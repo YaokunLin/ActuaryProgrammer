@@ -1,14 +1,99 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
+<!doctype html>
+<html lang="en">
   <head>
+    <!-- Required meta tags -->
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-light ">
+      <a class="navbar-brand" href=""> αctuaryProgrammer</a>
+       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto">
+          <li class="nav-item">
+              <a class="nav-link" href="#contact">contact</a>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              quantFinance</a>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                <a class="dropdown-item" href="#GBM">GBM</a>
+                <a class="dropdown-item" href="#">CIR</a>
+                <a class="dropdown-item" href="#">Jump-Diffusion</a>
+              </div>
+
+          </li>
+
+         
+
+          <li class="nav-item">
+              <a class="nav-link" href="#QuantFin">actuarial</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="">supervisedMachine</a>
+          <li class="nav-item">
+              <a class="nav-link" href="">more</a>
+        </li>
+      </ul>
+   </div>
+  </nav>
+  
     <title>Yaokun Lin's HomePage</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+  
   </head>
-  <body>
+  <style>
+  h1 {color:RGB(0, 0,128);
+  font-size: 30px;}
+
+  dt{font-size: 15px;}
+
+  body{margin-left: 10px;
+  }
 
 
+
+/* styling links */
+  a:link {
+color: green;
+background-color: transparent;
+text-decoration: none;
+}
+/* styling links */
+a:visited {
+color: blue;
+background-color: transparent;
+text-decoration: none;
+}
+/* styling links */
+a:hover {
+color: purple;
+background-color: transparent;
+text-decoration: underline;
+}
+/* styling links */
+a:active {
+color:red;
+background-color: transparent;
+text-decoration: underline;
+
+  </style>
+
+  
     <img src="https://media-exp1.licdn.com/dms/image/C4D03AQHPpbVcuXfdsw/profile-displayphoto-shrink_400_400/0?e=1607558400&v=beta&t=htL0x_NpIYa4U4EPtDggUNMnuyk3zKbwRFrxS097_xg" alt="Yaokun Lin Profile Picture" width="300" height="300">
-    <h1 style="color:RGB(0, 0,128);">Yaokun Lin</h1>
+
+<p></p>
+
+    <h1>Yaokun Lin</h1>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
 
     <dt>
        <em>Fellow of<em>
@@ -36,6 +121,8 @@
 
 
 
+        <br>
+
 
 
 
@@ -44,9 +131,9 @@
 
 
     <hr>
-    <h3>Quantitative Finance Models</h3>
+    <h5 id="QuantFin">Quantitative Finance Models</h5>
 
-    <ul>
+    <ul id="GBM">
 
       <img src="https://pbs.twimg.com/media/EkEUgueVoAAfsWM?format=jpg&name=large" alt="Geometric Brownian motion (GBM) Stock Price Simulation Picture" width="1345" height="605.25" style = "display: block; margin-left: auto; margin-right: auto;"/>
 
@@ -58,9 +145,9 @@
 
 
 
-      <li><a href="https://en.wikipedia.org/wiki/Geometric_Brownian_motion" target="_blank">Geometric Brownian motion (GBM) Stock Price Simulation</a></li>
+      <li><a href="https://en.wikipedia.org/wiki/Geometric_Brownian_motion" target="_blank" >Geometric Brownian motion (GBM) Stock Price Simulation</a></li>
 
-      <dt>
+      <dt >
         <em> (Real World Measure, Log-Normal Distribution, Control Variate Method)</em>
       </dt>
 
@@ -172,7 +259,7 @@
           </ul>
     </ul>
     <hr>
-    <h3>Actuarial Models</h3>
+    <h5>Actuarial Models</h5>
     <ul>
       <img src="https://pbs.twimg.com/media/EkES3UVUcAQcUBK?format=jpg&name=large" alt="Death Probability Qx Picture" width="1345" height="605.25"   style = "display: block; margin-left: auto; margin-right: auto;"/>
 <p></p>
@@ -238,7 +325,7 @@
     </ul>
 
     <hr>
-    <h3>Supervised Machine Learning</h3>
+    <h5>Supervised Machine Learning</h5>
     <ul>
 
       <img src="https://pbs.twimg.com/media/EkbEHY4VcAA33XW?format=jpg&name=medium" alt="SVR" width="550" height="400" style = "display: block; margin-left: auto; margin-right: auto;"/>
@@ -265,7 +352,7 @@
 
   </ul>
     <hr>
-    <h3>Other Fun Stuff</h3>
+    <h5>Other Fun Stuff</h5>
     <ul>
       <img src="https://pbs.twimg.com/media/EkJv1LSUcAIsYRc?format=jpg&name=medium" alt="Human Life Prophet Picture" width="800" height="356" style = "display: block; margin-left: auto; margin-right: auto;"/>
       <p></p>
@@ -301,7 +388,7 @@
 
     </ul>
 
-    <hr>
+    <hr id="contact">
 
 
 
@@ -309,7 +396,7 @@
 
       <a href="https://www.linkedin.com/in/yaokun-lin-fsa-cera-acia-00a20a199/"target="_blank"><img src="https://content.linkedin.com/content/dam/me/business/en-us/amp/brand-site/v2/bg/LI-Bug.svg.original.svg" alt="VS Logo" width="20" height="20">
 
-<br>
+<p></p>
 
 
     <p>
@@ -334,4 +421,7 @@
 
  </div>
 
+ <p></p>
+
   </body>
+</html>
