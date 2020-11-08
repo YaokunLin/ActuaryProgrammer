@@ -18,26 +18,36 @@
           <li class="nav-item">
               <a class="nav-link" href="#contact">contact</a>
           </li>
+
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               quantFinance</a>
               <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
                 <a class="dropdown-item" href="#GBM">GBM</a>
-                <a class="dropdown-item" href="#">CIR</a>
-                <a class="dropdown-item" href="#">Jump-Diffusion</a>
+                <a class="dropdown-item" href="#CIR">CIR</a>
+                <a class="dropdown-item" href="#JD">Jump-Diffusion</a>
               </div>
 
           </li>
 
          
 
-          <li class="nav-item">
-              <a class="nav-link" href="#QuantFin">actuarial</a>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              actuarial</a>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                <a class="dropdown-item" href="#LifeExpect">Life Expectancy</a>
+                <a class="dropdown-item" href="#NonLife">Non-Life Loss</a>
+                
+              </div>
+
           </li>
+
+
           <li class="nav-item">
-            <a class="nav-link" href="">supervisedMachine</a>
+            <a class="nav-link" href="#surprisedMachine">supervisedMachine</a>
           <li class="nav-item">
-              <a class="nav-link" href="">more</a>
+              <a class="nav-link" href="#OtherStuff">more</a>
         </li>
       </ul>
    </div>
@@ -51,12 +61,19 @@
   
   </head>
   <style>
-  h1 {color:RGB(0, 0,128);
-  font-size: 30px;}
 
+  h1 {color:RGB(0, 0,128);
+  font-size: 30px;
+  text-align: center;}
+
+  h5{text-align: center;}
+  
+
+  
   dt{font-size: 15px;}
 
   body{margin-left: 10px;
+    
   }
 
 
@@ -84,35 +101,69 @@ a:active {
 color:red;
 background-color: transparent;
 text-decoration: underline;
+}
+
+.SectionTitle::first-letter {
+  font-weight: bold;
+  /* color: #3e978b; */
+  font-size: 30px;
+  font-family: 'Playfair Display', serif;;
+}
+
+.TitleDivider{
+  /* color: #af6b58; */
+  font-size: 55px;
+  text-align: center;
+
+ 
+}
+
+.SecondTitleDivider{
+  /* color: #af6b58; */
+  font-size: 12px;
+  text-align: center;
+
+ 
+}
+}
+
+
 
   </style>
+  
+  
+  <p>&nbsp;</p>
 
   
-    <img src="https://media-exp1.licdn.com/dms/image/C4D03AQHPpbVcuXfdsw/profile-displayphoto-shrink_400_400/0?e=1607558400&v=beta&t=htL0x_NpIYa4U4EPtDggUNMnuyk3zKbwRFrxS097_xg" alt="Yaokun Lin Profile Picture" width="300" height="300">
+    <img src="https://media-exp1.licdn.com/dms/image/C4D03AQHPpbVcuXfdsw/profile-displayphoto-shrink_400_400/0?e=1607558400&v=beta&t=htL0x_NpIYa4U4EPtDggUNMnuyk3zKbwRFrxS097_xg" alt="Yaokun Lin Profile Picture" width="300" height="300" 
+    style="display: block; margin-left: auto; margin-right: auto;">
 
 <p></p>
 
     <h1>Yaokun Lin</h1>
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
 
-    <dt>
-       <em>Fellow of<em>
+   
+
+    
+    <dt style="text-align:center;">
+       <em>Fellow of <em>
       <a href="https://www.soa.org/"target="_blank"><em>the Society of Actuaries </em></a>
       <em>FSA, Quantitative Finance and Investment Fellowship Track<em>
     </dt>
 
-    <dt>
+    <dt style="text-align:center;">
        <em>Associate of<em>
       <a href="https://www.cia-ica.ca/home"target="_blank"><em>the Canadian Institute of Actuaries </em></a>
       <em>ACIA<em>
     </dt>
 
-    <dt>
+    <dt style="text-align:center;">
 
       <a href="https://ceraglobal.org/"target="_blank"><em>Chartered Enterprise Risk Management Actuary </em></a>
       <em>CERA<em>
     </dt>
-
+  
 
 
 
@@ -126,12 +177,35 @@ text-decoration: underline;
 
 
 
-    <p>I am excited when <b>Actuarial Science</b> sparks with <b>Technology</b>.
+    <p style="text-align:center;">I am excited when <b>Actuarial Science</b> sparks with <b>Technology</b>.
     </p>
 
+    <p>&nbsp;</p>
 
-    <hr>
-    <h5 id="QuantFin">Quantitative Finance Models</h5>
+    <p>&nbsp;</p>
+
+    <p>&nbsp;</p>
+
+    <dt style="text-align:center;" class="TitleDivider">
+      <em style="color: #4285F4"> · </em>
+      <em style="color: #DB4437"> · </em>
+      <em style="color: #F4B400"> · </em>
+      <em style="color: #4285F4"> · </em>
+      <em style="color: #0F9D58"> · </em>
+      <em style="color: #DB4437"> · </em>
+     
+   </dt>
+
+   
+
+    <p>&nbsp;</p>
+
+    <p>&nbsp;</p>
+    
+    <p>&nbsp;</p>
+    
+    <h5 id="QuantFin" class = "SectionTitle">Quantitative Finance Models</h5>
+    
 
     <ul id="GBM">
 
@@ -185,12 +259,26 @@ text-decoration: underline;
           </li>
         </ul>
 
-<p></p>
+        <p>&nbsp;</p>
 
-<hr>
+        <p>&nbsp;</p>
+        
+        <dt style="text-align:center;" class="SecondTitleDivider" >
+          <em style="color: #4285F4">&nbsp; &nbsp;  ■ &nbsp;  &nbsp;</em>
+          <em style="color: #DB4437"> &nbsp;&nbsp;  ■&nbsp; &nbsp;  </em>
+          <em style="color: #F4B400"> &nbsp;&nbsp;  ■ &nbsp;&nbsp;  </em>
+          <em style="color: #0F9D58"> &nbsp;&nbsp;  ■ &nbsp;&nbsp;  </em>
+         
+        </dt>
+        
+        <p>&nbsp;</p>
+        
+        <p>&nbsp;</p>
 
 
-<img src="https://pbs.twimg.com/media/EkPyWG-VgAAU2oj?format=jpg&name=large" alt="Cox–Ingersoll–Ross model simulation" width="1345" height="605.25" style = "display: block; margin-left: auto; margin-right: auto;"/>
+
+
+<img src="https://pbs.twimg.com/media/EkPyWG-VgAAU2oj?format=jpg&name=large" id="CIR" alt="Cox–Ingersoll–Ross model simulation" width="1345" height="605.25" style = "display: block; margin-left: auto; margin-right: auto;"/>
 
 
         <p>&nbsp;</p>
@@ -216,11 +304,23 @@ text-decoration: underline;
           </li>
         </ul>
 
-<p></p>
+        <p>&nbsp;</p>
 
-<hr>
+        <p>&nbsp;</p>
+        
+        <dt style="text-align:center;" class="SecondTitleDivider">
+          <em style="color: #4285F4">&nbsp; &nbsp;  ■ &nbsp;  &nbsp;</em>
+          <em style="color: #DB4437"> &nbsp;&nbsp;  ■&nbsp; &nbsp;  </em>
+          <em style="color: #F4B400"> &nbsp;&nbsp;  ■ &nbsp;&nbsp;  </em>
+          <em style="color: #0F9D58"> &nbsp;&nbsp;  ■ &nbsp;&nbsp;  </em>
+         
+        </dt>
+        
+        <p>&nbsp;</p>
+        
+        <p>&nbsp;</p>
 
-    <img src="https://pbs.twimg.com/media/Ek4bdOAU8AAI0dZ?format=jpg&name=large" alt="Poisson Jump Diffusion Picture" width="1345" height="605.25" style = "display: block; margin-left: auto; margin-right: auto;"/>
+    <img src="https://pbs.twimg.com/media/Ek4bdOAU8AAI0dZ?format=jpg&name=large" id="JD" alt="Poisson Jump Diffusion Picture" width="1345" height="605.25" style = "display: block; margin-left: auto; margin-right: auto;"/>
 
 
         <p>&nbsp;</p>
@@ -258,10 +358,32 @@ text-decoration: underline;
             <li>Python</li>
           </ul>
     </ul>
-    <hr>
-    <h5>Actuarial Models</h5>
+    <p>&nbsp;</p>
+
+    <p>&nbsp;</p>
+
+    <p>&nbsp;</p>
+
+    <dt style="text-align:center;" class="TitleDivider">
+      <em style="color: #4285F4"> · </em>
+      <em style="color: #DB4437"> · </em>
+      <em style="color: #F4B400"> · </em>
+      <em style="color: #4285F4"> · </em>
+      <em style="color: #0F9D58"> · </em>
+      <em style="color: #DB4437"> · </em>
+     
+   </dt>
+
+   
+
+    <p>&nbsp;</p>
+
+    <p>&nbsp;</p>
+    
+    <p>&nbsp;</p>
+    <h5  class = "SectionTitle">Actuarial Models</h5>
     <ul>
-      <img src="https://pbs.twimg.com/media/EkES3UVUcAQcUBK?format=jpg&name=large" alt="Death Probability Qx Picture" width="1345" height="605.25"   style = "display: block; margin-left: auto; margin-right: auto;"/>
+      <img src="https://pbs.twimg.com/media/EkES3UVUcAQcUBK?format=jpg&name=large" id="LifeExpect" alt="Death Probability Qx Picture" width="1345" height="605.25"   style = "display: block; margin-left: auto; margin-right: auto;"/>
 <p></p>
       <dt>
         <em>Source: Statistics Canada.<em>
@@ -291,12 +413,23 @@ text-decoration: underline;
         </li>
       </ul>
 
-      <p></p>
-      <hr>
+      <p>&nbsp;</p>
 
         <p>&nbsp;</p>
+        
+        <dt style="text-align:center;" class="SecondTitleDivider">
+          <em style="color: #4285F4">&nbsp; &nbsp;  ■ &nbsp;  &nbsp;</em>
+          <em style="color: #DB4437"> &nbsp;&nbsp;  ■&nbsp; &nbsp;  </em>
+          <em style="color: #F4B400"> &nbsp;&nbsp;  ■ &nbsp;&nbsp;  </em>
+          <em style="color: #0F9D58"> &nbsp;&nbsp;  ■ &nbsp;&nbsp;  </em>
+         
+        </dt>
+        
+        <p>&nbsp;</p>
+        
+        <p>&nbsp;</p>
 
-        <img src="https://pbs.twimg.com/media/Ekn87O5UYAAMTcC?format=png&name=large" alt="Frequency and Severity Picture" width="1345" height="605.25"   style = "display: block; margin-left: auto; margin-right: auto;"/>
+        <img src="https://pbs.twimg.com/media/Ekn87O5UYAAMTcC?format=png&name=large" id = "NonLife" alt="Frequency and Severity Picture" width="1345" height="605.25"   style = "display: block; margin-left: auto; margin-right: auto;"/>
 
         <p>&nbsp;</p>
         <img src="https://pbs.twimg.com/media/EkpNFHZU8AAqiJZ?format=png&name=large" alt="Simulated Total Loss Picture" width="1345" height="605.25"   style = "display: block; margin-left: auto; margin-right: auto;"/>
@@ -324,8 +457,31 @@ text-decoration: underline;
 
     </ul>
 
-    <hr>
-    <h5>Supervised Machine Learning</h5>
+    <p>&nbsp;</p>
+
+    <p>&nbsp;</p>
+
+    <p>&nbsp;</p>
+
+    <dt style="text-align:center;" class="TitleDivider">
+      <em style="color: #4285F4"> · </em>
+      <em style="color: #DB4437"> · </em>
+      <em style="color: #F4B400"> · </em>
+      <em style="color: #4285F4"> · </em>
+      <em style="color: #0F9D58"> · </em>
+      <em style="color: #DB4437"> · </em>
+     
+   </dt>
+
+   
+
+    <p>&nbsp;</p>
+
+    <p>&nbsp;</p>
+    
+    <p>&nbsp;</p>
+
+    <h5 id="surprisedMachine" class = "SectionTitle">Supervised Machine Learning</h5>
     <ul>
 
       <img src="https://pbs.twimg.com/media/EkbEHY4VcAA33XW?format=jpg&name=medium" alt="SVR" width="550" height="400" style = "display: block; margin-left: auto; margin-right: auto;"/>
@@ -351,8 +507,32 @@ text-decoration: underline;
 
 
   </ul>
-    <hr>
-    <h5>Other Fun Stuff</h5>
+
+  <p>&nbsp;</p>
+
+  <p>&nbsp;</p>
+
+  <p>&nbsp;</p>
+
+  <dt style="text-align:center;" class="TitleDivider">
+    <em style="color: #4285F4"> · </em>
+    <em style="color: #DB4437"> · </em>
+    <em style="color: #F4B400"> · </em>
+    <em style="color: #4285F4"> · </em>
+    <em style="color: #0F9D58"> · </em>
+    <em style="color: #DB4437"> · </em>
+   
+ </dt>
+
+ 
+
+  <p>&nbsp;</p>
+
+  <p>&nbsp;</p>
+  
+  <p>&nbsp;</p>
+
+    <h5 id="OtherStuff" class = "SectionTitle">Other Fun Stuff</h5>
     <ul>
       <img src="https://pbs.twimg.com/media/EkJv1LSUcAIsYRc?format=jpg&name=medium" alt="Human Life Prophet Picture" width="800" height="356" style = "display: block; margin-left: auto; margin-right: auto;"/>
       <p></p>
@@ -388,19 +568,45 @@ text-decoration: underline;
 
     </ul>
 
-    <hr id="contact">
+    <p>&nbsp;</p>
+
+  <p>&nbsp;</p>
+
+  <p>&nbsp;</p>
+
+  <dt style="text-align:center;" class="TitleDivider">
+    <em style="color: #4285F4"> · </em>
+    <em style="color: #DB4437"> · </em>
+    <em style="color: #F4B400"> · </em>
+    <em style="color: #4285F4"> · </em>
+    <em style="color: #0F9D58"> · </em>
+    <em style="color: #DB4437"> · </em>
+   
+ </dt>
+
+ 
+
+  
+  
+  
+ <dt style="text-align:center;">
+  <a id="contact" href="https://www.linkedin.com/in/yaokun-lin-fsa-cera-acia-00a20a199/"target="_blank"><img src="https://content.linkedin.com/content/dam/me/business/en-us/amp/brand-site/v2/bg/LI-Bug.svg.original.svg" alt="linkedin Logo" width="20" height="20" >
+    <a id="" href="mailto:yaokun1@ualberta.ca?subject=Hi Yao&body=How are you?" target="_blank"><img src="https://www.flaticon.com/svg/static/icons/svg/2089/2089181.svg" alt="Email Logo" width="20" height="20" >
+
+</dt>
+
+  
 
 
 
 
 
-      <a href="https://www.linkedin.com/in/yaokun-lin-fsa-cera-acia-00a20a199/"target="_blank"><img src="https://content.linkedin.com/content/dam/me/business/en-us/amp/brand-site/v2/bg/LI-Bug.svg.original.svg" alt="VS Logo" width="20" height="20">
-
+    
 <p></p>
 
 
-    <p>
-      <a href="https://www.actuarialdirectory.org/?searchType=11&discloseId=6pvjNyv76jsHCR34X20bHw%3D%3D"target="_blank"><em>TheActuarialDirectory </em></a>
+    <p style="text-align:center;">
+      <a href="https://www.actuarialdirectory.org/?searchType=11&discloseId=6pvjNyv76jsHCR34X20bHw%3D%3D"target="_blank"><em >TheActuarialDirectory </em></a>
     </p>
 
 
