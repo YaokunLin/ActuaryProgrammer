@@ -47,9 +47,19 @@
 
           <li class="nav-item">
             <a class="nav-link" href="#surprisedMachine">supervisedMachine</a>
-          <li class="nav-item">
-              <a class="nav-link" href="#OtherStuff">more</a>
+          
+
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            more</a>
+            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
+              <a class="dropdown-item" href="#chartdiv2d">Bivariate Gaussian Simulation</a>
+              <a class="dropdown-item" href="#Prophet">Human Life Prophet</a>
+              
+            </div>
+
         </li>
+
       </ul>
    </div>
   </nav>
@@ -575,7 +585,66 @@ text-decoration: underline;
   <p>&nbsp;</p>
 
     <h5 id="OtherStuff" class = "SectionTitle">Other Fun Stuff</h5>
-    <ul>
+
+    
+    
+
+
+
+    <div id="chartdiv2d"></div>
+    <ul id="MulivariateGau">
+     
+  
+      <li>
+        
+        <a href="https://en.wikipedia.org/wiki/Multivariate_normal_distribution#Drawing_values_from_the_distribution#Bivariate_case_2" target="_blank" >Bivariate Gaussian Simulation</a></li>
+  
+      <dt >
+        
+        <a href="https://en.wikipedia.org/wiki/Cholesky_decomposition#Monte_Carlo_simulation" target="_blank" >The Cholesky decomposition</a>
+        was applied in the Monte Carlo method with correlation coefficient ρ = .025
+      </dt>
+  
+       
+         
+          </li>
+          </ul>
+
+
+
+
+    
+    <p>&nbsp;</p>
+
+    <p>&nbsp;</p>
+  
+    <p>&nbsp;</p>
+  
+    <dt style="text-align:center;" class="TitleDivider">
+      <em style="color: #4285F4"> · </em>
+      <em style="color: #DB4437"> · </em>
+      <em style="color: #F4B400"> · </em>
+      <em style="color: #4285F4"> · </em>
+      <em style="color: #0F9D58"> · </em>
+      <em style="color: #DB4437"> · </em>
+     
+   </dt>
+  
+   
+  
+    <p>&nbsp;</p>
+  
+    <p>&nbsp;</p>
+    
+    <p>&nbsp;</p>
+
+
+    
+
+
+
+
+    <ul id="Prophet">
       <img src="https://pbs.twimg.com/media/EkJv1LSUcAIsYRc?format=jpg&name=medium" alt="Human Life Prophet Picture" width="800" height="356" style = "display: block; margin-left: auto; margin-right: auto;"/>
       <p></p>
 
@@ -877,3 +946,84 @@ text-decoration: underline;
   </script>
   
   <!-- HTML -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <!-- Styles -->
+<style>
+  #chartdiv2d {
+    width: 100%;
+    height: 500px;
+  }
+  </style>
+  
+  <!-- Resources -->
+  <script src="https://cdn.amcharts.com/lib/4/core.js"></script>
+  <script src="https://cdn.amcharts.com/lib/4/charts.js"></script>
+  <script src="https://cdn.amcharts.com/lib/4/themes/animated.js"></script>
+  
+  <!-- Chart code -->
+  <script>
+  am4core.useTheme(am4themes_animated);
+
+// Create chart instance
+var chart = am4core.create("chartdiv2d", am4charts.XYChart);
+
+// Add data
+chart.data = [{
+"x": 0,
+"y": 0
+}];
+
+// Create axes
+var xAxis = chart.xAxes.push(new am4charts.ValueAxis());
+xAxis.min = -3;
+xAxis.max = +3;
+xAxis.strictMinMax = true;
+
+var yAxis = chart.yAxes.push(new am4charts.ValueAxis());
+yAxis.min = -3;
+yAxis.max = +3;
+yAxis.strictMinMax = true;
+
+// Create series
+var series = chart.series.push(new am4charts.LineSeries());
+series.dataFields.valueY = "x";
+series.dataFields.valueX = "y";
+series.connect = false;
+
+series.bullets.push(new am4charts.CircleBullet());
+
+var rho = .025;
+
+setInterval(function() {
+chart.data[0].x = randn_normal();
+chart.data[0].y = rho*chart.data[0].x + (Math.sqrt(1-rho*rho) * randn_normal());
+chart.invalidateRawData();
+}, 2000);
+  </script>
