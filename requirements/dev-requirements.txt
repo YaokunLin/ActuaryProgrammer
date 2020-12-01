@@ -1,0 +1,2 @@
+black==19.3b0
+python-dotenv==0.15.0
