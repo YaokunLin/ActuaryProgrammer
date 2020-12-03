@@ -3,11 +3,14 @@ import datetime
 
 from django.db import models
 from django.db import IntegrityError
-from django.contrib.auth.models import AbstractUser
-from django.contrib.auth.models import UserManager as _UserManager
+from django.contrib.auth.models import AbstractUser, Group, UserManager as _UserManager
+from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.core.mail import send_mail
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
 
 from django_userforeignkey.models.fields import UserForeignKey
+from django_extensions.db.fields import ShortUUIDField
 
 class AuditTrailModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
@@ -35,7 +38,7 @@ class AuditTrailModel(models.Model):
 
 
 class UserManager(_UserManager):
-    def get_or_create_for_communications_platform(self, payload):
+    def get_or_create_for_user(self, payload):
         uid = payload["uid"]
 
         try:
@@ -52,7 +55,6 @@ class UserManager(_UserManager):
                 username=payload["username"],
                 email=payload["user_email"],
                 name=payload["displayName"],
-                domain=payload["domain"],
                 date_joined=timezone.now(),
                 last_login=timezone.now(),
                 is_active=True,
@@ -64,19 +66,15 @@ class UserManager(_UserManager):
 
 
 class User(AbstractUser):
-    uid = models.CharField(max_length=128, blank=True, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
-    modified_at = models.DateTimeField(auto_now=True, db_index=True)
-    user= models.CharField(max_length=80, blank=True)
-    email = models.CharField(max_length=128, blank=True, unique=True)
-    name = models.CharField(max_length=256, blank=True)
-    is_active = models.BooleanField(default=True)
-    is_staff = models.BooleanField(default=False)
+    # Using plain "name" here since we may not have it broken out into
+    # first and last
+    name = models.CharField(_('name'), max_length=300, blank=True)
+    access_token = models.CharField(_('communications platform access token'), max_length=255, blank=True)
+    refresh_token = models.CharField(_('communications platform refresh token'), max_length=255, blank=True)
+    expires_at = models.DateTimeField(_('communications platform token expires at'), null=True)
 
-    objects = UserManager()
-
-    USERNAME_FIELD = "uid"
-    REQUIRED_FIELDS = []
-
-    def __str__(self):
-        return self.name
+class Client(models.Model):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    group = models.OneToOneField(Group, on_delete=models.CASCADE)
+    rest_base_url = models.URLField() # Can be Dentrix, another EMR, or some other system
+    domain = models.CharField(max_length=80)

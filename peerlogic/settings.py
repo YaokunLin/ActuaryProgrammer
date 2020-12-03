@@ -35,6 +35,8 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 ALLOWED_HOSTS = [os.getenv("DJANGO_ALLOWED_HOSTS")]
 
+# Netsapiens Communications Info
+
 # CORS
 CORS_ORIGIN_ALLOW_ALL = DEBUG
 CORS_ORIGIN_WHITELIST = (
@@ -91,6 +93,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "peerlogic.wsgi.application"
 
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10
+}
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
@@ -99,8 +105,6 @@ WSGI_APPLICATION = "peerlogic.wsgi.application"
 # [START dbconfig]
 DATABASES = {
     "default": {
-        # If you are using Cloud SQL for MySQL rather than PostgreSQL, set
-        # 'ENGINE': 'django.db.backends.mysql' instead of the following.
         "ENGINE": "django.db.backends.postgresql",
         "NAME": "peerlogic",
         "USER": os.getenv("DATABASE_USER"),
@@ -133,6 +137,13 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.Argon2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+]
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
@@ -151,9 +162,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
-STATIC_URL = "/static/"
+# [START staticurl]
+STATIC_URL = 'http://storage.googleapis.com/peerlogic-api/static/'
+# STATIC_URL = 'https://storage.googleapis.com/<your-gcs-bucket>/static/'
+# [END staticurl]
 
-
+STATIC_ROOT = 'static/'
 # Celery Configuration Options
 CELERY_ENABLE_UTC = True
 CELERY_TASK_TRACK_STARTED = True
