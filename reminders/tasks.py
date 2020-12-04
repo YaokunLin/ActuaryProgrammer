@@ -1,6 +1,9 @@
 # import os
 # import requests
+<<<<<<< HEAD
 # from django.conf import settings
+=======
+>>>>>>> c5a3368965405ca7f854cece023bb013a2ec6d66
 # from reminders import celery, db, app
 # from models.appointment import Appointment
 # from sqlalchemy.orm.exc import NoResultFound
