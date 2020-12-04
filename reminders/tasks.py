@@ -1,5 +1,6 @@
 # import os
 # import requests
+# from django.conf import settings
 # from reminders import celery, db, app
 # from models.appointment import Appointment
 # from sqlalchemy.orm.exc import NoResultFound
@@ -29,10 +30,10 @@
 
 #     token_payload={'format': 'json',
 #     'grant_type': 'password',
-#     'client_id': '***REMOVED***',
-#     'client_secret': '***REMOVED***',
-#     'username': '***REMOVED***',
-#     'password': '***REMOVED***'}
+#     'client_id': settings.NS_CLIENT_ID,
+#     'client_secret': settings.NS_CLIENT_SECRET,
+#     'username': 'username',
+#     'password': 'password'}
 #     token_response = requests.request("POST", token_url, data=token_payload)
 
 #     print(token_response.json())
