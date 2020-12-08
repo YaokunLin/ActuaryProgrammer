@@ -59,7 +59,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "django_extensions",
-    "django_userforeignkey",
+    "django_celery_beat",
     "corsheaders",
     "core",
     "reminders",
