@@ -42,7 +42,7 @@ spec:
       containers:
       - name: peerlogic-api-app
         # Replace  with your project ID or use `make template`
-        image: gcr.io/peerlogic-api/peerlogic-api
+        image: gcr.io/peerlogic-api/peerlogic-1
         # This setting makes nodes pull the docker image every time before
         # starting the pod. This is useful when debugging, but should be turned
         # off in production.
@@ -60,8 +60,6 @@ spec:
                   name: cloudsql
                   key: password
             # [END cloudsql_secrets]
-            - name: DJANGO_DB_REQUIRE_SSL
-              value: false
             # [START peerlogic-beta_secrets]
             - name: DJANGO_SECRET_KEY
               valueFrom:
@@ -69,14 +67,16 @@ spec:
                   name: peerlogic-beta
                   key: DJANGO_SECRET_KEY
             # [END peerlogic-beta_secrets]
+            - name: DJANGO_DB_REQUIRE_SSL
+              value: "False"
             - name: DJANGO_ALLOWED_HOSTS
               value: api,localhost
             - name: DJANGO_EMAIL_BACKEND
               value: django.core.mail.backends.console.EmailBackend
             - name: CHANNELS_REDIS_URL
-              value: redis://redis:6379/0
+              value: "redis://redis:6379/0"
             - name: DJANGO_DEBUG
-              value: FALSE
+              value: "False"
         ports:
         - containerPort: 8080
 

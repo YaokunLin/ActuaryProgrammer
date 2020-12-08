@@ -1,6 +1,6 @@
+argon2-cffi==16.1.0
 celery==5.0.2
 Django>=3.0
-django[argon2]==16.1.0
 django-celery-beat==2.1.0
 django-cors-headers>=3.5.0
 django-extensions>=3.0.5
