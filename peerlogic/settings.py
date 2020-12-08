@@ -36,12 +36,15 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 ALLOWED_HOSTS = [os.getenv("DJANGO_ALLOWED_HOSTS")]
 
 # Netsapiens Communications Info
+NS_CLIENT_ID = os.getenv("NS_CLIENT_ID")
+NS_CLIENT_SECRET = os.getenv("NS_CLIENT_SECRET")
+NS_BASE_URL = os.getenv("NS_BASE_URL")
+NS_API_USER = os.getenv("NS_API_USER")
+NS_API_PASSWORD = os.getenv("NS_API_PASSWORD")
 
 # CORS
 CORS_ORIGIN_ALLOW_ALL = DEBUG
-CORS_ORIGIN_WHITELIST = (
-  'http://localhost:3000',
-)
+CORS_ORIGIN_WHITELIST = ("http://localhost:3000",)
 
 AUTH_USER_MODEL = "core.User"
 
@@ -55,6 +58,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "django_extensions",
     "django_userforeignkey",
     "corsheaders",
     "core",
@@ -94,8 +98,8 @@ TEMPLATES = [
 WSGI_APPLICATION = "peerlogic.wsgi.application"
 
 REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 10,
 }
 
 # Database
@@ -138,10 +142,10 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 PASSWORD_HASHERS = [
-    'django.contrib.auth.hashers.Argon2PasswordHasher',
-    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
-    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
-    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+    "django.contrib.auth.hashers.Argon2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
+    "django.contrib.auth.hashers.BCryptSHA256PasswordHasher",
 ]
 
 
@@ -163,11 +167,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 # [START staticurl]
-STATIC_URL = 'http://storage.googleapis.com/peerlogic-api/static/'
+STATIC_URL = "http://storage.googleapis.com/peerlogic-api/static/"
 # STATIC_URL = 'https://storage.googleapis.com/<your-gcs-bucket>/static/'
 # [END staticurl]
 
-STATIC_ROOT = 'static/'
+STATIC_ROOT = "static/"
 # Celery Configuration Options
 CELERY_ENABLE_UTC = True
 CELERY_TASK_TRACK_STARTED = True

@@ -12,6 +12,7 @@ from django.utils.translation import gettext_lazy as _
 from django_userforeignkey.models.fields import UserForeignKey
 from django_extensions.db.fields import ShortUUIDField
 
+
 class AuditTrailModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     modified_at = models.DateTimeField(auto_now=True, db_index=True)
@@ -68,13 +69,23 @@ class UserManager(_UserManager):
 class User(AbstractUser):
     # Using plain "name" here since we may not have it broken out into
     # first and last
-    name = models.CharField(_('name'), max_length=300, blank=True)
-    access_token = models.CharField(_('communications platform access token'), max_length=255, blank=True)
-    refresh_token = models.CharField(_('communications platform refresh token'), max_length=255, blank=True)
-    expires_at = models.DateTimeField(_('communications platform token expires at'), null=True)
+    name = models.CharField(_("name"), max_length=300, blank=True)
+    telecom_user = models.CharField(
+        _("telecom user (not sip username)"), max_length=80, blank=True
+    )
+    access_token = models.CharField(
+        _("telecom access token"), max_length=255, blank=True
+    )
+    refresh_token = models.CharField(
+        _("telecom refresh token"), max_length=255, blank=True
+    )
+    expires_at = models.DateTimeField(_("telecom token expires at"), null=True)
+    sms_number = models.CharField(max_length=10, blank=True)
+
 
 class Client(models.Model):
     id = ShortUUIDField(primary_key=True, editable=False)
     group = models.OneToOneField(Group, on_delete=models.CASCADE)
-    rest_base_url = models.URLField() # Can be Dentrix, another EMR, or some other system
-    domain = models.CharField(max_length=80)
+    rest_base_url = (
+        models.URLField()
+    )  # Can be Dentrix, another EMR, or some other system
