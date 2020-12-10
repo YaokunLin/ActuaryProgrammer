@@ -4,27 +4,30 @@ services:
 
   postgres:
       image: postgres:10-alpine
-      environment:
-        - POSTGRES_DB=peerlogic
-        - POSTGRES_PASSWORD=password
       ports:
           - "5432:5432"
       env_file:
           - .env
       volumes:
-          - ./volumes/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+          - ./volumes/postgres:/var/lib/postgresql
 
   web:
-      build: .
-      command: python manage.py runserver 0.0.0.0:8000
+      image: gcr.io/peerlogic-api/peerlogic-api
       volumes:
-          - .:/peerlogic
+          - .:/app
       ports:
-          - "8000:8000"
+          - 8000:8000
       depends_on:
           - postgres
       env_file:
           - .env
+      environment:
+          - PORT=8000
+          - WAIT_HOSTS=postgres:5432
+          - WAIT_HOSTS_TIMEOUT=300
+          - WAIT_SLEEP_INTERVAL=30
+          - WAIT_HOST_CONNECT_TIMEOUT=30
+          - DB_HOST=postgres
 
   redis:
     image: redis:4-alpine

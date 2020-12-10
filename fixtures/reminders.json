@@ -112,14 +112,6 @@
   }
 },
 {
-  "model": "sessions.session",
-  "pk": "84cg8hr1a96m5psck8ybs3rtnzu61k0u",
-  "fields": {
-    "session_data": "ODU1MjFhYWNmNjJkMWI2MTBkYjFiYmNlOWQwZWNhYjA4MmI3NDA5Mzp7Il9hdXRoX3VzZXJfaWQiOiIxIiwiX2F1dGhfdXNlcl9iYWNrZW5kIjoiZGphbmdvLmNvbnRyaWIuYXV0aC5iYWNrZW5kcy5Nb2RlbEJhY2tlbmQiLCJfYXV0aF91c2VyX2hhc2giOiJkNzlhZTkyMWJlYTEwZjJlMTYxZmY1ZWY1YTNmYzdjYjhkYTQxYWM3In0=",
-    "expire_date": "2020-12-18T18:02:48.139Z"
-  }
-},
-{
   "model": "django_celery_beat.crontabschedule",
   "pk": 1,
   "fields": {

@@ -42,41 +42,76 @@ spec:
       containers:
       - name: peerlogic-api-app
         # Replace  with your project ID or use `make template`
-        image: gcr.io/peerlogic-api/peerlogic-1
+        image: gcr.io/peerlogic-api/peerlogic-api
         # This setting makes nodes pull the docker image every time before
         # starting the pod. This is useful when debugging, but should be turned
         # off in production.
         imagePullPolicy: Always
         env:
             # [START cloudsql_secrets]
-            - name: DATABASE_USER
+            - name: POSTGRES_DB
               valueFrom:
                 secretKeyRef:
-                  name: cloudsql
-                  key: username
-            - name: DATABASE_PASSWORD
+                  name: cloudsql-dev
+                  key: POSTGRES_DB
+            - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: cloudsql
-                  key: password
+                  name: cloudsql-dev
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cloudsql-dev
+                  key: POSTGRES_PASSWORD
             # [END cloudsql_secrets]
-            # [START peerlogic-beta_secrets]
+            # [START peerlogic-dev_secrets]
             - name: DJANGO_SECRET_KEY
               valueFrom:
                 secretKeyRef:
-                  name: peerlogic-beta
+                  name: django-dev
                   key: DJANGO_SECRET_KEY
-            # [END peerlogic-beta_secrets]
+            # [END peerlogic-dev_secrets]
+            # [START netsapiens_secrets]
+            - name: NS_BASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: netsapiens-dev
+                  key: NS_BASE_URL
+            - name: NS_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: netsapiens-dev
+                  key: NS_CLIENT_ID
+            - name: NS_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: netsapiens-dev
+                  key: NS_CLIENT_SECRET
+            - name: NS_API_USER
+              valueFrom:
+                secretKeyRef:
+                  name: netsapiens-dev
+                  key: NS_API_USER
+            - name: NS_API_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: netsapiens-dev
+                  key: NS_API_PASSWORD
+            # [START netsapiens_secrets]
             - name: DJANGO_DB_REQUIRE_SSL
               value: "False"
-            - name: DJANGO_ALLOWED_HOSTS
-              value: api,localhost
             - name: DJANGO_EMAIL_BACKEND
               value: django.core.mail.backends.console.EmailBackend
-            - name: CHANNELS_REDIS_URL
-              value: "redis://redis:6379/0"
+            - name: CELERY_BROKER_URL
+              value: "redis://10.157.148.115:6379/0"
+            - name: CELERY_RESULT_BACKEND
+              value: "redis://10.157.148.115:6379/0"
             - name: DJANGO_DEBUG
               value: "False"
+            - name: GKE_APPLICATION
+              value: "True"
+
         ports:
         - containerPort: 8080
 
@@ -84,7 +119,7 @@ spec:
       - image: gcr.io/cloudsql-docker/gce-proxy:1.16
         name: cloudsql-proxy
         command: ["/cloud_sql_proxy", "--dir=/cloudsql",
-                  "-instances=peerlogic-api:us-west3:peerlogic-beta=tcp:5432",
+                  "-instances=peerlogic-api:us-west3:peerlogic-dev=tcp:5432",
                   "-credential_file=/secrets/cloudsql/credentials.json"]
         volumeMounts:
           - name: cloudsql-oauth-credentials
@@ -92,7 +127,7 @@ spec:
             readOnly: true
           - name: ssl-certs
             mountPath: /etc/ssl/certs
-          - name: cloudsql
+          - name: cloudsql-dev
             mountPath: /cloudsql
       # [END proxy_container]
       # [START volumes]
@@ -103,7 +138,7 @@ spec:
         - name: ssl-certs
           hostPath:
             path: /etc/ssl/certs
-        - name: cloudsql
+        - name: cloudsql-dev
           emptyDir: {}
       # [END volumes]
 # [END kubernetes_deployment]

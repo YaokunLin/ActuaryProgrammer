@@ -1,21 +1,41 @@
-# The base image we want to inherit from
-FROM python:3
+
+#	Copyright 2015, Google, Inc.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# [START docker]
+
+# The Google App Engine python runtime is Debian Jessie with Python installed
+# and various os-level packages to allow installation of popular Python
+# libraries. The source is on github at:
+# https://github.com/GoogleCloudPlatform/python-docker
+FROM gcr.io/google_appengine/python
+
+# Create a virtualenv for the application dependencies.
+RUN virtualenv -p python3 /env
+ENV PATH /env/bin:$PATH
+
 ENV PYTHONUNBUFFERED 1
 
-RUN mkdir /peerlogic
-WORKDIR /peerlogic
+ADD requirements/requirements.txt /app/requirements.txt
+RUN /env/bin/pip install --upgrade pip && /env/bin/pip install -r /app/requirements.txt
+ADD . /app
 
-# using ADD with the requirements (vs copy) makes use of caching to speed up consecutive builds
-ADD ./requirements requirements
+ENV WAIT_VERSION 2.7.2
+ADD https://github.com/ufoscout/docker-compose-wait/releases/download/$WAIT_VERSION/wait /wait
+RUN chmod +x /wait
 
-# Install the pip requirements file depending on
-# the uncommitted .env file passed in when starting build.
-RUN pip install -Ur requirements/requirements.txt
+WORKDIR /app
 
-# Copy the rest of our application.
-COPY . .
+CMD gunicorn -b :$PORT peerlogic.wsgi
 
-# Expose the application on port 8000 (check if container run or compose needs to map to 8000 locally)
-EXPOSE 8000
-# Run test server
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# [END docker]
