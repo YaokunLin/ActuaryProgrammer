@@ -1,19 +1,5 @@
 [
 {
-  "model": "django_celery_beat.clockedschedule",
-  "pk": 3,
-  "fields": {
-    "clocked_time": "2020-12-11T07:07:00Z"
-  }
-},
-{
-  "model": "django_celery_beat.clockedschedule",
-  "pk": 4,
-  "fields": {
-    "clocked_time": "2020-12-11T07:09:00Z"
-  }
-},
-{
   "model": "django_celery_beat.crontabschedule",
   "pk": 1,
   "fields": {
@@ -137,34 +123,6 @@
     "last_run_at": null,
     "total_run_count": 0,
     "date_changed": "2020-12-11T06:53:03.898Z",
-    "description": ""
-  }
-},
-{
-  "model": "django_celery_beat.periodictask",
-  "pk": 7,
-  "fields": {
-    "name": "Test",
-    "task": "reminders.tasks.send_sms_reminders",
-    "interval": null,
-    "crontab": null,
-    "solar": null,
-    "clocked": 4,
-    "args": "[]",
-    "kwargs": "{\"reminder_type\":\"night_before\"}",
-    "queue": null,
-    "exchange": null,
-    "routing_key": null,
-    "headers": "{}",
-    "priority": null,
-    "expires": null,
-    "expire_seconds": null,
-    "one_off": true,
-    "start_time": null,
-    "enabled": true,
-    "last_run_at": "2020-12-11T07:09:00.647Z",
-    "total_run_count": 1,
-    "date_changed": "2020-12-11T07:09:40.778Z",
     "description": ""
   }
 }
