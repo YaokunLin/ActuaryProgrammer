@@ -11,7 +11,7 @@ services:
       volumes:
           - ./volumes/postgres:/var/lib/postgresql
 
-  web:
+  api:
       image: gcr.io/peerlogic-api/peerlogic-api
       volumes:
           - .:/app
@@ -28,6 +28,44 @@ services:
           - WAIT_SLEEP_INTERVAL=30
           - WAIT_HOST_CONNECT_TIMEOUT=30
           - DB_HOST=postgres
+
+  worker:
+      image: gcr.io/peerlogic-api/peerlogic-api
+      command: ["celery", "-A", "peerlogic", "worker", "-l", "INFO"]
+      volumes:
+          - .:/app
+      depends_on:
+          - postgres
+      env_file:
+          - .env
+      environment:
+          - PORT=8000
+          - WAIT_HOSTS=postgres:5432
+          - WAIT_HOSTS_TIMEOUT=300
+          - WAIT_SLEEP_INTERVAL=60
+          - WAIT_HOST_CONNECT_TIMEOUT=60
+          - DB_HOST=postgres
+          - CELERY_BROKER_URL=redis://redis:6379/0
+          - CELERY_RESULT_BACKEND=redis://redis:6379/0
+
+  beat:
+      image: gcr.io/peerlogic-api/peerlogic-api
+      command: ["celery", "-A", "peerlogic", "beat", "-l", "INFO", "-S", "django_celery_beat.schedulers:DatabaseScheduler"]
+      volumes:
+          - .:/app
+      depends_on:
+          - postgres
+      env_file:
+          - .env
+      environment:
+          - PORT=8000
+          - WAIT_HOSTS=postgres:5432,redis:6379
+          - WAIT_HOSTS_TIMEOUT=300
+          - WAIT_SLEEP_INTERVAL=180
+          - WAIT_HOST_CONNECT_TIMEOUT=180
+          - DB_HOST=postgres
+          - CELERY_BROKER_URL=redis://redis:6379/0
+          - CELERY_RESULT_BACKEND=redis://redis:6379/0
 
   redis:
     image: redis:4-alpine

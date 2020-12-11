@@ -34,6 +34,9 @@ ENV WAIT_VERSION 2.7.2
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/$WAIT_VERSION/wait /wait
 RUN chmod +x /wait
 
+ENV GUNICORN_WORKERS=2
+
+
 WORKDIR /app
 
 CMD gunicorn -b :$PORT peerlogic.wsgi

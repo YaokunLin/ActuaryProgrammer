@@ -1,19 +1,35 @@
+from django.db.models.fields.related import create_many_to_many_intermediary_model
 import requests
 from django.conf import settings
 
 
 from peerlogic.celery import app
 from core.models import User, Client
+from reminders.field_choices import NIGHT_BEFORE, MORNING_OF
 from reminders.models import Cadence
 
+from celery.utils.log import get_task_logger
+
+logger = get_task_logger(__name__)
 
 @app.task()
-def send_sms_reminders():
+def send_sms_reminders(reminder_type=MORNING_OF):
+    logger.info(f'started')
+    logger.info(f"reminder_type: {reminder_type}")
+    date = "today"
+    if reminder_type == MORNING_OF:
+        date = "today"
+    elif reminder_type == NIGHT_BEFORE:
+        date = "tomorrow"
+
+    logger.info(f"reminder_type: {date}")
     appointments = None
     appointments = []
+
     for cadence in Cadence.objects.all():
+        print(f"{cadence.client.rest_base_url}/appointments?date={date}")
         appointments = requests.request(
-            "GET", f"{cadence.client.rest_base_url}/appointments?date=today"
+            "GET", f"{cadence.client.rest_base_url}/appointments?date={date}"
         ).json()
         if len(appointments) > 0:
             for a in appointments:
@@ -24,6 +40,7 @@ def send_sms_reminders():
     for appointment in appointments:
         rest_base_url = appointment["client"].rest_base_url
         start_hour = appointment["start_hour"]
+        start_hour = start_hour - 12 if int(start_hour) > 12 else start_hour
         start_minute = appointment["start_minute"]
         start_minute = f"0{start_minute}" if int(start_minute) < 10 else start_minute
         patient_guid = appointment["patient_guid"]

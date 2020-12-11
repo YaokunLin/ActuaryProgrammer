@@ -16,7 +16,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DJANGO_DEBUG", 'True') == 'True'
+DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
 
 if DEBUG:
     load_dotenv()
@@ -32,10 +32,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", os.getenv("DJANGO_ALLOWED_HOSTS", '*')]
-DB_HOST =os.getenv("DB_HOST", "127.0.0.1")
-if os.getenv("GKE_APPLICATION", False) == 'True':
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", os.getenv("DJANGO_ALLOWED_HOSTS", "*")]
+DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
+if os.getenv("GKE_APPLICATION", False) == "True":
     ALLOWED_HOSTS.append(os.getenv("KUBERNETES_SERVICE_HOST"))
+
 
 
 # Netsapiens Communications Info
@@ -175,9 +176,14 @@ STATIC_URL = "https://storage.googleapis.com/peerlogic-api/static/"
 # [END staticurl]
 
 STATIC_ROOT = "static/"
+
+
 # Celery Configuration Options
 CELERY_ENABLE_UTC = True
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60
-CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
-CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', CELERY_BROKER_URL)
+CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", CELERY_BROKER_URL)
+
+# Admin
+X_FRAME_OPTIONS = "SAMEORIGIN"
