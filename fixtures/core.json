@@ -1,0 +1,60 @@
+[
+{
+  "model": "core.user",
+  "pk": 1,
+  "fields": {
+    "password": "argon2$argon2i$v=19$m=512,t=2,p=2$UTBrRWQ1bUpiaHdT$ybUjHx4vzUHJuOh3V9fklA",
+    "last_login": "2020-12-11T06:48:18.539Z",
+    "is_superuser": true,
+    "username": "admin",
+    "first_name": "",
+    "last_name": "",
+    "email": "ana@peerlogic.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2020-12-04T18:02:21.772Z",
+    "name": "",
+    "telecom_user": "",
+    "access_token": "",
+    "refresh_token": "",
+    "expires_at": null,
+    "sms_number": "",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "core.user",
+  "pk": 2,
+  "fields": {
+    "password": "1Zquz@$3",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "1554@peerlogic",
+    "first_name": "",
+    "last_name": "",
+    "email": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2020-12-04T18:04:20Z",
+    "name": "",
+    "telecom_user": "1554",
+    "access_token": "",
+    "refresh_token": "",
+    "expires_at": "2020-12-05T00:00:00Z",
+    "sms_number": "4805611554",
+    "groups": [
+      1
+    ],
+    "user_permissions": []
+  }
+},
+{
+  "model": "core.client",
+  "pk": "ktwaNQhRoZQwY3FCpLEqEA",
+  "fields": {
+    "group": 1,
+    "rest_base_url": "http://ec2-18-216-231-8.us-east-2.compute.amazonaws.com:3000/v1"
+  }
+}
+]

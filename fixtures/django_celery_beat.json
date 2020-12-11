@@ -1,0 +1,171 @@
+[
+{
+  "model": "django_celery_beat.clockedschedule",
+  "pk": 3,
+  "fields": {
+    "clocked_time": "2020-12-11T07:07:00Z"
+  }
+},
+{
+  "model": "django_celery_beat.clockedschedule",
+  "pk": 4,
+  "fields": {
+    "clocked_time": "2020-12-11T07:09:00Z"
+  }
+},
+{
+  "model": "django_celery_beat.crontabschedule",
+  "pk": 1,
+  "fields": {
+    "minute": "0",
+    "hour": "4",
+    "day_of_week": "*",
+    "day_of_month": "*",
+    "month_of_year": "*",
+    "timezone": "UTC"
+  }
+},
+{
+  "model": "django_celery_beat.crontabschedule",
+  "pk": 3,
+  "fields": {
+    "minute": "*",
+    "hour": "8",
+    "day_of_week": "mon-fri",
+    "day_of_month": "*",
+    "month_of_year": "*",
+    "timezone": "US/Arizona"
+  }
+},
+{
+  "model": "django_celery_beat.crontabschedule",
+  "pk": 4,
+  "fields": {
+    "minute": "*",
+    "hour": "20",
+    "day_of_week": "sun-thu",
+    "day_of_month": "*",
+    "month_of_year": "*",
+    "timezone": "US/Arizona"
+  }
+},
+{
+  "model": "django_celery_beat.periodictasks",
+  "pk": 1,
+  "fields": {
+    "last_update": "2020-12-11T07:08:59.294Z"
+  }
+},
+{
+  "model": "django_celery_beat.periodictask",
+  "pk": 1,
+  "fields": {
+    "name": "celery.backend_cleanup",
+    "task": "celery.backend_cleanup",
+    "interval": null,
+    "crontab": 1,
+    "solar": null,
+    "clocked": null,
+    "args": "[]",
+    "kwargs": "{}",
+    "queue": null,
+    "exchange": null,
+    "routing_key": null,
+    "headers": "{}",
+    "priority": null,
+    "expires": null,
+    "expire_seconds": 43200,
+    "one_off": false,
+    "start_time": null,
+    "enabled": true,
+    "last_run_at": null,
+    "total_run_count": 0,
+    "date_changed": "2020-12-11T06:57:33.314Z",
+    "description": ""
+  }
+},
+{
+  "model": "django_celery_beat.periodictask",
+  "pk": 3,
+  "fields": {
+    "name": "Run morning Reminders",
+    "task": "reminders.tasks.send_sms_reminders",
+    "interval": null,
+    "crontab": 3,
+    "solar": null,
+    "clocked": null,
+    "args": "[]",
+    "kwargs": "{\"reminder_type\": \"morning_of\"}",
+    "queue": null,
+    "exchange": null,
+    "routing_key": null,
+    "headers": "{}",
+    "priority": null,
+    "expires": null,
+    "expire_seconds": null,
+    "one_off": false,
+    "start_time": "2020-12-11T06:51:15Z",
+    "enabled": true,
+    "last_run_at": null,
+    "total_run_count": 0,
+    "date_changed": "2020-12-11T06:52:04.189Z",
+    "description": ""
+  }
+},
+{
+  "model": "django_celery_beat.periodictask",
+  "pk": 4,
+  "fields": {
+    "name": "Run evening Reminders",
+    "task": "reminders.tasks.send_sms_reminders",
+    "interval": null,
+    "crontab": 4,
+    "solar": null,
+    "clocked": null,
+    "args": "[]",
+    "kwargs": "{\"reminder_type\":\"night_before\"}",
+    "queue": null,
+    "exchange": null,
+    "routing_key": null,
+    "headers": "{}",
+    "priority": null,
+    "expires": null,
+    "expire_seconds": null,
+    "one_off": false,
+    "start_time": "2020-12-11T06:52:34Z",
+    "enabled": true,
+    "last_run_at": null,
+    "total_run_count": 0,
+    "date_changed": "2020-12-11T06:53:03.898Z",
+    "description": ""
+  }
+},
+{
+  "model": "django_celery_beat.periodictask",
+  "pk": 7,
+  "fields": {
+    "name": "Test",
+    "task": "reminders.tasks.send_sms_reminders",
+    "interval": null,
+    "crontab": null,
+    "solar": null,
+    "clocked": 4,
+    "args": "[]",
+    "kwargs": "{\"reminder_type\":\"night_before\"}",
+    "queue": null,
+    "exchange": null,
+    "routing_key": null,
+    "headers": "{}",
+    "priority": null,
+    "expires": null,
+    "expire_seconds": null,
+    "one_off": true,
+    "start_time": null,
+    "enabled": true,
+    "last_run_at": "2020-12-11T07:09:00.647Z",
+    "total_run_count": 1,
+    "date_changed": "2020-12-11T07:09:40.778Z",
+    "description": ""
+  }
+}
+]

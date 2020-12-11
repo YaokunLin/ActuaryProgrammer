@@ -1,0 +1,327 @@
+[
+{
+  "model": "admin.logentry",
+  "pk": 1,
+  "fields": {
+    "action_time": "2020-12-04T18:03:41.178Z",
+    "user": 1,
+    "content_type": 3,
+    "object_id": "1",
+    "object_repr": "Peerlogic",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 2,
+  "fields": {
+    "action_time": "2020-12-04T18:03:57.900Z",
+    "user": 1,
+    "content_type": 6,
+    "object_id": "ktwaNQhRoZQwY3FCpLEqEA",
+    "object_repr": "Client object (ktwaNQhRoZQwY3FCpLEqEA)",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 3,
+  "fields": {
+    "action_time": "2020-12-04T18:04:53.488Z",
+    "user": 1,
+    "content_type": 7,
+    "object_id": "2",
+    "object_repr": "1554@peerlogic",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 4,
+  "fields": {
+    "action_time": "2020-12-08T01:32:44.385Z",
+    "user": 1,
+    "content_type": 8,
+    "object_id": "FMWWDpzPWMZtakvHt7VuZi",
+    "object_repr": "Cadence object (FMWWDpzPWMZtakvHt7VuZi)",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 5,
+  "fields": {
+    "action_time": "2020-12-08T02:08:26.380Z",
+    "user": 1,
+    "content_type": 9,
+    "object_id": "2",
+    "object_repr": "* 8 * * 1,5 (m/h/dM/MY/d) US/Arizona",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 6,
+  "fields": {
+    "action_time": "2020-12-08T02:08:45.624Z",
+    "user": 1,
+    "content_type": 11,
+    "object_id": "2",
+    "object_repr": "Run morning Reminders: * 8 * * 1,5 (m/h/dM/MY/d) US/Arizona",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 7,
+  "fields": {
+    "action_time": "2020-12-11T06:49:04.795Z",
+    "user": 1,
+    "content_type": 6,
+    "object_id": "3",
+    "object_repr": "* 8 * * mon-fri (m/h/dM/MY/d) US/Arizona",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 8,
+  "fields": {
+    "action_time": "2020-12-11T06:50:09.090Z",
+    "user": 1,
+    "content_type": 6,
+    "object_id": "4",
+    "object_repr": "* 20 * * sun-thu (m/h/dM/MY/d) US/Arizona",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 9,
+  "fields": {
+    "action_time": "2020-12-11T06:50:34.036Z",
+    "user": 1,
+    "content_type": 6,
+    "object_id": "2",
+    "object_repr": "* 8 * * 1,5 (m/h/dM/MY/d) US/Arizona",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 10,
+  "fields": {
+    "action_time": "2020-12-11T06:52:04.193Z",
+    "user": 1,
+    "content_type": 8,
+    "object_id": "3",
+    "object_repr": "Run morning Reminders: * 8 * * mon-fri (m/h/dM/MY/d) US/Arizona",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 11,
+  "fields": {
+    "action_time": "2020-12-11T06:53:03.901Z",
+    "user": 1,
+    "content_type": 8,
+    "object_id": "4",
+    "object_repr": "Run evening Reminders: * 20 * * sun-thu (m/h/dM/MY/d) US/Arizona",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 12,
+  "fields": {
+    "action_time": "2020-12-11T06:53:52.060Z",
+    "user": 1,
+    "content_type": 11,
+    "object_id": "1",
+    "object_repr": "2020-12-11 06:55:45+00:00",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 13,
+  "fields": {
+    "action_time": "2020-12-11T06:55:13.687Z",
+    "user": 1,
+    "content_type": 8,
+    "object_id": "5",
+    "object_repr": "Test: 2020-12-11 06:55:45+00:00",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 14,
+  "fields": {
+    "action_time": "2020-12-11T06:56:05.518Z",
+    "user": 1,
+    "content_type": 11,
+    "object_id": "1",
+    "object_repr": "2020-12-11 06:57:00+00:00",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Clock Time\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 15,
+  "fields": {
+    "action_time": "2020-12-11T06:58:03.570Z",
+    "user": 1,
+    "content_type": 11,
+    "object_id": "1",
+    "object_repr": "2020-12-11 06:59:00+00:00",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Clock Time\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 16,
+  "fields": {
+    "action_time": "2020-12-11T07:01:01.536Z",
+    "user": 1,
+    "content_type": 11,
+    "object_id": "1",
+    "object_repr": "2020-12-11 06:59:00+00:00",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 17,
+  "fields": {
+    "action_time": "2020-12-11T07:01:18.047Z",
+    "user": 1,
+    "content_type": 11,
+    "object_id": "2",
+    "object_repr": "2020-12-11 07:02:00+00:00",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 18,
+  "fields": {
+    "action_time": "2020-12-11T07:02:08.733Z",
+    "user": 1,
+    "content_type": 8,
+    "object_id": "6",
+    "object_repr": "Test: 2020-12-11 07:02:00+00:00",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 19,
+  "fields": {
+    "action_time": "2020-12-11T07:05:21.268Z",
+    "user": 1,
+    "content_type": 8,
+    "object_id": "6",
+    "object_repr": "Test: 2020-12-11 07:02:00+00:00",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 20,
+  "fields": {
+    "action_time": "2020-12-11T07:06:06.471Z",
+    "user": 1,
+    "content_type": 11,
+    "object_id": "2",
+    "object_repr": "2020-12-11 07:02:00+00:00",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 21,
+  "fields": {
+    "action_time": "2020-12-11T07:06:27.821Z",
+    "user": 1,
+    "content_type": 11,
+    "object_id": "3",
+    "object_repr": "2020-12-11 07:07:00+00:00",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 22,
+  "fields": {
+    "action_time": "2020-12-11T07:06:27.849Z",
+    "user": 1,
+    "content_type": 11,
+    "object_id": "4",
+    "object_repr": "2020-12-11 07:07:00+00:00",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 23,
+  "fields": {
+    "action_time": "2020-12-11T07:07:33.871Z",
+    "user": 1,
+    "content_type": 8,
+    "object_id": "7",
+    "object_repr": "Test: 2020-12-11 07:07:00+00:00",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 24,
+  "fields": {
+    "action_time": "2020-12-11T07:08:04.798Z",
+    "user": 1,
+    "content_type": 11,
+    "object_id": "4",
+    "object_repr": "2020-12-11 07:09:00+00:00",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Clock Time\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 25,
+  "fields": {
+    "action_time": "2020-12-11T07:08:59.303Z",
+    "user": 1,
+    "content_type": 8,
+    "object_id": "7",
+    "object_repr": "Test: 2020-12-11 07:09:00+00:00",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Enabled\", \"Clocked Schedule\", \"Positional Arguments\"]}}]"
+  }
+}
+]
