@@ -3,7 +3,7 @@
   <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
 
 <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -106,11 +106,7 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 
-  <!-- Bootstrap -->
-<link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css'>
-<script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js'></script>
-<!-- jQuery -->
-<script src='https://code.jquery.com/jquery-2.2.4.min.js'></script>
+
   
   </head>
   <style>
@@ -192,40 +188,31 @@ text-decoration: underline;
 
 
 /* For collasible information Box Starts */
-.wrapper{
-  width:100%;
+.collapsible {
+  background-color: #777;
+  color: white;
+  cursor: pointer;
+  padding: 5px;
+  width: 100%;
+  border: none;
+  text-align: left;
+  outline: none;
+  font-size: 15px;
 }
-@media(max-width:992px){
- .wrapper{
-  width:100%;
-} 
+
+.active, .collapsible:hover {
+  background-color: #555;
 }
-.panel-heading {
-  padding: 0;
-	border:0;
+
+.content {
+  padding: 0 18px;
+  display: none;
+  overflow: hidden;
+  background-color: #f1f1f1;
 }
-.panel-title>a, .panel-title>a:active{
-	display:block;
-	padding:15px;
-  color:#555;
-  font-size:16px;
-  font-weight:bold;
-	/*text-transform:uppercase;*/
-	letter-spacing:1px;
-  word-spacing:3px;
-	text-decoration:none;
-}
-.panel-heading  a:before {
-   font-family: 'Glyphicons Halflings';
-   content: "\e114";
-   float: right;
-   transition: all 0.5s;
-}
-.panel-heading.active a:before {
-	-webkit-transform: rotate(180deg);
-	-moz-transform: rotate(180deg);
-	transform: rotate(180deg);
-}
+
+
+▼
  /* For collasible information Box Ends */ 
 
 
@@ -238,7 +225,7 @@ text-decoration: underline;
 <div class = "intro">
 
   <p>&nbsp;</p>
-  <p>&nbsp;</p>
+  
   <p>&nbsp;</p>
   <p>&nbsp;</p>
   <p>&nbsp;</p>
@@ -249,14 +236,14 @@ text-decoration: underline;
   
 
   <p>&nbsp;</p>
-  <p>&nbsp;</p>
+  
   <p>&nbsp;</p>
   <p>&nbsp;</p>
 
 <i>This blog started from some projects and notes I made for myself. I hope you like the posts, comments are always welcome. </i>
 
 <p>&nbsp;</p>
-<p>&nbsp;</p>
+
 <p>&nbsp;</p>
 
 <p>&nbsp;</p>
@@ -696,45 +683,29 @@ text-decoration: underline;
 
   </ul>
  
+  <br>
 
-  <div class="wrapper center-block">
-    <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+  <button type="button" class="collapsible">▼ &nbsp;&nbsp;&nbsp;   A Note on the Algo    </button>
+  <div class="content">
+    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+  </div>
+  
+  <script>
+    var coll = document.getElementsByClassName("collapsible");
+    var i;
     
-    <div class="panel panel-default">
-      <div class="panel-heading" role="tab" id="headingTwo">
-        <h4 class="panel-title">
-          <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-            Algo:
-          </a>
-        </h4>
-      </div>
-      <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
-        <div class="panel-body">
-          Your contents...
-        </div>
-      </div>
-    </div>
-
-    <div class="panel panel-default">
-      <div class="panel-heading" role="tab" id="headingThree">
-        <h4 class="panel-title">
-          <a class="collapsed" role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-            Next Item
-          </a>
-        </h4>
-      </div>
-      <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
-        <div class="panel-body">
-          Your contents...
-        </div>
-      </div>
-    </div>
-
-
-
-  </div>
-  </div>
-
+    for (i = 0; i < coll.length; i++) {
+      coll[i].addEventListener("click", function() {
+        this.classList.toggle("active");
+        var content = this.nextElementSibling;
+        if (content.style.display === "block") {
+          content.style.display = "none";
+        } else {
+          content.style.display = "block";
+        }
+      });
+    }
+    </script>
 
 
 
@@ -745,6 +716,9 @@ text-decoration: underline;
 
 
 </li>
+
+
+
 
 
 
