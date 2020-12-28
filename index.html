@@ -927,9 +927,12 @@ text-decoration: underline;
     <p>&nbsp;</p>
     
     <p>&nbsp;</p>
+    
 
-    <h4 class='FX-header'>Real Time Exchange Rate Calculator</h3>
-    <p>Choose the currency and the amounts to get the exchange rate</p>
+    <img class='money-img' src="https://images-na.ssl-images-amazon.com/images/I/510WmeXkLXL.png" alt="" class="money-img" />
+    <h4 class='FX-header FX-header2'>Real Time Foreign Exchange Rate Calculator</h3>
+      
+    <p class='FX-header2'>Choose the currency and the amounts to get the exchange rate</p>
     
     <div class = "FX-container">
       <div class="currency">
@@ -996,7 +999,7 @@ text-decoration: underline;
         <button class="FXbtn" id="swap">
           Swap
          </button>
-        <div class="rate" id="rate"></div>
+        <div class="FXrate" id="FXrate"></div>
       </div>
 
       <div class="currency">
@@ -1057,15 +1060,29 @@ text-decoration: underline;
 
         <input type="number"  id="amount-two" placeholder="0" >
 
+        <div class="FXrate" id="FXrate"></div>
+
       </div>
 
+      
+      <div class="fxUpdateTimeStamp" id='fxUpdateTimeStamp'></div>
 
     </div>
 
     <style>
-        :root{--primary-color:#72bcd4;}
+      /* CSS for the FX calculator  */
+
+        :root{--primary-color:#4285F4;}
       
       *{box-sizing: border-box;}  
+
+      .money-img {
+      width: 150px;
+      display: block; 
+      margin-left: auto; 
+      margin-right: auto;
+      padding-bottom: 80px;
+    }
       
       .FX-container{
         background-color: #f4f4f4;
@@ -1078,12 +1095,17 @@ text-decoration: underline;
         height: 100%;
         margin: 0;
         padding: 20px;
+        
       }
 
       .FX-header{
         color: var(--primary-color); 
       
 
+      }
+
+      .FX-header2{
+        text-align: center;
       }
 
       .FXbtn{
@@ -1122,8 +1144,109 @@ text-decoration: underline;
 
       }
 
+      .swap-rate-container{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
 
+      .FXrate{
+        color: var(--primary-color);
+        padding-top: 0;
+        padding-bottom: 0;
+        padding-left: 10px;
+        padding-right: 10px; 
+      }
+
+      select:focus, input:focus, button:focus{
+        outline: 0;
+      }
+
+      @media(max-width: 600px){
+        .currency input{
+          width: 200px;
+        }
+
+        .fxUpdateTimeStamp{
+          text-align: right;
+        }
+      }
+     
+
+      /* CSS for the FX calculator  */
     </style>
+
+    <script>
+          const currencyEL_one = document.getElementById('currency-one');
+          const amountEL_one = document.getElementById('amount-one');
+
+          const currencyEL_two = document.getElementById('currency-two');
+          const amountEL_two = document.getElementById('amount-two');
+
+          const rateEl=document.getElementById('FXrate');
+          const swap=document.getElementById('swap');
+
+          const updateFXTime = document.getElementById('fxUpdateTimeStamp');
+
+          function calculate(){
+            const currency_one=currencyEL_one.value;
+            const currency_two=currencyEL_two.value;
+
+            
+       //console.log(data);
+       fetch(`https://api.exchangerate-api.com/v4/latest/${currency_one}`)
+                .then(res => res.json())
+                .then(fxData => {
+                  //console.log(fxData);
+                  const exchangeRate = fxData.rates[currency_two];
+                  //console.log(exchangeRate);
+                  
+                 // console.log(lastUpdateUnixTimestamp);
+                  
+                rateEl.innerText= `1 ${currency_one} = ${exchangeRate} ${currency_two}`;
+                
+                amountEL_two.value=(amountEL_one.value * exchangeRate).toFixed(2);
+                  
+                const lastUpdateUnixTimestamp = fxData.time_last_updated;
+                const fxUpdateDate = new Date(lastUpdateUnixTimestamp * 1000);
+                // Hours part from the timestamp
+                const fxUpdatehours = fxUpdateDate.getHours();
+                // Minutes part from the timestamp
+                const fxUpdateminutes = "0" + fxUpdateDate.getMinutes();
+                // Seconds part from the timestamp
+                const fxUpdateseconds = "0" + fxUpdateDate.getSeconds();
+
+                // Will display time in 10:30:23 format
+                const formattedfxUpdateTime = fxUpdatehours + ':' + fxUpdateminutes.substr(-2) + ':' + fxUpdateseconds.substr(-2);
+               // console.log(formattedfxUpdateTime);
+               // console.log(fxUpdateDate);
+
+                updateFXTime.innerText='FX data last updated: '+fxUpdateDate;
+
+
+    });
+      
+   
+
+          }
+          
+          currencyEL_one.addEventListener('change', calculate );
+          amountEL_one.addEventListener('input', calculate );
+          currencyEL_two.addEventListener('change',calculate );
+          amountEL_two.addEventListener('input',calculate );
+
+          swap.addEventListener('click',()=>{
+            const temp=currencyEL_one.value;
+            currencyEL_one.value=currencyEL_two.value;
+            currencyEL_two.value=temp;
+            calculate();
+          })
+
+          const fxUpdateDate='Sun Dec 27 2020 17:00:02 GMT-0700 (Mountain Standard Time)'
+          updateFXTime.innerText='FX data last updated: '+fxUpdateDate;
+
+          calculate();
+    </script>
 
 
 
