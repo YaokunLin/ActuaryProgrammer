@@ -208,14 +208,14 @@ text-decoration: underline;
 
 .content {
   padding: 0 18px;
-  display: none;
+  display: block;
   overflow: hidden;
   background-color: #f1f1f1;
   width: 95%;
 }
 
 
-▼
+
  /* For collasible information Box Ends */ 
 
 
@@ -785,7 +785,7 @@ text-decoration: underline;
  
   <br>
 
-  <button type="button" class="collapsible">▼ &nbsp;&nbsp;&nbsp;   Notes on the Algo    </button>
+  <button type="button" class="collapsible" >▼ &nbsp;&nbsp;&nbsp;   Notes on the Algo    </button>
   <div class="content">
     
     <ul style="list-style-type:disc">
@@ -798,13 +798,83 @@ text-decoration: underline;
         </dt>
           
           <ol>
-            <li>The algorithm first goes through all of the column features</li>
+            <li>The algorithm first goes through each of the columns / features.</li>
             <br>
-            <li>Within each of the column, the algorithm sorts the rows/observations in accending order of the column value. </li>
+            <li>Within each column, the algorithm sorts the rows / observations in ascending  order of the column values.
+              Sorting is expensive. But the idea behind the sorting is to avoid  repeated scoring calculations (which will be discussed below).
+            Therefore, sorting can save run time when there are many observations with the same column value. </li>
             <br>
-            <li>Then it treats each of the observation as a split point which seprates obervations; obervations that are less than the current split point 
-              are placed into the left group; and those greater than the current split point are placed into the right group  </li>
+            <li>It then treats each row of the column as a split point which separates observations. Observations that have feature values less than the current split point  
+              are placed into the left leaf; and those greater than the current split point are placed into the right leaf.  </li>
+            <br>
+            <li>It calculates two scores for both the left leaf and the right leaf. The score measures the amount of variation of the dependent variable y's within the leaf. 
+              Potential candidates for the score measurement include
+              <a href="https://en.wikipedia.org/wiki/Decision_tree_learning#Gini_impurity" target="_blank">the Gini impurity</a> and 
+              <a href="https://en.wikipedia.org/wiki/Entropy_(information_theory)" target="_blank">the information entropy</a>.
+              The python code above uses standard deviation as the measurement. All these score measurements provide similar end results. 
+              They measure the dispersion of the dependent variables within the leaf. 
+            </li>
+            <br>
+            <li>The algorithm then calculates a weighted average of the two scores obtained in step 4. The weighting is based on the number of observations in each leaf. 
+              And this weighted score is the score for this particular split point.
+            </li>
+            <br>
+            <li>
+              Repeat step 2 - 5 for all columns / features and for rows / observations to find the best split point that has the lowest score.
+              A lower score indicates lower amount of variation of the dependent variable y's within the leaf.
+              Then the algorithm memorizes two best leaves correspond to the best split point.
+            </li>
+            <br>
+            <li>
+              Apply the same method to the left leaf, and split the observations into new ( and deeper in depth) left leaf and new right leaf. 
+              Do the same for the right leaf.
+            </li>
+
+            <br>
+            <li>
+              The algorithm keeps grows the tree until the number of observations within a leaf is less than the minimum required (this is a hyper-parameter).
+              Also, it stops growing the tree until it reaches the maximum depth allowed (this is another hyper-parameter).
+              
+            </li>
           </ol> 
+
+          <br>
+              
+            <dt>
+              One of the main weaknesses of the decision tree algorithm is that it tends to overfit the data. 
+              An overfitted model predicts out-of-sample observations poorly: 
+            </dt>
+
+            <dd>
+              That is why, when growing a decision tree, it is important to fine-tune the Min_Leave_Sample (which specifies the minimum numbers of observations required in a leaf)
+               and Max_Depth (which specifies the maximum level of depths allowed for a tree) hyper-parameters. 
+               <br>
+               <br>
+               As we can see from the second graph, when the maximum depth allowed is larger, the tree is more complex, and it tends to overfit the data and 
+               provides a poorer out of sample prediction. The out of sample predicting ability is measured by the out of sample MAE.
+               <br>
+               <br>
+                I used the 
+                <a href="https://archive.ics.uci.edu/ml/datasets/Student+Performance" target="_blank">Student Performance Data Set</a>
+                to test the algorithm and generate the above graph. A cleanup version of the CSV data can be found:
+                <a href="https://github.com/YaokunLin/ActuaryProgrammer/blob/main/dataForDecisionTree.txt" target="_blank">here</a>
+
+                <br><br>
+                For this particular dataset when we limit the maximum allowed depth of the tree to be 20, the model provides the best out of sample prediction. 
+                <ul>
+                  <li>When the max_depth is too low, the model is not sophisticated enough to explain the variation of the data. </li>
+                  <li>When the max_depth is too large, the model overfits the training data.</li>
+                </ul>
+                
+                
+
+
+              </dd>
+            
+
+
+
+          
   
   </div>
 
@@ -1825,18 +1895,18 @@ chart.invalidateRawData();
 <script>
 //for collasibles
 
-  var coll = document.getElementsByClassName("collapsible");
-  var i;
-  
-  for (i = 0; i < coll.length; i++) {
-    coll[i].addEventListener("click", function() {
-      this.classList.toggle("active");
-      var content = this.nextElementSibling;
-      if (content.style.display === "block") {
-        content.style.display = "none";
-      } else {
-        content.style.display = "block";
-      }
-    });
-  }
-  </script>
+var coll = document.getElementsByClassName("collapsible");
+var i;
+
+for (i = 0; i < coll.length; i++) {
+  coll[i].addEventListener("click", function() {
+    this.classList.toggle("active");
+    var content = this.nextElementSibling;
+    if (content.style.display === "none") {
+      content.style.display = "block";
+    } else {
+      content.style.display = "none";
+    }
+  });
+}
+</script>
