@@ -130,7 +130,7 @@ class DecisionTree():
 
 def std_agg(cnt, s1, s2): return math.sqrt((s2/cnt) - (s1/cnt)**2)
 
-df=pd.read_csv('data.txt')
+df=pd.read_csv('dataForDecisionTree.txt')
 X=df.loc[:,['school','sex','age','address','absences']]
 Y=np.asarray(df.G1+df.G2+df.G3)
 
