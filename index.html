@@ -1371,8 +1371,7 @@ text-decoration: underline;
             calculate();
           })
 
-          const fxUpdateDate='Sun Dec 27 2020 17:00:02 GMT-0700 (Mountain Standard Time)'
-          updateFXTime.innerText='FX data last updated: '+fxUpdateDate;
+
 
           calculate();
     </script>
@@ -1451,36 +1450,57 @@ text-decoration: underline;
 
 <p>&nbsp;</p>
 
-  <style type="text/css">
-    /* Set the size of the div element that contains the map */
-    #map {
-      height: 400px;
-      /* The height is 400 pixels */
-      width: 100%;
-      /* The width is the width of the web page */
-    }
-  </style>
-  <script>
-    // Initialize and add the map
-    function initMap() {
-      // The location of Uluru
-      const uluru = { lat: -25.344, lng: 131.036 };
-      // The map, centered at Uluru
-      const map = new google.maps.Map(document.getElementById("map"), {
-        zoom: 4,
-        center: uluru,
-      });
-      // The marker, positioned at Uluru
-      const marker = new google.maps.Marker({
-        position: uluru,
-        map: map,
-      });
-    }
-  </script>
+<style type="text/css">
+  /* Set the size of the div element that contains the map */
+  #map {
+    height: 400px;
+    /* The height is 400 pixels */
+    width: 100%;
+    /* The width is the width of the web page */
+  }
+</style>
+<script>
+    // Initialize and add the map
+    function initMap() {
+      // The location of Canada
+      const canadaLoc = { lat: 56.1304, lng: -106.3468 };
+      // The map, centered at ualbert
+      const EdmontonLoc = { lat: 53.5461, lng: -113.4938 };
+      const map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 4,
+        center: canadaLoc,
+      });
+      // The marker, positioned at Edmonton
+      const marker = new google.maps.Marker({
+        position: EdmontonLoc,
+        map: map
+      //  icon:'https://i.ibb.co/RzHdLsf/profile-Marker.png'
+      });
 
 
-  <!--The div element for the map -->
-  <div id="map"></div>
+const infowindow = new google.maps.InfoWindow({
+   content: '<h6>Hello World!</h6>',
+ });
+
+
+
+marker.addListener("click", () => {
+  infowindow.open(map, marker);
+});
+}
+
+
+   
+  </script>
+
+<body>
+
+<!--The div element for the map -->
+<div id="map"></div>
+
+
+
+
   <p>&nbsp;</p>
   <p>&nbsp;</p>
 
