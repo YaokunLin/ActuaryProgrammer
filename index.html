@@ -812,34 +812,35 @@ text-decoration: underline;
             Therefore, sorting can save run time when there are many observations with the same column value. </li>
             <br>
             <li>It then treats each row of the column as a split point which separates observations. Observations that have feature values less than the current split point
-              are placed into the left leaf; and those greater than the current split point are placed into the right leaf.  </li>
+              are placed into the left node; and those greater than the current split point are placed into the right node.  </li>
             <br>
-            <li>It calculates two scores for both the left leaf and the right leaf. The score measures the amount of variation of the dependent variable y's within the leaf.
+            <li>It calculates two scores for both the left node and the right node. The score measures the amount of variation of the dependent variable y's within the node.
               Potential candidates for the score measurement include
               <a href="https://en.wikipedia.org/wiki/Decision_tree_learning#Gini_impurity" target="_blank">the Gini impurity</a> and
               <a href="https://en.wikipedia.org/wiki/Entropy_(information_theory)" target="_blank">the information entropy</a>.
               The python code above uses standard deviation as the measurement. All these score measurements provide similar end results.
-              They measure the dispersion of the dependent variables within the leaf.
+              They measure the dispersion of the dependent variables within the node.
             </li>
             <br>
-            <li>The algorithm then calculates a weighted average of the two scores obtained in step 4. The weighting is based on the number of observations in each leaf.
+            <li>The algorithm then calculates a weighted average of the two scores obtained in step 4. The weighting is based on the number of observations in each node.
               And this weighted score is the score for this particular split point.
             </li>
             <br>
             <li>
               Repeat step 2 - 5 for all columns / features and for rows / observations to find the best split point that has the lowest score.
-              A lower score indicates lower amount of variation of the dependent variable y's within the leaf.
-              Then the algorithm memorizes two best leaves correspond to the best split point.
+              A lower score indicates lower amount of variation of the dependent variable y's within the node.
+              Then the algorithm memorizes two best nodes correspond to the best split point.
             </li>
             <br>
             <li>
-              Apply the same method to the left leaf, and split the observations into new ( and deeper in depth) left leaf and new right leaf.
-              Do the same for the right leaf.
+              Apply the same method to the best left node, and split the observations into new (and deeper in depth) left node and new right node.
+              The two new nodes are the children of the best left node.
+              Do the same for the best right node. This is how we grow a decision tree.
             </li>
 
             <br>
             <li>
-              The algorithm keeps grows the tree until the number of observations within a leaf is less than the minimum required (this is a hyper-parameter).
+              The algorithm keeps growing the tree until the number of observations within a node is less than the minimum required (this is a hyper-parameter).
               Also, it stops growing the tree until it reaches the maximum depth allowed (this is another hyper-parameter).
 
             </li>
@@ -853,7 +854,7 @@ text-decoration: underline;
             </dt>
 
             <dd>
-              That is why, when growing a decision tree, it is important to fine-tune the Min_Leave_Sample (which specifies the minimum numbers of observations required in a leaf)
+              That is why, when growing a decision tree, it is important to fine-tune the Min_Leave_Sample (which specifies the minimum numbers of observations required in a node)
                and Max_Depth (which specifies the maximum level of depths allowed for a tree) hyper-parameters.
                <br>
                <br>
@@ -861,7 +862,7 @@ text-decoration: underline;
                provides a poorer out of sample prediction. The out of sample predicting ability is measured by the out of sample MAE.
                <br>
                <br>
-                I used the
+                I used the UCI's
                 <a href="https://archive.ics.uci.edu/ml/datasets/Student+Performance" target="_blank">Student Performance Data Set</a>
                 to test the algorithm and generate the above graph. A cleanup version of the CSV data can be found:
                 <a href="https://github.com/YaokunLin/ActuaryProgrammer/blob/main/dataForDecisionTree.txt" target="_blank">here</a>
@@ -910,7 +911,10 @@ text-decoration: underline;
   </div>
 
   <li>
-     Compare Stochastic learning strategies for
+
+
+
+     Compare stochastic learning strategies for
      <a href="https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html" target="_blank" >scikit-learn's Multi-layer Perceptron classifier</a>
     <br>
     This analysis extends from
@@ -919,7 +923,7 @@ text-decoration: underline;
     <ul>
 
 
-      <li>Google Colab Link
+      <li>Google Colab
         <a href="https://colab.research.google.com/drive/1kSphHMFQXVP3DCPzI6TmtEJ3W9hDLRvr?usp=sharing" target="_blank">.ipynb file</a>
 
         &nbsp;&nbsp; <!-- add spacing -->
@@ -937,40 +941,106 @@ text-decoration: underline;
 
       <ul style="list-style-type:disc">
 
-                This report visualizes in-sample training loss curves and out-sample accuracy for different stochastic learning strategies,
-                including SGD and Adam. The datasets used in the analysis are small, and
-                <a href="https://en.wikipedia.org/wiki/Limited-memory_BFGS" target="_blank">Limited-memory BFGS (L-BFGS)</a>
-                 might be more suitable. The analysis shown here seems to be able to generalize to larger datasets, however.
+                      This report visualizes in-sample training loss curves and out-sample accuracy for different stochastic learning strategies,
+              including SGD and Adam. The datasets used in the analysis are small, and
+              <a href="https://en.wikipedia.org/wiki/Limited-memory_BFGS" target="_blank">Limited-memory BFGS (L-BFGS)</a>
+              might be more suitable. The analysis shown here seems to be able to generalize to larger datasets, however.
 
-                 <br>
-                 <br>
-                Let's first go over some frequently used optimization strategies for deep learning:
+              <br>
+              <br>
+              Let's first go over some frequently used optimization strategies for deep learning:
+              <br>
+              <br>
+              <dl>
+              <dt>Plain
+              <a href="https://en.wikipedia.org/wiki/Stochastic_gradient_descent" target="_blank">Stochastic Gradient Descent (SGD)</a>
+              updates the weight matrix <b>W</b> and the bias <b>b</b> vector:
+              </dt>
+              <dd>
+              <b>Updating:</b> W(t) = W(t-1) - constant_learning_rate × dW(t)</dd>
+              <dd><b>Updating:</b> b(t) = b(t-1) - constant_learning_rate × db(t)</dd>
+                <dd>where dW and db are the
+                  <a href="https://en.wikipedia.org/wiki/Gradient" target="_blank">gradients</a>
+
+                of the weight matrix <b>W</b> and the bias <b>b</b> vector </dd>
+              <br>
+              <dt>
+              <a href="https://www.youtube.com/watch?v=k8fTYJPd3_I" target="_blank">SGD with momentum</a>
+              smooths out the learning proccess, avoid overshooting the target and prevent divergence
+              </dt>
+
+              <dd>velocity[dW(t)]  =  momentum_β1  ×  velocity[dW(t-1)]  +  (1 - momentum_β1)  ×  dW(t)</dd>
+              <dd>velocity[dW(t)]  is an exponentially weighted moving average of dW </dd>
+              <dd>
+              <b>Updating:</b>
+              W(t) = W(t-1) - constant_learning_rate × velocity[dW(t)], with V[dW(0)] = 0
+              </dd>
+
+              <dd>velocity[db(t)]  =  momentum_β1  ×  velocity[db(t-1)]  +  (1 - momentum_β1)  ×  db(t)</dd>
+              <dd>velocity[db(t)]  is an exponentially weighted moving average of db </dd>
+              <dd>
+              <b>Updating:</b>
+              b(t) = b(t-1) - constant_learning_rate × velocity[db(t)], with v[db(0)] = 0
+              </dd>
+
+              <dd>A commonly used value for hyperparameter momentum_β1 is 0.9,
+              which allows velocity[dW(t)] and velocity[db(t)] to calculate the average
+              based on the lastest 1/(1-momentum_β1) = 10 dW's and db's.</dd>
+
+              <dd>An exponentially weighted moving average allows more weights to be given to the more recent data.
+              And the weight decays exponentially when we go back in time.</dd>
+              <br>
+              <dt>
+                <a href="https://www.youtube.com/watch?v=sV9aiEsXanE" target="_blank">SGD with Nesterov momentum</a>
+                  pushes the weight matrix <b>W</b> and the bias <b>b</b> vector
+                  to look ahead when calculating their gradients.
+                  Nesterov momentum lowers the chance of overshooting the target
+                  when the optimization is close to its target.
+                  The idea of looking ahead allows the gradians (on W's and b's) to be more forward looking for the updates and allows faster convergence.
+              </dt>
+
+              <dd>W(t)_look_ahead = W(t) - momentum_β1 × v[dW(t-1)]</dd>
+              <dd>W(t)_look_ahead is the proximate future position of W(t), and is where it improves from the plain momentum method</dd>
+              <dd>v[dW(t)] = momentum_β1 × v[dW(t-1)] + (1-momentum_β1) × dW(t)_look_ahead</dd>
+              <dd>The gradient is calculate on dW(t)_look_ahead instead of dW(t) as in the plain momentum method</dd>
+              <dd>
+                <b>Updating:</b>
+                W(t) = W(t-1) - constant_learning_rate × v[dW(t)]
+              </dd>
+              <dd>b(t)_look_ahead = b(t) - momentum_β1 × v[db(t-1)]</dd>
+              <dd>b(t)_look_ahead is the proximate future position of b(t), and is where it improves from the plain momentum method</dd>
+              <dd>v[db(t)] = momentum_β1 × v[db(t-1)] + (1-momentum_β1) × db(t)_look_ahead</dd>
+              <dd>The gradient is calculate on db(t)_look_ahead instead of db(t) as in the plain momentum method</dd>
+              <dd>
+                <b>Updating:</b>
+                b(t) = b(t-1) - constant_learning_rate × v[db(t)]
+              </dd>
                 <br>
-                <br>
-                <dl>
-                  <dt>Plain
-                    <a href="https://en.wikipedia.org/wiki/Stochastic_gradient_descent" target="_blank">Stochastic Gradient Descent (SGD)</a>
-                    updates the weight matrix <b>W</b> and the bias <b>b</b> vector:
-                  </dt>
-                      <dd>W(t) = W(t-1) - constant_learning_rate * dW(t)</dd>
-                      <dd>b(t) = b(t-1) - constant_learning_rate * db(t)</dd>
-                  
-                      <br>
-                  <dt>
-                    
-                      <a href="https://en.wikipedia.org/wiki/Stochastic_gradient_descent#Momentum" target="_blank">SGD with momentum</a>
-                      can smooth out the learning proccess, avoid overshooting the target and prevent divergence
-                  </dt>
+              <dt>The Adaptive Moment Estimation
+                (<a href="https://www.youtube.com/watch?v=JXQT_vxqwIs"  target="_blank">Adam</a>)
 
-                      <dd>velocity[dW(t)]  =  momentum_β1  *  velocity[dW(t-1)]  +  (1-momentum_β1)  *  dW(t)</dd>
-                      <dd>velocity[dW(t)]  is an exponential moving average of dW </dd>
-                      <dd>
-                        <b>Updating:</b>
-                        W(t) = W(t-1) - constant_learning_rate * Velocity[dW(t)], with V[dW(0)] = 0
-                      </dd>
-
-
-                </dl>
+              is a widely used optimization algorithm in many deep learning applications.
+              It combines the
+              <a href="https://www.youtube.com/watch?v=k8fTYJPd3_I" target="_blank">plain momentum</a>
+              with the Root Mean Square Propagation
+              (<a href="https://www.youtube.com/watch?v=_e-LFe_igno&t=29s" target="_blank">RMSProp</a>).
+              </dt>
+              <dd>v[dW(t)] = momentum_β1 × v[dW(t-1)] + (1 - momentum_β1) × dW(t)</dd>
+              <dd>v[dW] is an exponentially weighted moving average of dW</dd>
+              <dd>v[dW]_bias_corrected = v[dW] / (1 - momentum_β1^epoch_number)</dd>
+              <dd>s[dW(t)] = β2 × s[dW(t-1)] + (1 - β2) × dW(t) <sup>2</sup> , where dW(t) <sup>2</sup> squares the vector elements, is performed element-wise</dd>
+              <dd>s[dW(t)] is an exponentially weighted moving average of dW(t) <sup>2</sup> </dd>
+              <dd>s[dW(t)]_bias_corrected = s[dW(t)] / (1 - β2^epoch_number)</dd>
+              <dd>
+                <b>Updating:</b>
+                W(t) = W(t-1) - constant_learning_rate × v[dW]_bias_corrected / [( s[dW(t)]_bias_corrected + Ɛ)^0.5]
+              </dd>
+              <dd>s[dW(0)] = 0, s[dW(0)] = 0</dd>
+              <dd>This algorithm is similar for updating the bias vector.</dd>
+              <dd>A commonly used value for hyperparameter β2 is 0.999,
+                which allows s[dW(t) <sup>2</sup> ] and s[db(t) <sup>2</sup> ] to calculate the average based on the lastest
+                 1/(1 - β2) = 1000 dW <sup>2</sup> 's and db <sup>2</sup> 's.</dd>
+                 <dd>hyperparameter Ɛ is to prevent dividing by 0, a commonly used value for epsilon =  10<sup>-8</sup></dd>
 
 
 
