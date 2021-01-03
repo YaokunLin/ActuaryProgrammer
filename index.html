@@ -1696,8 +1696,8 @@ text-decoration: underline;
       // The marker, positioned at Edmonton
       const InterSpaceMarker = new google.maps.Marker({
         position: interSpacLoc,
-        map: InterSpaceMap
-       //  icon:'http://open-notify.org/Open-Notify-API/map/ISSIcon.png'
+        map: InterSpaceMap,
+         icon:'https://i.ibb.co/F5zJ3PC/ISSIcon.png'
       });
 
       const infowindowInterSpace = new google.maps.InfoWindow({
@@ -1713,9 +1713,10 @@ text-decoration: underline;
 
 
         function moveISS () {
-            $.getJSON('http://api.open-notify.org/iss-now.json?callback=?', function(interSpaceData) {
-            var lat = interSpaceData['iss_position']['latitude'];
-            var lon = interSpaceData['iss_position']['longitude'];
+            $.getJSON('https://api.wheretheiss.at/v1/satellites/25544', function(interSpaceData) {
+          //    console.log();
+            var lat = interSpaceData['latitude'];
+            var lon = interSpaceData['longitude'];
             InterSpaceMarker.setPosition( new google.maps.LatLng( lat, lon ) );
             InterSpaceMap.panTo( new google.maps.LatLng( lat, lon ) );
             $('#isslat').html(Math.round(lat*1000)/1000.0);
