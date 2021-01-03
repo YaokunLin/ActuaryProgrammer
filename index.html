@@ -225,6 +225,20 @@ text-decoration: underline;
 
  /* For collasible information Box Ends */
 
+ /* Set the size of the div element that contains the map */
+ #mapInterSpace {
+   height: 800px;
+   /* The height is 400 pixels */
+   width: 100%;
+   /* The width is the width of the web page */
+ }
+
+ #mapMyLoc {
+   height: 400px;
+   /* The height is 400 pixels */
+   width: 100%;
+   /* The width is the width of the web page */
+
 
 
 
@@ -1576,25 +1590,35 @@ text-decoration: underline;
 
 
     <style type="text/css">
-      /* Set the size of the div element that contains the map */
-      #mapInterSpace {
-        height: 400px;
-        /* The height is 400 pixels */
-        width: 100%;
-        /* The width is the width of the web page */
-      }
 
-      #mapMyLoc {
-        height: 400px;
-        /* The height is 400 pixels */
-        width: 100%;
-        /* The width is the width of the web page */
       }
 
     </style>
 
     <!--The div element for the map -->
+    <p>&nbsp;</p>
+
+    <p>&nbsp;</p>
+
+    <p>&nbsp;</p>
+
+    <dt style="text-align:center;" class="SecondTitleDivider">
+      <em style="color: #4285F4">&nbsp; &nbsp;  ■ &nbsp;  &nbsp;</em>
+      <em style="color: #DB4437"> &nbsp;&nbsp;  ■&nbsp; &nbsp;  </em>
+      <em style="color: #F4B400"> &nbsp;&nbsp;  ■ &nbsp;&nbsp;  </em>
+      <em style="color: #0F9D58"> &nbsp;&nbsp;  ■ &nbsp;&nbsp;  </em>
+
+    </dt>
+
+
+
+    <p>&nbsp;</p>
+
+    <p>&nbsp;</p>
+
+    <p>&nbsp;</p>
     <div id="mapInterSpace"></div>
+    Where is the International Space Station right now!? Real time update!
 
 
 
@@ -1678,18 +1702,20 @@ text-decoration: underline;
     // Initialize and add the map
     function initMap() {
       // The location of Canada
-      const canadaLoc = { lat: 56.1304, lng: -106.3468 };
-      // The map, centered at ualbert
-      const EdmontonLoc = { lat: 53.5461, lng: -113.4938 };
-      const InterSpaceMap = new google.maps.Map(document.getElementById("mapInterSpace"), {
-        zoom: 4,
-        center: canadaLoc,
-      });
+
+      const interSpacLoc = { lat: 0, lng: 0 };
+      let interSpaceOptions={
+        zoom:4,
+        center:interSpacLoc,
+        mapTypeId: google.maps.MapTypeId.HYBRID
+      }
+
+      const InterSpaceMap = new google.maps.Map(document.getElementById("mapInterSpace"), interSpaceOptions);
       // The marker, positioned at Edmonton
       const InterSpaceMarker = new google.maps.Marker({
-        position: EdmontonLoc,
-        map: InterSpaceMap
-      //  icon:'https://i.ibb.co/RzHdLsf/profile-Marker.png'
+        position: interSpacLoc,
+        map: InterSpaceMap,
+         icon:'http://open-notify.org/Open-Notify-API/map/ISSIcon.png'
       });
 
       const infowindowInterSpace = new google.maps.InfoWindow({
@@ -1702,10 +1728,33 @@ text-decoration: underline;
         });
 
 
+
+
+        function moveISS () {
+            $.getJSON('http://api.open-notify.org/iss-now.json?callback=?', function(interSpaceData) {
+            var lat = interSpaceData['iss_position']['latitude'];
+            var lon = interSpaceData['iss_position']['longitude'];
+            InterSpaceMarker.setPosition( new google.maps.LatLng( lat, lon ) );
+            InterSpaceMap.panTo( new google.maps.LatLng( lat, lon ) );
+
+
+
+
+    });
+    setTimeout(moveISS, 5000);
+}
+
+
+moveISS();
+
+
         //for my location at the very bottom
+        const canadaLoc = { lat: 56.1304, lng: -106.3468 };
+              // The map, centered at ualbert
+        const EdmontonLoc = { lat: 53.5461, lng: -113.4938 };
         const MyLocMap = new google.maps.Map(document.getElementById("mapMyLoc"), {
                 zoom: 4,
-                center: canadaLoc,
+                center: canadaLoc
               });
 
         const MyLocMarker = new google.maps.Marker({
@@ -1722,6 +1771,8 @@ text-decoration: underline;
         MyLocMarker.addListener("click", () => {
           infowindowMyLoc.open(MyLocMap, MyLocMarker);
         });
+
+
 
 
 }
