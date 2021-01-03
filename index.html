@@ -941,7 +941,7 @@ text-decoration: underline;
 
       <ul style="list-style-type:disc">
 
-                      This report visualizes in-sample training loss curves and out-sample accuracy for different stochastic learning strategies,
+              This report visualizes in-sample training loss curves and out-sample accuracy for different stochastic learning strategies,
               including SGD and Adam. The datasets used in the analysis are small, and
               <a href="https://en.wikipedia.org/wiki/Limited-memory_BFGS" target="_blank">Limited-memory BFGS (L-BFGS)</a>
               might be more suitable. The analysis shown here seems to be able to generalize to larger datasets, however.
@@ -966,26 +966,26 @@ text-decoration: underline;
               <br>
               <dt>
               <a href="https://www.youtube.com/watch?v=k8fTYJPd3_I" target="_blank">SGD with momentum</a>
-              smooths out the learning proccess, avoid overshooting the target and prevent divergence
+              smooths out the learning proccess, avoids overshooting the target and prevents divergence
               </dt>
 
-              <dd>velocity[dW(t)]  =  momentum_β1  ×  velocity[dW(t-1)]  +  (1 - momentum_β1)  ×  dW(t)</dd>
+              <dd>velocity[dW(t)]  =  momentum_β<sub>1</sub>  ×  velocity[dW(t-1)]  +  (1 - momentum_β<sub>1</sub>)  ×  dW(t)</dd>
               <dd>velocity[dW(t)]  is an exponentially weighted moving average of dW </dd>
               <dd>
               <b>Updating:</b>
-              W(t) = W(t-1) - constant_learning_rate × velocity[dW(t)], with V[dW(0)] = 0
+              W(t) = W(t-1) - constant_learning_rate × velocity[dW(t)], with v[dW(0)] = 0
               </dd>
 
-              <dd>velocity[db(t)]  =  momentum_β1  ×  velocity[db(t-1)]  +  (1 - momentum_β1)  ×  db(t)</dd>
+              <dd>velocity[db(t)]  =  momentum_β<sub>1</sub>  ×  velocity[db(t-1)]  +  (1 - momentum_β<sub>1</sub>)  ×  db(t)</dd>
               <dd>velocity[db(t)]  is an exponentially weighted moving average of db </dd>
               <dd>
               <b>Updating:</b>
               b(t) = b(t-1) - constant_learning_rate × velocity[db(t)], with v[db(0)] = 0
               </dd>
 
-              <dd>A commonly used value for hyperparameter momentum_β1 is 0.9,
-              which allows velocity[dW(t)] and velocity[db(t)] to calculate the average
-              based on the lastest 1/(1-momentum_β1) = 10 dW's and db's.</dd>
+              <dd>A commonly used value for the hyperparameter momentum_β<sub>1</sub> is 0.9,
+              which allows velocity[dW(t)] and velocity[db(t)] calculate the averages
+              based on the lastest 1/(1-momentum_β<sub>1</sub>) = 10 dW's and db's.</dd>
 
               <dd>An exponentially weighted moving average allows more weights to be given to the more recent data.
               And the weight decays exponentially when we go back in time.</dd>
@@ -996,20 +996,20 @@ text-decoration: underline;
                   to look ahead when calculating their gradients.
                   Nesterov momentum lowers the chance of overshooting the target
                   when the optimization is close to its target.
-                  The idea of looking ahead allows the gradians (on W's and b's) to be more forward looking for the updates and allows faster convergence.
+                  The idea of looking ahead allows the gradians (on W's and b's) to be more forward-looking for the updates and allows faster convergence.
               </dt>
 
-              <dd>W(t)_look_ahead = W(t) - momentum_β1 × v[dW(t-1)]</dd>
+              <dd>W(t)_look_ahead = W(t) - momentum_β<sub>1</sub> × v[dW(t-1)]</dd>
               <dd>W(t)_look_ahead is the proximate future position of W(t), and is where it improves from the plain momentum method</dd>
-              <dd>v[dW(t)] = momentum_β1 × v[dW(t-1)] + (1-momentum_β1) × dW(t)_look_ahead</dd>
+              <dd>v[dW(t)] = momentum_β<sub>1</sub> × v[dW(t-1)] + (1-momentum_β<sub>1</sub>) × dW(t)_look_ahead</dd>
               <dd>The gradient is calculate on dW(t)_look_ahead instead of dW(t) as in the plain momentum method</dd>
               <dd>
                 <b>Updating:</b>
                 W(t) = W(t-1) - constant_learning_rate × v[dW(t)]
               </dd>
-              <dd>b(t)_look_ahead = b(t) - momentum_β1 × v[db(t-1)]</dd>
+              <dd>b(t)_look_ahead = b(t) - momentum_β<sub>1</sub> × v[db(t-1)]</dd>
               <dd>b(t)_look_ahead is the proximate future position of b(t), and is where it improves from the plain momentum method</dd>
-              <dd>v[db(t)] = momentum_β1 × v[db(t-1)] + (1-momentum_β1) × db(t)_look_ahead</dd>
+              <dd>v[db(t)] = momentum_β<sub>1</sub> × v[db(t-1)] + (1-momentum_β<sub>1</sub>) × db(t)_look_ahead</dd>
               <dd>The gradient is calculate on db(t)_look_ahead instead of db(t) as in the plain momentum method</dd>
               <dd>
                 <b>Updating:</b>
@@ -1020,31 +1020,51 @@ text-decoration: underline;
                 (<a href="https://www.youtube.com/watch?v=JXQT_vxqwIs"  target="_blank">Adam</a>)
 
               is a widely used optimization algorithm in many deep learning applications.
-              It combines the
+              It combines
               <a href="https://www.youtube.com/watch?v=k8fTYJPd3_I" target="_blank">plain momentum</a>
               with the Root Mean Square Propagation
               (<a href="https://www.youtube.com/watch?v=_e-LFe_igno&t=29s" target="_blank">RMSProp</a>).
               </dt>
-              <dd>v[dW(t)] = momentum_β1 × v[dW(t-1)] + (1 - momentum_β1) × dW(t)</dd>
+              <dd>v[dW(t)] = momentum_β<sub>1</sub> × v[dW(t-1)] + (1 - momentum_β<sub>1</sub>) × dW(t)</dd>
               <dd>v[dW] is an exponentially weighted moving average of dW</dd>
-              <dd>v[dW]_bias_corrected = v[dW] / (1 - momentum_β1^epoch_number)</dd>
-              <dd>s[dW(t)] = β2 × s[dW(t-1)] + (1 - β2) × dW(t) <sup>2</sup> , where dW(t) <sup>2</sup> squares the vector elements, is performed element-wise</dd>
-              <dd>s[dW(t)] is an exponentially weighted moving average of dW(t) <sup>2</sup> </dd>
-              <dd>s[dW(t)]_bias_corrected = s[dW(t)] / (1 - β2^epoch_number)</dd>
+              <dd>v[dW]_bias_corrected = v[dW] / (1 - momentum_β<sub>1</sub><sup>epoch_number</sup>)</dd>
+              <dd>s[dW(t)] = momentum_β<sub>2</sub> × s[dW(t-1)] + (1 - momentum_β<sub>2</sub>) × dW(t) <sup>2</sup> , where dW(t) <sup>2</sup> squares the vector elements, is performed element-wise</dd>
+              <dd>s[dW(t)] captures the information in the second moment, and is an exponentially weighted moving average of dW(t) <sup>2</sup> </dd>
+              <dd>s[dW(t)]_bias_corrected = s[dW(t)] / (1 - momentum_β<sub>2</sub><sup>epoch_number</sup>))</dd>
               <dd>
                 <b>Updating:</b>
-                W(t) = W(t-1) - constant_learning_rate × v[dW]_bias_corrected / [( s[dW(t)]_bias_corrected + Ɛ)^0.5]
+                W(t) = W(t-1) - constant_learning_rate × v[dW]_bias_corrected / [( s[dW(t)]_bias_corrected + Ɛ)<sup>0.5</sup>]
               </dd>
               <dd>s[dW(0)] = 0, s[dW(0)] = 0</dd>
               <dd>This algorithm is similar for updating the bias vector.</dd>
-              <dd>A commonly used value for hyperparameter β2 is 0.999,
-                which allows s[dW(t) <sup>2</sup> ] and s[db(t) <sup>2</sup> ] to calculate the average based on the lastest
-                 1/(1 - β2) = 1000 dW <sup>2</sup> 's and db <sup>2</sup> 's.</dd>
-                 <dd>hyperparameter Ɛ is to prevent dividing by 0, a commonly used value for epsilon =  10<sup>-8</sup></dd>
+              <dd>A commonly used value for the hyperparameter momentum_β<sub>2</sub> is 0.999,
+                which allows s[dW(t) <sup>2</sup> ] and s[db(t) <sup>2</sup> ] calculate the averages based on the lastest
+                 1/(1 - momentum_β<sub>2</sub>) = 1000 dW <sup>2</sup> 's and db <sup>2</sup> 's.</dd>
+                 <dd>The hyperparameter Ɛ is to prevent dividing by 0, a commonly used value for epsilon =  10<sup>-8</sup></dd>
+                <br>
+              <dt>A
+                <a href="https://www.youtube.com/watch?v=QzulmoOg2JE&t=2s" target="_blank">learning rate decay algorithm</a>
+                allows the learning rate to decrease over time.
+                When the weight matrix W and the bias b vector come close to the optimal solution, the needed learning rate
+                will be smaller than the initial learning rate.
+              </dt>
+              <dd>There is a decay learning rate method in scikit-Learn named Inverse Scaling "invscaling"
+              </dd>
+              <dd>effective_learning_rate(t) = initial_learning_rate / t <sup>power_t</sup>
+              </dd>
+              <dd>where power_t is a hyperparameter with a default value of 0.5</dd>
 
+              <br>
 
+              This report examines seven stochastic learning strategies to see their training loss and testing accuracy.
 
+              From the above graphs, we see that Adam is a star performer consistently across datasets, in both training sets and testing sets.
 
+              However, SGD with only a decay learning rate consistently performs the worst across the board.
+              It is worth noting, this strategy performs even worse than the plain SGD with a constant learning rate.
+
+              SGD with plain momentum performs similarly compared to Nesterov momentum;
+              they are not the best performers; but in some cases, they can perform better than Adam.
 
 
 
@@ -1373,6 +1393,8 @@ text-decoration: underline;
 
     </div>
 
+    Source: <a href="https://www.exchangerate-api.com/" target="_blank">ExchangeRate-API</a>
+
     <style>
       /* CSS for the FX calculator  */
 
@@ -1553,6 +1575,58 @@ text-decoration: underline;
 
 
 
+    <style type="text/css">
+      /* Set the size of the div element that contains the map */
+      #IntSpacMapMap {
+        height: 400px;
+        /* The height is 400 pixels */
+        width: 100%;
+        /* The width is the width of the web page */
+      }
+    </style>
+
+    <!--The div element for the map -->
+    <div id="IntSpacMapMap"></div>
+
+    <script>
+    console.log("sss");
+        // Initialize and add the map
+        function initIntSpacMap() {
+          // The location of Canada
+          const canadaLoc = { lat: 56.1304, lng: -106.3468 };
+          // The map, centered at ualbert
+          const EdmontonLoc = { lat: 53.5461, lng: -113.4938 };
+          const IntSpacMap = new google.maps.Map(document.getElementById("IntSpacMapMap"), {
+            zoom: 4,
+            center: canadaLoc,
+          });
+          // The marker, positioned at Edmonton
+          const marker = new google.maps.Marker({
+            position: EdmontonLoc,
+            map: map
+          //  icon:'https://i.ibb.co/RzHdLsf/profile-Marker.png'
+          });
+
+
+    const infowindow = new google.maps.InfoWindow({
+       content: '<h6>Hello World!</h6>',
+     });
+
+
+
+    marker.addListener("click", () => {
+      infowindow.open(map, marker);
+    });
+    }
+
+
+       
+      </script>
+
+
+
+
+
 
     <p>&nbsp;</p>
 
@@ -1634,6 +1708,7 @@ text-decoration: underline;
     /* The width is the width of the web page */
   }
 </style>
+
 <script>
     // Initialize and add the map
     function initMap() {
@@ -1668,7 +1743,7 @@ marker.addListener("click", () => {
    
   </script>
 
-<body>
+
 
 <!--The div element for the map -->
 <div id="map"></div>
