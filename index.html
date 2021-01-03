@@ -1577,51 +1577,24 @@ text-decoration: underline;
 
     <style type="text/css">
       /* Set the size of the div element that contains the map */
-      #IntSpacMapMap {
+      #mapInterSpace {
         height: 400px;
         /* The height is 400 pixels */
         width: 100%;
         /* The width is the width of the web page */
       }
+
+      #mapMyLoc {
+        height: 400px;
+        /* The height is 400 pixels */
+        width: 100%;
+        /* The width is the width of the web page */
+      }
+
     </style>
 
     <!--The div element for the map -->
-    <div id="IntSpacMapMap"></div>
-
-    <script>
-    console.log("sss");
-        // Initialize and add the map
-        function initIntSpacMap() {
-          // The location of Canada
-          const canadaLoc = { lat: 56.1304, lng: -106.3468 };
-          // The map, centered at ualbert
-          const EdmontonLoc = { lat: 53.5461, lng: -113.4938 };
-          const IntSpacMap = new google.maps.Map(document.getElementById("IntSpacMapMap"), {
-            zoom: 4,
-            center: canadaLoc,
-          });
-          // The marker, positioned at Edmonton
-          const marker = new google.maps.Marker({
-            position: EdmontonLoc,
-            map: map
-          //  icon:'https://i.ibb.co/RzHdLsf/profile-Marker.png'
-          });
-
-
-    const infowindow = new google.maps.InfoWindow({
-       content: '<h6>Hello World!</h6>',
-     });
-
-
-
-    marker.addListener("click", () => {
-      infowindow.open(map, marker);
-    });
-    }
-
-
-       
-      </script>
+    <div id="mapInterSpace"></div>
 
 
 
@@ -1699,15 +1672,7 @@ text-decoration: underline;
 
 <p>&nbsp;</p>
 
-<style type="text/css">
-  /* Set the size of the div element that contains the map */
-  #map {
-    height: 400px;
-    /* The height is 400 pixels */
-    width: 100%;
-    /* The width is the width of the web page */
-  }
-</style>
+<div id="mapMyLoc"></div>
 
 <script>
     // Initialize and add the map
@@ -1716,28 +1681,52 @@ text-decoration: underline;
       const canadaLoc = { lat: 56.1304, lng: -106.3468 };
       // The map, centered at ualbert
       const EdmontonLoc = { lat: 53.5461, lng: -113.4938 };
-      const map = new google.maps.Map(document.getElementById("map"), {
+      const InterSpaceMap = new google.maps.Map(document.getElementById("mapInterSpace"), {
         zoom: 4,
         center: canadaLoc,
       });
       // The marker, positioned at Edmonton
-      const marker = new google.maps.Marker({
+      const InterSpaceMarker = new google.maps.Marker({
         position: EdmontonLoc,
-        map: map
+        map: InterSpaceMap
       //  icon:'https://i.ibb.co/RzHdLsf/profile-Marker.png'
       });
 
-
-const infowindow = new google.maps.InfoWindow({
-   content: '<h6>Hello World!</h6>',
- });
-
+      const infowindowInterSpace = new google.maps.InfoWindow({
+         content: '<h6>Hello World!</h6>',
+       });
 
 
-marker.addListener("click", () => {
-  infowindow.open(map, marker);
-});
+        InterSpaceMarker.addListener("click", () => {
+          infowindowInterSpace.open(InterSpaceMap, InterSpaceMarker);
+        });
+
+
+        //for my location at the very bottom
+        const MyLocMap = new google.maps.Map(document.getElementById("mapMyLoc"), {
+                zoom: 4,
+                center: canadaLoc,
+              });
+
+        const MyLocMarker = new google.maps.Marker({
+                position: EdmontonLoc,
+                map: MyLocMap
+              //  icon:'https://i.ibb.co/RzHdLsf/profile-Marker.png'
+              });
+
+        const infowindowMyLoc = new google.maps.InfoWindow({
+           content: '<h6>Hello World!</h6>',
+         });
+
+
+        MyLocMarker.addListener("click", () => {
+          infowindowMyLoc.open(MyLocMap, MyLocMarker);
+        });
+
+
 }
+
+
 
 
    
@@ -1745,8 +1734,7 @@ marker.addListener("click", () => {
 
 
 
-<!--The div element for the map -->
-<div id="map"></div>
+
 
 
 
