@@ -1618,7 +1618,12 @@ text-decoration: underline;
 
     <p>&nbsp;</p>
     <div id="mapInterSpace"></div>
-    Where is the International Space Station right now!? Real time update!
+    Where is the International Space Station right now!?
+    <br>
+    The ISS is currently over
+    <span id="isslat"></span>° N,
+    <span id="isslon"></span>° E
+
 
 
 
@@ -1736,12 +1741,14 @@ text-decoration: underline;
             var lon = interSpaceData['iss_position']['longitude'];
             InterSpaceMarker.setPosition( new google.maps.LatLng( lat, lon ) );
             InterSpaceMap.panTo( new google.maps.LatLng( lat, lon ) );
+            $('#isslat').html(Math.round(lat*1000)/1000.0);
+            $('#isslon').html(Math.round(lon*1000)/1000.0);
 
 
 
 
     });
-    setTimeout(moveISS, 5000);
+    setTimeout(moveISS, 3000);
 }
 
 
