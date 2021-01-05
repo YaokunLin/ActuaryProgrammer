@@ -83,6 +83,7 @@
           <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             more</a>
             <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
+              <a class="dropdown-item" href="#mapInterSpace">Where is the international space station right now?</a>
               <a class="dropdown-item" href="#chartdiv2d">Bivariate Gaussian Simulation</a>
               <a class="dropdown-item" href="#Prophet">Human Life Prophet</a>
               <a class="dropdown-item" href="#FX">Real Time FX Calculator</a>
@@ -729,6 +730,9 @@ text-decoration: underline;
           <a href="https://en.wikipedia.org/wiki/Rectifier_(neural_networks)" target="_blank">Rectified Linear Unit ReLu</a>,
           <a href="https://en.wikipedia.org/wiki/Sigmoid_function" target="_blank">Sigmoid function</a>,
           <a href="https://en.wikipedia.org/wiki/Rectifier_(neural_networks)#Softplus" target="_blank">Softplus function</a>)
+          <br>
+          σ(<b>W</b> × <b>Input Vector</b> + <b>b</b>)
+
 
          </dd>
 
@@ -1111,7 +1115,43 @@ text-decoration: underline;
 
     <h5 id="OtherStuff" class = "SectionTitle">Other Fun Stuff</h5>
 
+    <div id="mapInterSpace"></div>
+    Where is the International Space Station ISS right now?
+    <br>
+    The ISS is currently over
+    <span id="isslat"></span>° N,
+    <span id="isslon"></span>° E
+    <br>
+    Altitude:&nbsp;<span id="issalt"></span>&nbsp;kilometers
+    <br>
+    Velocity:&nbsp;<span id="issvel"></span>&nbsp;km/h
+    <br>
+    When the ISS comes close to you, don't forget look up at the sky, especially when it is at night and the sky is clear!
+      <span style='font-style: normal;'>😃</span>
 
+
+    <!--The div element for the map -->
+    <p>&nbsp;</p>
+
+    <p>&nbsp;</p>
+
+    <p>&nbsp;</p>
+
+    <dt style="text-align:center;" class="SecondTitleDivider">
+      <em style="color: #4285F4">&nbsp; &nbsp;  ■ &nbsp;  &nbsp;</em>
+      <em style="color: #DB4437"> &nbsp;&nbsp;  ■&nbsp; &nbsp;  </em>
+      <em style="color: #F4B400"> &nbsp;&nbsp;  ■ &nbsp;&nbsp;  </em>
+      <em style="color: #0F9D58"> &nbsp;&nbsp;  ■ &nbsp;&nbsp;  </em>
+
+    </dt>
+
+
+
+    <p>&nbsp;</p>
+
+    <p>&nbsp;</p>
+
+    <p>&nbsp;</p>
 
 
 
@@ -1581,34 +1621,11 @@ text-decoration: underline;
 
     </style>
 
-    <!--The div element for the map -->
-    <p>&nbsp;</p>
-
-    <p>&nbsp;</p>
-
-    <p>&nbsp;</p>
-
-    <dt style="text-align:center;" class="SecondTitleDivider">
-      <em style="color: #4285F4">&nbsp; &nbsp;  ■ &nbsp;  &nbsp;</em>
-      <em style="color: #DB4437"> &nbsp;&nbsp;  ■&nbsp; &nbsp;  </em>
-      <em style="color: #F4B400"> &nbsp;&nbsp;  ■ &nbsp;&nbsp;  </em>
-      <em style="color: #0F9D58"> &nbsp;&nbsp;  ■ &nbsp;&nbsp;  </em>
-
-    </dt>
 
 
 
-    <p>&nbsp;</p>
 
-    <p>&nbsp;</p>
 
-    <p>&nbsp;</p>
-    <div id="mapInterSpace"></div>
-    Where is the International Space Station right now!?
-    <br>
-    The ISS is currently over
-    <span id="isslat"></span>° N,
-    <span id="isslon"></span>° E
 
 
 
@@ -1717,12 +1734,14 @@ text-decoration: underline;
           //    console.log();
             var lat = interSpaceData['latitude'];
             var lon = interSpaceData['longitude'];
+            var alt =interSpaceData['altitude'];
+            var speed = interSpaceData['velocity'];
             InterSpaceMarker.setPosition( new google.maps.LatLng( lat, lon ) );
             InterSpaceMap.panTo( new google.maps.LatLng( lat, lon ) );
             $('#isslat').html(Math.round(lat*1000)/1000.0);
             $('#isslon').html(Math.round(lon*1000)/1000.0);
-
-
+            $('#issalt').html(Math.round(alt*100000)/100000.0);
+            $('#issvel').html(Math.round(speed*100000)/100000.0);
 
 
     });
