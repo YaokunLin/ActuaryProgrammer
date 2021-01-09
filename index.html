@@ -721,9 +721,9 @@ text-decoration: underline;
           <br>
           <br>
            Perform matrix multiplication between the first weight matrix
-          <b>W</b>
+          <b>W<sub>1</sub></b>
            and the input vector (which is 784 × 1) and add the first bias vector
-          <b>b</b>,
+          <b>b<sub>1</sub></b>,
           then transform the resulting vector by an
           <a href="https://en.wikipedia.org/wiki/Activation_function" target="_blank">activation function</a>
           (some popular activation functions include:
@@ -731,7 +731,30 @@ text-decoration: underline;
           <a href="https://en.wikipedia.org/wiki/Sigmoid_function" target="_blank">Sigmoid function</a>,
           <a href="https://en.wikipedia.org/wiki/Rectifier_(neural_networks)#Softplus" target="_blank">Softplus function</a>)
           <br>
-          σ(<b>W</b> × <b>Input Vector</b> + <b>b</b>)
+          <br>
+          <b>Z<sub>1</sub></b> = <b>W<sub>1</sub></b> × <b>Input Vector</b> + <b>b<sub>1</sub></b>
+            <br>
+          <b>Activation<sub>1</sub> = </b>σ<sub>1</sub> (<b>Z<sub>1</sub></b>)， where σ<sub>1</sub>(*) is the activation function for the first hidden layer, and the operation performs element-wise.
+          <br>
+          <b>Activation<sub>1</sub></b> is the output of the first hidden layer which will be the input of the second hidden layer.
+          <br><br>
+          <b>Z<sub>2</sub></b> = <b>W<sub>2</sub></b> × <b>Activation<sub>1</sub></b> + <b>b<sub>2</sub></b>
+          <br>
+          <b>Activation<sub>2</sub> = </b>σ<sub>2</sub> (<b>Z<sub>2</sub></b>)， where σ<sub>2</sub>(*) is the activation function for the second hidden layer, which does not need to be the same as σ<sub>1</sub>(*).
+          <br>
+          <b>Activation<sub>2</sub></b> is the output of the second hidden layer which will be the input of the third hidden layer.
+          <br>
+          <div style="font-size: 20px;">... ...</div>
+          <b>Z<sub>last</sub></b> = <b>W<sub>last</sub></b> × <b>Activation<sub>last-1</sub></b> + <b>b<sub>last</sub></b>
+          <br>
+           <b>W<sub>last</sub></b> is the last weight matrix
+          , <b>b<sub>last</sub></b> is the last bias vector
+          <br>
+          <b>Activation<sub>last</sub> = </b>σ<sub>last</sub> (<b>Z<sub>last-1</sub></b>)
+          <br>
+          <b>Activation<sub>last</sub></b> is the output layer which is a 10 × 1 vector, this vector dimension is due to there are total 10 digits (from 0 to 9).
+          <br>
+
 
 
          </dd>
