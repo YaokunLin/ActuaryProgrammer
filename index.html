@@ -118,6 +118,7 @@
 
 
 
+
   </head>
   <style>
 
@@ -272,16 +273,21 @@ text-decoration: underline;
 <p>&nbsp;</p>
 
 <p>&nbsp;</p>
+<p>&nbsp;</p>
+<i>(Shhhh... bonus content at the end of this website)</i>
+<img src="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/whatsapp/273/shushing-face_1f92b.png" alt="Log-Normal Distribution Picture" width="40"/>
+
 </div>
 
 
 
 
-    <p>&nbsp;</p>
 
 
 
-    <p>&nbsp;</p>
+
+
+
 
     <dt style="text-align:center;" class="TitleDivider">
       <em style="color: #4285F4"> · </em>
@@ -677,10 +683,10 @@ text-decoration: underline;
 
 
 <div>
-  <img class="ResponsiveImg" src="https://i.ibb.co/TLfVsSD/Neural-Net-Work2.png" id = "Neural" alt="NeuralNetwork" width="1345" height="552.4874" style = "display: block; margin-left: auto; margin-right: auto;"/>
-  <img class="ResponsiveImg" src="https://i.ibb.co/gZtKYQN/Neural-Net-Work-Example-Top.png" alt="NeuralNetwork" width="1345" height="665.76752" style = "display: block; margin-left: auto; margin-right: auto;"/>
+  <img class="ResponsiveImg" src="https://pbs.twimg.com/media/ErYZqiTVkAICxk5?format=jpg&name=large" id = "Neural" alt="NeuralNetwork" width="1345" height="552.4874" style = "display: block; margin-left: auto; margin-right: auto;"/>
+  <img class="ResponsiveImg" src="https://pbs.twimg.com/media/ErYbklIUcAApKvD?format=jpg&name=large" alt="NeuralNetwork" width="1345" height="665.76752" style = "display: block; margin-left: auto; margin-right: auto;"/>
   <p></p>
-  <img class="ResponsiveImg" src="https://i.ibb.co/J5rNMts/Neural-Net-Work-Example-Bottom2.png" alt="NeuralNetwork" width="1345" height="665.76752" style = "display: block; margin-left: auto; margin-right: auto;"/>
+  <img class="ResponsiveImg" src="https://pbs.twimg.com/media/ErYbkk0UUAEYkt2?format=jpg&name=large" alt="NeuralNetwork" width="1345" height="665.76752" style = "display: block; margin-left: auto; margin-right: auto;"/>
 
 </div>
 
@@ -800,8 +806,8 @@ text-decoration: underline;
 <p>&nbsp;</p>
 
 <div>
-  <img class="ResponsiveImg" src="https://i.ibb.co/4NMQqyk/Decision-Tree1a.png" id = "DecisionTree" alt="Illustration of a Decision Tree" width="1345" height="552.4874" style = "display: block; margin-left: auto; margin-right: auto;"/>
-  <img class="ResponsiveImg" src="https://i.ibb.co/3vGx90S/Decision-Tree2.png" id = "DecisionTree" alt="Illustration of a Decision Tree" width="0.5"  style = "display: block; margin-left: auto; margin-right: auto;"/>
+  <img class="ResponsiveImg" src="https://pbs.twimg.com/media/ErYcOZJVgAgXF_T?format=png&name=large" id = "DecisionTree" alt="Illustration of a Decision Tree" width="1345" height="552.4874" style = "display: block; margin-left: auto; margin-right: auto;"/>
+  <img class="ResponsiveImg" src="https://pbs.twimg.com/media/ErYcRpSVkAEhWP5?format=jpg&name=medium" id = "DecisionTree" alt="Illustration of a Decision Tree" width="0.5"  style = "display: block; margin-left: auto; margin-right: auto;"/>
 
 </div>
 
@@ -1148,7 +1154,7 @@ text-decoration: underline;
     Altitude:&nbsp;<span id="issalt"></span>&nbsp;kilometers
     <br>
     Velocity:&nbsp;<span id="issvel"></span>&nbsp;km/h
-    <br>
+    <br> <br>
     When the ISS comes close to you, don't forget look up at the sky, especially when it is at night and the sky is clear!
       <span style='font-style: normal;'>😃</span>
 
@@ -1676,8 +1682,81 @@ text-decoration: underline;
 
     <p>&nbsp;</p>
 
+    <h5 class = "SectionTitle"> Bonus Content <span style='font-style: normal'>🎁</span> </h5>
+    <h5 class = "SectionTitle"> Astronomy Picture of the Day from NASA</h5>
 
- <img  src="https://i.ibb.co/4NL0Z2Y/Capture.png" alt="Yaokun Lin Profile Picture" width="420" height="300"
+    <div class="NASA_APOD">
+      <img class="ResponsiveImg" id = "pic_APOD" alt="Illustration of a Decision Tree" style = "display: block; margin-left: auto; margin-right: auto;"/>
+      <br>
+      <h6 style="text-align: center;" id="title_APOD"></h6>
+      <br>
+
+      <span class="explanation_APOD", style="display:block; padding:0 18px">
+
+        <div id="story_APOD"></div>
+          <br>
+
+         NASA Astronomy Picture of the Day: &nbsp; <span id="date_APOD"></span>
+
+
+
+
+      </span>
+
+
+    </div>
+
+  <br>
+
+    <h5 class = "SectionTitle"> Thanks for visiting my website!</h5>
+
+    <script>
+            const NASA_API_KEY = "uKPbaghgdteDqESC24xEOrYSGOcM5aBgBezh0J8G";
+            const apodUrl = "https://api.nasa.gov/planetary/apod"
+
+            async function fetch_NASA_apod(){
+              const fetch_NASA_apod_respond = await fetch
+              (apodUrl+'?api_key='+NASA_API_KEY);
+              const NASA_apod_data = await fetch_NASA_apod_respond.json();
+              console.log(NASA_apod_data.explanation);
+              document.getElementById("pic_APOD").src = NASA_apod_data.hdurl;
+              document.getElementById("title_APOD").innerText = NASA_apod_data.title;
+              document.getElementById("story_APOD").innerText = NASA_apod_data.explanation;
+              document.getElementById("date_APOD").innerText =  NASA_apod_data.date;
+            }
+
+
+
+            fetch_NASA_apod();
+
+    </script>
+
+    <p>&nbsp;</p>
+
+  <p>&nbsp;</p>
+
+  <p>&nbsp;</p>
+
+  <dt style="text-align:center;" class="TitleDivider">
+    <em style="color: #4285F4"> · </em>
+    <em style="color: #DB4437"> · </em>
+    <em style="color: #F4B400"> · </em>
+    <em style="color: #4285F4"> · </em>
+    <em style="color: #0F9D58"> · </em>
+    <em style="color: #DB4437"> · </em>
+
+ </dt>
+
+
+
+     <p>&nbsp;</p>
+
+    <p>&nbsp;</p>
+
+    <p>&nbsp;</p>
+
+
+ <img  src="https://pbs.twimg.com/media/ErYdEqJU0AEE-Mj?format=jpg&name=large" alt="Yaokun Lin Profile Picture" width="420" height="300"
  style="display: block; margin-left: auto; margin-right: auto;">
 
 <p></p>
@@ -1737,7 +1816,7 @@ text-decoration: underline;
       const InterSpaceMarker = new google.maps.Marker({
         position: interSpacLoc,
         map: InterSpaceMap,
-         icon:'https://i.ibb.co/F5zJ3PC/ISSIcon.png'
+         icon:'https://raw.githubusercontent.com/YaokunLin/ActuaryProgrammer/main/ISSIcon.png'
       });
 
       const infowindowInterSpace = new google.maps.InfoWindow({
@@ -1822,7 +1901,7 @@ moveISS();
 
 
  <dt style="text-align:center;">
-  <a id="contact" href="https://www.linkedin.com/in/yaokun-lin-fsa-cera-acia-00a20a199/"target="_blank"><img src="https://content.linkedin.com/content/dam/me/business/en-us/amp/brand-site/v2/bg/LI-Bug.svg.original.svg" alt="linkedin Logo" width="20" height="20" >
+  <a id="contact" href="https://www.linkedin.com/in/yaokun-lin-fsa-fcia-cera-00a20a199/?originalSubdomain=ca"target="_blank"><img src="https://content.linkedin.com/content/dam/me/business/en-us/amp/brand-site/v2/bg/LI-Bug.svg.original.svg" alt="linkedin Logo" width="20" height="20" >
     <a id="" href="mailto:yaokun1@ualberta.ca?subject=Hi Yao&body=How are you?" target="_blank"><img src="https://www.flaticon.com/svg/static/icons/svg/2089/2089181.svg" alt="Email Logo" width="20" height="20" >
 
 </dt>
