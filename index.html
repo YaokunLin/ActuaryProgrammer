@@ -192,7 +192,7 @@ text-decoration: underline;
 
 
 
-.ResponsiveImg {
+.ResponsiveImg{
   width: 95%;
   height: auto;
 }
@@ -240,9 +240,24 @@ text-decoration: underline;
    /* The height is 400 pixels */
    width: 100%;
    /* The width is the width of the web page */
+}
+  /* THIS IS FOR YOUTUBE VIDEO, PART1, RESPONSIVE FRAME */
+.iframe-container{
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 Aspect Ratio (divide 9 by 16 = 0.5625) */
+}
 
-
-
+  iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+  }
 
 
   </style>
@@ -275,7 +290,7 @@ text-decoration: underline;
 <p>&nbsp;</p>
 <p>&nbsp;</p>
 <i>(Shhhh... bonus content sitting at the end of this website)</i>
-<img src="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/whatsapp/273/shushing-face_1f92b.png" alt="Log-Normal Distribution Picture" width="40"/>
+<img src="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/whatsapp/273/shushing-face_1f92b.png" alt="Shhh Emoji" width="35"/>
 
 </div>
 
@@ -1135,11 +1150,11 @@ text-decoration: underline;
 
 
        Receiver Operating Characteristic (ROC) and Area under the Curve (AUC) with
-       <a href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.RepeatedStratifiedKFold.html" target="_blank" >Repeated Stratified K-Fold Cross Validation</a>
+       <a href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.RepeatedStratifiedKFold.html" target="_blank" >Repeated Stratified K-Fold Cross-Validation</a>
         in scikit-learn
       <br>
-      The above presents the out-sample (cross validated) RoC's across three unoptimized classifiers:
-      <a href="https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html#sklearn.neural_network.MLPClassifier" target="_blank" >Aritificial Neural Network ANN</a>
+      The above presents the out-sample (cross-validated) RoC's across three unoptimized classifiers:
+      <a href="https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html#sklearn.neural_network.MLPClassifier" target="_blank" >Artificial Neural Network ANN</a>
       (left),
       <a href="https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html#sklearn.svm.SVC" target="_blank" >Support Vector Machine</a>
       (mid),
@@ -1731,9 +1746,17 @@ text-decoration: underline;
     <p>&nbsp;</p>
 
     <h5 class = "SectionTitle"> Bonus Content <span style='font-style: normal'>🎁</span> </h5>
-    <h5 class = "SectionTitle"> Astronomy Picture of the Day from NASA</h5>
+    <h5 class = "SectionTitle"> Astronomy Story of the Day from NASA</h5>
 
     <div class="NASA_APOD">
+      <div class="content_APOD">
+        <div class="iframe-container">
+          <iframe id="video_APOD" width="1345" height="605.25" src="https://www.youtube.com/embed/8XV2-pmiyAg"
+          frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope;
+
+          picture-in-picture" allowfullscreen></iframe>
+        </div>
+          </div>
       <img class="ResponsiveImg" id = "pic_APOD" alt="Illustration of a Decision Tree" style = "display: block; margin-left: auto; margin-right: auto;"/>
       <br>
       <h6 style="text-align: center;" id="title_APOD"></h6>
@@ -1744,7 +1767,7 @@ text-decoration: underline;
         <div id="story_APOD"></div>
           <br>
 
-         NASA Astronomy Picture of the Day: &nbsp; <span id="date_APOD"></span>
+         NASA Astronomy Story of the Day: &nbsp; <span id="date_APOD"></span>
 
 
 
@@ -1755,6 +1778,8 @@ text-decoration: underline;
     </div>
 
   <br>
+
+
 
   <p>&nbsp;</p>
 
@@ -1768,12 +1793,25 @@ text-decoration: underline;
             const NASA_API_KEY = "uKPbaghgdteDqESC24xEOrYSGOcM5aBgBezh0J8G";
             const apodUrl = "https://api.nasa.gov/planetary/apod"
 
+
+
             async function fetch_NASA_apod(){
               const fetch_NASA_apod_respond = await fetch
               (apodUrl+'?api_key='+NASA_API_KEY);
               const NASA_apod_data = await fetch_NASA_apod_respond.json();
-              console.log(NASA_apod_data.explanation);
-              document.getElementById("pic_APOD").src = NASA_apod_data.hdurl;
+              console.log(NASA_apod_data.media_type);
+
+              if(NASA_apod_data.media_type=="video")
+              {  document.querySelector(".iframe-container").style.display = "block";
+                 document.getElementById("title_APOD").style.display = "none";
+                document.getElementById("video_APOD").src = NASA_apod_data.hdurl;
+                document.getElementById("pic_APOD").src = "";}
+              else{
+                document.querySelector(".iframe-container").style.display = "none";
+                document.getElementById("title_APOD").style.display = "block";
+                 document.getElementById("video_APOD").src = "";
+                document.getElementById("pic_APOD").src = NASA_apod_data.hdurl;}
+
               document.getElementById("title_APOD").innerText = NASA_apod_data.title;
               document.getElementById("story_APOD").innerText = NASA_apod_data.explanation;
               document.getElementById("date_APOD").innerText =  NASA_apod_data.date;
