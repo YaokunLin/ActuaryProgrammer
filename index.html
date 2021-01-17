@@ -112,15 +112,13 @@
 
     <title>Spark</title>
 
-    <link rel="apple-touch-icon" sizes="180x180" href="https://raw.githubusercontent.com/YaokunLin/ActuaryProgrammer/main/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="https://raw.githubusercontent.com/YaokunLin/ActuaryProgrammer/main/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="https://raw.githubusercontent.com/YaokunLin/ActuaryProgrammer/main/favicon-16x16.png">
-    <link rel="manifest" href="/site.webmanifest">
 
-      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 
 
 
@@ -329,6 +327,142 @@ text-decoration: underline;
     <p>&nbsp;</p>
 
     <p>&nbsp;</p>
+
+    <h5 class = "SectionTitle"> Teaser Content <img src="https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/joypixels/257/lollipop_1f36d.png" alt="Shhh Emoji" width="35"/> </h5>
+    <div id="mapInterSpace"></div>
+    Where is the International Space Station ISS right now?
+    <br>
+    The ISS is currently over
+    <span id="isslat"></span>° N,
+    <span id="isslon"></span>° E
+    <br>
+    Altitude:&nbsp;<span id="issalt"></span>&nbsp;kilometers
+    <br>
+    Velocity:&nbsp;<span id="issvel"></span>&nbsp;km/h
+    <br>
+
+
+      <br>
+
+      How far away is the ISS from your current location?
+
+    <button id = "find-me">Calculate</button>
+    <div id="calculate_ISS_Distance", style="style.display = "none";">
+      <span id = "Coord_status"></span>
+      <a id = "map-link" target="_blank"></a>
+
+
+      <span id = "Elavation_status"></span>
+    </div>
+    <br>
+
+  When the ISS comes close to you, don't forget look up at the sky, especially when it is at night and the sky is clear!
+    <span class='emoji'>😃</span>
+
+  <script type="text/javascript">
+
+  function insertAfter(referenceNode, newNode) {
+    referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
+  }
+
+
+  function geoFindMe() {
+
+
+const Coord_Status = document.querySelector('#Coord_status');
+const Ela_Status = document.querySelector('#Elavation_status');
+const mapLink = document.querySelector('#map-link');
+let br1=document.createElement("br")
+const calculate_ISS_Distance_div=document.querySelector('#calculate_ISS_Distance');
+
+
+mapLink.href = '';
+mapLink.textContent = '';
+
+function success(position) {
+  const latitude  = position.coords.latitude;
+  const longitude = position.coords.longitude;
+
+  Coord_Status.textContent = 'Your current coordinate: ';
+  mapLink.href = `https://www.openstreetmap.org/#map=18/${latitude}/${longitude}`;
+  mapLink.textContent = `Latitude: ${latitude}°N, Longitude: ${longitude}°E`;
+  insertAfter(mapLink, br1);
+  googlecalculate();
+  Ela_Status.textContent = 'Your current elevation (from sea level in meters): ';
+}
+
+function error() {
+  Coord_Status.textContent = 'Unable to retrieve your location';
+}
+
+if(!navigator.geolocation) {
+  Coord_Status.textContent = 'Geolocation is not supported by your browser';
+} else {
+  Coord_Status.textContent = 'Locating…';
+  navigator.geolocation.getCurrentPosition(success, error);
+}
+
+
+async function fetch_google_elavation(){
+              const google_API_key="AIzaSyBjM24GGHMMQ9auAVgVsuUY1t84QFqmE3U";
+              const google_Elavator_Url = "https://maps.googleapis.com/maps/api/elevation/json?locations=39.7391536,-104.9847034"
+              console.log(google_Elavator_Url+'&key='+google_API_key);
+              const fetch_google_elavation_respond = await fetch
+              (google_Elavator_Url+'&key='+google_API_key);
+              const Google_ela_data = await fetch_google_elavation_respond.json();
+              console.log(Google_ela_data);}
+
+}
+
+
+
+function googlecalculate(){
+  const google_API_key="AIzaSyBjM24GGHMMQ9auAVgVsuUY1t84QFqmE3U";
+  const google_Elavator_Url = "https://maps.googleapis.com/maps/api/elevation/json?locations=39.7391536,-104.9847034"
+  console.log(google_Elavator_Url+'&key='+google_API_key);
+
+  fetch(google_Elavator_Url+'&key='+google_API_key)
+             .then(res => res.json())
+             .then(fxdData => {
+               console.log(fxdData);
+
+
+       })
+
+}
+
+
+
+
+
+document.querySelector('#find-me').addEventListener('click', geoFindMe);
+
+
+  </script>
+
+      <p>&nbsp;</p>
+
+      <p>&nbsp;</p>
+
+      <p>&nbsp;</p>
+
+      <dt style="text-align:center;" class="TitleDivider">
+        <em style="color: #4285F4"> · </em>
+        <em style="color: #DB4437"> · </em>
+        <em style="color: #F4B400"> · </em>
+        <em style="color: #4285F4"> · </em>
+        <em style="color: #0F9D58"> · </em>
+        <em style="color: #DB4437"> · </em>
+
+     </dt>
+
+
+
+      <p>&nbsp;</p>
+
+      <p>&nbsp;</p>
+
+      <p>&nbsp;</p>
 
     <h5 id="QuantFin" class = "SectionTitle">Quantitative Finance Models</h5>
 
@@ -1213,19 +1347,7 @@ text-decoration: underline;
 
     <h5 id="OtherStuff" class = "SectionTitle">Other Fun Stuff</h5>
 
-    <div id="mapInterSpace"></div>
-    Where is the International Space Station ISS right now?
-    <br>
-    The ISS is currently over
-    <span id="isslat"></span>° N,
-    <span id="isslon"></span>° E
-    <br>
-    Altitude:&nbsp;<span id="issalt"></span>&nbsp;kilometers
-    <br>
-    Velocity:&nbsp;<span id="issvel"></span>&nbsp;km/h
-    <br> <br>
-    When the ISS comes close to you, don't forget look up at the sky, especially when it is at night and the sky is clear!
-      <span style='font-style: normal;'>😃</span>
+
 
 
     <!--The div element for the map -->
@@ -1638,6 +1760,10 @@ text-decoration: underline;
 
 
       /* CSS for the FX calculator  */
+
+      .emoji {
+  font-style: normal;
+}
     </style>
 
     <script>
@@ -1751,7 +1877,7 @@ text-decoration: underline;
 
     <p>&nbsp;</p>
 
-    <h5 class = "SectionTitle"> Bonus Content <span style='font-style: normal'>🎁</span> </h5>
+    <h5 class = "SectionTitle"> Bonus Content <span class="emoji">🎁</span> </h5>
     <h5 class = "SectionTitle"> Astronomy Story of the Day from NASA</h5>
 
     <div class="NASA_APOD">
