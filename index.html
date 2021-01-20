@@ -2038,9 +2038,9 @@ You are on the left, your browser is on the right!
       });
 
 
-    //  InterSpaceMarker.addListener("click", () => {
+      //  InterSpaceMarker.addListener("click", () => {
       //  infowindowInterSpace.open(InterSpaceMap, InterSpaceMarker);
-    //  });
+      //  });
 
       infowindowInterSpace.open(InterSpaceMap, InterSpaceMarker);
 
@@ -2175,12 +2175,12 @@ You are on the left, your browser is on the right!
 
               const straigh_line_distance = haversine_distance(current_ISS_Loc, userCoord);
               let total_distance = Math.pow(straigh_line_distance, 2) + Math.pow(currentISSData.altitude, 2);
-              total_distance = Math.round(Math.pow(total_distance, 0.5)-0.841);
+              total_distance = Math.round(Math.pow(total_distance, 0.5) - 0.841);
 
               //console.log(Math.pow(currentISSData.altitude,2));
 
               let contentString = 'By the <a href="https://en.wikipedia.org/wiki/Haversine_formula" target="_blank">Haversine formula</a>'
-              contentString = contentString + ' and the <a href="https://en.wikipedia.org/wiki/Pythagorean_theorem" target="_blank">the Pythagorean theorem</a>';
+              contentString = contentString + ' and the <a href="https://en.wikipedia.org/wiki/Pythagorean_theorem" target="_blank">Pythagorean theorem</a>';
               contentString = contentString + ', the current distance between you and the ISS is'
 
               const infoWindowMyLocISS = new google.maps.InfoWindow({
