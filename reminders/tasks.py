@@ -12,9 +12,10 @@ from celery.utils.log import get_task_logger
 
 logger = get_task_logger(__name__)
 
+
 @app.task()
 def send_sms_reminders(reminder_type=MORNING_OF):
-    logger.info(f'started')
+    logger.info(f"started")
     logger.info(f"reminder_type: {reminder_type}")
     date = "today"
     if reminder_type == MORNING_OF:
@@ -59,18 +60,18 @@ def send_sms_reminders(reminder_type=MORNING_OF):
         body = f"Hello {patient_name}. You have an appointment at {start_hour}:{start_minute}. Ready to see you soon!"
 
         to = patient["mobile_phone"].strip()
-        url = f"{settings.NS_BASE_URL}/?object=message&action=create&domain={domain}&user={user}&from_num={sms_number}&type=sms&destination={to}&message={body}"
+        url = f"{settings.NETSAPIENS_BASE_URL}/?object=message&action=create&domain={domain}&user={user}&from_num={sms_number}&type=sms&destination={to}&message={body}"
         print(url)
 
-        token_url = f"{settings.NS_BASE_URL}/oauth2/token/"
+        token_url = f"{settings.NETSAPIENS_BASE_URL}/oauth2/token/"
 
         token_payload = {
             "format": "json",
             "grant_type": "password",
-            "client_id": settings.NS_CLIENT_ID,
-            "client_secret": settings.NS_CLIENT_SECRET,
-            "username": settings.NS_API_USER,
-            "password": settings.NS_API_PASSWORD,
+            "client_id": settings.NETSAPIENS_CLIENT_ID,
+            "client_secret": settings.NETSAPIENS_CLIENT_SECRET,
+            "username": settings.NETSAPIENS_API_USERNAME,
+            "password": settings.NETSAPIENS_API_PASSWORD,
         }
         token_response = requests.request("POST", token_url, data=token_payload)
 
