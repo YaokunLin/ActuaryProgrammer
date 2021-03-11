@@ -12,7 +12,7 @@ services:
           - ./volumes/postgres:/var/lib/postgresql
 
   api:
-      image: gcr.io/peerlogic-api/peerlogic-api
+      build: .
       volumes:
           - .:/app
       ports:

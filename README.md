@@ -20,6 +20,14 @@ After initial build and servers are running, in a separate terminal window run t
 `docker-compose run api python manage.py createsuperuser`
 `docker-compose run api python manage.py loaddata fixtures/django_celery_beat.json`
 
+
+Log into Google Kubernetes Engine (GKE):
+
+```bash
+gcloud container clusters get-credentials peerlogic-dev-1 --zone "us-west3-c"
+gcloud auth configure-docker
+```
+
 All done!
 
 ### Running/Stopping
@@ -57,7 +65,18 @@ python3 manage.py runserver
 
 ## Deployment steps for GKE
 
-If editing the peerlogic-api.yaml, do the following steps
+Install GCP Dependencies to your local machine:
+* [gcloud SDK](https://cloud.google.com/sdk/docs/quickstart)
+
+If on Mac and you get the `zsh compinit: insecure directories, run compaudit for list.
+Ignore insecure directories and continue [y] or abort compinit [n]? kcompinit:` error upon creating new terminal windows, then run
+
+```bash
+compaudit | xargs chmod g-w
+```
+
+
+If your changes include changes to the peerlogic-api.yaml, do the following steps
 
 ```bash
 $ kubectl apply -f peerlogic-api.yaml
