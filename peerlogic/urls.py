@@ -18,10 +18,12 @@ from django.urls import include, path
 
 admin.site.site_header = "Peerlogic API Admin Portal"
 
-from reminders.urls import router
+from reminders.urls import urlpatterns as reminders_urlpatterns
+from core.urls import urlpatterns as company_urlpatterns
 
 urlpatterns = [
-    path("api/", include(router.urls)),
+    path("api/reminders/", include(reminders_urlpatterns)),
+    path("api/companies/", include(company_urlpatterns)),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     path("admin/", admin.site.urls),
 ]

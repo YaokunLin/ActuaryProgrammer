@@ -5,11 +5,18 @@ from django.contrib.auth.models import Group
 from .forms import GroupAdminForm
 from .models import Client, User
 
-admin.site.register(User)
-admin.site.register(Client)
 
 admin.site.unregister(Group)
-# Create a new Group admin.
+
+
+class ClientAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "group",
+        "rest_base_url",
+    )
+
+
 class GroupAdmin(admin.ModelAdmin):
     # Use our custom form.
     form = GroupAdminForm
@@ -17,5 +24,6 @@ class GroupAdmin(admin.ModelAdmin):
     filter_horizontal = ["permissions"]
 
 
-# Register the new Group ModelAdmin.
+admin.site.register(User)
+admin.site.register(Client, ClientAdmin)
 admin.site.register(Group, GroupAdmin)
