@@ -75,6 +75,40 @@ Ignore insecure directories and continue [y] or abort compinit [n]? kcompinit:` 
 compaudit | xargs chmod g-w
 ```
 
+### Updating Source Code
+
+Create a new image and push it to the Container Repository in GCP.
+
+```bash
+docker build . -t gcr.io/peerlogic-api/peerlogic-api:latest
+docker push gcr.io/peerlogic-api/peerlogic-api:latest
+ ```
+
+Then, find the deployment you want to deploy the new image to:
+
+```bash
+kubectl get deployments
+```
+
+Put the deployment name into the right spot and run the following commands:
+
+```bash
+kubectl set image deployments/<deploymentname> peerlogic-celery-worker=gcr.io/peerlogic-api/peerlogic-api:latest
+kubectl set image deployments/<deploymentname> peerlogic-celery-worker=gcr.io/peerlogic-api/peerlogic-api:latest
+kubectl set image deployments/<deploymentname> peerlogic-celery-beat=gcr.io/peerlogic-api/peerlogic-api:latest
+```
+
+This will set off a rolling update.
+
+Check on the status of this with these commands:
+
+```bash
+kubectl describe deployments/peerlogic-api
+kubectl get pods
+```
+
+### Updating the Deployment
+
 
 If your changes include changes to the peerlogic-api.yaml, do the following steps
 
