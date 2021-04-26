@@ -47,7 +47,7 @@ NETSAPIENS_API_PASSWORD = os.getenv("NETSAPIENS_API_PASSWORD")
 
 # CORS
 CORS_ORIGIN_ALLOW_ALL = DEBUG
-CORS_ORIGIN_WHITELIST = ("http://localhost:3000",)
+CORS_ORIGIN_WHITELIST = ("http://localhost:3000", "app://.")
 
 AUTH_USER_MODEL = "core.User"
 
