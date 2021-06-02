@@ -17,7 +17,9 @@ Make sure Docker is running, then do the following steps:
 After initial build and servers are running, in a separate terminal window run the following:
 
 `docker-compose run api python manage.py migrate`
+
 `docker-compose run api python manage.py createsuperuser`
+
 `docker-compose run api python manage.py loaddata fixtures/django_celery_beat.json`
 
 
