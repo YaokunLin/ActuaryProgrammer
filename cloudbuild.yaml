@@ -1,0 +1,13 @@
+steps:
+- name: 'gcr.io/cloud-builders/gcloud'
+  args:
+  - 'run'
+  - 'deploy'
+  - 'cloudrunservice'
+  - '--image'
+  - 'us-west4-docker.pkg.dev/peerlogic-api-prod/peerlogic/peerlogic-api:latest'
+  - '--region'
+  - 'us-west4'
+  - '--platform'
+  - 'managed'
+  - '--allow-unauthenticated'
