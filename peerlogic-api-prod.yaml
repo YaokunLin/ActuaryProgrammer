@@ -166,6 +166,47 @@ spec:
               value: "False"
             - name: GKE_APPLICATION
               value: "True"
+            # [START peerlogic_secrets]
+            - name: DJANGO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: django
+                  key: DJANGO_SECRET_KEY
+            # [END peerlogic_secrets]
+            # [START netsapiens_secrets]
+            - name: NETSAPIENS_BASE_URL
+              value: 'https://core1-phx.peerlogic.com/ns-api'
+            - name: NETSAPIENS_CLIENT_ID
+              value: peerlogic-api-prod
+            # [START netsapiens_secrets]
+            - name: NETSAPIENS_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: netsapiens
+                  key: NETSAPIENS_CLIENT_SECRET
+            - name: NETSAPIENS_API_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: netsapiens
+                  key: NETSAPIENS_API_USERNAME
+            - name: NETSAPIENS_API_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: netsapiens
+                  key: NETSAPIENS_API_PASSWORD
+            # [START netsapiens_secrets]
+            - name: DJANGO_DB_REQUIRE_SSL
+              value: "False"
+            - name: DJANGO_EMAIL_BACKEND
+              value: django.core.mail.backends.console.EmailBackend
+            - name: CELERY_BROKER_URL
+              value: "redis://10.19.147.155:6379/0"
+            - name: CELERY_RESULT_BACKEND
+              value: "redis://10.19.147.155:6379/0"
+            - name: DJANGO_DEBUG
+              value: "False"
+            - name: GKE_APPLICATION
+              value: "True"
       - name: peerlogic-celery-worker
         command: ["celery", "-A", "peerlogic", "worker", "-l", "INFO"]
         image: gcr.io/peerlogic-api-prod/peerlogic-api
