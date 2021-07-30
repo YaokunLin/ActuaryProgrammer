@@ -107,6 +107,8 @@ spec:
         image: gcr.io/peerlogic-api-prod/peerlogic-api
         command: ["python"]
         args: ["manage.py", "migrate"]
+        restartPolicy: Never
+        backoffLimit: 0
         env:
             # [START cloudsql_secrets]
             - name: POSTGRES_DB
