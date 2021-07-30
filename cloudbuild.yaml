@@ -1,4 +1,4 @@
-images: ${_DJANGO_DOCKER_REPO}
+images: $_DJANGO_DOCKER_REPO
 steps:
   - id: "build image"
     name: "gcr.io/cloud-builders/docker"
