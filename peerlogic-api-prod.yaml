@@ -40,6 +40,21 @@ spec:
         app: peerlogic-api
     spec:
       containers:
+      # [START proxy_container]
+      - image: gcr.io/cloudsql-docker/gce-proxy:1.16
+        name: cloudsql-proxy
+        command: ["/cloud_sql_proxy", "--dir=/cloudsql",
+                  "-instances=peerlogic-api-prod:us-west4:peerlogic-prod=tcp:5432",
+                  "-credential_file=/secrets/cloudsql/credentials.json"]
+        volumeMounts:
+          - name: cloudsql-oauth-credentials
+            mountPath: /secrets/cloudsql
+            readOnly: true
+          - name: ssl-certs
+            mountPath: /etc/ssl/certs
+          - name: cloudsql
+            mountPath: /cloudsql
+      # [END proxy_container]
       - name: peerlogic-api
         image: gcr.io/peerlogic-api-prod/peerlogic-api
         env:
@@ -103,112 +118,10 @@ spec:
               value: "True"
         ports:
         - containerPort: 8080
-      - name: peerlogic-migrate
-        image: gcr.io/peerlogic-api-prod/peerlogic-api
-        command: ["python"]
-        args: ["manage.py", "migrate"]
-        restartPolicy: Never
-        backoffLimit: 0
-        env:
-            # [START cloudsql_secrets]
-            - name: POSTGRES_DB
-              valueFrom:
-                secretKeyRef:
-                  name: cloudsql
-                  key: POSTGRES_DB
-            - name: POSTGRES_USER
-              valueFrom:
-                secretKeyRef:
-                  name: cloudsql
-                  key: POSTGRES_USER
-            - name: POSTGRES_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: cloudsql
-                  key: POSTGRES_PASSWORD
-            # [END cloudsql_secrets]
-            # [START peerlogic_secrets]
-            - name: DJANGO_SECRET_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: django
-                  key: DJANGO_SECRET_KEY
-            # [END peerlogic_secrets]
-            # [START netsapiens_secrets]
-            - name: NETSAPIENS_BASE_URL
-              value: 'https://core1-phx.peerlogic.com/ns-api'
-            - name: NETSAPIENS_CLIENT_ID
-              value: peerlogic-api-prod
-            # [START netsapiens_secrets]
-            - name: NETSAPIENS_CLIENT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: netsapiens
-                  key: NETSAPIENS_CLIENT_SECRET
-            - name: NETSAPIENS_API_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: netsapiens
-                  key: NETSAPIENS_API_USERNAME
-            - name: NETSAPIENS_API_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: netsapiens
-                  key: NETSAPIENS_API_PASSWORD
-            # [START netsapiens_secrets]
-            - name: DJANGO_DB_REQUIRE_SSL
-              value: "False"
-            - name: DJANGO_EMAIL_BACKEND
-              value: django.core.mail.backends.console.EmailBackend
-            - name: CELERY_BROKER_URL
-              value: "redis://10.19.147.155:6379/0"
-            - name: CELERY_RESULT_BACKEND
-              value: "redis://10.19.147.155:6379/0"
-            - name: DJANGO_DEBUG
-              value: "False"
-            - name: GKE_APPLICATION
-              value: "True"
-            # [START peerlogic_secrets]
-            - name: DJANGO_SECRET_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: django
-                  key: DJANGO_SECRET_KEY
-            # [END peerlogic_secrets]
-            # [START netsapiens_secrets]
-            - name: NETSAPIENS_BASE_URL
-              value: 'https://core1-phx.peerlogic.com/ns-api'
-            - name: NETSAPIENS_CLIENT_ID
-              value: peerlogic-api-prod
-            # [START netsapiens_secrets]
-            - name: NETSAPIENS_CLIENT_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: netsapiens
-                  key: NETSAPIENS_CLIENT_SECRET
-            - name: NETSAPIENS_API_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: netsapiens
-                  key: NETSAPIENS_API_USERNAME
-            - name: NETSAPIENS_API_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: netsapiens
-                  key: NETSAPIENS_API_PASSWORD
-            # [START netsapiens_secrets]
-            - name: DJANGO_DB_REQUIRE_SSL
-              value: "False"
-            - name: DJANGO_EMAIL_BACKEND
-              value: django.core.mail.backends.console.EmailBackend
-            - name: CELERY_BROKER_URL
-              value: "redis://10.19.147.155:6379/0"
-            - name: CELERY_RESULT_BACKEND
-              value: "redis://10.19.147.155:6379/0"
-            - name: DJANGO_DEBUG
-              value: "False"
-            - name: GKE_APPLICATION
-              value: "True"
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/sh", "-c", "python manage.py migrate > /var/log/migrations; gcloud logging write peerlogic-api-migration $(cat /etc/log/migrations)"]
       - name: peerlogic-celery-worker
         command: ["celery", "-A", "peerlogic", "worker", "-l", "INFO"]
         image: gcr.io/peerlogic-api-prod/peerlogic-api
@@ -335,21 +248,7 @@ spec:
               value: "False"
             - name: GKE_APPLICATION
               value: "True"
-      # [START proxy_container]
-      - image: gcr.io/cloudsql-docker/gce-proxy:1.16
-        name: cloudsql-proxy
-        command: ["/cloud_sql_proxy", "--dir=/cloudsql",
-                  "-instances=peerlogic-api-prod:us-west4:peerlogic-prod=tcp:5432",
-                  "-credential_file=/secrets/cloudsql/credentials.json"]
-        volumeMounts:
-          - name: cloudsql-oauth-credentials
-            mountPath: /secrets/cloudsql
-            readOnly: true
-          - name: ssl-certs
-            mountPath: /etc/ssl/certs
-          - name: cloudsql
-            mountPath: /cloudsql
-      # [END proxy_container]
+      
       # [START volumes]
       volumes:
         - name: cloudsql-oauth-credentials
