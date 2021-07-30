@@ -1,4 +1,4 @@
-images: $_DJANGO_DOCKER_REPO
+images: gcr.io/peerlogic-api-prod/peerlogic-api
 steps:
   - id: "build image"
     name: "gcr.io/cloud-builders/docker"
