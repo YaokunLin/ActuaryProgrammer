@@ -234,57 +234,6 @@ Take note of the zone, IP address, and port of the Redis instance.
 
 Update the values in the appropriate peerlogic-api-\<env\>.yaml to point at the `redis://\<ipadress\>:6379/0` for the CELERY_BROKER_URL and CELERY_RESULT_BACKEND.
 
-
-## Create Docker Repository
-
-Instructions:
-
-[Enable Artifact Repository](https://console.cloud.google.com/marketplace/product/google/artifactregistry.googleapis.com)
-
-```bash
-gcloud artifacts repositories create peerlogic --repository-format=docker \
---location=us-west4 --description="Peerlogic repo"
-```
-Verify it created successfully.
-
-```bash
-gcloud artifacts repositories list
-```
-
-## Build using Dockerfile
-
-[Enable Cloudbuild API](https://console.cloud.google.com/marketplace/product/google/cloudbuild.googleapis.com)
-
-Cloud Build allows you to build a Docker image using a Dockerfile. You don't require a separate Cloud Build config file.
-
-To build using a Dockerfile:
-
-1. Get your Cloud project ID by running the following command:
-
-```bash
-gcloud config get-value project
-```
-
-2. Make sure you are on the `main` branch. Then run the following command from the directory containing Dockerfile, where project-id is your Cloud project ID:
-
-```bash
-gcloud builds submit --tag us-west4-docker.pkg.dev/project-id/peerlogic/peerlogic-api:latest
-```
-
-Note: If your project ID contains a colon, replace the colon with a forward slash.
-After the build is complete, you will see an output similar to the following:
-
-```text
-DONE
-------------------------------------------------------------------------------------------------------------------------------------
-ID                                    CREATE_TIME                DURATION  SOURCE   IMAGES     STATUS
-545cb89c-f7a4-4652-8f63-579ac974be2e  2020-11-05T18:16:04+00:00  16S       gs://peerlogic-api-prod_cloudbuild/source/1604600163.528729-b70741b0f2d0449d8635aa22893258fe.tgz  us-west4-docker.pkg.dev/peerlogic/peerlogic-api:latest  SUCCESS
-```
-
-You've just built a Docker image named peerlogic-api using a Dockerfile and pushed the image to Artifact Registry.
-
-Navigate to your Cloud Build History and watch the job there. Click on the Build Artifacts tab, and you'll see the docker image, like so: us-west4-docker.pkg.dev/peerlogic-api-prod/peerlogic/peerlogic-api. You can click the icon to open the docker image information in a new tab, and you'll see the latest tag there.
-
 ## Grant permissions
 
 Enable the following services/APIs:
@@ -323,32 +272,6 @@ gcloud iam service-accounts add-iam-policy-binding \
     --role=roles/iam.serviceAccountUser
 ```
 
-## Deploy a prebuilt image
-
-You can configure Cloud Build to deploy a prebuilt image that is stored in Artifact Registry to Cloud Run.
-
-To deploy a prebuilt image:
-
-
-The cloudbuild.yaml file is the Cloud Build config file. It contains instructions for Cloud Build to deploy the image named `us-west4-docker.pkg.dev/peerlogic-api-prod/peerlogic/peerlogic-api:latest` on the Cloud Run service named cloudrunservice.
-
-Deploy the image by running the following command:
-
-```bash
-gcloud builds submit --config cloudbuild.yaml
-```
-
-When the build is complete, you will see an output similar to the following:
-
-```
-DONE
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-ID                                    CREATE_TIME                DURATION  SOURCE                                                                                            IMAGES  STATUS
-784653b2-f00e-4c4b-9f5f-96a5f115bef4  2020-01-23T14:53:13+00:00  23S       gs://cloudrunqs-project_cloudbuild/source/1579791193.217726-ea20e1c787fb4784b19fb1273d032df2.tgz  -       SUCCESS
-```
-
-You've just deployed the image peerlogic-api to Cloud Run.
 
 ## Update GKE deployment yaml file with the appropriate image name
 
@@ -356,7 +279,26 @@ This is titled peerlogic-api-\<env\>.yaml.
 
 Update the image value for each container spec for the following: peerlogic-api, and peerlogic-celery-beat, and peerlogic-celery-worker wiht your new repo:
 
-`us-west4-docker.pkg.dev/peerlogic-api-prod/peerlogic/peerlogic-api`
+`gcr.io/peerlogic-api-prod/peerlogic-api`
+
+
+
+# Create Cloud Build for GKE
+
+[Enable Cloudbuild API](https://console.cloud.google.com/marketplace/product/google/cloudbuild.googleapis.com)
+
+Enable Kubernetes Engine - Kubernetes Engine Developer in the [Settings page for GKE](https://console.cloud.google.com/cloud-build/settings/service-account).
+
+Test your build before creating a trigger:
+
+```bash
+gcloud builds submit --project=project-id --config build-config
+```
+
+Where:
+
+* project-id is the ID for your project.
+* build-config is the name of your build configuration file.
 
 
 

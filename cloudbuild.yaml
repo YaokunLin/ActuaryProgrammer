@@ -1,3 +1,4 @@
+images: ${_DJANGO_DOCKER_REPO}
 steps:
   - id: "build image"
     name: "gcr.io/cloud-builders/docker"
@@ -5,7 +6,13 @@ steps:
   - id: "push image"
     name: "gcr.io/cloud-builders/docker"
     args: ["push", "${_DJANGO_DOCKER_REPO}"]
-
+  - id: "deploy container image to GKE"
+    name: "gcr.io/cloud-builders/gke-deploy"
+    args:
+    - run
+    - --filename=${_KUBERNETES_RESOURCE_FILE}
+    - --location=us-west4
+    - --cluster=peerlogic-api
   - id: "apply migrations"
     name: "${_DJANGO_DOCKER_REPO}"
     args:
@@ -41,5 +48,6 @@ steps:
       gsutil -m rsync -r '/workspace/static' 'gs://${PROJECT_ID}/static'
 
 substitutions:
-  _DJANGO_DOCKER_REPO: us-west4-docker.pkg.dev/peerlogic-api-prod/peerlogic/peerlogic-api
+  _DJANGO_DOCKER_REPO: gcr.io/peerlogic-api-prod/peerlogic-api
   _REGION: us-west4
+

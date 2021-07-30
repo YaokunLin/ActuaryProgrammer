@@ -42,7 +42,7 @@ spec:
       containers:
       - name: peerlogic-api
         # Replace  with your project ID or use `make template`
-        image: us-west4-docker.pkg.dev/peerlogic-api-prod/peerlogic/peerlogic-api
+        image: gcr.io/peerlogic-api-prod/peerlogic-api
         # This setting makes nodes pull the docker image every time before
         # starting the pod. This is useful when debugging, but should be turned
         # off in production.
@@ -111,7 +111,7 @@ spec:
       - name: peerlogic-celery-worker
         command: ["celery", "-A", "peerlogic", "worker", "-l", "INFO"]
         # Replace  with your project ID or use `make template`
-        image: us-west4-docker.pkg.dev/peerlogic-api-prod/peerlogic/peerlogic-api
+        image: gcr.io/peerlogic-api-prod/peerlogic-api
         # This setting makes nodes pull the docker image every time before
         # starting the pod. This is useful when debugging, but should be turned
         # off in production.
@@ -177,7 +177,7 @@ spec:
       - name: peerlogic-celery-beat
         command: ["celery", "-A", "peerlogic", "beat", "-l", "INFO", "-S", "django_celery_beat.schedulers:DatabaseScheduler"]
         # Replace  with your project ID or use `make template`
-        image: us-west4-docker.pkg.dev/peerlogic-api-prod/peerlogic/peerlogic-api
+        image: gcr.io/peerlogic-api-prod/peerlogic-api
         # This setting makes nodes pull the docker image every time before
         # starting the pod. This is useful when debugging, but should be turned
         # off in production.
