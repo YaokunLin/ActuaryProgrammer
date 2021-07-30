@@ -7,7 +7,7 @@ steps:
     args: ["push", "${_DOCKER_REPO}"]
   - id: "Delete past migration job"
     name: "gcr.io/cloud-builders/kubectl"
-    args: ["kubectl", "delete", "job", "migrate-database"]
+    args: ["delete", "job", "migrate-database"]
     env:
     - 'CLOUDSDK_COMPUTE_REGION=us-west4-a'
     - 'CLOUDSDK_CONTAINER_CLUSTER=peerlogic-api'
