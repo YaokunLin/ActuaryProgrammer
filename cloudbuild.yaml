@@ -19,6 +19,9 @@ steps:
         "python",
         "manage.py",
         "collectstatic",
+        "--verbosity",
+        "2",
+        "--noinput"
       ]  
     env:
     - 'DJANGO_SECRET_KEY=$_DJANGO_SECRET_KEY'
