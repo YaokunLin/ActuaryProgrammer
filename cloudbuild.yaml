@@ -1,14 +1,35 @@
 steps:
-- name: 'gcr.io/cloud-builders/gcloud'
-  args:
-  - 'run'
-  - 'deploy'
-  - 'cloudrunservice'
-  - '--image'
-  - 'us-west4-docker.pkg.dev/peerlogic-api-prod/peerlogic/peerlogic-api:latest'
-  - '--region'
-  - 'us-west4'
-  - '--platform'
-  - 'managed'
-  - '--allow-unauthenticated'
-# todo - add collectstatic and gcloud step to resync static files
+  - id: "build image"
+    name: "gcr.io/cloud-builders/docker"
+    args: [ 'build', '-t', '${_DJANGO_DOCKER_REPO}', '.']
+  - id: "push image"
+    name: "gcr.io/cloud-builders/docker"
+    args: ["push", "${_DJANGO_DOCKER_REPO}"]
+
+  - id: "apply migrations"
+    name: "${_DJANGO_DOCKER_REPO}"
+    args:
+      [
+        "python",
+        "manage.py",
+        "migrate",
+      ]  
+  - id: "Collect static"
+    name: "${_DJANGO_DOCKER_REPO}"
+    args:
+      [
+        "python",
+        "manage.py",
+        "collectstatic",
+      ]  
+  - id: "Rsync Static files to bucket"
+    name:  'gcr.io/cloud-builders/gsutil'
+    entrypoint: 'bash'
+    args:
+    - '-c'
+    - |
+      gsutil -m rsync -r '/workspace/static' 'gs://${PROJECT_ID}/static'
+
+substitutions:
+  _DJANGO_DOCKER_REPO: us-west4-docker.pkg.dev/peerlogic-api-prod/peerlogic/peerlogic-api
+  _REGION: us-west4

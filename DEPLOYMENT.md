@@ -103,6 +103,11 @@ source env/bin/activate
 pip3 install -r requirements/requirements.txt
 ```
 
+Collect static:
+```bash
+python manage.py collectstatic
+```
+
 Upload the collected static resources to the bucket in the static directory:
 
 ```bash
