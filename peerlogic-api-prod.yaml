@@ -66,6 +66,7 @@ kind: Job
 metadata:
   name: migrate-database
 spec:
+  replicas: 1
   template:
     spec:
       containers:

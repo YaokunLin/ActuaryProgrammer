@@ -5,6 +5,12 @@ steps:
   - id: "push image"
     name: "gcr.io/cloud-builders/docker"
     args: ["push", "${_DOCKER_REPO}"]
+  - id: "Delete past migration job"
+    name: "gcr.io/cloud-builders/kubectl"
+    args: ["kubectl", "delete", "job", "migrate-database"]
+    env:
+    - 'CLOUDSDK_COMPUTE_REGION=us-west4'
+    - 'CLOUDSDK_CONTAINER_CLUSTER=peerlogic-api'
   - id: "deploy container image to GKE"
     name: "gcr.io/cloud-builders/gke-deploy"
     args:
