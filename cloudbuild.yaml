@@ -11,3 +11,4 @@ steps:
   - '--platform'
   - 'managed'
   - '--allow-unauthenticated'
+# todo - add collectstatic and gcloud step to resync static files

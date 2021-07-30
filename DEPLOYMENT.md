@@ -29,9 +29,205 @@ gcloud init
 Start with a tiny instance. We can ramp it up when we have customers on it.
 
 ```bash
-gcloud sql instances create peerlogic --tier=db-f1-micro --region=us-west4
+gcloud sql instances create peerlogic-envname \
+--database-version=POSTGRES_13 \
+--cpu=2 \
+--memory=7680MB \
+--region=us-west4
 ```
 
+Set the password for the `postgres` user:
+
+Password for different environments gets the title "Peerlogic \<Environment\> Postgres User" in 1Password.
+
+
+```bash
+gcloud sql users set-password postgres \
+--instance=peerlogic-prod \
+--password=PASSWORD
+```
+
+Test the password by running the cloud_sql_proxy:
+
+```bash
+gcloud sql instances describe peerlogic-envname | grep connection
+```
+
+After installing the cloud_sql_proxy, add it to your PATH. Then run the following in a new terminal window.
+```bash
+cloud_sql_proxy -instances="[YOUR_INSTANCE_CONNECTION_NAME]"=tcp:5432
+```
+
+In another terminal window, install postgres and then run the following command:
+
+```bash
+psql --host 127.0.0.1 --user postgres --password
+```
+
+Enter the password you just set.
+
+Create a *new* `peerlogic` user and database separate from the `postgres`. Password for this user goes into 1Password as Peerlogic \<Environment\> peerlogic user.
+
+```
+CREATE DATABASE peerlogic;
+CREATE USER peerlogic WITH PASSWORD '[PEERLOGIC_POSTGRES_PASSWORD]';
+GRANT ALL PRIVILEGES ON DATABASE peerlogic TO peerlogic;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO peerlogic;
+```
+
+
+
+## Create a service account
+
+[Follow the docs](https://cloud.google.com/python/django/kubernetes-engine#creating_a_service_account)
+
+Name the service account the following:
+peerlogic-api-\<environment\>-cloud-sql
+
+Give it the "Cloud SQL > Cloud SQL Client" Role.
+
+Put the new JSON key file into 1Password as "\<service-account-name> - \<filename\>".
+
+## Create and upload static resources
+
+```
+gsutil mb gs://[PROJECT_ID]
+gsutil defacl set public-read  gs://[PROJECT_ID]
+```
+
+Create a virtual environment if you don't have one yet and activate it. Then install the dependencies.
+
+```bash
+python3 -m venv env
+source env/bin/activate
+pip3 install -r requirements/requirements.txt
+```
+
+Upload the collected static resources to the bucket in the static directory:
+
+```bash
+gsutil -m rsync -r ./static gs://[PROJECT_ID]/static
+```
+
+## Create GKE Cluster
+
+```bash
+gcloud container clusters create peerlogic-api \
+  --scopes "https://www.googleapis.com/auth/userinfo.email","cloud-platform" \
+  --num-nodes 4 --zone "us-west4-a" \
+  --enable-ip-alias
+```
+
+After the cluster is created, use the kubectl command-line tool, which is integrated with the gcloud tool, to interact with your GKE cluster. Because gcloud and kubectl are separate tools, make sure kubectl is configured to interact with the right cluster.
+
+```bash
+gcloud container clusters get-credentials peerlogic-api --zone "us-west4-a"
+```
+
+## Create a new GKE deployment yaml for the new environment
+
+Copy peerlogic-api-prod.yaml and name it peerlogic-api-\<env\>.yaml. We will be editing this document's environment variables and commands along the way with our IP addresses and urls.
+
+Update the cloudsql-proxy command in your corresponding GKE deployment yaml file to use the right connection name obtained from the gcloud command:
+
+```bash
+gcloud beta sql instances describe peerlogic-prod | grep connectionName
+```
+
+## Set up Cloud SQL Connection in GKE
+
+https://cloud.google.com/python/django/kubernetes-engine#set_up_cloud_sql
+
+
+
+You need several secrets to enable your GKE app to connect with your Cloud SQL instance. One is required for instance-level access (connection), while the other two are required for database access. For more information about the two levels of access control, see Instance access control.
+
+To create the secret for instance-level access, provide the location ([PATH_TO_CREDENTIAL_FILE]) of the JSON service account key you downloaded when you created your service account (see Creating a service account):
+
+
+```bash
+kubectl create secret generic cloudsql-oauth-credentials --from-file=credentials.json=[PATH_TO_CREDENTIAL_FILE]
+```
+
+
+To create the secrets for database access, use the SQL [PASSWORD] defined in above in step 2 of Initializing your Cloud SQL instance:
+
+
+```bash
+kubectl create secret generic cloudsql --from-literal=POSTGRES_DB=peerlogic \ --from-literal=POSTGRES_USER=peerlogic \
+--from-literal=POSTGRES_PASSWORD=[PASSWORD]
+```
+
+Retrieve the public Docker image for the Cloud SQL proxy.
+
+```bash
+docker pull b.gcr.io/cloudsql-docker/gce-proxy
+```
+
+
+
+## Create Secret Keys in Kubernetes
+
+Generate a secret key by activating your virtual environment and running the following python:
+
+```python
+from django.core.management import utils
+print(utils.get_random_secret_key())
+```
+Copy-paste this value into your next command:
+
+```bash
+kubectl create secret generic django --from-literal=DJANGO_SECRET_KEY='YOURGENERATEDKEYHERE'
+```
+
+Obtain the username and password for the [Peerlogic Netsapiens API user](https://start.1password.com/open/i?a=P3RU52IFYBEH3GKEDF2UBYENBQ&v=wlmpasbyyncmhpjji3lfc7ra4a&i=4snjuintsvcurafofmf53twjtm&h=my.1password.com). Have an admin set up a new client ID and secret for this application in core1.
+
+Netsapiens Secrets:
+```bash
+kubectl create secret generic netsapiens --from-literal=NETSAPIENS_CLIENT_SECRET='CLIENTSECRET' \
+--from-literal=NETSAPIENS_API_USERNAME='USERNAME' \
+--from-literal=NETSAPIENS_API_PASSWORD='PASSWORD'
+```
+
+
+## Create Redis Store
+
+https://cloud.google.com/memorystore/docs/redis/connect-redis-instance-gke
+
+Enter the following command to create a 2 GiB Basic Tier Redis instance in the us-west4 region:
+```bash
+gcloud redis instances create peerlogic-api-redis --size=2 --region=us-west4
+```
+Enable `redis.googleapis.com` when asked.
+
+After the instance is created, enter the describe command to get the IP address and port of the instance:
+
+
+```bash
+gcloud redis instances describe peerlogic-api-redis --region=us-west4
+```
+If successful, gcloud returns something similar to the following:
+
+```bash
+authorizedNetwork: projects/my-project/global/networks/default
+createTime: '2018-04-09T21:47:56.824081Z'
+currentLocationId: us-west4-a
+host: 10.0.0.27
+locationId: us-west4-a
+memorySizeGb: 2
+name: projects/my-project/locations/us-west4/instances/myinstance
+networkThroughputGbps: 2
+port: 6379
+redisVersion: REDIS_4_0
+reservedIpRange: 10.0.0.24/29
+state: READY
+tier: BASIC
+```
+Take note of the zone, IP address, and port of the Redis instance.
+
+## Connect the Redis Store to GKE
+
+Update the values in the appropriate peerlogic-api-\<env\>.yaml to point at the `redis://\<ipadress\>:6379/0` for the CELERY_BROKER_URL and CELERY_RESULT_BACKEND.
 
 
 ## Create Docker Repository
@@ -42,7 +238,7 @@ Instructions:
 
 ```bash
 gcloud artifacts repositories create peerlogic --repository-format=docker \
-    --location=us-west4 --description="Peerlogic repo"
+--location=us-west4 --description="Peerlogic repo"
 ```
 Verify it created successfully.
 
@@ -78,8 +274,9 @@ DONE
 ------------------------------------------------------------------------------------------------------------------------------------
 ID                                    CREATE_TIME                DURATION  SOURCE   IMAGES     STATUS
 545cb89c-f7a4-4652-8f63-579ac974be2e  2020-11-05T18:16:04+00:00  16S       gs://peerlogic-api-prod_cloudbuild/source/1604600163.528729-b70741b0f2d0449d8635aa22893258fe.tgz  us-west4-docker.pkg.dev/peerlogic/peerlogic-api:latest  SUCCESS
-You've just built a Docker image named peerlogic-api using a Dockerfile and pushed the image to Artifact Registry.
 ```
+
+You've just built a Docker image named peerlogic-api using a Dockerfile and pushed the image to Artifact Registry.
 
 Navigate to your Cloud Build History and watch the job there. Click on the Build Artifacts tab, and you'll see the docker image, like so: us-west4-docker.pkg.dev/peerlogic-api-prod/peerlogic/peerlogic-api. You can click the icon to open the docker image information in a new tab, and you'll see the latest tag there.
 
@@ -147,6 +344,14 @@ ID                                    CREATE_TIME                DURATION  SOURC
 ```
 
 You've just deployed the image peerlogic-api to Cloud Run.
+
+## Update GKE deployment yaml file with the appropriate image name
+
+This is titled peerlogic-api-\<env\>.yaml.
+
+Update the image value for each container spec for the following: peerlogic-api, and peerlogic-celery-beat, and peerlogic-celery-worker wiht your new repo:
+
+`us-west4-docker.pkg.dev/peerlogic-api-prod/peerlogic/peerlogic-api`
 
 
 
