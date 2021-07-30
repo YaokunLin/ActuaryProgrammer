@@ -13,7 +13,12 @@ steps:
         "python",
         "manage.py",
         "migrate",
-      ]  
+      ]
+    env:
+    - 'DJANGO_SECRET_KEY=$_DJANGO_SECRET_KEY'
+    - 'POSTGRES_USER=$_POSTGRES_USER'
+    - 'POSTGRES_DB=$_POSTGRES_DB'
+    - 'POSTGRES_PASSWORD=$_POSTGRES_PASSWORD'
   - id: "Collect static"
     name: "${_DJANGO_DOCKER_REPO}"
     args:
@@ -22,6 +27,11 @@ steps:
         "manage.py",
         "collectstatic",
       ]  
+    env:
+    - 'DJANGO_SECRET_KEY=$_DJANGO_SECRET_KEY'
+    - 'POSTGRES_USER=$_POSTGRES_USER'
+    - 'POSTGRES_DB=$_POSTGRES_DB'
+    - 'POSTGRES_PASSWORD=$_POSTGRES_PASSWORD'
   - id: "Rsync Static files to bucket"
     name:  'gcr.io/cloud-builders/gsutil'
     entrypoint: 'bash'
