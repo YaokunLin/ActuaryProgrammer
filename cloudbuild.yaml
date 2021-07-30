@@ -10,7 +10,7 @@ steps:
     args:
     - run
     - --filename=${_KUBERNETES_RESOURCE_FILE}
-    - --location=us-west4
+    - --location=us-west4-a
     - --cluster=peerlogic-api
   - id: "apply migrations"
     name: "${_DOCKER_REPO}"
