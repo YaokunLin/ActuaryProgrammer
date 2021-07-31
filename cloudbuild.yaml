@@ -16,6 +16,7 @@ steps:
     name: "gcr.io/cloud-builders/gke-deploy"
     args:
     - run
+    - --image=${_DOCKER_REPO}:latest
     - --filename=${_KUBERNETES_RESOURCE_FILE}
     - --location=${_ZONE}
     - --cluster=${_CLUSTER}
