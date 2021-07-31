@@ -384,6 +384,14 @@ spec:
     protocol: TCP
     targetPort: 8080
 # [END service]
+---
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: api-prod-peerlogic-tech
+spec:
+  domains:
+    - api-prod.peerlogic.tech
 
 ---
 apiVersion: networking.k8s.io/v1
@@ -391,7 +399,8 @@ kind: Ingress
 metadata:
   name: basic-ingress
   annotations:
-    # If the class annotation is not specified it defaults to "gce".
+    kubernetes.io/ingress.global-static-ip-name: peerlogic-api-prod
+    networking.gke.io/managed-certificates: api-prod-peerlogic-tech
     kubernetes.io/ingress.class: "gce"
 spec:
   rules:
@@ -404,5 +413,7 @@ spec:
             name: peerlogic-api
             port:
               number: 80
+
+
 
 

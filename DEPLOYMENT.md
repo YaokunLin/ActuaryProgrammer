@@ -302,3 +302,62 @@ Where:
 
 
 
+## Configure HTTPS Ingress
+
+```bash
+gcloud compute addresses create YOURPROJECTID --global
+gcloud compute addresses describe YOURPROJECTID --global
+```
+
+Create the managed certificate manifest in your peerlogic-api-\<env\>.yaml.
+
+Look up the IP address of the load balancer created in the previous step. Use the following command to get the IP address of the load balancer:
+
+```bash
+kubectl get ingress
+```
+The output is similar to the following:
+
+```bash
+NAME            CLASS    HOSTS   ADDRESS                 PORTS   AGE
+basic-ingress   <none>   *       should-match-above-ip   80      54s
+```
+
+
+The load balancer's IP address is listed in the ADDRESS column. If you are using a reserved static IP address that will be the load balancer's address.
+
+If the address is not listed, wait for the Ingress to finish setting up.
+
+
+Configure the DNS records for your domains to point to the IP address of the load balancer. If you use Cloud DNS, you can refer to the Managing Records guide for details. A Record pointing api-\<env\>.peerlogic.tech to the static IP.
+
+
+
+Note: You must wait for the DNS records you configured to propagate before continuing.
+Wait for the Google-managed certificate to be provisioned. This may take up to 60 minutes. You can check on the status of the certificate with the following command:
+
+```bash
+kubectl describe managedcertificate CERTIFICATE_NAME
+```
+
+Once a certificate is successfully provisioned, the value of the Status.CertificateStatus field will be Active. The following example shows the output of kubectl describe after the certificate is successfully provisioned:
+
+
+Name:         CERTIFICATE_NAME
+Namespace:    default
+Labels:       <none>
+Annotations:  <none>
+API Version:  networking.gke.io/v1
+Kind:         ManagedCertificate
+(...)
+Spec:
+  Domains:
+    DOMAIN_NAME1
+    DOMAIN_NAME2
+Status:
+  CertificateStatus: Active
+(...)
+
+
+Verify that SSL is working by visiting your domains using the https:// prefix. Your browser will indicate that the connection is secure and you can view the certificate details.
+
