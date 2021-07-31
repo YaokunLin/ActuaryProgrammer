@@ -10,21 +10,15 @@ steps:
     name: "gcr.io/cloud-builders/kubectl"
     args: ["delete", "jobs", "--all"]
     env:
-    - 'CLOUDSDK_COMPUTE_ZONE=us-west4-a'
-    - 'CLOUDSDK_CONTAINER_CLUSTER=peerlogic-api'
-  # TODO: figure out how to set celery and migration images as well
-  # - name: 'gcr.io/cloud-builders/kubectl'
-  #   args: ['set', 'image', 'deployment/peerlogic-api', 'peerlogic-api=${_DOCKER_REPO}']
-  #   env:
-  #   - 'CLOUDSDK_COMPUTE_ZONE=us-west4-a'
-  #   - 'CLOUDSDK_CONTAINER_CLUSTER=peerlogic-api'
+    - 'CLOUDSDK_COMPUTE_ZONE=${_ZONE}'
+    - 'CLOUDSDK_CONTAINER_CLUSTER=${_CLUSTER}'
   - id: "deploy container image to GKE"
     name: "gcr.io/cloud-builders/gke-deploy"
     args:
     - run
     - --filename=${_KUBERNETES_RESOURCE_FILE}
-    - --location=us-west4-a
-    - --cluster=peerlogic-api
+    - --location=${_ZONE}
+    - --cluster=${_CLUSTER}
   - id: "Collect static"
     name: "${_DOCKER_REPO}"
     args:
@@ -50,5 +44,6 @@ steps:
       gsutil -m rsync -r '/workspace/static' 'gs://${PROJECT_ID}/static'
 
 substitutions:
-  _REGION: us-west4
+  _ZONE: us-west4-a
+  _CLUSTER: peerlogic-api
 
