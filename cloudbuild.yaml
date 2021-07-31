@@ -2,15 +2,22 @@ steps:
   - id: "build image"
     name: "gcr.io/cloud-builders/docker"
     args: [ 'build', '-t', '${_DOCKER_REPO}', '.']
+    timeout: 500s
   - id: "push image"
     name: "gcr.io/cloud-builders/docker"
     args: ["push", "${_DOCKER_REPO}"]
-  - id: "Delete past migration job"
+  - id: "Delete past jobs"
     name: "gcr.io/cloud-builders/kubectl"
-    args: ["delete", "job", "migrate-database"]
+    args: ["delete", "jobs", "--all"]
     env:
-    - 'CLOUDSDK_COMPUTE_REGION=us-west4-a'
+    - 'CLOUDSDK_COMPUTE_ZONE=us-west4-a'
     - 'CLOUDSDK_CONTAINER_CLUSTER=peerlogic-api'
+  # TODO: figure out how to set celery and migration images as well
+  # - name: 'gcr.io/cloud-builders/kubectl'
+  #   args: ['set', 'image', 'deployment/peerlogic-api', 'peerlogic-api=${_DOCKER_REPO}']
+  #   env:
+  #   - 'CLOUDSDK_COMPUTE_ZONE=us-west4-a'
+  #   - 'CLOUDSDK_CONTAINER_CLUSTER=peerlogic-api'
   - id: "deploy container image to GKE"
     name: "gcr.io/cloud-builders/gke-deploy"
     args:
