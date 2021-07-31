@@ -159,6 +159,10 @@ spec:
       containers:
       - name: peerlogic-api
         image: gcr.io/peerlogic-api-prod/peerlogic-api
+        readinessProbe:
+          httpGet:
+            path: /admin/login/?next=/admin/core/client/
+            port: 8080
         env:
             # [START cloudsql_secrets]
             - name: POSTGRES_DB
@@ -368,16 +372,37 @@ apiVersion: v1
 kind: Service
 metadata:
   name: peerlogic-api
+  namespace: default
   labels:
     app: peerlogic-api
 spec:
-  type: LoadBalancer
-  ports:
-  - port: 80
-    targetPort: 8080
+  type: NodePort
   selector:
     app: peerlogic-api
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 8080
 # [END service]
 
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: basic-ingress
+  annotations:
+    # If the class annotation is not specified it defaults to "gce".
+    kubernetes.io/ingress.class: "gce"
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /*
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: peerlogic-api
+            port:
+              number: 80
 
 
