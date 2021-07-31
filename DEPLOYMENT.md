@@ -304,12 +304,15 @@ Where:
 
 ## Configure HTTPS Ingress
 
+
+### Reserve a static IP
+
 ```bash
 gcloud compute addresses create YOURPROJECTID --global
 gcloud compute addresses describe YOURPROJECTID --global
 ```
 
-Create the managed certificate manifest in your peerlogic-api-\<env\>.yaml.
+Create the managed certificate manifest in your peerlogic-api-\<env\>.yaml and reference it in your ingress resource.
 
 Look up the IP address of the load balancer created in the previous step. Use the following command to get the IP address of the load balancer:
 
@@ -328,12 +331,41 @@ The load balancer's IP address is listed in the ADDRESS column. If you are using
 
 If the address is not listed, wait for the Ingress to finish setting up.
 
+### Visiting your reserved static IP address
+To verify that the load balancer is configured correctly, you can either use a web browser to visit the IP address or use curl:
 
-Configure the DNS records for your domains to point to the IP address of the load balancer. If you use Cloud DNS, you can refer to the Managing Records guide for details. A Record pointing api-\<env\>.peerlogic.tech to the static IP.
 
+curl http://203.0.113.32/
 
+Note: You might get HTTP 404 and HTTP 500 errors for a few minutes if you used Ingress resource to configure a load balancer. It takes time for configuration changes to propagate to regions across the globe.
+
+### Configuring your domain name records
+Configure the DNS records for your domains to point to the IP address of the load balancer. 
+
+To have browsers querying your domain name, such as example.com, or subdomain name, such as blog.example.com, point to the static IP address you reserved, you must update the DNS (Domain Name Server) records of your domain name.
+
+You must create an A (Address) type DNS record for your domain or subdomain name and have its value configured with the reserved IP address.
+
+DNS records of your domain are managed by your nameserver. Our nameserver is a DNS service called Cloud DNS, located in the peerlogic-dns project.
+
+Follow Cloud DNS Quickstart guide to configure DNS A record for your domain name with the reserved IP address of your application. Go to Cloud DNS and create a record set in peerlogic-tech pointing api-\<env\>.peerlogic.tech to the static IP.
 
 Note: You must wait for the DNS records you configured to propagate before continuing.
+
+### Visiting your domain name
+To verify that your domain name's DNS A records resolve to the IP address you reserved, visit your domain name.
+
+Note: It can take a few hours for DNS records to propagate. This time might depend on your nameservers, local internet service provider (ISP), and many other factors.
+To make a DNS query for your domain name's A record, run the host command:
+
+
+host example.com
+Output:
+
+example.com has address 203.0.113.32
+At this point, you can point your web browser to your domain name and visit your website!
+
+### Babysit the Google-managed Certificate
 Wait for the Google-managed certificate to be provisioned. This may take up to 60 minutes. You can check on the status of the certificate with the following command:
 
 ```bash
