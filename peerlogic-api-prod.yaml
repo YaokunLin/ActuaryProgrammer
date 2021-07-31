@@ -399,6 +399,7 @@ kind: Ingress
 metadata:
   name: basic-ingress
   annotations:
+    kubernetes.io/ingress.allow-http: false
     kubernetes.io/ingress.global-static-ip-name: peerlogic-api-prod
     networking.gke.io/managed-certificates: api-prod-peerlogic-tech
     kubernetes.io/ingress.class: "gce"
