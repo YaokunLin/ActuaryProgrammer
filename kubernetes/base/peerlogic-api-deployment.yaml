@@ -1,82 +1,8 @@
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: peerlogic-api
-data:
-  project_id: "peerlogic-api-prod"
-  environment: "prod"
-  cloudsql_connection_name: "peerlogic-api-prod:us-west4:peerlogic-prod"
-  docker_repo_name: "gcr.io/peerlogic-api-prod/peerlogic-api"
-
----
-# https://cloud.google.com/python/django/kubernetes-engine#set_up_cloud_sql
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: cloudsql
-spec:
-  selector:
-    matchLabels:
-      app: cloudsql
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: cloudsql
-    spec:
-      containers:
-      # [START proxy_container]
-      - image: gcr.io/cloudsql-docker/gce-proxy:1.16
-        name: cloudsql-proxy
-        command: ["/cloud_sql_proxy", "--dir=/cloudsql",
-                  "-instances=${INSTANCE_CONNECTION_NAME}=tcp:0.0.0.0:5432",
-                  "-credential_file=/secrets/cloudsql/credentials.json"]
-        env:
-        - name: INSTANCE_CONNECTION_NAME
-          valueFrom:
-            configMapKeyRef:
-              name: peerlogic-api
-              key: cloudsql_connection_name
-        volumeMounts:
-          - name: cloudsql-oauth-credentials
-            mountPath: /secrets/cloudsql
-            readOnly: true
-          - name: ssl-certs
-            mountPath: /etc/ssl/certs
-          - name: cloudsql
-            mountPath: /cloudsql
-        ports:
-          - containerPort: 5432
-            name: sql
-      # [END proxy_container] 
-      # [START volumes]
-      volumes:
-        - name: cloudsql-oauth-credentials
-          secret:
-            secretName: cloudsql-oauth-credentials
-        - name: ssl-certs
-          hostPath:
-            path: /etc/ssl/certs
-        - name: cloudsql
-          emptyDir: {}
-      # [END volumes]        
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: cloudsql
-  labels:
-    app: cloudsql
-spec:
-  type: ClusterIP
-  selector:
-    app: cloudsql
-  ports:
-    - port: 5432
-      name: sql
-      targetPort: sql
+# ---
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: peerlogic-api-env
 
 ---
 apiVersion: batch/v1
@@ -88,7 +14,7 @@ spec:
     spec:
       containers:
       - name: migrate-database
-        image: gcr.io/peerlogic-api-prod/peerlogic-api
+        image: ${DOCKER_REPO}
         command: ["python", "manage.py", "migrate"]
         env:
             # [START cloudsql_secrets]
@@ -121,7 +47,7 @@ spec:
             - name: NETSAPIENS_CLIENT_ID
               valueFrom:
                 configMapKeyRef:
-                  name: peerlogic-api
+                  name: peerlogic-api-env
                   key: project_id
             # [START netsapiens_secrets]
             - name: NETSAPIENS_CLIENT_SECRET
@@ -145,9 +71,15 @@ spec:
             - name: DJANGO_EMAIL_BACKEND
               value: django.core.mail.backends.console.EmailBackend
             - name: CELERY_BROKER_URL
-              value: "redis://10.19.147.155:6379/0"
+              valueFrom:
+                configMapKeyRef:
+                  name: peerlogic-api-env
+                  key: redis_url
             - name: CELERY_RESULT_BACKEND
-              value: "redis://10.19.147.155:6379/0"
+              valueFrom:
+                configMapKeyRef:
+                  name: peerlogic-api-env
+                  key: redis_url
             - name: DJANGO_DEBUG
               value: "False"
             - name: GKE_APPLICATION
@@ -179,7 +111,7 @@ spec:
     spec:
       containers:
       - name: peerlogic-api
-        image: gcr.io/peerlogic-api-prod/peerlogic-api
+        image: ${DOCKER_REPO}
         readinessProbe:
           httpGet:
             path: /admin/login/?next=/admin/core/client/
@@ -215,7 +147,7 @@ spec:
             - name: NETSAPIENS_CLIENT_ID
               valueFrom:
                 configMapKeyRef:
-                  name: peerlogic-api
+                  name: peerlogic-api-env
                   key: project_id
             # [START netsapiens_secrets]
             - name: NETSAPIENS_CLIENT_SECRET
@@ -239,9 +171,15 @@ spec:
             - name: DJANGO_EMAIL_BACKEND
               value: django.core.mail.backends.console.EmailBackend
             - name: CELERY_BROKER_URL
-              value: "redis://10.19.147.155:6379/0"
+              valueFrom:
+                configMapKeyRef:
+                  name: peerlogic-api-env
+                  key: redis_url
             - name: CELERY_RESULT_BACKEND
-              value: "redis://10.19.147.155:6379/0"
+              valueFrom:
+                configMapKeyRef:
+                  name: peerlogic-api-env
+                  key: redis_url
             - name: DJANGO_DEBUG
               value: "False"
             - name: GKE_APPLICATION
@@ -252,7 +190,7 @@ spec:
         - containerPort: 8080
       - name: peerlogic-celery-worker
         command: ["celery", "-A", "peerlogic", "worker", "-l", "INFO"]
-        image: gcr.io/peerlogic-api-prod/peerlogic-api
+        image: ${DOCKER_REPO}
         env:
             # [START cloudsql_secrets]
             - name: POSTGRES_DB
@@ -283,7 +221,7 @@ spec:
             - name: NETSAPIENS_CLIENT_ID
               valueFrom:
                 configMapKeyRef:
-                  name: peerlogic-api
+                  name: peerlogic-api-env
                   key: project_id
             # [START netsapiens_secrets]
             - name: NETSAPIENS_CLIENT_SECRET
@@ -307,9 +245,15 @@ spec:
             - name: DJANGO_EMAIL_BACKEND
               value: django.core.mail.backends.console.EmailBackend
             - name: CELERY_BROKER_URL
-              value: "redis://10.19.147.155:6379/0"
+              valueFrom:
+                configMapKeyRef:
+                  name: peerlogic-api-env
+                  key: redis_url
             - name: CELERY_RESULT_BACKEND
-              value: "redis://10.19.147.155:6379/0"
+              valueFrom:
+                configMapKeyRef:
+                  name: peerlogic-api-env
+                  key: redis_url
             - name: DJANGO_DEBUG
               value: "False"
             - name: GKE_APPLICATION
@@ -318,7 +262,7 @@ spec:
               value: "$(CLOUDSQL_SERVICE_HOST)"
       - name: peerlogic-celery-beat
         command: ["celery", "-A", "peerlogic", "beat", "-l", "INFO", "-S", "django_celery_beat.schedulers:DatabaseScheduler"]
-        image: gcr.io/peerlogic-api-prod/peerlogic-api
+        image: ${DOCKER_REPO}
         env:
             # [START cloudsql_secrets]
             - name: POSTGRES_DB
@@ -349,7 +293,7 @@ spec:
             - name: NETSAPIENS_CLIENT_ID
               valueFrom:
                 configMapKeyRef:
-                  name: peerlogic-api
+                  name: peerlogic-api-env
                   key: project_id
             # [START netsapiens_secrets]
             - name: NETSAPIENS_CLIENT_SECRET
@@ -377,9 +321,15 @@ spec:
             - name: DJANGO_EMAIL_BACKEND
               value: django.core.mail.backends.console.EmailBackend
             - name: CELERY_BROKER_URL
-              value: "redis://10.19.147.155:6379/0"
+              valueFrom:
+                configMapKeyRef:
+                  name: peerlogic-api-env
+                  key: redis_url
             - name: CELERY_RESULT_BACKEND
-              value: "redis://10.19.147.155:6379/0"
+              valueFrom:
+                configMapKeyRef:
+                  name: peerlogic-api-env
+                  key: redis_url
             - name: DJANGO_DEBUG
               value: "False"
             - name: GKE_APPLICATION
@@ -414,36 +364,7 @@ spec:
     protocol: TCP
     targetPort: 8080
 # [END service]
----
-apiVersion: networking.gke.io/v1
-kind: ManagedCertificate
-metadata:
-  name: api-prod-peerlogic-tech
-spec:
-  domains:
-    - api-prod.peerlogic.tech
 
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: basic-ingress
-  annotations:
-    kubernetes.io/ingress.allow-http:  "false"
-    kubernetes.io/ingress.global-static-ip-name: peerlogic-api-prod
-    networking.gke.io/managed-certificates: api-prod-peerlogic-tech
-    kubernetes.io/ingress.class: "gce"
-spec:
-  rules:
-  - http:
-      paths:
-      - path: /*
-        pathType: ImplementationSpecific
-        backend:
-          service:
-            name: peerlogic-api
-            port:
-              number: 80
 
 
 

@@ -1,0 +1,63 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudsql
+spec:
+  selector:
+    matchLabels:
+      app: cloudsql
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: cloudsql
+    spec:
+      containers:
+      # [START proxy_container]
+      - image: gcr.io/cloudsql-docker/gce-proxy:1.16
+        name: cloudsql-proxy
+        command:
+        - /cloud_sql_proxy
+        - --dir=/cloudsql
+        - --instances=${CLOUDSQL_CONNECTION_NAME}=tcp:0.0.0.0:5432
+        - --credential_file=/secrets/cloudsql/credentials.json
+        volumeMounts:
+          - name: cloudsql-oauth-credentials
+            mountPath: /secrets/cloudsql
+            readOnly: true
+          - name: ssl-certs
+            mountPath: /etc/ssl/certs
+          - name: cloudsql
+            mountPath: /cloudsql
+        ports:
+          - containerPort: 5432
+            name: sql
+      # [END proxy_container] 
+      # [START volumes]
+      volumes:
+        - name: cloudsql-oauth-credentials
+          secret:
+            secretName: cloudsql-oauth-credentials
+        - name: ssl-certs
+          hostPath:
+            path: /etc/ssl/certs
+        - name: cloudsql
+          emptyDir: {}
+      # [END volumes]        
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cloudsql
+  labels:
+    app: cloudsql
+spec:
+  type: ClusterIP
+  selector:
+    app: cloudsql
+  ports:
+    - port: 5432
+      name: sql
+      targetPort: sql
