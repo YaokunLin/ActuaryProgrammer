@@ -112,7 +112,7 @@ envsubst < "$KUBERNETES_BASE_DIR/cloudsql.yaml" > "$KUBERNETES_OVERLAY_DIR/cloud
 #   --num-nodes 4 --zone $ZONE \
 #   --enable-ip-alias
 
-# gcloud container clusters get-credentials peerlogic-api --zone $ZONE
+gcloud container clusters get-credentials peerlogic-api --zone $ZONE
 
 
 # # Kubectl secrets
