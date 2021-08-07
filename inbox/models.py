@@ -3,11 +3,7 @@ from django.db import models
 from django_extensions.db.fields import ShortUUIDField
 from phonenumber_field.modelfields import PhoneNumberField
 
-from .field_choices import (
-    MESSAGE_STATUSES,
-    MESSAGE_PRIORITIES,
-    MESSAGE_PRIORITIES_DEFAULT,
-)
+from .field_choices import MESSAGE_STATUSES, MESSAGE_PRIORITIES, MESSAGE_PRIORITIES_DEFAULT
 
 
 class Contact(models.Model):
@@ -33,17 +29,13 @@ class SMSMessage(models.Model):
     to_numbers = models.JSONField()
     from_numbers = models.JSONField()
     text = models.CharField(max_length=2048)
-    message_status = models.CharField(
-        choices=MESSAGE_STATUSES, blank=True, max_length=255
-    )
+    message_status = models.CharField(choices=MESSAGE_STATUSES, blank=True, max_length=255)
     from_date_time = models.DateTimeField()
     to_date_time = models.DateTimeField()
     direction = models.CharField(max_length=255)
     media = models.JSONField(null=True)
     segment_count = models.IntegerField(null=True)
-    priority = models.CharField(
-        choices=MESSAGE_PRIORITIES, default=MESSAGE_PRIORITIES_DEFAULT, max_length=255
-    )
+    priority = models.CharField(choices=MESSAGE_PRIORITIES, default=MESSAGE_PRIORITIES_DEFAULT, max_length=255)
     expiration = models.DateTimeField(null=True)
 
     @property
