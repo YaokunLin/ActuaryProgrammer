@@ -37,6 +37,8 @@ DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
 if os.getenv("GKE_APPLICATION", False) == "True":
     ALLOWED_HOSTS.append(os.getenv("KUBERNETES_SERVICE_HOST"))
 
+# Bandwidth
+BANDWIDTH_APPLICATION_ID = os.getenv("BANDWIDTH_APPLICATION_ID")
 
 # Netsapiens Communications Info
 NETSAPIENS_CLIENT_ID = os.getenv("NETSAPIENS_CLIENT_ID")
@@ -49,7 +51,9 @@ NETSAPIENS_API_PASSWORD = os.getenv("NETSAPIENS_API_PASSWORD")
 CORS_ORIGIN_ALLOW_ALL = DEBUG
 CORS_ORIGIN_WHITELIST = ("http://localhost:3000", "app://.")
 
+
 AUTH_USER_MODEL = "core.User"
+
 
 # Application definition
 
@@ -63,9 +67,11 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_extensions",
     "django_celery_beat",
+    "phonenumber_field",
     "corsheaders",
     "core",
     "reminders",
+    "inbox",
 ]
 
 MIDDLEWARE = [
@@ -145,10 +151,10 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 PASSWORD_HASHERS = [
-    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
-    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
-    'django.contrib.auth.hashers.Argon2PasswordHasher',
-    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
+    "django.contrib.auth.hashers.Argon2PasswordHasher",
+    "django.contrib.auth.hashers.BCryptSHA256PasswordHasher",
 ]
 
 
