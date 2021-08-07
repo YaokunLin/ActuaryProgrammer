@@ -67,6 +67,7 @@ class UserManager(_UserManager):
 
 
 class User(AbstractUser):
+    id = ShortUUIDField(primary_key=True, editable=False)
     # Using plain "name" here since we may not have it broken out into
     # first and last
     name = models.CharField(_("name"), max_length=300, blank=True)

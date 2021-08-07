@@ -1,4 +1,3 @@
-from core.models import User
 from rest_framework import serializers
 
 from .models import Cadence
