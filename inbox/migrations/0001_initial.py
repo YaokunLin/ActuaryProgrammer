@@ -11,46 +11,119 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-    ]
+    dependencies = [migrations.swappable_dependency(settings.AUTH_USER_MODEL)]
 
     operations = [
         migrations.CreateModel(
-            name='Contact',
+            name="Contact",
             fields=[
-                ('id', django_extensions.db.fields.ShortUUIDField(blank=True, editable=False, primary_key=True, serialize=False)),
-                ('first_name', models.CharField(blank=True, max_length=255)),
-                ('last_name', models.CharField(blank=True, max_length=255)),
-                ('placeholder', models.CharField(blank=True, max_length=255)),
-                ('mobile_number', phonenumber_field.modelfields.PhoneNumberField(max_length=128, region=None)),
-                ('fax_number', phonenumber_field.modelfields.PhoneNumberField(blank=True, max_length=128, region=None)),
-                ('address_line_1', models.CharField(blank=True, max_length=255)),
-                ('address_line_2', models.CharField(blank=True, max_length=255)),
-                ('zip_code', models.CharField(max_length=255)),
+                (
+                    "id",
+                    django_extensions.db.fields.ShortUUIDField(
+                        blank=True, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                ("first_name", models.CharField(blank=True, max_length=255)),
+                ("last_name", models.CharField(blank=True, max_length=255)),
+                ("placeholder", models.CharField(blank=True, max_length=255)),
+                (
+                    "mobile_number",
+                    phonenumber_field.modelfields.PhoneNumberField(
+                        max_length=128, region=None
+                    ),
+                ),
+                (
+                    "fax_number",
+                    phonenumber_field.modelfields.PhoneNumberField(
+                        blank=True, max_length=128, region=None
+                    ),
+                ),
+                ("address_line_1", models.CharField(blank=True, max_length=255)),
+                ("address_line_2", models.CharField(blank=True, max_length=255)),
+                ("zip_code", models.CharField(max_length=255)),
             ],
         ),
         migrations.CreateModel(
-            name='SMSMessage',
+            name="SMSMessage",
             fields=[
-                ('id', models.CharField(editable=False, max_length=255, primary_key=True, serialize=False)),
-                ('owner', phonenumber_field.modelfields.PhoneNumberField(max_length=128, region=None)),
-                ('source_number', phonenumber_field.modelfields.PhoneNumberField(max_length=128, region=None)),
-                ('destination_number', phonenumber_field.modelfields.PhoneNumberField(max_length=128, region=None)),
-                ('error_code', models.IntegerField(null=True)),
-                ('to_numbers', models.JSONField()),
-                ('from_numbers', models.JSONField()),
-                ('text', models.CharField(max_length=2048)),
-                ('message_status', models.CharField(blank=True, choices=[('accepted', 'Accepted'), ('delivered', 'Delivered'), ('failed', 'Failed'), ('queued', 'Queued'), ('received', 'Received'), ('sending', 'Sending'), ('sent', 'Sent'), ('undelivered', 'Undelivered')], max_length=255)),
-                ('from_date_time', models.DateTimeField()),
-                ('to_date_time', models.DateTimeField()),
-                ('direction', models.CharField(max_length=255)),
-                ('media', models.JSONField(null=True)),
-                ('segment_count', models.IntegerField(null=True)),
-                ('priority', models.CharField(choices=[('default', 'Default'), ('high', 'High')], default='default', max_length=255)),
-                ('expiration', models.DateTimeField(null=True)),
-                ('assigned_to', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
-                ('contact', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='inbox.contact')),
+                (
+                    "id",
+                    models.CharField(
+                        editable=False,
+                        max_length=255,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                (
+                    "owner",
+                    phonenumber_field.modelfields.PhoneNumberField(
+                        max_length=128, region=None
+                    ),
+                ),
+                (
+                    "source_number",
+                    phonenumber_field.modelfields.PhoneNumberField(
+                        max_length=128, region=None
+                    ),
+                ),
+                (
+                    "destination_number",
+                    phonenumber_field.modelfields.PhoneNumberField(
+                        max_length=128, region=None
+                    ),
+                ),
+                ("error_code", models.IntegerField(null=True)),
+                ("to_numbers", models.JSONField()),
+                ("from_numbers", models.JSONField()),
+                ("text", models.CharField(max_length=2048)),
+                (
+                    "message_status",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("accepted", "Accepted"),
+                            ("delivered", "Delivered"),
+                            ("failed", "Failed"),
+                            ("queued", "Queued"),
+                            ("received", "Received"),
+                            ("sending", "Sending"),
+                            ("sent", "Sent"),
+                            ("undelivered", "Undelivered"),
+                        ],
+                        max_length=255,
+                    ),
+                ),
+                ("from_date_time", models.DateTimeField()),
+                ("to_date_time", models.DateTimeField()),
+                ("direction", models.CharField(max_length=255)),
+                ("media", models.JSONField(null=True)),
+                ("segment_count", models.IntegerField(null=True)),
+                (
+                    "priority",
+                    models.CharField(
+                        choices=[("default", "Default"), ("high", "High")],
+                        default="default",
+                        max_length=255,
+                    ),
+                ),
+                ("expiration", models.DateTimeField(null=True)),
+                (
+                    "assigned_to",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "contact",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to="inbox.contact",
+                    ),
+                ),
             ],
         ),
     ]
