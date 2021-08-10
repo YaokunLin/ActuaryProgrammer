@@ -120,3 +120,6 @@ GitHub.sublime-settings
 
 # Docker
 volumes/postgres/data
+
+# GCP
+key-file

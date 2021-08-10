@@ -1,16 +1,13 @@
-import uuid
-import datetime
-
 from django.db import models
 from django.db import IntegrityError
 from django.contrib.auth.models import AbstractUser, Group, UserManager as _UserManager
-from django.contrib.auth.validators import UnicodeUsernameValidator
-from django.core.mail import send_mail
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from django_userforeignkey.models.fields import UserForeignKey
 from django_extensions.db.fields import ShortUUIDField
+
+from phonenumber_field.modelfields import PhoneNumberField
 
 
 class AuditTrailModel(models.Model):
@@ -67,26 +64,22 @@ class UserManager(_UserManager):
 
 
 class User(AbstractUser):
-    id = ShortUUIDField(primary_key=True, editable=False)
     # Using plain "name" here since we may not have it broken out into
     # first and last
     name = models.CharField(_("name"), max_length=300, blank=True)
-    telecom_user = models.CharField(
-        _("telecom user (not sip username)"), max_length=80, blank=True
-    )
-    access_token = models.CharField(
-        _("telecom access token"), max_length=255, blank=True
-    )
-    refresh_token = models.CharField(
-        _("telecom refresh token"), max_length=255, blank=True
-    )
+    telecom_user = models.CharField(_("telecom user (not sip username)"), max_length=80, blank=True)
+    access_token = models.CharField(_("telecom access token"), max_length=255, blank=True)
+    refresh_token = models.CharField(_("telecom refresh token"), max_length=255, blank=True)
     expires_at = models.DateTimeField(_("telecom token expires at"), null=True)
-    sms_number = models.CharField(max_length=10, blank=True)
 
 
 class Client(models.Model):
     id = ShortUUIDField(primary_key=True, editable=False)
     group = models.OneToOneField(Group, on_delete=models.CASCADE)
-    rest_base_url = (
-        models.URLField()
-    )  # Can be Dentrix, another EMR, or some other system
+    rest_base_url = models.URLField()  # Can be Dentrix, another EMR, or some other system
+
+
+class GroupTelecom(models.Model):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    group = models.OneToOneField(Group, on_delete=models.CASCADE)
+    sms_number = PhoneNumberField(blank=True)
