@@ -22,7 +22,7 @@ class SMSMessagesView(APIView):
     Create a new SMSMessage.
     # TODO: list once pagination comes available
     # TODO: from_number will always come from 1 assigned group/domain's sms number, not willy-nilly
-    # TODO: protect PUT
+
     # TODO: lock down authorization
     """
 
@@ -53,7 +53,7 @@ class SMSMessagesView(APIView):
 
 class SMSMessageDetail(APIView):
     """
-    Retrieve, update or delete a SMSMessage instance.
+    Retrieve or update a SMSMessage instance.
     """
 
     def get_object(self, pk):
