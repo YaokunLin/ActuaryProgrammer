@@ -79,7 +79,6 @@ celerybeat-schedule.*
 *.sage.py
 
 # Environments
-.env
 *.env
 .venv
 env/
@@ -121,3 +120,6 @@ GitHub.sublime-settings
 
 # Docker
 volumes/postgres/data
+
+# GCP
+key-file
