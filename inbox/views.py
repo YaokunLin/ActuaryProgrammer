@@ -48,7 +48,7 @@ class SMSMessagesView(APIView):
         sms_message = bandwidth_response_to_sms_message.save()
         serializer = SMSMessageSerializer(sms_message)
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 
 
 class SMSMessageDetail(APIView):
