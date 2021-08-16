@@ -1,7 +1,5 @@
 from django.db import models
 from django.conf import settings
-from django.db.models.fields.related import ForeignKey
-
 
 from django_extensions.db.fields import ShortUUIDField
 from django_userforeignkey.models.fields import UserForeignKey

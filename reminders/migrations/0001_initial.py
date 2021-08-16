@@ -24,9 +24,7 @@ class Migration(migrations.Migration):
                 ("modified_at", models.DateTimeField(auto_now=True, db_index=True)),
                 (
                     "id",
-                    django_extensions.db.fields.ShortUUIDField(
-                        blank=True, editable=False, primary_key=True, serialize=False
-                    ),
+                    django_extensions.db.fields.ShortUUIDField(blank=True, editable=False, primary_key=True, serialize=False),
                 ),
                 (
                     "cadence_type",
@@ -40,9 +38,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "client",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE, to="core.Client"
-                    ),
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="core.Client"),
                 ),
                 (
                     "created_by",

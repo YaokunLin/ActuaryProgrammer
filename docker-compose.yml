@@ -13,6 +13,8 @@ services:
 
   api:
       build: .
+      # using runserver for hot reloading, instead of gunicorn
+      command: python3 manage.py runserver 0.0.0.0:8000
       volumes:
           - .:/app
       ports:
@@ -30,7 +32,7 @@ services:
           - DB_HOST=postgres
 
   worker:
-      image: gcr.io/peerlogic-api/peerlogic-api
+      build: .
       command: ["celery", "-A", "peerlogic", "worker", "-l", "INFO"]
       volumes:
           - .:/app
@@ -49,7 +51,7 @@ services:
           - CELERY_RESULT_BACKEND=redis://redis:6379/0
 
   beat:
-      image: gcr.io/peerlogic-api/peerlogic-api
+      build: .
       command: ["celery", "-A", "peerlogic", "beat", "-l", "INFO", "-S", "django_celery_beat.schedulers:DatabaseScheduler"]
       volumes:
           - .:/app

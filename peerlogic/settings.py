@@ -11,9 +11,12 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
 import os
+import requests
+from requests.auth import HTTPBasicAuth
 from pathlib import Path
 
 from dotenv import load_dotenv
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
@@ -37,6 +40,14 @@ DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
 if os.getenv("GKE_APPLICATION", False) == "True":
     ALLOWED_HOSTS.append(os.getenv("KUBERNETES_SERVICE_HOST"))
 
+# Bandwidth
+BANDWIDTH_APPLICATION_ID = os.getenv("BANDWIDTH_APPLICATION_ID")
+BANDWIDTH_MESSAGING_URI = os.getenv("BANDWIDTH_MESSAGING_URI")
+BANDWIDTH_API_USERNAME = os.getenv("BANDWIDTH_API_USERNAME")
+BANDWIDTH_API_PASSWORD = os.getenv("BANDWIDTH_API_PASSWORD")
+BANDWIDTH_CLIENT = requests.Session()
+BANDWIDTH_CLIENT.auth = HTTPBasicAuth(BANDWIDTH_API_USERNAME, BANDWIDTH_API_PASSWORD)
+
 
 # Netsapiens Communications Info
 NETSAPIENS_CLIENT_ID = os.getenv("NETSAPIENS_CLIENT_ID")
@@ -49,7 +60,9 @@ NETSAPIENS_API_PASSWORD = os.getenv("NETSAPIENS_API_PASSWORD")
 CORS_ORIGIN_ALLOW_ALL = DEBUG
 CORS_ORIGIN_WHITELIST = ("http://localhost:3000", "app://.")
 
+# DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "core.User"
+
 
 # Application definition
 
@@ -63,9 +76,11 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_extensions",
     "django_celery_beat",
+    "phonenumber_field",
     "corsheaders",
     "core",
     "reminders",
+    "inbox",
 ]
 
 MIDDLEWARE = [
@@ -136,19 +151,17 @@ if os.getenv("TRAMPOLINE_CI", None):
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
-    },
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
 PASSWORD_HASHERS = [
-    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
-    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
-    'django.contrib.auth.hashers.Argon2PasswordHasher',
-    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
+    "django.contrib.auth.hashers.Argon2PasswordHasher",
+    "django.contrib.auth.hashers.BCryptSHA256PasswordHasher",
 ]
 
 
