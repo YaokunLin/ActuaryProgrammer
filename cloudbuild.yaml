@@ -12,14 +12,15 @@ steps:
     env:
     - 'CLOUDSDK_COMPUTE_ZONE=${_ZONE}'
     - 'CLOUDSDK_CONTAINER_CLUSTER=${_CLUSTER}'
-  # - id: "deploy container image to GKE"
-  #   name: "gcr.io/cloud-builders/gke-deploy"
-  #   args:
-  #   - run
-  #   - --image=${_DOCKER_REPO}:latest
-  #   - --filename=${_KUBERNETES_RESOURCE_FILE}
-  #   - --location=${_ZONE}
-  #   - --cluster=${_CLUSTER}
+  - id: "deploy container image to GKE"
+    name: 'gcr.io/$PROJECT_ID/kustomize'
+    args:
+    - 'build'
+    - 'overlays/${PROJECT_ID}.env'
+    env:
+      - 'APPLY=true'
+      - 'CLOUDSDK_COMPUTE_ZONE=${_ZONE}'
+      - 'CLOUDSDK_CONTAINER_CLUSTER={_CLUSTER}'
   - id: "Collect static"
     name: "${_DOCKER_REPO}"
     args:
