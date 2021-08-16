@@ -40,12 +40,14 @@ Set the NETSAPIENS_API_USERNAME and NETSAPIENS_API_PASSWORD in the <env>.env fil
 
 # Run gcloud deployment script
 
+From the root of this directory:
+
 Activate your virtual environment and `pip install -r requirements/requirements.txt`.
 
 Then run:
 
 ```bash
-gcloud_deploy.bash <env>
+./deployment/gcloud_deploy.bash <env>
 ```
 
 
@@ -61,7 +63,7 @@ cloud_sql_proxy -instances="[YOUR_INSTANCE_CONNECTION_NAME]"=tcp:5432
 In another terminal window, install postgres and then run the following command:
 
 ```bash
-psql_deploy.bash
+./deployment/psql_deploy.bash
 ```
 
 # Create Cloud Build for GKE
@@ -129,7 +131,7 @@ Note: You might get HTTP 404 and HTTP 500 errors for a few minutes if you used I
 ### Visiting your domain name
 To verify that your domain name's DNS A records resolve to the IP address you reserved, visit your domain name.
 
-`gcloud_deploy.bash`'s run will output the following:
+`./deployment/cloud_deploy.bash`'s run will output the following:
 
 ```text
 Domain name api-prod.peerlogic.tech is propagating. All set!

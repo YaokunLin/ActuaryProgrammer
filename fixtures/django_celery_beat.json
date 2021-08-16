@@ -1,5 +1,12 @@
 [
 {
+  "model": "django_celery_beat.clockedschedule",
+  "pk": 2,
+  "fields": {
+    "clocked_time": "2020-12-12T01:31:14Z"
+  }
+},
+{
   "model": "django_celery_beat.crontabschedule",
   "pk": 1,
   "fields": {
@@ -13,9 +20,9 @@
 },
 {
   "model": "django_celery_beat.crontabschedule",
-  "pk": 3,
+  "pk": 2,
   "fields": {
-    "minute": "*",
+    "minute": "0",
     "hour": "8",
     "day_of_week": "mon-fri",
     "day_of_month": "*",
@@ -25,9 +32,9 @@
 },
 {
   "model": "django_celery_beat.crontabschedule",
-  "pk": 4,
+  "pk": 3,
   "fields": {
-    "minute": "*",
+    "minute": "0",
     "hour": "20",
     "day_of_week": "sun-thu",
     "day_of_month": "*",
@@ -39,7 +46,7 @@
   "model": "django_celery_beat.periodictasks",
   "pk": 1,
   "fields": {
-    "last_update": "2020-12-11T07:08:59.294Z"
+    "last_update": "2021-08-07T02:00:22.424Z"
   }
 },
 {
@@ -64,24 +71,24 @@
     "one_off": false,
     "start_time": null,
     "enabled": true,
-    "last_run_at": null,
-    "total_run_count": 0,
-    "date_changed": "2020-12-11T06:57:33.314Z",
+    "last_run_at": "2021-08-16T04:00:00.017Z",
+    "total_run_count": 233,
+    "date_changed": "2021-08-16T04:02:40.975Z",
     "description": ""
   }
 },
 {
   "model": "django_celery_beat.periodictask",
-  "pk": 3,
+  "pk": 2,
   "fields": {
     "name": "Run morning Reminders",
     "task": "reminders.tasks.send_sms_reminders",
     "interval": null,
-    "crontab": 3,
+    "crontab": 2,
     "solar": null,
     "clocked": null,
     "args": "[]",
-    "kwargs": "{\"reminder_type\": \"morning_of\"}",
+    "kwargs": "{}",
     "queue": null,
     "exchange": null,
     "routing_key": null,
@@ -90,11 +97,11 @@
     "expires": null,
     "expire_seconds": null,
     "one_off": false,
-    "start_time": "2020-12-11T06:51:15Z",
+    "start_time": "2020-12-08T02:08:33Z",
     "enabled": true,
-    "last_run_at": null,
-    "total_run_count": 0,
-    "date_changed": "2020-12-11T06:52:04.189Z",
+    "last_run_at": "2021-08-16T15:00:00.021Z",
+    "total_run_count": 166,
+    "date_changed": "2021-08-16T15:02:46.023Z",
     "description": ""
   }
 },
@@ -105,11 +112,11 @@
     "name": "Run evening Reminders",
     "task": "reminders.tasks.send_sms_reminders",
     "interval": null,
-    "crontab": 4,
+    "crontab": 3,
     "solar": null,
     "clocked": null,
     "args": "[]",
-    "kwargs": "{\"reminder_type\":\"night_before\"}",
+    "kwargs": "{\"reminder_type\": \"night_before\"}",
     "queue": null,
     "exchange": null,
     "routing_key": null,
@@ -118,11 +125,39 @@
     "expires": null,
     "expire_seconds": null,
     "one_off": false,
-    "start_time": "2020-12-11T06:52:34Z",
+    "start_time": "2020-12-12T01:30:11Z",
     "enabled": true,
+    "last_run_at": "2021-08-16T03:00:00.018Z",
+    "total_run_count": 165,
+    "date_changed": "2021-08-16T03:02:56.153Z",
+    "description": ""
+  }
+},
+{
+  "model": "django_celery_beat.periodictask",
+  "pk": 5,
+  "fields": {
+    "name": "Test",
+    "task": "reminders.tasks.send_sms_reminders",
+    "interval": null,
+    "crontab": null,
+    "solar": null,
+    "clocked": 2,
+    "args": "[]",
+    "kwargs": "{}",
+    "queue": null,
+    "exchange": null,
+    "routing_key": null,
+    "headers": "{}",
+    "priority": null,
+    "expires": null,
+    "expire_seconds": null,
+    "one_off": true,
+    "start_time": "2020-12-12T01:29:40Z",
+    "enabled": false,
     "last_run_at": null,
     "total_run_count": 0,
-    "date_changed": "2020-12-11T06:53:03.898Z",
+    "date_changed": "2020-12-12T06:39:14.288Z",
     "description": ""
   }
 }
