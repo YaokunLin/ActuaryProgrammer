@@ -122,4 +122,5 @@ GitHub.sublime-settings
 volumes/postgres/data
 
 # GCP
+transaction.yaml
 key-file

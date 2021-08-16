@@ -1,27 +1,97 @@
-# Copyright 2020 Google Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License
+# ---
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: peerlogic-api-env
 
-# This file configures the peerlogic-api application . The frontend serves
-# public web traffic.
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate-database
+spec:
+  template:
+    spec:
+      containers:
+      - name: migrate-database
+        image: gcr.io/peerlogic-api-stage/peerlogic-api
+        command: ["python", "manage.py", "migrate"]
+        env:
+            # [START cloudsql_secrets]
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: cloudsql
+                  key: POSTGRES_DB
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: cloudsql
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cloudsql
+                  key: POSTGRES_PASSWORD
+            # [END cloudsql_secrets]
+            # [START peerlogic_secrets]
+            - name: DJANGO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: django
+                  key: DJANGO_SECRET_KEY
+            # [END peerlogic_secrets]
+            # [START netsapiens_secrets]
+            - name: NETSAPIENS_BASE_URL
+              value: 'https://core1-phx.peerlogic.com/ns-api'
+            - name: NETSAPIENS_CLIENT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: peerlogic-api-env
+                  key: project_id
+            # [START netsapiens_secrets]
+            - name: NETSAPIENS_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: netsapiens
+                  key: NETSAPIENS_CLIENT_SECRET
+            - name: NETSAPIENS_API_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: netsapiens
+                  key: NETSAPIENS_API_USERNAME
+            - name: NETSAPIENS_API_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: netsapiens
+                  key: NETSAPIENS_API_PASSWORD
+            # [START netsapiens_secrets]
+            - name: DJANGO_DB_REQUIRE_SSL
+              value: "False"
+            - name: DJANGO_EMAIL_BACKEND
+              value: django.core.mail.backends.console.EmailBackend
+            - name: CELERY_BROKER_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: peerlogic-api-env
+                  key: redis_url
+            - name: CELERY_RESULT_BACKEND
+              valueFrom:
+                configMapKeyRef:
+                  name: peerlogic-api-env
+                  key: redis_url
+            - name: DJANGO_DEBUG
+              value: "False"
+            - name: GKE_APPLICATION
+              value: "True"
+            - name: DB_HOST
+              value: "$(CLOUDSQL_SERVICE_HOST)"
+        ports:
+        - containerPort: 8080
+      restartPolicy: Never
+  backoffLimit: 4
 
-# The bookshelf frontend replication controller ensures that at least 3
-# instances of the bookshelf app are running on the cluster.
-# For more info about Pods see:
-#   https://cloud.google.com/container-engine/docs/pods/
-# For more info about Deployments:
-#   https://kubernetes.io/docs/user-guide/deployments/
-
+---
 # [START kubernetes_deployment]
 apiVersion: apps/v1
 kind: Deployment
@@ -41,62 +111,59 @@ spec:
     spec:
       containers:
       - name: peerlogic-api
-        # Replace  with your project ID or use `make template`
-        image: gcr.io/peerlogic-api/peerlogic-api
-        # This setting makes nodes pull the docker image every time before
-        # starting the pod. This is useful when debugging, but should be turned
-        # off in production.
-        imagePullPolicy: Always
+        image: gcr.io/peerlogic-api-stage/peerlogic-api
+        readinessProbe:
+          httpGet:
+            path: /admin/login/?next=/admin/core/client/
+            port: 8080
         env:
             # [START cloudsql_secrets]
             - name: POSTGRES_DB
               valueFrom:
                 secretKeyRef:
-                  name: cloudsql-dev
+                  name: cloudsql
                   key: POSTGRES_DB
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: cloudsql-dev
+                  name: cloudsql
                   key: POSTGRES_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: cloudsql-dev
+                  name: cloudsql
                   key: POSTGRES_PASSWORD
             # [END cloudsql_secrets]
-            # [START peerlogic-dev_secrets]
+            # [START peerlogic_secrets]
             - name: DJANGO_SECRET_KEY
               valueFrom:
                 secretKeyRef:
-                  name: django-dev
+                  name: django
                   key: DJANGO_SECRET_KEY
-            # [END peerlogic-dev_secrets]
+            # [END peerlogic_secrets]
             # [START netsapiens_secrets]
             - name: NETSAPIENS_BASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: netsapiens-dev
-                  key: NETSAPIENS_BASE_URL
+              value: 'https://core1-phx.peerlogic.com/ns-api'
             - name: NETSAPIENS_CLIENT_ID
               valueFrom:
-                secretKeyRef:
-                  name: netsapiens-dev
-                  key: NETSAPIENS_CLIENT_ID
+                configMapKeyRef:
+                  name: peerlogic-api-env
+                  key: project_id
+            # [START netsapiens_secrets]
             - name: NETSAPIENS_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: netsapiens-dev
+                  name: netsapiens
                   key: NETSAPIENS_CLIENT_SECRET
             - name: NETSAPIENS_API_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: netsapiens-dev
+                  name: netsapiens
                   key: NETSAPIENS_API_USERNAME
             - name: NETSAPIENS_API_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: netsapiens-dev
+                  name: netsapiens
                   key: NETSAPIENS_API_PASSWORD
             # [START netsapiens_secrets]
             - name: DJANGO_DB_REQUIRE_SSL
@@ -104,73 +171,73 @@ spec:
             - name: DJANGO_EMAIL_BACKEND
               value: django.core.mail.backends.console.EmailBackend
             - name: CELERY_BROKER_URL
-              value: "redis://10.157.148.115:6379/0"
+              valueFrom:
+                configMapKeyRef:
+                  name: peerlogic-api-env
+                  key: redis_url
             - name: CELERY_RESULT_BACKEND
-              value: "redis://10.157.148.115:6379/0"
+              valueFrom:
+                configMapKeyRef:
+                  name: peerlogic-api-env
+                  key: redis_url
             - name: DJANGO_DEBUG
               value: "False"
             - name: GKE_APPLICATION
               value: "True"
+            - name: DB_HOST
+              value: "$(CLOUDSQL_SERVICE_HOST)"
         ports:
         - containerPort: 8080
       - name: peerlogic-celery-worker
         command: ["celery", "-A", "peerlogic", "worker", "-l", "INFO"]
-        # Replace  with your project ID or use `make template`
-        image: gcr.io/peerlogic-api/peerlogic-api
-        # This setting makes nodes pull the docker image every time before
-        # starting the pod. This is useful when debugging, but should be turned
-        # off in production.
-        imagePullPolicy: Always
+        image: gcr.io/peerlogic-api-stage/peerlogic-api
         env:
             # [START cloudsql_secrets]
             - name: POSTGRES_DB
               valueFrom:
                 secretKeyRef:
-                  name: cloudsql-dev
+                  name: cloudsql
                   key: POSTGRES_DB
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: cloudsql-dev
+                  name: cloudsql
                   key: POSTGRES_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: cloudsql-dev
+                  name: cloudsql
                   key: POSTGRES_PASSWORD
             # [END cloudsql_secrets]
-            # [START peerlogic-dev_secrets]
+            # [START peerlogic_secrets]
             - name: DJANGO_SECRET_KEY
               valueFrom:
                 secretKeyRef:
-                  name: django-dev
+                  name: django
                   key: DJANGO_SECRET_KEY
-            # [END peerlogic-dev_secrets]
-            # [START netsapiens_secrets]
+            # [END peerlogic_secrets]
             - name: NETSAPIENS_BASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: netsapiens-dev
-                  key: NETSAPIENS_BASE_URL
+              value: 'https://core1-phx.peerlogic.com/ns-api'
             - name: NETSAPIENS_CLIENT_ID
               valueFrom:
-                secretKeyRef:
-                  name: netsapiens-dev
-                  key: NETSAPIENS_CLIENT_ID
+                configMapKeyRef:
+                  name: peerlogic-api-env
+                  key: project_id
+            # [START netsapiens_secrets]
             - name: NETSAPIENS_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: netsapiens-dev
+                  name: netsapiens
                   key: NETSAPIENS_CLIENT_SECRET
             - name: NETSAPIENS_API_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: netsapiens-dev
+                  name: netsapiens
                   key: NETSAPIENS_API_USERNAME
             - name: NETSAPIENS_API_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: netsapiens-dev
+                  name: netsapiens
                   key: NETSAPIENS_API_PASSWORD
             # [END netsapiens_secrets]
             - name: DJANGO_DB_REQUIRE_SSL
@@ -178,71 +245,75 @@ spec:
             - name: DJANGO_EMAIL_BACKEND
               value: django.core.mail.backends.console.EmailBackend
             - name: CELERY_BROKER_URL
-              value: "redis://10.157.148.115:6379/0"
+              valueFrom:
+                configMapKeyRef:
+                  name: peerlogic-api-env
+                  key: redis_url
             - name: CELERY_RESULT_BACKEND
-              value: "redis://10.157.148.115:6379/0"
+              valueFrom:
+                configMapKeyRef:
+                  name: peerlogic-api-env
+                  key: redis_url
             - name: DJANGO_DEBUG
               value: "False"
             - name: GKE_APPLICATION
               value: "True"
+            - name: DB_HOST
+              value: "$(CLOUDSQL_SERVICE_HOST)"
       - name: peerlogic-celery-beat
         command: ["celery", "-A", "peerlogic", "beat", "-l", "INFO", "-S", "django_celery_beat.schedulers:DatabaseScheduler"]
-        # Replace  with your project ID or use `make template`
-        image: gcr.io/peerlogic-api/peerlogic-api
-        # This setting makes nodes pull the docker image every time before
-        # starting the pod. This is useful when debugging, but should be turned
-        # off in production.
-        imagePullPolicy: Always
+        image: gcr.io/peerlogic-api-stage/peerlogic-api
         env:
             # [START cloudsql_secrets]
             - name: POSTGRES_DB
               valueFrom:
                 secretKeyRef:
-                  name: cloudsql-dev
+                  name: cloudsql
                   key: POSTGRES_DB
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: cloudsql-dev
+                  name: cloudsql
                   key: POSTGRES_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: cloudsql-dev
+                  name: cloudsql
                   key: POSTGRES_PASSWORD
             # [END cloudsql_secrets]
-            # [START peerlogic-dev_secrets]
+            # [START peerlogic_secrets]
             - name: DJANGO_SECRET_KEY
               valueFrom:
                 secretKeyRef:
-                  name: django-dev
+                  name: django
                   key: DJANGO_SECRET_KEY
-            # [END peerlogic-dev_secrets]
-            # [START netsapiens_secrets]
+            # [END peerlogic_secrets]
             - name: NETSAPIENS_BASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: netsapiens-dev
-                  key: NETSAPIENS_BASE_URL
+              value: 'https://core1-phx.peerlogic.com/ns-api'
             - name: NETSAPIENS_CLIENT_ID
               valueFrom:
-                secretKeyRef:
-                  name: netsapiens-dev
-                  key: NETSAPIENS_CLIENT_ID
+                configMapKeyRef:
+                  name: peerlogic-api-env
+                  key: project_id
+            # [START netsapiens_secrets]
             - name: NETSAPIENS_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: netsapiens-dev
+                  name: netsapiens
+                  key: NETSAPIENS_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: netsapiens
                   key: NETSAPIENS_CLIENT_SECRET
             - name: NETSAPIENS_API_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: netsapiens-dev
+                  name: netsapiens
                   key: NETSAPIENS_API_USERNAME
             - name: NETSAPIENS_API_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: netsapiens-dev
+                  name: netsapiens
                   key: NETSAPIENS_API_PASSWORD
             # [END netsapiens_secrets]
             - name: DJANGO_DB_REQUIRE_SSL
@@ -250,39 +321,21 @@ spec:
             - name: DJANGO_EMAIL_BACKEND
               value: django.core.mail.backends.console.EmailBackend
             - name: CELERY_BROKER_URL
-              value: "redis://10.157.148.115:6379/0"
+              valueFrom:
+                configMapKeyRef:
+                  name: peerlogic-api-env
+                  key: redis_url
             - name: CELERY_RESULT_BACKEND
-              value: "redis://10.157.148.115:6379/0"
+              valueFrom:
+                configMapKeyRef:
+                  name: peerlogic-api-env
+                  key: redis_url
             - name: DJANGO_DEBUG
               value: "False"
             - name: GKE_APPLICATION
               value: "True"
-      # [START proxy_container]
-      - image: gcr.io/cloudsql-docker/gce-proxy:1.16
-        name: cloudsql-proxy
-        command: ["/cloud_sql_proxy", "--dir=/cloudsql",
-                  "-instances=peerlogic-api:us-west3:peerlogic-dev=tcp:5432",
-                  "-credential_file=/secrets/cloudsql/credentials.json"]
-        volumeMounts:
-          - name: cloudsql-oauth-credentials
-            mountPath: /secrets/cloudsql
-            readOnly: true
-          - name: ssl-certs
-            mountPath: /etc/ssl/certs
-          - name: cloudsql-dev
-            mountPath: /cloudsql
-      # [END proxy_container]
-      # [START volumes]
-      volumes:
-        - name: cloudsql-oauth-credentials
-          secret:
-            secretName: cloudsql-oauth-credentials
-        - name: ssl-certs
-          hostPath:
-            path: /etc/ssl/certs
-        - name: cloudsql-dev
-          emptyDir: {}
-      # [END volumes]
+            - name: DB_HOST
+              value: "$(CLOUDSQL_SERVICE_HOST)"
 # [END kubernetes_deployment]
 
 ---
@@ -299,13 +352,20 @@ apiVersion: v1
 kind: Service
 metadata:
   name: peerlogic-api
+  namespace: default
   labels:
     app: peerlogic-api
 spec:
-  type: LoadBalancer
-  ports:
-  - port: 80
-    targetPort: 8080
+  type: NodePort
   selector:
     app: peerlogic-api
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 8080
 # [END service]
+
+
+
+
+

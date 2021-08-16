@@ -16,6 +16,25 @@ Log into Google Kubernetes Engine (GKE):
 gcloud container clusters get-credentials peerlogic-dev-1 --zone "us-west3-c"
 gcloud auth configure-docker
 ```
+# 1Password sign-in
+
+Set up your CLI tool: https://support.1password.com/command-line-getting-started/
+
+Sign in: 
+
+https://support.1password.com/command-line/#sign-in-or-out
+
+```bash
+op signin [<sign_in_address>](https://peerlogic.1password.com/signin) <email_address> <secret_key>
+```
+eval $(op signin my)
+
+<!-- For MAC:
+
+```bash
+echo "1PASSWORD_SHORTHAND=<youroutputtedtokenhere>" >> ~/.bashrc
+``` -->
+
 ## Docker
 
 Make sure to run these commands from the root of the project.
@@ -77,6 +96,13 @@ python3 manage.py runserver
 ```
 
 # Deployment
+
+GKE ships with kubernetes version 1.19 in gcloud installation, which means it ships with kustomize version 2.0.3 at the time of this writing:
+
+Helpful Docs:
+* [Kustomize 2.0.3](https://github.com/kubernetes-sigs/kustomize/tree/v2.0.3/docs)
+
+
 
 See REDEPLOYMENT.md for steps on updating development and staging environments with configuration or code changes.
 
