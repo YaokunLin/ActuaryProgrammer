@@ -2,14 +2,14 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 commonLabels:
-  variant: stage
+  variant: dev
 
 bases:
 - ../../base
 
 configMapGenerator:
 - name: "peerlogic-api-env"
-  env: stage.env
+  envs: ["./.env"]
 
 patchesStrategicMerge:
  - cloudsql.yaml
@@ -19,7 +19,7 @@ patchesStrategicMerge:
 
 images:
 - name: peerlogic-api
-  newName: gcr.io/peerlogic-api-stage/peerlogic-api
+  newName: gcr.io/peerlogic-api-dev/peerlogic-api
   # TODO: newTag with commit SHA or digest
   # newTag: commitSHA
   # digest:sha256:24a0c4b4a4c0eb97a1aabb8e29f18e917d05abfe1b7a7c07857230879ce7d3d3

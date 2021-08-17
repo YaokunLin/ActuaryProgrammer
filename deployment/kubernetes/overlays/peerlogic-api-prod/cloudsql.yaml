@@ -20,7 +20,7 @@ spec:
         command:
         - /cloud_sql_proxy
         - --dir=/cloudsql
-        - --instances==tcp:0.0.0.0:5432
+        - --instances=""=tcp:0.0.0.0:5432
         - --credential_file=/secrets/cloudsql/credentials.json
         volumeMounts:
           - name: cloudsql-oauth-credentials

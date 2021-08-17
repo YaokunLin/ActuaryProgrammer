@@ -1,5 +1,5 @@
 #!/bin/bash
-KUBERNETES_BASE_DIR="../kubernetes/base"
+KUBERNETES_BASE_DIR="./kubernetes/base"
 PROJECT_ID=$(gcloud config list --format='value(core.project)')
 PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
 DOCKER_REPO="gcr.io/${PROJECT_ID}/peerlogic-api"
@@ -13,25 +13,12 @@ fi
 
 DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management import utils; print(utils.get_random_secret_key())')
 
-echo $ENV_FILE
-
-if [ $# -eq 0 ];
-then
-  echo "Error: please specify the following for environment as an argument: stage | prod"
-  exit 1
-fi
-
-ENVIRONMENT=$1
-ENV_FILE="${ENVIRONMENT}.env"
-KUBERNETES_OVERLAY_DIR="../kubernetes/overlays/${ENVIRONMENT}"
-KUBERNETES_ENV_FILE="${KUBERNETES_OVERLAY_DIR}/${ENVIRONMENT}.env"
+eval $(op signin my)
 
 export DOCKER_REPO
-envsubst < "$KUBERNETES_BASE_DIR/peerlogic-api-deployment.yaml" > "$KUBERNETES_OVERLAY_DIR/peerlogic-api-deployment.yaml"
+ENV_FILE="${PROJECT_ID}.env"
 
-
-echo "project_id=\"$PROJECT_ID\"" >> $KUBERNETES_ENV_FILE
-echo "environment=\"$ENVIRONMENT\"" >> $KUBERNETES_ENV_FILE
+echo $ENV_FILE
 
 
 if [ -f $ENV_FILE ];
@@ -42,10 +29,22 @@ fi
 
 
 
+
+KUBERNETES_OVERLAY_DIR="./kubernetes/overlays/${PROJECT_ID}"
+KUBERNETES_ENV_FILE="${KUBERNETES_OVERLAY_DIR}/.env"
+
+touch $KUBERNETES_ENV_FILE
+echo "project_id=\"$PROJECT_ID\"" >> $KUBERNETES_ENV_FILE
+echo "environment=\"$ENVIRONMENT\"" >> $KUBERNETES_ENV_FILE
+
+envsubst < "${KUBERNETES_BASE_DIR}/peerlogic-api-deployment.yaml" > "${KUBERNETES_OVERLAY_DIR}/${PROJECT_ID}.yaml"
+
+
 SERVICE_ACCOUNT_ID=${PROJECT_ID}-cloud-sql
 SERVICE_ACCOUNT_NAME=${SERVICE_ACCOUNT_ID}@${PROJECT_ID}.iam.gserviceaccount.com
 
 # enable services
+echo "Enabling services"
 gcloud services enable sql-component.googleapis.com
 gcloud services enable sqladmin.googleapis.com
 gcloud services enable compute.googleapis.com
@@ -53,6 +52,7 @@ gcloud services enable container.googleapis.com
 gcloud services enable redis.googleapis.com
 gcloud services enable cloudbuild.googleapis.com
 gcloud services enable dns.googleapis.com
+gcloud services enable secretmanager.googleapis.com
 
 # Cloud SQL
 # Start with a tiny instance. We can ramp it up when we have customers on it.
@@ -75,12 +75,6 @@ export CLOUDSQL_CONNECTION_NAME
 envsubst < "$KUBERNETES_BASE_DIR/cloudsql.yaml" > "$KUBERNETES_OVERLAY_DIR/cloudsql.yaml"
 
 
-
-echo "Start cloud_sql_proxy in a new window and continue to the next script - psql_deploy.bash"
-
- 
-
-
 # Service Accounts
 
 
@@ -96,11 +90,18 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
       --member="serviceAccount:${CLOUDBUILD_SERVICE_ACCOUNT}" \
       --role="roles/container.developer"
 
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+      --member="serviceAccount:${CLOUDBUILD_SERVICE_ACCOUNT}" \
+      --role="roles/secretmanager.secretAccessor"
+
 gcloud iam service-accounts keys create key-file \
     --iam-account="${SERVICE_ACCOUNT_NAME}"
+
+
 cat key-file | op create document - --title "${ENVIRONMENT} ${SERVICE_ACCOUNT_NAME} - key-file" --vault wlmpasbyyncmhpjji3lfc7ra4a
 
 
+# Create bucket
 
 gsutil mb gs://${PROJECT_ID}
 gsutil defacl set public-read gs://${PROJECT_ID}
@@ -109,16 +110,13 @@ gsutil defacl set public-read gs://${PROJECT_ID}
 
 gcloud container clusters create peerlogic-api \
   --scopes "https://www.googleapis.com/auth/userinfo.email","cloud-platform" \
-  --num-nodes 4 --zone $ZONE \
+  --num-nodes 2 --zone $ZONE \
   --enable-ip-alias
 
 gcloud container clusters get-credentials peerlogic-api --zone $ZONE
 
 
-# # Kubectl secrets
-
-
-
+# Kubectl secrets
 
 kubectl create secret generic cloudsql-oauth-credentials --from-file=credentials.json=key-file
 kubectl create secret generic cloudsql --from-literal=POSTGRES_DB=peerlogic \
@@ -166,9 +164,22 @@ gcloud dns --project=peerlogic-dns record-sets transaction execute \
 echo "Domain name ${DOMAIN_NAME} is propagating. All set!"
 
 
-gcloud builds submit --project=$PROJECT_ID --config cloudbuild.yaml \
+cd ../..
+git clone https://github.com/GoogleCloudPlatform/cloud-builders-community
+cd cloud-builders-community/kustomize
+gcloud builds submit --config cloudbuild.yaml .
+gcloud container images list --filter kustomize
+cd ../peerlogic-api
+
+gcloud secrets versions create env --data-file=${KUBERNETES_ENV_FILE}
+
+rm ${KUBERNETES_ENV_FILE}
+
+
+gcloud builds submit --project=$PROJECT_ID --config ./cloudbuild.yaml \
   --substitutions "_DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY},_POSTGRES_USER=peerlogic,_POSTGRES_DB=peerlogic,_POSTGRES_PASSWORD=${_POSTGRES_PEERLOGIC_PASSWORD},_DOCKER_REPO=${DOCKER_REPO}"
 
 
-# TODO: eventually apply kustomize substitutions
-# kubectl apply -k ./kubernetes/overlays/stage
+echo "Start cloud_sql_proxy in a new window and continue to the next script - psql_deploy.bash"
+
+
