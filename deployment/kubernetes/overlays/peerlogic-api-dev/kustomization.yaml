@@ -7,11 +7,8 @@ commonLabels:
 bases:
 - ../../base
 
-configMapGenerator:
-- name: "peerlogic-api-env"
-  envs: ["./.env"]
-
 patchesStrategicMerge:
+ - map.yaml
  - cloudsql.yaml
  - peerlogic-api-deployment.yaml
 

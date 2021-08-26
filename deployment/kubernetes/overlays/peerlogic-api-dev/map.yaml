@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: peerlogic-api-env
+data:
+  environment: dev
+  project_id: peerlogic-api-dev
+  cloudsql_connnection_name: peerlogic-api-dev:us-west4:peerlogic-api
+  redis_url: redis://10.213.58.120:6379/0

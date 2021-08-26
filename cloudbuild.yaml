@@ -13,7 +13,8 @@ steps:
       - -c
       - |
         # Save env vars to persistent volume mount: "/workspace"
-        echo -e $$ENVFILE >> /workspace/deployment/kubernetes/overlays/${PROJECT_ID}/.env
+        echo -e $$ENVFILE >> /workspace/deployment/kubernetes/overlays/${PROJECT_ID}/.env &&
+        cat /workspace/deployment/kubernetes/overlays/${PROJECT_ID}/.env
     secretEnv: ["ENVFILE"]
   - id: "Delete past jobs"
     name: "gcr.io/cloud-builders/kubectl"

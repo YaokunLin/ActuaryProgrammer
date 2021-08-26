@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: peerlogic-api-env
+data:
+  environment: ${ENVIRONMENT}
+  project_id: ${PROJECT_ID}
+  cloudsql_connnection_name: ${CLOUDSQL_CONNECTION_NAME}
+  redis_url: ${REDIS_URL}
