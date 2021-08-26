@@ -54,9 +54,9 @@ envsubst < "${KUBERNETES_BASE_DIR}/peerlogic-api-deployment.yaml" > "${KUBERNETE
 SERVICE_ACCOUNT_ID=${PROJECT_ID}-cloud-sql
 SERVICE_ACCOUNT_NAME=${SERVICE_ACCOUNT_ID}@${PROJECT_ID}.iam.gserviceaccount.com
 
-# enable services
 
-echo "${textgreen}Enabling services ${textreset}"
+
+# echo "${textgreen}Enabling services ${textreset}"
 # gcloud services enable sql-component.googleapis.com
 # gcloud services enable sqladmin.googleapis.com
 # gcloud services enable compute.googleapis.com
@@ -68,7 +68,7 @@ echo "${textgreen}Enabling services ${textreset}"
 
 # Cloud SQL
 # Start with a tiny instance. We can ramp it up when we have customers on it.
-# gcloud sql instances create peerlogic-api \
+# gcloud sql instances create $PROJECT_ID \
 # --database-version=POSTGRES_13 \
 # --cpu=2 \
 # --memory=7680MB \
@@ -80,18 +80,18 @@ echo "${textgreen}Enabling services ${textreset}"
 
 # echo "${textgreen}Setting the password for the 'postgres' user:"
 # gcloud sql users set-password postgres \
-# --instance=peerlogic-api \
-# --password=${POSTGRES_PEERLOGIC_PASSWORD}
+# --instance=$PROJECT_ID \
+# --password=${POSTGRES_ROOT_PASSWORD}
 
 # echo "${textgreen}Creating peerlogic user:"
 # gcloud sql users create peerlogic \
-# --instance=peerlogic-api \
+# --instance=$PROJECT_ID \
 # --password=${POSTGRES_PEERLOGIC_PASSWORD}
 
 
 # echo "${textgreen}Creating peerlogic database:"
-gcloud sql databases create peerlogic \
---instance=peerlogic-api
+# gcloud sql databases create peerlogic \
+# --instance=$PROJECT_ID
 
 
 echo "${textblue}Reading cloud sql connection name for kube cluster${textreset}"

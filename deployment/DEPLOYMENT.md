@@ -1,6 +1,7 @@
 # Dependencies
 Install GCP Dependencies to your local machine:
 * [gcloud SDK](https://cloud.google.com/sdk/docs/quickstart)
+* [1Password CLI](https://support.1password.com/command-line/)
 
 
 # Creating a new environment
@@ -48,7 +49,8 @@ Activate your virtual environment and `pip install -r requirements/requirements.
 Then run:
 
 ```bash
-./deployment/gcloud_deploy.bash <env>
+cd ./deployment
+.gcloud_deploy.bash
 ```
 
 
