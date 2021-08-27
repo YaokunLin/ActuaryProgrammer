@@ -5,4 +5,4 @@ resources:
 - configMap.yaml
 - cloudsql.yaml
 - peerlogic-api-deployment.yaml
-# - ssl.yaml
+- ssl.yaml

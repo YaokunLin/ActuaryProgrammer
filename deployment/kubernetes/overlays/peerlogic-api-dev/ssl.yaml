@@ -1,0 +1,17 @@
+---
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: peerlogic-tech-cert
+spec:
+  domains:
+    - api-dev.peerlogic.tech
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: peerlogic-api-ingress
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: peerlogic-api-dev
+    networking.gke.io/managed-certificates: peerlogic-tech-cert

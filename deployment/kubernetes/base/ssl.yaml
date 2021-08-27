@@ -2,16 +2,17 @@
 apiVersion: networking.gke.io/v1
 kind: ManagedCertificate
 metadata:
-  name: peerlogic-api-ssl
+  name: peerlogic-tech-cert
 
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: peerlogic-api-ssl
+  name: peerlogic-api-ingress
   annotations:
-    kubernetes.io/ingress.allow-http:  "false"
+    #kubernetes.io/ingress.allow-http: "false"
     kubernetes.io/ingress.class: "gce"
+    networking.gke.io/managed-certificates: peerlogic-tech-cert
 spec:
   rules:
   - http:

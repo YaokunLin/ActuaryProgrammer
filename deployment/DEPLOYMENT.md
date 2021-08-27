@@ -2,7 +2,10 @@
 Install GCP Dependencies to your local machine:
 * [gcloud SDK](https://cloud.google.com/sdk/docs/quickstart)
 * [1Password CLI](https://support.1password.com/command-line/)
+* [psql](https://blog.timescale.com/blog/how-to-install-psql-on-mac-ubuntu-debian-windows/)
+* [kustomize v2.0.3](https://github.com/kubernetes-sigs/kustomize/releases/tag/v2.0.3)
 
+Save kustomize with executable permissions.
 
 # Creating a new environment
 
