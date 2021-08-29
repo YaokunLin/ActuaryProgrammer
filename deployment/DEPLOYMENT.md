@@ -1,7 +1,11 @@
 # Dependencies
 Install GCP Dependencies to your local machine:
 * [gcloud SDK](https://cloud.google.com/sdk/docs/quickstart)
+* [1Password CLI](https://support.1password.com/command-line/)
+* [psql](https://blog.timescale.com/blog/how-to-install-psql-on-mac-ubuntu-debian-windows/)
+* [kustomize v2.0.3](https://github.com/kubernetes-sigs/kustomize/releases/tag/v2.0.3)
 
+Save kustomize with executable permissions.
 
 # Creating a new environment
 
@@ -38,6 +42,7 @@ Obtain the username and password for the [Peerlogic Netsapiens API user](https:/
 
 Set the NETSAPIENS_API_USERNAME and NETSAPIENS_API_PASSWORD in the <env>.env file you're working with from the following [1Password Item](https://start.1password.com/open/i?a=P3RU52IFYBEH3GKEDF2UBYENBQ&v=wlmpasbyyncmhpjji3lfc7ra4a&i=4snjuintsvcurafofmf53twjtm&h=my.1password.com)
 
+
 # Run gcloud deployment script
 
 From the root of this directory:
@@ -47,7 +52,8 @@ Activate your virtual environment and `pip install -r requirements/requirements.
 Then run:
 
 ```bash
-./deployment/gcloud_deploy.bash <env>
+cd ./deployment
+.gcloud_deploy.bash
 ```
 
 
@@ -84,7 +90,7 @@ Where:
 
 ## Update GKE kustomization yaml file with the appropriate image name
 
-This is titled kubernetes/overlays/<env>/kustomization.yaml
+This is titled kubernetes/overlays/<project_id>/kustomization.yaml
 
 Update the image value with this value:
 

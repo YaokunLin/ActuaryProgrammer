@@ -6,21 +6,31 @@ steps:
   - id: "push image"
     name: "gcr.io/cloud-builders/docker"
     args: ["push", "${_DOCKER_REPO}"]
+  - id: "Store environment variables in .env"
+    name: ubuntu
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        # Save env vars to persistent volume mount: "/workspace"
+        echo -e $$ENVFILE >> /workspace/deployment/kubernetes/overlays/${PROJECT_ID}/.env &&
+        cat /workspace/deployment/kubernetes/overlays/${PROJECT_ID}/.env
+    secretEnv: ["ENVFILE"]
   - id: "Delete past jobs"
     name: "gcr.io/cloud-builders/kubectl"
     args: ["delete", "jobs", "--all"]
     env:
-    - 'CLOUDSDK_COMPUTE_ZONE=${_ZONE}'
-    - 'CLOUDSDK_CONTAINER_CLUSTER=${_CLUSTER}'
+      - 'CLOUDSDK_COMPUTE_ZONE=${_ZONE}'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=${_CLUSTER}'
   - id: "deploy container image to GKE"
     name: 'gcr.io/$PROJECT_ID/kustomize'
     args:
     - 'build'
-    - 'overlays/${PROJECT_ID}.env'
+    - 'deployment/kubernetes/overlays/${PROJECT_ID}'
     env:
       - 'APPLY=true'
       - 'CLOUDSDK_COMPUTE_ZONE=${_ZONE}'
-      - 'CLOUDSDK_CONTAINER_CLUSTER={_CLUSTER}'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=${_CLUSTER}'
   - id: "Collect static"
     name: "${_DOCKER_REPO}"
     args:
@@ -33,19 +43,23 @@ steps:
         "--noinput"
       ]  
     env:
-    - 'DJANGO_SECRET_KEY=$_DJANGO_SECRET_KEY'
-    - 'POSTGRES_USER=$_POSTGRES_USER'
-    - 'POSTGRES_DB=$_POSTGRES_DB'
-    - 'POSTGRES_PASSWORD=$_POSTGRES_PASSWORD'
+      - 'DJANGO_SECRET_KEY=$_DJANGO_SECRET_KEY'
+      - 'POSTGRES_USER=$_POSTGRES_USER'
+      - 'POSTGRES_DB=$_POSTGRES_DB'
+      - 'POSTGRES_PASSWORD=$_POSTGRES_PASSWORD'
   - id: "Rsync Static files to bucket"
     name:  'gcr.io/cloud-builders/gsutil'
     entrypoint: 'bash'
     args:
-    - '-c'
-    - |
-      gsutil -m rsync -r '/workspace/static' 'gs://${PROJECT_ID}/static'
+      - '-c'
+      - |
+        gsutil -m rsync -r '/workspace/static' 'gs://${PROJECT_ID}/static'
 
 substitutions:
   _ZONE: us-west4-a
   _CLUSTER: peerlogic-api
 
+availableSecrets:
+  secretManager:
+  - versionName: projects/${PROJECT_NUMBER}/secrets/env/versions/latest
+    env: "ENVFILE"
