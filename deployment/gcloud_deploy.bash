@@ -15,7 +15,7 @@ textcyn=$(tput setaf 6) # Cyan
 textwht=$(tput setaf 7) # White
 textreset=$(tput sgr0) # Text reset.
 
-
+# TODO: check if python 3 is installed as 'python3' first, otherwise use 'python'
 # TODO: check op (1Password) is installed before continuing
 # TODO: check project name before continuing
 
@@ -139,6 +139,12 @@ echo "${textgreen}Create cloud storage bucket for Django static resources${textr
 gsutil mb gs://${PROJECT_ID}
 gsutil defacl set public-read gs://${PROJECT_ID}
 
+
+echo "${textgreen}Loading cloud storage bucket with Django static resources${textreset}"
+cd ..
+python3 manage.py collectstatic --verbosity 2 --noinput
+gsutil -m rsync -r ./static 'gs://${PROJECT_ID}/static'
+cd deployment
 
 echo "${textgreen}Create cluster${textreset}"
 gcloud container clusters create peerlogic-api \

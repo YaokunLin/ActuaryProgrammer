@@ -14,4 +14,3 @@ metadata:
   name: peerlogic-api-ingress
   annotations:
     kubernetes.io/ingress.global-static-ip-name: peerlogic-api-dev
-    networking.gke.io/managed-certificates: peerlogic-tech-cert
