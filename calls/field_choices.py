@@ -28,3 +28,8 @@ class ReferralSourceTypes(models.TextChoices):
     PAID_ADVERTISING = "paid_advertising"
     UNKNOWN = "unknown"
     OTHER = "other"
+
+class CallDirectionTypes(models.TextChoices):
+    INBOUND = "inbound"
+    OUTBOUND = "outbound"
+    INTERNAL = "internal"
