@@ -1,11 +1,10 @@
-from django.contrib import admin
-from django.urls import path
 from rest_framework import routers
 
-from .views import CallViewset
+from .views import CallViewset, CallLabelViewset
 
 router = routers.DefaultRouter()
 
-router.register(r"", CallViewset)
+router.register(r"calls", CallViewset)
+router.register(r"labels", CallLabelViewset)
 
 urlpatterns = router.urls
