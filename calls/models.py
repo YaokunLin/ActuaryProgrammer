@@ -39,5 +39,6 @@ class Call(AuditTrailModel):
 
 
 class CallLabel(AuditTrailModel):
+    call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="The call being labeled", related_name="calls")
     metric = models.CharField(max_length=255)
     label = models.CharField(max_length=255)
