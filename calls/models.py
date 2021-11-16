@@ -11,7 +11,6 @@ class Call(AuditTrailModel):
     telecom_call_id = models.CharField(max_length=255)
     caller_audio_url = models.CharField(max_length=255)
     callee_audio_url = models.CharField(max_length=255)
-    practice_interacted_with = models.CharField(max_length=50)
     call_start = models.DateTimeField()
     call_end = models.DateTimeField()
     duration_seconds = models.DurationField()
