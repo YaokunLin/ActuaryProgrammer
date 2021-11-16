@@ -1,7 +1,7 @@
 from django.db import models
 
 
-class PersonaTypes(models.TextChoices):
+class EngagementPersonaTypes(models.TextChoices):
     AGENT = "agent"
     NON_AGENT = "non_agent"
 
@@ -19,7 +19,7 @@ class CallConnectionTypes(models.TextChoices):
     CONNECTED = "connected"
 
 
-class WhoTerminatedCallTypes(models.TextChoices):
+class TelecomPersonaTypes(models.TextChoices):
     CALLER = "caller"
     CALLEE = "callee"
 
