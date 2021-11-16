@@ -6,7 +6,7 @@ class EngagementPersonaTypes(models.TextChoices):
     NON_AGENT = "non_agent"
 
 
-class NonAgentTypes(models.TextChoices):
+class NonAgentEngagementPersonaTypes(models.TextChoices):
     NEW_PATIENT = "new_patient"
     EXISTING_PATIENT = "existing_patient"
     CONTRACTOR_VENDOR = "contractor_vendor"
