@@ -11,6 +11,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 
 class AuditTrailModel(models.Model):
+    id = ShortUUIDField(primary_key=True, editable=False)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     modified_at = models.DateTimeField(auto_now=True, db_index=True)
     created_by = UserForeignKey(
@@ -83,3 +84,15 @@ class GroupTelecom(models.Model):
     id = ShortUUIDField(primary_key=True, editable=False)
     group = models.OneToOneField(Group, on_delete=models.CASCADE)
     sms_number = PhoneNumberField(blank=True)
+
+
+class Contact(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    first_name = models.CharField(blank=True, max_length=255)
+    last_name = models.CharField(blank=True, max_length=255)
+    placeholder = models.CharField(blank=True, max_length=255)
+    mobile_number = PhoneNumberField()
+    fax_number = PhoneNumberField(blank=True)
+    address_line_1 = models.CharField(blank=True, max_length=255)
+    address_line_2 = models.CharField(blank=True, max_length=255)
+    zip_code = models.CharField(max_length=255)
