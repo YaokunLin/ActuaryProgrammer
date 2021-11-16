@@ -25,6 +25,9 @@ if DEBUG:
     load_dotenv()
 
 
+
+PROJECT_ID = os.getenv("PROJECT_ID", "peerlogic-api-dev")
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -184,8 +187,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 # [START staticurl]
-STATIC_URL = "https://storage.googleapis.com/peerlogic-api/static/"
-# STATIC_URL = 'https://storage.googleapis.com/<your-gcs-bucket>/static/'
+STATIC_BUCKET_NAME = PROJECT_ID
+STATIC_URL = f"https://storage.googleapis.com/{STATIC_BUCKET_NAME}/static/"
 # [END staticurl]
 
 STATIC_ROOT = "static/"
