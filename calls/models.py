@@ -4,7 +4,7 @@ from django_extensions.db.fields import ShortUUIDField
 from phonenumber_field.modelfields import PhoneNumberField
 
 from core.models import AuditTrailModel
-from calls.field_choices import CallConnectionTypes, PersonaTypes, ReferralSourceTypes, WhoTerminatedCallTypes
+from calls.field_choices import CallConnectionTypes, CallDirectionTypes, PersonaTypes, ReferralSourceTypes, WhoTerminatedCallTypes
 
 
 class Call(AuditTrailModel):
@@ -16,23 +16,16 @@ class Call(AuditTrailModel):
     duration_seconds = models.DurationField()
     connect_duration_seconds = models.DurationField()
     progress_time_seconds = models.DurationField()
-    caller_domain = models.ForeignKey(
+    call_direction = models.CharField(choices=CallDirectionTypes.choices, max_length=50)
+    domain = models.ForeignKey(
         "core.GroupTelecom",
         on_delete=models.SET_NULL,
-        verbose_name="The domain calling",
-        related_name="outbound_calls",
-        null=True,
-    )
-    callee_domain = models.ForeignKey(
-        "core.GroupTelecom",
-        on_delete=models.SET_NULL,
-        verbose_name="The domain that received the call",
-        related_name="incoming_calls",
+        verbose_name="The domain the call pertains to",
+        related_name="calls",
         null=True,
     )
     sip_caller_number = PhoneNumberField()
     sip_callee_number = PhoneNumberField()
-    sip_last_response_description = models.CharField(max_length=255)
     checked_voicemail = models.BooleanField()
     went_to_voicemail = models.BooleanField()
     call_connection = models.CharField(choices=CallConnectionTypes.choices, max_length=50)
