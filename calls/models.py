@@ -3,7 +3,7 @@ from django.db import models
 from phonenumber_field.modelfields import PhoneNumberField
 
 from core.models import AuditTrailModel
-from calls.field_choices import CallConnectionTypes, CallDirectionTypes, PersonaTypes, NonAgentTypes, ReferralSourceTypes, WhoTerminatedCallTypes
+from calls.field_choices import CallConnectionTypes, CallDirectionTypes, EngagementPersonaTypes, NonAgentTypes, ReferralSourceTypes, TelecomPersonaTypes
 
 
 class Call(AuditTrailModel):
@@ -30,11 +30,11 @@ class Call(AuditTrailModel):
     checked_voicemail = models.BooleanField()
     went_to_voicemail = models.BooleanField()
     call_connection = models.CharField(choices=CallConnectionTypes.choices, max_length=50)
-    who_terminated_call = models.CharField(choices=WhoTerminatedCallTypes.choices, max_length=50)
+    who_terminated_call = models.CharField(choices=TelecomPersonaTypes.choices, max_length=50)
     referral_source = models.CharField(choices=ReferralSourceTypes.choices, max_length=50, blank=True)
-    caller_type = models.CharField(choices=PersonaTypes.choices, max_length=50)
-    callee_type = models.CharField(choices=PersonaTypes.choices, max_length=50)
-    non_agent_type = models.CharField(choices=NonAgentTypes.choices, max_length=50, blank=True)
+    caller_type = models.CharField(choices=EngagementPersonaTypes.choices, max_length=50)
+    callee_type = models.CharField(choices=EngagementPersonaTypes.choices, max_length=50)
+    agent_engaged_with = models.CharField(choices=NonAgentTypes.choices, max_length=50, blank=True)
     metadata_file_uri = models.CharField(max_length=255)
 
 
