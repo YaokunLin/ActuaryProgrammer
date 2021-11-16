@@ -2,10 +2,16 @@ from django.db import models
 
 
 class PersonaTypes(models.TextChoices):
+    AGENT = "agent"
+    NON_AGENT = "non_agent"
+
+
+class NonAgentTypes(models.TextChoices):
     NEW_PATIENT = "new_patient"
     EXISTING_PATIENT = "existing_patient"
     CONTRACTOR_VENDOR = "contractor_vendor"
-    AGENT = "agent"
+    INSURANCE_PROVIDER = "insurance_provider"
+    OTHERS = "others"
 
 
 class CallConnectionTypes(models.TextChoices):
@@ -26,8 +32,9 @@ class ReferralSourceTypes(models.TextChoices):
     SOCIAL_MEDIA = "social_media"
     INSURANCE = "insurance"
     PAID_ADVERTISING = "paid_advertising"
-    UNKNOWN = "unknown"
-    OTHER = "other"
+    NOT_APPLICABLE = "not_applicable"
+    OTHERS = "others"
+
 
 class CallDirectionTypes(models.TextChoices):
     INBOUND = "inbound"

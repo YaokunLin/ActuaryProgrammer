@@ -25,7 +25,6 @@ if DEBUG:
     load_dotenv()
 
 
-
 PROJECT_ID = os.getenv("PROJECT_ID", "peerlogic-api-dev")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
