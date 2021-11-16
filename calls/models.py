@@ -25,7 +25,9 @@ class Call(AuditTrailModel):
         null=True,
     )
     sip_caller_number = PhoneNumberField()
+    sip_caller_name = models.CharField(max_length=255, blank=True)
     sip_callee_number = PhoneNumberField()
+    sip_callee_name = models.CharField(max_length=255, blank=True) 
     checked_voicemail = models.BooleanField()
     went_to_voicemail = models.BooleanField()
     call_connection = models.CharField(choices=CallConnectionTypes.choices, max_length=50)
@@ -33,7 +35,7 @@ class Call(AuditTrailModel):
     referral_source = models.CharField(choices=ReferralSourceTypes.choices, max_length=50)
     caller_type = models.CharField(choices=PersonaTypes.choices, max_length=50)
     callee_type = models.CharField(choices=PersonaTypes.choices, max_length=50)
-
+    metadata_file_uri = models.CharField(max_length=255)
 
 class CallLabel(AuditTrailModel):
     metric = models.CharField(max_length=255)
