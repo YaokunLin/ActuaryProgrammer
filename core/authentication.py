@@ -30,7 +30,7 @@ class JSONWebTokenAuthentication(BaseAuthentication):
         payload = xmltodict.parse(response)["Oauthtoken"]
 
         USER_MODEL = self.get_user_model()
-        user = USER_MODEL.objects.get_or_create_from_token_payload(payload)
+        user = USER_MODEL.objects.get_or_create_from_introspect_token_payload(payload)
         return (user, None)
 
     def introspect_token(self, token: str):

@@ -37,7 +37,10 @@ class AuditTrailModel(models.Model):
 
 
 class UserManager(_UserManager):
-    def get_or_create_from_token_payload(self, payload):
+    INTROSPECT_TOKEN_PAYLOAD_KEYS = ["token", "client_id", "territory", "domain", "uid", "expires", "scope", "mask_chain"]
+
+    def get_or_create_from_introspect_token_payload(self, payload):
+        self._validate_introspect_token_payload(payload)
         uid = payload["uid"]
 
         try:
@@ -64,6 +67,10 @@ class UserManager(_UserManager):
             user = self.get(username=uid)
 
         return user
+
+    def _validate_introspect_token_payload(self, payload):
+        if not all(key in self.INTROSPECT_TOKEN_PAYLOAD_KEYS for key in payload):
+            raise ValueError("Wrong payload to get or create a user")
 
 
 class User(AbstractUser):
