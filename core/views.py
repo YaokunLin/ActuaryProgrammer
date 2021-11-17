@@ -8,7 +8,6 @@ from .serializers import ClientSerializer
 class ClientViewset(viewsets.ModelViewSet):
     queryset = Client.objects.all()
     serializer_class = ClientSerializer
-    # permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         queryset = Client.objects.all()
