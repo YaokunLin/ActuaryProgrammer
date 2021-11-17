@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0007_remove_unnecessary_token_fields'),
+        ("core", "0007_remove_unnecessary_token_fields"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='contact',
-            name='zip_code_add_on',
+            model_name="contact",
+            name="zip_code_add_on",
             field=models.CharField(blank=True, max_length=50),
         ),
         migrations.AlterField(
-            model_name='contact',
-            name='zip_code',
+            model_name="contact",
+            name="zip_code",
             field=models.CharField(max_length=50),
         ),
     ]
