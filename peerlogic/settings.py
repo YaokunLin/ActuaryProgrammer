@@ -85,7 +85,6 @@ INSTALLED_APPS = [
     "phonenumber_field",
     "corsheaders",
     "core",
-    "calls",
     "reminders",
     "inbox",
 ]
