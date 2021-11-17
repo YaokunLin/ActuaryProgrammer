@@ -102,4 +102,5 @@ class Contact(AuditTrailModel):
     fax_number = PhoneNumberField(blank=True)
     address_line_1 = models.CharField(blank=True, max_length=255)
     address_line_2 = models.CharField(blank=True, max_length=255)
-    zip_code = models.CharField(max_length=255)
+    zip_code = models.CharField(max_length=50)
+    zip_code_add_on = models.CharField(max_length=50, blank=True)
