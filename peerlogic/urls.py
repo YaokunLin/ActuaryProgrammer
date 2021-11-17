@@ -18,6 +18,7 @@ from django.urls import include, path
 
 
 from core.urls import urlpatterns as company_urlpatterns
+
 from inbox.urls import urlpatterns as inbox_urlpatterns
 from reminders.urls import urlpatterns as reminders_urlpatterns
 

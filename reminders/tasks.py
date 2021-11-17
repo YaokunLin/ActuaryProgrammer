@@ -29,9 +29,7 @@ def send_sms_reminders(reminder_type=MORNING_OF):
 
     for cadence in Cadence.objects.all():
         print(f"{cadence.client.rest_base_url}/appointments?date={date}")
-        appointments = requests.request(
-            "GET", f"{cadence.client.rest_base_url}/appointments?date={date}"
-        ).json()
+        appointments = requests.request("GET", f"{cadence.client.rest_base_url}/appointments?date={date}").json()
         if len(appointments) > 0:
             for a in appointments:
                 a["client"] = cadence.client
@@ -47,14 +45,10 @@ def send_sms_reminders(reminder_type=MORNING_OF):
         patient_guid = appointment["patient_guid"]
         domain = appointment["client"].group.name
         user = appointment["cadence"].user_sending_reminder
-        django_user = User.objects.get(
-            pk=appointment["cadence"].user_sending_reminder.id
-        )
+        django_user = User.objects.get(pk=appointment["cadence"].user_sending_reminder.id)
         sms_number = django_user.sms_number
         user = django_user.telecom_user
-        patient = requests.request(
-            "GET", f"{rest_base_url}/patients/{patient_guid}"
-        ).json()
+        patient = requests.request("GET", f"{rest_base_url}/patients/{patient_guid}").json()
 
         patient_name = patient["first_name"].rstrip().title()
         body = f"Hello {patient_name}. You have an appointment at {start_hour}:{start_minute}. Ready to see you soon!"
