@@ -16,3 +16,4 @@ shortuuid==1.0.1
 psycopg2-binary==2.8.6
 python-dotenv==0.15.0
 wheel==0.35.1
+xmltodict==0.12.0

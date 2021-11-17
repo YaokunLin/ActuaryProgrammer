@@ -21,9 +21,7 @@ def get_merge_request_url():
     github_group_and_project = github_group_and_project.search(remotes[0])
 
     if github_group_and_project is None:
-        raise Exception(
-            f"Git remote {remotes[0]} does not match expected pattern! Could not determine github_project!"
-        )
+        raise Exception(f"Git remote {remotes[0]} does not match expected pattern! Could not determine github_project!")
 
     github_group_and_project = github_group_and_project.group()
     return f"https://github.com/{github_group_and_project}/merge_requests/new?&merge_request%5Bsource_branch=release%2F{NEW_VERSION}&merge_request%5Btarget_branch%5D=main"
@@ -52,19 +50,18 @@ def commit_updates():
     os.system(f"git add {VERSION_FILE}")
     if PACKAGE_JSON_FILE_EXISTS:
         os.system(f"git add {PACKAGE_JSON_FILE}")
-    is_ok = (
-        input("Commit the above to development and subsequently cut release? (yes) ")
-        or "yes"
-    )
+    is_ok = input("Commit the above to development and subsequently cut release? (yes) ") or "yes"
     if is_ok != "yes":
         print("Cancelling.")
         exit(1)
     os.system(f'git commit -m "Updated version to {NEW_VERSION}."')
     os.system(f"git push")
 
+
 def tag_commit_and_push_tag():
     os.system(f"git tag v{NEW_VERSION}")
     os.system(f"git push origin v{NEW_VERSION}")
+
 
 def create_release_branch():
     os.system(f"git checkout -b release/{NEW_VERSION}")
@@ -84,9 +81,7 @@ get_latest_development_branch()
 # Read current and new versions
 with open(VERSION_FILE, "r") as f:
     CURRENT_VERSION = f.read().strip()
-NEW_VERSION = (
-    input(f"What version are we releasing? ({CURRENT_VERSION}) ") or CURRENT_VERSION
-)
+NEW_VERSION = input(f"What version are we releasing? ({CURRENT_VERSION}) ") or CURRENT_VERSION
 
 
 if NEW_VERSION.strip() == CURRENT_VERSION:

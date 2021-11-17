@@ -25,6 +25,8 @@ if DEBUG:
     load_dotenv()
 
 
+PROJECT_ID = os.getenv("PROJECT_ID", "peerlogic-api-dev")
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -53,6 +55,10 @@ BANDWIDTH_CLIENT.auth = HTTPBasicAuth(BANDWIDTH_API_USERNAME, BANDWIDTH_API_PASS
 NETSAPIENS_CLIENT_ID = os.getenv("NETSAPIENS_CLIENT_ID")
 NETSAPIENS_CLIENT_SECRET = os.getenv("NETSAPIENS_CLIENT_SECRET")
 NETSAPIENS_BASE_URL = os.getenv("NETSAPIENS_BASE_URL")
+NETSAPIENS_ACCESS_TOKEN_URL = os.getenv("NETSAPIENS_ACCESS_TOKEN_URL")
+NETSAPIENS_INTROSPECT_TOKEN_URL = os.getenv("NETSAPIENS_INTROSPECT_TOKEN_URL")
+
+
 NETSAPIENS_API_USERNAME = os.getenv("NETSAPIENS_API_USERNAME")
 NETSAPIENS_API_PASSWORD = os.getenv("NETSAPIENS_API_PASSWORD")
 
@@ -79,6 +85,7 @@ INSTALLED_APPS = [
     "phonenumber_field",
     "corsheaders",
     "core",
+    "calls",
     "reminders",
     "inbox",
 ]
@@ -116,6 +123,8 @@ TEMPLATES = [
 WSGI_APPLICATION = "peerlogic.wsgi.application"
 
 REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": ["core.authentication.JSONWebTokenAuthentication"],
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
 }
@@ -183,8 +192,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 # [START staticurl]
-STATIC_URL = "https://storage.googleapis.com/peerlogic-api/static/"
-# STATIC_URL = 'https://storage.googleapis.com/<your-gcs-bucket>/static/'
+STATIC_BUCKET_NAME = PROJECT_ID
+STATIC_URL = f"https://storage.googleapis.com/{STATIC_BUCKET_NAME}/static/"
 # [END staticurl]
 
 STATIC_ROOT = "static/"

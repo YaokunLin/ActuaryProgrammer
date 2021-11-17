@@ -18,6 +18,8 @@ from django.urls import include, path
 
 
 from core.urls import urlpatterns as company_urlpatterns
+
+from calls.urls import urlpatterns as calls_urlpatterns
 from inbox.urls import urlpatterns as inbox_urlpatterns
 from reminders.urls import urlpatterns as reminders_urlpatterns
 
@@ -28,6 +30,7 @@ urlpatterns = [
     path("api/reminders/", include(reminders_urlpatterns)),
     path("api/companies/", include(company_urlpatterns)),
     path("api/inbox/", include(inbox_urlpatterns)),
+    path("api/", include(calls_urlpatterns)),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     path("admin/", admin.site.urls),
 ]
