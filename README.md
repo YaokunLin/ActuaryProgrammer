@@ -44,7 +44,7 @@ Make sure to run these commands from the root of the project.
 If you haven't created an .env file go ahead and make one from the example file:
 `cp .envexample .env`
 
-Fill in the necessary creds in `.env`.
+Fill in the necessary creds in `.env`. See 1Password for examples: [peerlogic-api.env](https://start.1password.com/open/i?a=P3RU52IFYBEH3GKEDF2UBYENBQ&v=wlmpasbyyncmhpjji3lfc7ra4a&i=sxjcghmtefeqvdystb2l6q7k5y&h=my.1password.com)
 
 Make sure Docker is running, then do the following steps:
 `docker-compose build api`
@@ -95,13 +95,16 @@ source env/bin/activate # ./env/Scripts/activate on Windows
 python3 manage.py runserver
 ```
 
+# Postman Collection
+
+There is a Postman Collection that can be used to validate setup and test changes. Import the following: (Peerlogic API Collection)[https://www.getpostman.com/collections/c1045d02c72c56abd559]
+
 # Deployment
 
 GKE ships with kubernetes version 1.19 in gcloud installation, which means it ships with kustomize version 2.0.3 at the time of this writing:
 
 Helpful Docs:
 * [Kustomize 2.0.3](https://github.com/kubernetes-sigs/kustomize/tree/v2.0.3/docs)
-
 
 
 See REDEPLOYMENT.md for steps on updating development and staging environments with configuration or code changes.

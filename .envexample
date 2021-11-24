@@ -1,4 +1,3 @@
-
 DJANGO_ALLOWED_HOSTS=*
 DJANGO_DEBUG=True
 DJANGO_DB_REQUIRE_SSL
@@ -7,7 +6,9 @@ DJANGO_EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
 DB_HOST=localhost
 NETSAPIENS_CLIENT_ID=
 NETSAPIENS_CLIENT_SECRET=
-NETSAPIENS_BASE_URL=
+NETSAPIENS_BASE_URL=https://core1-phx.peerlogic.com/ns-api
+NETSAPIENS_ACCESS_TOKEN_URL=https://core1-phx.peerlogic.com/ns-api/oauth2/token/
+NETSAPIENS_INTROSPECT_TOKEN_URL=https://core1-phx.peerlogic.com/ns-api/oauth2/read/
 NETSAPIENS_API_USERNAME=
 NETSAPIENS_API_PASSWORD=
 POSTGRES_DB=peerlogic
