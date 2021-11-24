@@ -3,7 +3,11 @@ from django.contrib.auth.models import Group
 from rest_framework import serializers
 
 
-from .models import Call, CallLabel
+from .models import (
+    Call,
+    CallerName,
+    CallLabel,
+)
 
 
 class CallSerializer(serializers.ModelSerializer):
@@ -18,5 +22,12 @@ class CallSerializer(serializers.ModelSerializer):
 class CallLabelSerializer(serializers.ModelSerializer):
     class Meta:
         model = CallLabel
+        fields = "__all__"
+        read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
+
+
+class CallerNameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CallerName
         fields = "__all__"
         read_only_fields = ["id", "created_at", "modified_by", "modified_at"]

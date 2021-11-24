@@ -7,6 +7,7 @@ from core.models import AuditTrailModel
 from calls.field_choices import (
     CallConnectionTypes,
     CallDirectionTypes,
+    CallerNameType,
     EngagementPersonaTypes,
     NonAgentEngagementPersonaTypes,
     ReferralSourceTypes,
@@ -55,3 +56,9 @@ class CallLabel(AuditTrailModel):
     call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="The call being labeled", related_name="labeled_calls")
     metric = models.CharField(max_length=255, db_index=True)
     label = models.CharField(max_length=255, db_index=True)
+
+
+class CallerName(AuditTrailModel):
+    phone_number = PhoneNumberField()
+    caller_name = models.CharField(max_length=255)
+    caller_name_type = models.CharField(choices=CallerNameType.choices, max_length=50)

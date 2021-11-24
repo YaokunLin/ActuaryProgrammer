@@ -68,6 +68,10 @@ Start:
 End all processes:
 `docker-compose down  --remove-orphans`
 
+### Database and Data Schema Creations
+
+`docker-compose run api python3 manage.py makemigrations --name {name}`
+
 ## Run it Locally (w/o Docker)
 
 Not really recommended; docker has been more tested.

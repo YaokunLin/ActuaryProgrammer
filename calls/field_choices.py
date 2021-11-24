@@ -40,3 +40,8 @@ class CallDirectionTypes(models.TextChoices):
     INBOUND = "inbound"
     OUTBOUND = "outbound"
     INTERNAL = "internal"
+
+
+class CallerNameType(models.TextChoices):
+    PERSONAL = "individual"
+    BUSINESS = "business"
