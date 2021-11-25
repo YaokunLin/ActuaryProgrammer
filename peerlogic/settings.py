@@ -39,6 +39,7 @@ if os.environ.get("GOOGLE_CLOUD_PROJECT", None):
 else:
     load_dotenv()
 
+GKE_APPLICATION = os.getenv("GKE_APPLICATION", False)
 
 DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
 
@@ -50,7 +51,7 @@ DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 ALLOWED_HOSTS = ["127.0.0.1", "localhost", os.getenv("DJANGO_ALLOWED_HOSTS", "*")]
-if os.getenv("GKE_APPLICATION", False) == "True":
+if GKE_APPLICATION == "True":
     ALLOWED_HOSTS.append(os.getenv("KUBERNETES_SERVICE_HOST"))
 
 
@@ -156,6 +157,11 @@ DATABASES = {
         "PORT": "5432",
     }
 }
+
+# If the flag as been set, configure to use proxy
+if os.getenv("USE_CLOUD_SQL_AUTH_PROXY", None):
+    DATABASES["default"]["HOST"] = "127.0.0.1"
+    DATABASES["default"]["PORT"] = 5432
 # [END dbconfig]
 
 # Use a in-memory sqlite3 database when testing in CI systems
@@ -203,12 +209,16 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
-# [START staticurl]
-STATIC_BUCKET_NAME = PROJECT_ID
-STATIC_URL = f"https://storage.googleapis.com/{STATIC_BUCKET_NAME}/static/"
+# [START staticurl] 
+if GKE_APPLICATION == "True":
+    STATIC_BUCKET_NAME = PROJECT_ID
+    STATIC_URL = f"https://storage.googleapis.com/{STATIC_BUCKET_NAME}/static/"
+    STATIC_ROOT = "static/"
+else: # app engine or local
+    STATIC_URL = "/static/"
+    STATIC_ROOT = "static"
+    STATICFILES_DIRS = []
 # [END staticurl]
-
-STATIC_ROOT = "static/"
 
 
 # Celery Configuration Options
