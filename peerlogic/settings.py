@@ -10,25 +10,37 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
+import io
 import os
 import requests
 from requests.auth import HTTPBasicAuth
 from pathlib import Path
 
 from dotenv import load_dotenv
+from google.cloud import secretmanager
 
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
-
-if DEBUG:
-    load_dotenv()
+# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 PROJECT_ID = os.getenv("PROJECT_ID", "peerlogic-api-dev")
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+
+if os.environ.get("GOOGLE_CLOUD_PROJECT", None):
+    # Pull secrets from Secret Manager
+    PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT")
+
+    client = secretmanager.SecretManagerServiceClient()
+    settings_name = os.environ.get("SETTINGS_NAME", "django_settings")
+    name = f"projects/{PROJECT_ID}/secrets/{settings_name}/versions/latest"
+    payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
+
+    load_dotenv(stream=io.StringIO(payload))
+else:
+    load_dotenv()
+
+
+DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
 
 
 # Quick-start development settings - unsuitable for production
@@ -38,9 +50,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 ALLOWED_HOSTS = ["127.0.0.1", "localhost", os.getenv("DJANGO_ALLOWED_HOSTS", "*")]
-DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
 if os.getenv("GKE_APPLICATION", False) == "True":
     ALLOWED_HOSTS.append(os.getenv("KUBERNETES_SERVICE_HOST"))
+
 
 # Bandwidth
 BANDWIDTH_APPLICATION_ID = os.getenv("BANDWIDTH_APPLICATION_ID")
@@ -140,7 +152,7 @@ DATABASES = {
         "NAME": os.getenv("POSTGRES_USER"),
         "USER": os.getenv("POSTGRES_DB"),
         "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
-        "HOST": DB_HOST,
+        "HOST": os.getenv("DB_HOST", "127.0.0.1"),
         "PORT": "5432",
     }
 }
