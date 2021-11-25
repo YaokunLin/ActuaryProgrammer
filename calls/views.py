@@ -2,13 +2,13 @@ from rest_framework import viewsets
 
 from .models import (
     Call,
-    CallerName,
     CallLabel,
+    TelecomCallerNameInfo,
 )
 from .serializers import (
     CallSerializer,
-    CallerNameSerializer,
     CallLabelSerializer,
+    TelecomCallerNameInfoSerializer,
 )
 
 
@@ -22,7 +22,7 @@ class CallLabelViewset(viewsets.ModelViewSet):
     serializer_class = CallLabelSerializer
 
 
-class CallerNameViewSet(viewsets.ModelViewSet):
-    queryset = CallerName.objects.all()
-    serializer_class = CallerNameSerializer
+class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
+    queryset = TelecomCallerNameInfo.objects.all()
+    serializer_class = TelecomCallerNameInfoSerializer
 

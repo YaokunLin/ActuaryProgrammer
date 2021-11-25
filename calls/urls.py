@@ -2,14 +2,14 @@ from rest_framework import routers
 
 from .views import (
     CallViewset,
-    CallerNameViewSet,
     CallLabelViewset,
+    TelecomCallerNameInfoViewSet,
 )
 
 router = routers.DefaultRouter()
 
 router.register(r"calls", CallViewset)
-router.register(r"caller_name", CallerNameViewSet)
 router.register(r"labels", CallLabelViewset)
+router.register(r"telecom_caller_name_info", TelecomCallerNameInfoViewSet)
 
 urlpatterns = router.urls

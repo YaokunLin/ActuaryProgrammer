@@ -7,10 +7,10 @@ from core.models import AuditTrailModel
 from calls.field_choices import (
     CallConnectionTypes,
     CallDirectionTypes,
-    CallerNameType,
     EngagementPersonaTypes,
     NonAgentEngagementPersonaTypes,
     ReferralSourceTypes,
+    TelecomCallerNameInfoType,
     TelecomPersonaTypes,
 )
 
@@ -58,7 +58,7 @@ class CallLabel(AuditTrailModel):
     label = models.CharField(max_length=255, db_index=True)
 
 
-class CallerName(AuditTrailModel):
-    phone_number = PhoneNumberField()
+class TelecomCallerNameInfo(AuditTrailModel):
+    phone_number = PhoneNumberField(db_index=True)
     caller_name = models.CharField(max_length=255)
-    caller_name_type = models.CharField(choices=CallerNameType.choices, max_length=50)
+    caller_name_type = models.CharField(choices=TelecomCallerNameInfoType.choices, max_length=50)
