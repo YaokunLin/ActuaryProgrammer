@@ -112,14 +112,11 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
 
 gcloud projects add-iam-policy-binding $PROJECT_ID \
       --member="serviceAccount:${CLOUDBUILD_SERVICE_ACCOUNT}" \
-      --role="roles/appengine.deployer"
+      --role="roles/appengine.serviceAdmin"
 
 gcloud projects add-iam-policy-binding $PROJECT_ID \
       --member="serviceAccount:${CLOUDBUILD_SERVICE_ACCOUNT}" \
       --role="roles/iam.serviceAccountUser"
-
-
-
 
 
 # echo "${textgreen}Creating redis instance${textreset}"
@@ -137,9 +134,9 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
 
 # echo "${textgreen}Reserving static IP address${textreset}"
 # gcloud compute addresses create $PROJECT_ID --global
-ADDRESS=$(gcloud compute addresses describe $PROJECT_ID --global --format "value(address)")
+# ADDRESS=$(gcloud compute addresses describe $PROJECT_ID --global --format "value(address)")
 
-echo "${textgreen}Assigning $DOMAIN_NAME to ADDRESS: $ADDRESS  ${textreset}"
+# echo "${textgreen}Assigning $DOMAIN_NAME to ADDRESS: $ADDRESS  ${textreset}"
 
 
 # echo "${textgreen}Create A-record using gcloud${textreset}"
