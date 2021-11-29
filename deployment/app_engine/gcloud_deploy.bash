@@ -60,6 +60,9 @@ gcloud services enable cloudbuild.googleapis.com
 gcloud services enable secretmanager.googleapis.com
 
 
+echo "${textgreen}Creating App Engine project ${textreset}"
+gcloud app create
+
 # echo "${textgreen}Creating tiny cloud sql instance:"
 # gcloud sql instances create $PROJECT_ID \
 # --database-version=POSTGRES_13 \
