@@ -6,7 +6,7 @@ steps:
     - -c
     - |
       # Save env vars to persistent volume mount: "/workspace"
-      echo -e 'BANDWIDTH_API_PASSWORD=$BANDWIDTH_API_PASSWORD' >> /workspace/.env &&
+      echo -e 'BANDWIDTH_API_PASSWORD=$$BANDWIDTH_API_PASSWORD' >> /workspace/.env &&
       echo -e 'BANDWIDTH_API_USERNAME=$_BANDWIDTH_API_USERNAME' >> /workspace/.env &&
       echo -e 'BANDWIDTH_APPLICATION_ID=$_BANDWIDTH_APPLICATION_ID' >> /workspace/.env &&
       echo -e 'BANDWIDTH_MESSAGING_URI=$_BANDWIDTH_MESSAGING_URI' >> /workspace/.env &&
@@ -16,21 +16,27 @@ steps:
       echo -e 'DJANGO_DB_REQUIRE_SSL=$_DJANGO_DB_REQUIRE_SSL' >> /workspace/.env &&
       echo -e 'DJANGO_DEBUG=$_DJANGO_DEBUG' >> /workspace/.env &&
       echo -e 'DJANGO_EMAIL_BACKEND=$_DJANGO_EMAIL_BACKEND' >> /workspace/.env &&
-      echo -e 'DJANGO_SECRET_KEY=$_DJANGO_SECRET_KEY' >> /workspace/.env &&
+      echo -e 'DJANGO_SECRET_KEY=$$DJANGO_SECRET_KEY' >> /workspace/.env &&
       echo -e 'NETSAPIENS_ACCESS_TOKEN_URL=$_NETSAPIENS_ACCESS_TOKEN_URL' >> /workspace/.env &&
-      echo -e 'NETSAPIENS_API_PASSWORD=$NETSAPIENS_API_PASSWORD' >> /workspace/.env &&
+      echo -e 'NETSAPIENS_API_PASSWORD=$$NETSAPIENS_API_PASSWORD' >> /workspace/.env &&
       echo -e 'NETSAPIENS_API_USERNAME=$_NETSAPIENS_API_USERNAME' >> /workspace/.env &&
       echo -e 'NETSAPIENS_BASE_URL=$_NETSAPIENS_BASE_URL' >> /workspace/.env &&
       echo -e 'NETSAPIENS_CLIENT_ID=$_NETSAPIENS_CLIENT_ID' >> /workspace/.env &&
-      echo -e 'NETSAPIENS_CLIENT_SECRET=$NETSAPIENS_CLIENT_SECRET' >> /workspace/.env &&
+      echo -e 'NETSAPIENS_CLIENT_SECRET=$$NETSAPIENS_CLIENT_SECRET' >> /workspace/.env &&
       echo -e 'NETSAPIENS_INTROSPECT_TOKEN_URL=$_NETSAPIENS_INTROSPECT_TOKEN_URL' >> /workspace/.env &&
       echo -e 'ENVIRONMENT=$_ENVIRONMENT' >> /workspace/.env &&
       echo -e 'PAGE_SIZE=$_PAGE_SIZE' >> /workspace/.env &&
       echo -e 'POSTGRES_DB=$_POSTGRES_DB' >> /workspace/.env &&
-      echo -e 'POSTGRES_PASSWORD=$POSTGRES_PASSWORD' >> /workspace/.env
-      echo -e 'POSTGRES_ROOT_PASSWORD=$POSTGRES_ROOT_PASSWORD' >> /workspace/.env &&
+      echo -e 'POSTGRES_PASSWORD=$$POSTGRES_PASSWORD' >> /workspace/.env
+      echo -e 'POSTGRES_ROOT_PASSWORD=$$POSTGRES_ROOT_PASSWORD' >> /workspace/.env &&
       echo -e 'POSTGRES_USER=$_POSTGRES_USER' >> /workspace/.env &&
-  secretEnv: ["BANDWIDTH_API_PASSWORD", "DJANGO_SECRET_KEY", "NETSAPIENS_CLIENT_SECRET", "NETSAPIENS_API_PASSWORD", "POSTGRES_ROOT_PASSWORD", "POSTGRES_PASSWORD"]
+  secretEnv:
+    - "BANDWIDTH_API_PASSWORD"
+    - "DJANGO_SECRET_KEY"
+    - "NETSAPIENS_CLIENT_SECRET"
+    - "NETSAPIENS_API_PASSWORD"
+    - "POSTGRES_ROOT_PASSWORD"
+    - "POSTGRES_PASSWORD"
 
 - id: "Validate the .env exists"
   name: ubuntu
