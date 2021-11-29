@@ -38,7 +38,7 @@ steps:
 
 - id: "Validate the .env exists"
   name: ubuntu
-  args: ["ls", "-lah", "/workspace/src/"]
+  args: ["ls", "-lah", "/workspace/"]
 
 - name: "gcr.io/cloud-builders/gcloud"
   args: ['-q','app', 'deploy', '/workspace/deployment/app_engine/app.yaml']
