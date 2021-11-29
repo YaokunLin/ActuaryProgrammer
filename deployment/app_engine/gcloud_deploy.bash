@@ -1,5 +1,4 @@
 #!/bin/bash
-KUBERNETES_BASE_DIR="./kubernetes/base"
 PROJECT_ID=$(gcloud config list --format='value(core.project)')
 PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
 DOCKER_REPO="gcr.io/${PROJECT_ID}/peerlogic-api"
@@ -41,7 +40,7 @@ then
   source $ENV_FILE
 fi
 
-echo "${textblue}Reading environment and project ID for kube cluster${textreset}"
+echo "${textblue}Reading environment and project ID${textreset}"
 export ENVIRONMENT
 export PROJECT_ID
 
@@ -69,10 +68,10 @@ gcloud services enable secretmanager.googleapis.com
 # --region=us-west4
 
 
-echo "${textgreen}Setting the password for the 'postgres' user:"
-gcloud sql users set-password postgres \
---instance=$PROJECT_ID \
---password=${POSTGRES_ROOT_PASSWORD}
+# echo "${textgreen}Setting the password for the 'postgres' user:"
+# gcloud sql users set-password postgres \
+# --instance=$PROJECT_ID \
+# --password=${POSTGRES_ROOT_PASSWORD}
 
 # echo "${textgreen}Creating peerlogic user:"
 # gcloud sql users create peerlogic \
@@ -85,7 +84,7 @@ gcloud sql users set-password postgres \
 # --instance=$PROJECT_ID
 
 
-echo "${textblue}Reading cloud sql connection name for kube cluster${textreset}"
+echo "${textblue}Reading cloud sql connection name${textreset}"
 CLOUDSQL_CONNECTION_NAME=$(gcloud sql instances describe $PROJECT_ID --format "value(connectionName)")
 
 export CLOUDSQL_CONNECTION_NAME
@@ -110,7 +109,7 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
 
 gcloud projects add-iam-policy-binding $PROJECT_ID \
       --member="serviceAccount:${CLOUDBUILD_SERVICE_ACCOUNT}" \
-      --role="roles/secretmanager.secretAccessor"
+      --role="roles/appengine.deployer"
 
 
 
