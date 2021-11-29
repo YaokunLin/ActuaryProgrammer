@@ -60,8 +60,8 @@ gcloud services enable cloudbuild.googleapis.com
 gcloud services enable secretmanager.googleapis.com
 
 
-echo "${textgreen}Creating App Engine project ${textreset}"
-gcloud app create
+# echo "${textgreen}Creating App Engine project ${textreset}"
+# gcloud app create
 
 # echo "${textgreen}Creating tiny cloud sql instance:"
 # gcloud sql instances create $PROJECT_ID \
@@ -114,6 +114,9 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
       --member="serviceAccount:${CLOUDBUILD_SERVICE_ACCOUNT}" \
       --role="roles/appengine.deployer"
 
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+      --member="serviceAccount:${CLOUDBUILD_SERVICE_ACCOUNT}" \
+      --role="roles/iam.serviceAccountUser"
 
 
 
