@@ -55,5 +55,5 @@ availableSecrets:
     env: "NETSAPIENS_API_PASSWORD"
   - versionName: projects/$PROJECT_NUMBER/secrets/NETSAPIENS_CLIENT_SECRET/versions/latest
     env: "NETSAPIENS_CLIENT_SECRET"
-  - versionName: projects/$PROJECT_NUMBER/secrets/POSTGRES_PASSWORD/versions/latest
-    env: "POSTGRES_PASSWORD"
+  - versionName: projects/$PROJECT_NUMBER/secrets/POSTGRES_PEERLOGIC_PASSWORD/versions/latest
+    env: "POSTGRES_PEERLOGIC_PASSWORD"

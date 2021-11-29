@@ -28,11 +28,11 @@ spec:
                 secretKeyRef:
                   name: cloudsql
                   key: POSTGRES_USER
-            - name: POSTGRES_PASSWORD
+            - name: POSTGRES_PEERLOGIC_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: cloudsql
-                  key: POSTGRES_PASSWORD
+                  key: POSTGRES_PEERLOGIC_PASSWORD
             # [END cloudsql_secrets]
             # [START peerlogic_secrets]
             - name: DJANGO_SECRET_KEY
@@ -128,11 +128,11 @@ spec:
                 secretKeyRef:
                   name: cloudsql
                   key: POSTGRES_USER
-            - name: POSTGRES_PASSWORD
+            - name: POSTGRES_PEERLOGIC_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: cloudsql
-                  key: POSTGRES_PASSWORD
+                  key: POSTGRES_PEERLOGIC_PASSWORD
             # [END cloudsql_secrets]
             # [START peerlogic_secrets]
             - name: DJANGO_SECRET_KEY
@@ -203,11 +203,11 @@ spec:
                 secretKeyRef:
                   name: cloudsql
                   key: POSTGRES_USER
-            - name: POSTGRES_PASSWORD
+            - name: POSTGRES_PEERLOGIC_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: cloudsql
-                  key: POSTGRES_PASSWORD
+                  key: POSTGRES_PEERLOGIC_PASSWORD
             # [END cloudsql_secrets]
             # [START peerlogic_secrets]
             - name: DJANGO_SECRET_KEY
@@ -275,11 +275,11 @@ spec:
                 secretKeyRef:
                   name: cloudsql
                   key: POSTGRES_USER
-            - name: POSTGRES_PASSWORD
+            - name: POSTGRES_PEERLOGIC_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: cloudsql
-                  key: POSTGRES_PASSWORD
+                  key: POSTGRES_PEERLOGIC_PASSWORD
             # [END cloudsql_secrets]
             # [START peerlogic_secrets]
             - name: DJANGO_SECRET_KEY
