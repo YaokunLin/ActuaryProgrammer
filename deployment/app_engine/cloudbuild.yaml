@@ -36,9 +36,12 @@ steps:
     - "NETSAPIENS_API_PASSWORD"
     - "POSTGRES_PEERLOGIC_PASSWORD"
 
-- id: "Validate the .env exists"
-  name: ubuntu
-  args: ["ls", "-lah", "/workspace/"]
+- id: Pip install dependencies
+  name: "python"
+  entrypoint: "pip"
+  args: ["install", "-r", "requirements/requirements.txt"]
+  dir: '.'
+  timeout: "1600s"
 
 - name: "gcr.io/cloud-builders/gcloud"
   args: ['-q','app', 'deploy', '/workspace/deployment/app_engine/app.yaml']
