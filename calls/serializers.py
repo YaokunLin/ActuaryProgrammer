@@ -30,3 +30,8 @@ class TelecomCallerNameInfoSerializer(serializers.ModelSerializer):
         model = TelecomCallerNameInfo
         fields = "__all__"
         read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
+
+    
+    def get_or_create(self, validated_data):
+        return TelecomCallerNameInfo.objects.get_or_create_from_twilio(**validated_data)
+        

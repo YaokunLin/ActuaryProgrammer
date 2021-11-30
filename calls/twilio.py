@@ -6,7 +6,7 @@ from typing import (
 )
 
 from django.conf import settings
-
+from twilio.rest import Client
 
 class TwilioCnameClient(requests.Request):
 
@@ -20,6 +20,10 @@ class TwilioCnameClient(requests.Request):
         self._twilio_base_url = twilio_base_url
         self._username = username  # key_sid
         self._password = password  # key_secret
+        
+
+
+    # TODO add username attribute
 
 
     def lookup_phone_number(self, phone_number: str) -> Dict:
