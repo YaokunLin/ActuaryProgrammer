@@ -42,9 +42,12 @@ steps:
   args: ["/workspace/requirements/requirements.txt", "/workspace/requirements.txt"]
   timeout: "1600s"
 
+- id: "Validate the workspace looks right"
+  name: ubuntu
+  args: ["ls", "-lah", "/workspace/flask_app/src/"]
+
 - name: "gcr.io/cloud-builders/gcloud"
-  args: ['-q','app', 'deploy', '/workspace/deployment/app_engine/app.yaml']
-  dir: '.'
+  args: ['app', 'deploy', '/workspace/deployment/app_engine/app.yaml']
   timeout: "1600s"
 
 availableSecrets:
