@@ -17,6 +17,7 @@
 # [START django_app]
 # [START gaestd_py_django_app_yaml]
 runtime: python39
+#entrypoint: gunicorn -b :$PORT peerlogic.wsgi:application
 
 handlers:
 # This configures Google App Engine to serve the files in the app's static
