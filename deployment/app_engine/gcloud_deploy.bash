@@ -3,6 +3,7 @@ PROJECT_ID=$(gcloud config list --format='value(core.project)')
 PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
 DOCKER_REPO="gcr.io/${PROJECT_ID}/peerlogic-api"
 CLOUDBUILD_SERVICE_ACCOUNT="${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com"
+APP_ENGINE_SERVICE_ACCOUNT="${PROJECT_ID}@appspot.gserviceaccount.com"
 VAULT_ID="wlmpasbyyncmhpjji3lfc7ra4a"
 
 textred=$(tput setaf 1) # Red
@@ -118,6 +119,10 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
       --member="serviceAccount:${CLOUDBUILD_SERVICE_ACCOUNT}" \
       --role="roles/iam.serviceAccountUser"
 
+echo "${textgreen}Adding App engine roles${textreset}"
+gcloud secrets add-iam-policy-binding peerlogic-api-env \
+    --member "serviceAccount:${APP_ENGINE_SERVICE_ACCOUNT}" \
+    --role="roles/secretmanager.secretAccessor"
 
 # echo "${textgreen}Creating redis instance${textreset}"
 # gcloud redis instances create peerlogic-api --size=2 --region=us-west4
