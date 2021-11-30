@@ -24,9 +24,10 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 PROJECT_ID = os.getenv("PROJECT_ID", "peerlogic-api-dev")
+GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT", None)
 
 
-if os.environ.get("GOOGLE_CLOUD_PROJECT", None):
+if GOOGLE_CLOUD_PROJECT:
     # Pull secrets from Secret Manager
     PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT")
 
@@ -159,7 +160,7 @@ DATABASES = {
 }
 
 # If the flag as been set, configure to use proxy
-if os.getenv("USE_CLOUD_SQL_AUTH_PROXY", None):
+if os.getenv("USE_CLOUD_SQL_AUTH_PROXY", None) or GOOGLE_CLOUD_PROJECT:
     DATABASES["default"]["HOST"] = "127.0.0.1"
     DATABASES["default"]["PORT"] = 5432
 # [END dbconfig]
