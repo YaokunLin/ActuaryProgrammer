@@ -31,8 +31,8 @@ if os.environ.get("GOOGLE_CLOUD_PROJECT", None):
     PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT")
 
     client = secretmanager.SecretManagerServiceClient()
-    settings_name = os.environ.get("SETTINGS_NAME", "django_settings")
-    name = f"projects/{PROJECT_ID}/secrets/{settings_name}/versions/latest"
+    ENV_CONFIG_SECRET = os.environ.get("ENV_CONFIG_SECRET", "peerlogic-api-env")
+    name = f"projects/{PROJECT_ID}/secrets/{ENV_CONFIG_SECRET}/versions/latest"
     payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
 
     load_dotenv(stream=io.StringIO(payload))
