@@ -42,6 +42,12 @@ steps:
   args: ["/workspace/requirements/requirements.txt", "/workspace/requirements.txt"]
   timeout: "1600s"
 
+- id: Copy main.py to root of directory for app engine to see
+  name: "ubuntu"
+  entrypoint: "cp"
+  args: ["/workspace/deployment/app_engine/main.py", "/workspace/main.py"]
+  timeout: "1600s"
+
 - id: "Validate the workspace looks right"
   name: ubuntu
   args: ["ls", "-lah", "/workspace/"]
