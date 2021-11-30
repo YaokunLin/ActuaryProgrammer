@@ -29,5 +29,7 @@ handlers:
 # the entire handlers section) when there are no static files defined.
 - url: /.*
   script: auto
+
+entrypoint: gunicorn -b :$PORT peerlogic.wsgi:app
 # [END gaestd_py_django_app_yaml]
 # [END django_app]
