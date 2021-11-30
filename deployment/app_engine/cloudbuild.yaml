@@ -44,7 +44,7 @@ steps:
 
 - id: "Validate the workspace looks right"
   name: ubuntu
-  args: ["ls", "-lah", "/workspace/flask_app/src/"]
+  args: ["ls", "-lah", "/workspace/"]
 
 - name: "gcr.io/cloud-builders/gcloud"
   args: ['app', 'deploy', '/workspace/deployment/app_engine/app.yaml']
