@@ -61,31 +61,31 @@ gcloud services enable cloudbuild.googleapis.com
 gcloud services enable secretmanager.googleapis.com
 
 
-# echo "${textgreen}Creating App Engine project ${textreset}"
-# gcloud app create
+echo "${textgreen}Creating App Engine project ${textreset}"
+gcloud app create
 
-# echo "${textgreen}Creating tiny cloud sql instance:"
-# gcloud sql instances create $PROJECT_ID \
-# --database-version=POSTGRES_13 \
-# --cpu=2 \
-# --memory=7680MB \
-# --region=us-west4
-
-
-# echo "${textgreen}Setting the password for the 'postgres' user:"
-# gcloud sql users set-password postgres \
-# --instance=$PROJECT_ID \
-# --password=${POSTGRES_ROOT_PASSWORD}
-
-# echo "${textgreen}Creating peerlogic user:"
-# gcloud sql users create peerlogic \
-# --instance=$PROJECT_ID \
-# --password=${POSTGRES_PEERLOGIC_PASSWORD}
+echo "${textgreen}Creating tiny cloud sql instance:"
+gcloud sql instances create $PROJECT_ID \
+--database-version=POSTGRES_13 \
+--cpu=2 \
+--memory=7680MB \
+--region=us-west4
 
 
-# echo "${textgreen}Creating peerlogic database:"
-# gcloud sql databases create peerlogic \
-# --instance=$PROJECT_ID
+echo "${textgreen}Setting the password for the 'postgres' user:"
+gcloud sql users set-password postgres \
+--instance=$PROJECT_ID \
+--password=${POSTGRES_ROOT_PASSWORD}
+
+echo "${textgreen}Creating peerlogic user:"
+gcloud sql users create peerlogic \
+--instance=$PROJECT_ID \
+--password=${POSTGRES_PEERLOGIC_PASSWORD}
+
+
+echo "${textgreen}Creating peerlogic database:"
+gcloud sql databases create peerlogic \
+--instance=$PROJECT_ID
 
 
 echo "${textblue}Reading cloud sql connection name${textreset}"
@@ -124,38 +124,15 @@ gcloud secrets add-iam-policy-binding peerlogic-api-env \
     --member "serviceAccount:${APP_ENGINE_SERVICE_ACCOUNT}" \
     --role="roles/secretmanager.secretAccessor"
 
-# echo "${textgreen}Creating redis instance${textreset}"
-# gcloud redis instances create peerlogic-api --size=2 --region=us-west4
+echo "${textgreen}Creating redis instance${textreset}"
+gcloud redis instances create peerlogic-api --size=2 --region=us-west4
 
-# echo "${textblue}Reading redis url${textreset}"
-# REDIS_IP_RANGE=$(gcloud redis instances describe peerlogic-api --region=us-west4 --format "value(
-# reservedIpRange)")
-# REDIS_PORT=$(gcloud redis instances describe peerlogic-api --region=us-west4 --format "value(port)")
-# REDIS_IP=${REDIS_IP_RANGE%/*}
+echo "${textblue}Reading redis url${textreset}"
+REDIS_IP_RANGE=$(gcloud redis instances describe peerlogic-api --region=us-west4 --format "value(
+reservedIpRange)")
+REDIS_PORT=$(gcloud redis instances describe peerlogic-api --region=us-west4 --format "value(port)")
+REDIS_IP=${REDIS_IP_RANGE%/*}
 
-# export REDIS_URL="redis://${REDIS_IP}:${REDIS_PORT}/0"
+export REDIS_URL="redis://${REDIS_IP}:${REDIS_PORT}/0"
 
-
-
-# echo "${textgreen}Reserving static IP address${textreset}"
-# gcloud compute addresses create $PROJECT_ID --global
-# ADDRESS=$(gcloud compute addresses describe $PROJECT_ID --global --format "value(address)")
-
-# echo "${textgreen}Assigning $DOMAIN_NAME to ADDRESS: $ADDRESS  ${textreset}"
-
-
-# echo "${textgreen}Create A-record using gcloud${textreset}"
-# gcloud dns --project=peerlogic-dns record-sets transaction start \
-#     --zone=peerlogic-tech
-
-# gcloud dns --project=peerlogic-dns record-sets transaction add $ADDRESS \
-#     --name=${DOMAIN_NAME}. \
-#     --ttl=300 \
-#     --type=A \
-#     --zone=peerlogic-tech
-
-# gcloud dns --project=peerlogic-dns record-sets transaction execute \
-#     --zone=peerlogic-tech
-
-# echo "${textgreen}Domain name ${DOMAIN_NAME} is propagating. All set! ${textreset}"
-
+# TODO: custom domain mapping
