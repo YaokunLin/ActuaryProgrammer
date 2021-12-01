@@ -58,7 +58,6 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
             print("exists and is not stale")
             return Response(TelecomCallerNameInfoSerializer(telecom_caller_name_info).data)
 
-
         print("IT' STALE!")
         # fetch from twilio
         twilio_caller_name_info = get_caller_name_info_from_twilio(phone_number=phone_number)
@@ -67,10 +66,7 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
         telecom_caller_name_info = convert_twilio_phone_number_info_to_telecom_caller_name_info(twilio_caller_name_info)
 
         # save
-        
-
-        # telecom_caller_name_info
-
+        telecom_caller_name_info.save()
 
         # return
         return Response(TelecomCallerNameInfoSerializer(telecom_caller_name_info).data)
@@ -86,15 +82,11 @@ def get_or_none(classmodel, **kwargs):
         return None
 
 
-
-
-
-
-# twilio lookup API: https://support.twilio.com/hc/en-us/articles/360050891214-Getting-Started-with-the-Twilio-Lookup-API
-# Example lookups in python: https://www.twilio.com/docs/lookup/api
-# API Explorer - "Lookup": https://console.twilio.com/us1/develop/api-explorer/endpoints?frameUrl=%2Fconsole%2Fapi-explorer%3Fx-target-region%3Dus1&currentFrameUrl=%2Fconsole%2Fapi-explorer%2Flookup%2Flookup-phone-numbers%2Ffetch%3F__override_layout__%3Dembed%26bifrost%3Dtrue%26x-target-region%3Dus1
-
 def convert_twilio_phone_number_info_to_telecom_caller_name_info(twilio_phone_number_info: PhoneNumberInstance) -> TelecomCallerNameInfo:
+    # twilio lookup API: https://support.twilio.com/hc/en-us/articles/360050891214-Getting-Started-with-the-Twilio-Lookup-API
+    # Example lookups in python: https://www.twilio.com/docs/lookup/api
+    # API Explorer - "Lookup": https://console.twilio.com/us1/develop/api-explorer/endpoints?frameUrl=%2Fconsole%2Fapi-explorer%3Fx-target-region%3Dus1&currentFrameUrl=%2Fconsole%2Fapi-explorer%2Flookup%2Flookup-phone-numbers%2Ffetch%3F__override_layout__%3Dembed%26bifrost%3Dtrue%26x-target-region%3Dus1
+
     # shape of the date
     # {
     #    "caller_name": {"caller_name": "", "caller_type", "error_code": ""}
@@ -124,11 +116,9 @@ def convert_twilio_phone_number_info_to_telecom_caller_name_info(twilio_phone_nu
 
 
 def get_caller_name_info_from_twilio(phone_number, client=None):
-    print(phone_number)
     if not client:
         client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
     
     # lookup value in twilio
-    phone_number_info = client.lookups.v1.phone_numbers(phone_number).fetch(type=["caller-name", "carrier"])  # type is important otherwise we won't get the caller_name properties including caller_type
-
+    phone_number_info = client.lookups.v1.phone_numbers(phone_number).fetch(type=["caller-name", "carrier"])  # you must specify the types whose values you want to have filled in, otherwise they will be None
     return phone_number_info

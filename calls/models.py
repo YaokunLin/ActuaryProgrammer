@@ -3,7 +3,9 @@ import datetime
 from django.conf import settings
 from django.db import models
 from django_extensions.db.fields import ShortUUIDField
+from django_userforeignkey.models.fields import UserForeignKey
 from phonenumber_field.modelfields import PhoneNumberField
+
 
 from core.models import AuditTrailModel
 from calls.field_choices import (
@@ -61,10 +63,33 @@ class CallLabel(AuditTrailModel):
     label = models.CharField(max_length=255, db_index=True)
 
 class TelecomCallerNameInfo(AuditTrailModel):
-    phone_number = PhoneNumberField(db_index=True)
+    id = None
+    phone_number = PhoneNumberField(primary_key=True)
     caller_name = models.CharField(max_length=255)
     caller_name_type = models.CharField(choices=TelecomCallerNameInfoTypes.choices, max_length=50, null=True)
     source = models.CharField(choices=TelecomCallerNameInfoSourceTypes.choices, max_length=50)
+
+    # created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    # modified_at = models.DateTimeField(auto_now=True, db_index=True)
+    # created_by = UserForeignKey(
+    #     on_delete=models.SET_NULL,
+    #     auto_user_add=True,
+    #     verbose_name="The user that is automatically assigned",
+    #     related_name="%(class)s_created",
+    #     blank=True,
+    #     null=True,
+    # )
+    # modified_by = UserForeignKey(
+    #     on_delete=models.SET_NULL,
+    #     auto_user_add=True,
+    #     verbose_name="The user that is automatically assigned",
+    #     related_name="%(class)s_modified",
+    #     blank=True,
+    #     null=True,
+    # )
+
+    # class Meta:
+    #     get_latest_by = "modified_at"
 
 
     def is_caller_name_info_stale(self) -> bool:
@@ -72,5 +97,4 @@ class TelecomCallerNameInfo(AuditTrailModel):
         today = datetime.datetime.now(time_zone)  # today by the database's standard
         expiration_time = self.modified_at + datetime.timedelta(seconds=settings.TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS)  # calculate expiration time
         
-        print(f"today: {today}, expiration_time: {expiration_time}, max_age: {settings.TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS}")
         return today > expiration_time
