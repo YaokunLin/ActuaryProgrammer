@@ -23,3 +23,8 @@ steps:
     name: "gcr.io/cloud-builders/gcloud"
     args: ["app", "deploy", "/workspace/app.yaml"]
     timeout: "1600s"
+
+  - id: "App Engine Deploy"
+    name: "gcr.io/cloud-builders/gcloud"
+    args: ["app", "deploy", "/workspace/django_migrate.yaml"]
+    timeout: "1600s"
