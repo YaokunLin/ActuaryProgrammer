@@ -43,5 +43,11 @@ class CallDirectionTypes(models.TextChoices):
 
 
 class TelecomCallerNameInfoTypes(models.TextChoices):
-    PERSONAL = "individual"
     BUSINESS = "business"
+    CONSUMER = "consumer"
+    UNDETERMINED = "undetermined"  # encountered but the type is unknown
+
+
+class TelecomCallerNameInfoSourceTypes(models.TextChoices):
+    PEERLOGIC = "peerlogic"
+    TWILIO = "twilio"

@@ -1,3 +1,5 @@
+import datetime
+
 from django.conf import settings
 from django.db import models
 from django_extensions.db.fields import ShortUUIDField
@@ -11,6 +13,7 @@ from calls.field_choices import (
     NonAgentEngagementPersonaTypes,
     ReferralSourceTypes,
     TelecomCallerNameInfoTypes,
+    TelecomCallerNameInfoSourceTypes,
     TelecomPersonaTypes,
 )
 
@@ -61,3 +64,12 @@ class TelecomCallerNameInfo(AuditTrailModel):
     phone_number = PhoneNumberField(db_index=True)
     caller_name = models.CharField(max_length=255)
     caller_name_type = models.CharField(choices=TelecomCallerNameInfoTypes.choices, max_length=50)
+    source = models.CharField(choices=TelecomCallerNameInfoSourceTypes.choices, max_length=50)
+
+    def is_caller_name_info_stale(self) -> bool:
+        time_zone = self.modified_at.tzinfo
+
+        today = datetime.datetime.now(time_zone)
+        expiration_time = self.modified_at + datetime.timedelta(seconds=settings.TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS)
+        
+        return today > expiration_time

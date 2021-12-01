@@ -1,4 +1,3 @@
-import datetime
 import logging
 
 from django.conf import settings
@@ -68,7 +67,7 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
         # search database for record
         telecom_caller_name_info = get_or_none(TelecomCallerNameInfo, phone_number=phone_number)
 
-        if telecom_caller_name_info and not is_caller_name_info_stale(telecom_caller_name_info.modified_at):
+        if telecom_caller_name_info and not telecom_caller_name_info.is_caller_name_info_stale():
             # TODO log 
             print("exists and is not stale")
             return Response(TelecomCallerNameInfoSerializer(telecom_caller_name_info).data)
@@ -99,13 +98,7 @@ def get_or_none(classmodel, **kwargs):
         return None
 
 
-def is_caller_name_info_stale(retrieved_time: datetime.datetime) -> bool:
-    time_zone = retrieved_time.tzinfo
 
-    today = datetime.datetime.now(time_zone)
-    valid_time = retrieved_time + datetime.timedelta(seconds=settings.TWILIO_REFETCH_IN_SECONDS)
-    
-    return today > valid_time
 
 
 
