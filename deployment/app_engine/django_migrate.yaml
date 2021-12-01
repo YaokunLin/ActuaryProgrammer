@@ -5,6 +5,6 @@
 # [START django_migrate]
 runtime: python39
 service: django-migrate
-entrypoint: "python manage.py migrate"
+entrypoint: "python3 manage.py migrate --noinput"
 
 # [END django_migrate]
