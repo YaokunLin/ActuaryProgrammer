@@ -2,7 +2,7 @@ steps:
 - id: Copy requirements.txt to root of directory for app engine to see
   name: "ubuntu"
   entrypoint: "cp"
-  args: ["/workspace/", "/workspace/requirements.txt"]
+  args: ["/workspace/requirements/requirements.txt", "/workspace/requirements.txt"]
   timeout: "1600s"
 
 - id: Copy app engine modules to root of directory for app engine to see
