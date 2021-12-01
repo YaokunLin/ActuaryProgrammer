@@ -63,13 +63,13 @@ class CallLabel(AuditTrailModel):
 class TelecomCallerNameInfo(AuditTrailModel):
     phone_number = PhoneNumberField(db_index=True)
     caller_name = models.CharField(max_length=255)
-    caller_name_type = models.CharField(choices=TelecomCallerNameInfoTypes.choices, max_length=50)
+    caller_name_type = models.CharField(choices=TelecomCallerNameInfoTypes.choices, max_length=50, null=True)
     source = models.CharField(choices=TelecomCallerNameInfoSourceTypes.choices, max_length=50)
 
-    def is_caller_name_info_stale(self) -> bool:
-        time_zone = self.modified_at.tzinfo
 
-        today = datetime.datetime.now(time_zone)
-        expiration_time = self.modified_at + datetime.timedelta(seconds=settings.TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS)
+    def is_caller_name_info_stale(self) -> bool:
+        time_zone = self.modified_at.tzinfo  # use database standard timezone
+        today = datetime.datetime.now(time_zone)  # today by the database's standard
+        expiration_time = self.modified_at + datetime.timedelta(seconds=settings.TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS)  # calculate expiration time
         
         return today > expiration_time

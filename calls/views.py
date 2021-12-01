@@ -103,10 +103,10 @@ def convert_twilio_phone_number_info_to_telecom_caller_name_info(twilio_phone_nu
 
     caller_name = caller_name_section.get("caller_name", None)
     caller_type = caller_name_section.get("caller_type", None)  # BUSINESS CONSUMER UNDETERMINED
-    phone_Number = caller_name_section.get("phone_number")
+    phone_number = caller_name_section.get("phone_number")
 
     
-    telcom_caller_name_info = TelecomCallerNameInfo(phone_number="14403544304", caller_name=caller_name["caller_name"])
+    telcom_caller_name_info = TelecomCallerNameInfo(phone_number=phone_number, caller_name=caller_name, caller_name_type=caller_type)
     return telcom_caller_name_info
 
 
