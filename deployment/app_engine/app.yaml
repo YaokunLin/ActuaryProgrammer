@@ -17,6 +17,7 @@
 # [START django_app]
 # [START gaestd_py_django_app_yaml]
 runtime: python39
+service: default
 #entrypoint: gunicorn -b :$PORT peerlogic.wsgi:application
 
 handlers:

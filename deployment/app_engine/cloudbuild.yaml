@@ -19,6 +19,7 @@ steps:
     name: ubuntu
     args: ["ls", "-lah", "/workspace/"]
 
-  - name: "gcr.io/cloud-builders/gcloud"
+  - id: "App Engine Deploy"
+    name: "gcr.io/cloud-builders/gcloud"
     args: ["app", "deploy", "/workspace/app.yaml"]
     timeout: "1600s"

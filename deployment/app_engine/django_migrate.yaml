@@ -1,0 +1,10 @@
+#
+#
+#
+
+# [START django_migrate]
+runtime: python39
+service: django_migrate
+entrypoint: "python manage.py migrate"
+
+# [END django_migrate]
