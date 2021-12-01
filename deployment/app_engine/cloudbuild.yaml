@@ -8,12 +8,8 @@
 - id: Copy app engine modules to root of directory for app engine to see
   name: "ubuntu"
   entrypoint: "cp"
-  args: ["-R", "/workspace/deployment/app_engine/*", "/workspace/"]
+  args: ["-R", "/workspace/deployment/app_engine/*", "/workspace/."]
   timeout: "1600s"
-
-
-# TODO: move app.yaml, main.py and __init__.py from root directory into deployment/app_engine/
-# then add steps to copy them to root
 
 - id: "Validate the workspace looks right"
   name: ubuntu
