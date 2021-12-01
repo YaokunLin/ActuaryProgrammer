@@ -1,5 +1,12 @@
 #!/bin/bash
-KUBERNETES_BASE_DIR="./kubernetes/base"
+
+# STOP! THIS NEEDS TO BE RE-WRITTEN TO USE THE FILE STRUCTURE PRESENT IN THE deployment DIRECTORY
+# This cloudbuild file is for a Kubernetes cluster, we now use app_engine.
+
+# We moved it to a different directory so it wasn't in the root anymore
+# TODO: make this work again (when we have more DevOps personell to manage a kube cluster)
+
+KUBERNETES_BASE_DIR="./kubernetes/clusters/base"
 PROJECT_ID=$(gcloud config list --format='value(core.project)')
 PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
 DOCKER_REPO="gcr.io/${PROJECT_ID}/peerlogic-api"
@@ -43,7 +50,7 @@ fi
 
 
 
-KUBERNETES_OVERLAY_DIR="./kubernetes/overlays/${PROJECT_ID}"
+KUBERNETES_OVERLAY_DIR="./kubernetes/clusters/overlays/${PROJECT_ID}"
 KUBERNETES_ENV_FILE="${KUBERNETES_OVERLAY_DIR}/.env"
 
 rm -f $KUBERNETES_ENV_FILE

@@ -90,7 +90,7 @@ Where:
 
 ## Update GKE kustomization yaml file with the appropriate image name
 
-This is titled kubernetes/overlays/<project_id>/kustomization.yaml
+This is titled kubernetes/clusters/overlays/<project_id>/kustomization.yaml
 
 Update the image value with this value:
 

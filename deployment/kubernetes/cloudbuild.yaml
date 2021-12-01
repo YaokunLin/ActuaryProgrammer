@@ -1,3 +1,8 @@
+# This cloudbuild file is for Kubernetes cluster, we now use app_engine.
+
+# We moved it to a different directory so it wasn't in the root anymore
+# TODO: make this work again (when we have more DevOps personell to manage it)
+
 steps:
   - id: "build image"
     name: "gcr.io/cloud-builders/docker"
@@ -13,8 +18,8 @@ steps:
       - -c
       - |
         # Save env vars to persistent volume mount: "/workspace"
-        echo -e $$ENVFILE >> /workspace/deployment/kubernetes/overlays/${PROJECT_ID}/.env &&
-        cat /workspace/deployment/kubernetes/overlays/${PROJECT_ID}/.env
+        echo -e $$ENVFILE >> /workspace/deployment/kubernetes/clusters/overlays/${PROJECT_ID}/.env &&
+        cat /workspace/deployment/kubernetes/clusters/overlays/${PROJECT_ID}/.env
     secretEnv: ["ENVFILE"]
   - id: "Delete past jobs"
     name: "gcr.io/cloud-builders/kubectl"
@@ -26,7 +31,7 @@ steps:
     name: 'gcr.io/$PROJECT_ID/kustomize'
     args:
     - 'build'
-    - 'deployment/kubernetes/overlays/${PROJECT_ID}'
+    - 'deployment/kubernetes/clusters/overlays/${PROJECT_ID}'
     env:
       - 'APPLY=true'
       - 'CLOUDSDK_COMPUTE_ZONE=${_ZONE}'
