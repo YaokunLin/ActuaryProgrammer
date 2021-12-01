@@ -32,29 +32,10 @@ class CallLabelViewset(viewsets.ModelViewSet):
     serializer_class = CallLabelSerializer
 
 
-# class TelecomCallerNameInfoByPhoneNumberViewSet(viewsets.ModelViewSet):
-#     serializer_class = TelecomCallerNameInfoSerializer
-#     lookup_field = "phone"
-
-#     def get_queryset(self):
-#         queryset = TelecomCallerNameInfo.objects.all()
-#         category = self.request.query_params.get('phone_number', None)
-#         if category is not None:
-#             queryset = queryset.filter(category=category)
-#         return queryset
-
 class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
     queryset = TelecomCallerNameInfo.objects.all()
     serializer_class = TelecomCallerNameInfoSerializer
     lookup_field = "phone_number"
-
-    # def retrieve(self, request, pk=None):
-    #     print("hello")
-    #     log.info("Hello!")
-    #     queryset = TelecomCallerNameInfo.objects.all()
-    #     telecom_caller_name_info = get_object_or_404(queryset, pk=pk)
-    #     serializer = TelecomCallerNameInfoSerializer(telecom_caller_name_info)
-    #     return Response(serializer.data)
 
 
     def retrieve(self, request, phone_number):
