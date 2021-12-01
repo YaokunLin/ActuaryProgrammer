@@ -7,6 +7,11 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from twilio.rest import Client
 
+from .field_choices import (
+    TelecomCallerNameInfoTypes,
+    TelecomCallerNameInfoSourceTypes,
+)
+
 from .models import (
     Call,
     CallLabel,
@@ -59,10 +64,12 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
         twilio_caller_name_info = get_caller_name_info_from_twilio(phone_number=phone_number)
         
         # create object
-        
+        telecom_caller_name_info = convert_twilio_phone_number_info_to_telecom_caller_name_info(twilio_caller_name_info)
 
         # save
+        
 
+        # telecom_caller_name_info
 
 
         # return
@@ -96,17 +103,23 @@ def convert_twilio_phone_number_info_to_telecom_caller_name_info(twilio_phone_nu
     #    "phone_number": "",
     #    "national_format": ""
     # }
+    # TODO debug log
+    print(twilio_phone_number_info.__dict__)
+
     caller_name_section = twilio_phone_number_info.caller_name
     if caller_name_section is None:
         # TODO explode
         return None
 
     caller_name = caller_name_section.get("caller_name", None)
-    caller_type = caller_name_section.get("caller_type", None)  # BUSINESS CONSUMER UNDETERMINED
-    phone_number = caller_name_section.get("phone_number")
+    caller_type = caller_name_section.get("caller_type", "")  # BUSINESS CONSUMER UNDETERMINED
+    caller_type = caller_type.lower()
+    if caller_type not in TelecomCallerNameInfoTypes.values:
+        caller_type = None
+    phone_number = twilio_phone_number_info.phone_number
+    source = TelecomCallerNameInfoSourceTypes.TWILIO
 
-    
-    telcom_caller_name_info = TelecomCallerNameInfo(phone_number=phone_number, caller_name=caller_name, caller_name_type=caller_type)
+    telcom_caller_name_info = TelecomCallerNameInfo(phone_number=phone_number, caller_name=caller_name, caller_name_type=caller_type, source=source)
     return telcom_caller_name_info
 
 

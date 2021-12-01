@@ -72,4 +72,5 @@ class TelecomCallerNameInfo(AuditTrailModel):
         today = datetime.datetime.now(time_zone)  # today by the database's standard
         expiration_time = self.modified_at + datetime.timedelta(seconds=settings.TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS)  # calculate expiration time
         
+        print(f"today: {today}, expiration_time: {expiration_time}, max_age: {settings.TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS}")
         return today > expiration_time
