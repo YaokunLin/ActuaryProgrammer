@@ -42,6 +42,6 @@ class CallDirectionTypes(models.TextChoices):
     INTERNAL = "internal"
 
 
-class TelecomCallerNameInfoType(models.TextChoices):
+class TelecomCallerNameInfoTypes(models.TextChoices):
     PERSONAL = "individual"
     BUSINESS = "business"
