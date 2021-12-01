@@ -4,7 +4,7 @@
 
 # [START django_migrate]
 runtime: python39
-service: django_migrate
+service: django-migrate
 entrypoint: "python manage.py migrate"
 
 # [END django_migrate]
