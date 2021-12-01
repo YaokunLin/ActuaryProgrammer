@@ -1,4 +1,4 @@
-
+steps:
 - id: Copy requirements.txt to root of directory for app engine to see
   name: "ubuntu"
   entrypoint: "cp"
@@ -18,16 +18,3 @@
 - name: "gcr.io/cloud-builders/gcloud"
   args: ['app', 'deploy', '/workspace/app.yaml']
   timeout: "1600s"
-
-availableSecrets:
-  secretManager:
-  - versionName: projects/$PROJECT_NUMBER/secrets/BANDWIDTH_API_PASSWORD/versions/latest
-    env: "BANDWIDTH_API_PASSWORD"
-  - versionName: projects/$PROJECT_NUMBER/secrets/DJANGO_SECRET_KEY/versions/latest
-    env: "DJANGO_SECRET_KEY"
-  - versionName: projects/$PROJECT_NUMBER/secrets/NETSAPIENS_API_PASSWORD/versions/latest
-    env: "NETSAPIENS_API_PASSWORD"
-  - versionName: projects/$PROJECT_NUMBER/secrets/NETSAPIENS_CLIENT_SECRET/versions/latest
-    env: "NETSAPIENS_CLIENT_SECRET"
-  - versionName: projects/$PROJECT_NUMBER/secrets/POSTGRES_PEERLOGIC_PASSWORD/versions/latest
-    env: "POSTGRES_PEERLOGIC_PASSWORD"
