@@ -43,10 +43,6 @@ GKE_APPLICATION = os.getenv("GKE_APPLICATION", False)
 
 DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
-
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 

@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# First, gcloud init
+# Then, run as ./deployment/app_engine/gcloud_deploy.bash from the root of the peerlogic-api repo.
+
 PROJECT_ID=$(gcloud config list --format='value(core.project)')
 PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
 DOCKER_REPO="gcr.io/${PROJECT_ID}/peerlogic-api"
@@ -10,7 +14,7 @@ textred=$(tput setaf 1) # Red
 textgreen=$(tput setaf 2) # Green
 textylw=$(tput setaf 3) # Yellow
 textblue=$(tput setaf 4) # Blue
-textpur=$(tput setaf 5) # Purple
+textpurple=$(tput setaf 5) # Purple
 textcyn=$(tput setaf 6) # Cyan
 textwht=$(tput setaf 7) # White
 textreset=$(tput sgr0) # Text reset.
@@ -77,11 +81,6 @@ gcloud sql users set-password postgres \
 --instance=$PROJECT_ID \
 --password=${POSTGRES_ROOT_PASSWORD}
 
-echo "${textgreen}Creating peerlogic user:"
-gcloud sql users create peerlogic \
---instance=$PROJECT_ID \
---password=${POSTGRES_PEERLOGIC_PASSWORD}
-
 
 echo "${textgreen}Creating peerlogic database:"
 gcloud sql databases create peerlogic \
@@ -136,3 +135,9 @@ REDIS_IP=${REDIS_IP_RANGE%/*}
 export REDIS_URL="redis://${REDIS_IP}:${REDIS_PORT}/0"
 
 # TODO: custom domain mapping
+
+
+echo "${textpurple} TO FINISH:"
+echo "1. Place a  ${PROJECT_ID}.env into deployment/ directory,"
+echo "2. Be sure to escape certain key value pairs in the ${PROJECT_ID}.env that have special characters in them"
+echo "3. Make sure to run cloud_sql_proxy.bash in one terminal and in a separate terminal, run ./deployment/psql_deploy.bash to finish up the process.${textreset}"
