@@ -19,12 +19,12 @@ steps:
     name: ubuntu
     args: ["ls", "-lah", "/workspace/"]
 
-  - id: "App Engine Deploy"
+  - id: "Default App Engine Deploy"
     name: "gcr.io/cloud-builders/gcloud"
     args: ["app", "deploy", "/workspace/app.yaml"]
     timeout: "1600s"
 
-  - id: "App Engine Deploy"
+  - id: "django_migrate service App Engine Deploy"
     name: "gcr.io/cloud-builders/gcloud"
     args: ["app", "deploy", "/workspace/django_migrate.yaml"]
     timeout: "1600s"
