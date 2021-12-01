@@ -210,12 +210,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
-# [START staticurl] 
+# [START staticurl]
 if GKE_APPLICATION == "True":
     STATIC_BUCKET_NAME = PROJECT_ID
     STATIC_URL = f"https://storage.googleapis.com/{STATIC_BUCKET_NAME}/static/"
     STATIC_ROOT = "static/"
-else: # app engine or local
+else:  # app engine or local
     STATIC_URL = "/static/"
     STATIC_ROOT = "static"
     STATICFILES_DIRS = []
