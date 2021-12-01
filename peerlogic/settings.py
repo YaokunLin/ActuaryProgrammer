@@ -24,16 +24,15 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 PROJECT_ID = os.getenv("PROJECT_ID", "peerlogic-api-dev")
-GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT", None)
-
+GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT", None) # WE'RE IN GCP
+ENV_CONFIG_SECRET_NAME = os.environ.get("ENV_CONFIG_SECRET_NAME", "peerlogic-api-env")
 
 if GOOGLE_CLOUD_PROJECT:
     # Pull secrets from Secret Manager
     PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT")
 
     client = secretmanager.SecretManagerServiceClient()
-    ENV_CONFIG_SECRET = os.environ.get("ENV_CONFIG_SECRET", "peerlogic-api-env")
-    name = f"projects/{PROJECT_ID}/secrets/{ENV_CONFIG_SECRET}/versions/latest"
+    name = f"projects/{PROJECT_ID}/secrets/{ENV_CONFIG_SECRET_NAME}/versions/latest"
     payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
 
     load_dotenv(stream=io.StringIO(payload))
