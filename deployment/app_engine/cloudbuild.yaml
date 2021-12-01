@@ -12,7 +12,7 @@ steps:
 - id: Copy app engine modules to root of directory for app engine to see
   name: "ubuntu"
   entrypoint: "cp"
-  args: ["-r", "/workspace/deployment/app_engine/*", "/workspace/."]
+  args: ["-a", "/workspace/deployment/app_engine/.", "/workspace/"]
   timeout: "1600s"
 
 
