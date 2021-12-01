@@ -1,46 +1,19 @@
-steps:
-- id: "Store environment variables in .env"
-  name: ubuntu
-  entrypoint: bash
-  args:
-    - -c
-    - |
-      # Save env vars to persistent volume mount: "/workspace"
-      echo -e 'BANDWIDTH_API_PASSWORD=$$BANDWIDTH_API_PASSWORD' >> /workspace/.env &&
-      echo -e 'BANDWIDTH_API_USERNAME=$_BANDWIDTH_API_USERNAME' >> /workspace/.env &&
-      echo -e 'BANDWIDTH_APPLICATION_ID=$_BANDWIDTH_APPLICATION_ID' >> /workspace/.env &&
-      echo -e 'BANDWIDTH_MESSAGING_URI=$_BANDWIDTH_MESSAGING_URI' >> /workspace/.env &&
-      echo -e 'CELERY_BROKER_URL=$_CELERY_BROKER_URL' >> /workspace/.env &&
-      echo -e 'CELERY_RESULT_BACKEND=$_CELERY_RESULT_BACKEND' >> /workspace/.env &&
-      echo -e 'DJANGO_ALLOWED_HOSTS=$_DJANGO_ALLOWED_HOSTS' >> /workspace/.env &&
-      echo -e 'DJANGO_DB_REQUIRE_SSL=$_DJANGO_DB_REQUIRE_SSL' >> /workspace/.env &&
-      echo -e 'DJANGO_DEBUG=$_DJANGO_DEBUG' >> /workspace/.env &&
-      echo -e 'DJANGO_EMAIL_BACKEND=$_DJANGO_EMAIL_BACKEND' >> /workspace/.env &&
-      echo -e 'DJANGO_SECRET_KEY=$$DJANGO_SECRET_KEY' >> /workspace/.env &&
-      echo -e 'NETSAPIENS_ACCESS_TOKEN_URL=$_NETSAPIENS_ACCESS_TOKEN_URL' >> /workspace/.env &&
-      echo -e 'NETSAPIENS_API_PASSWORD=$$NETSAPIENS_API_PASSWORD' >> /workspace/.env &&
-      echo -e 'NETSAPIENS_API_USERNAME=$_NETSAPIENS_API_USERNAME' >> /workspace/.env &&
-      echo -e 'NETSAPIENS_BASE_URL=$_NETSAPIENS_BASE_URL' >> /workspace/.env &&
-      echo -e 'NETSAPIENS_CLIENT_ID=$_NETSAPIENS_CLIENT_ID' >> /workspace/.env &&
-      echo -e 'NETSAPIENS_CLIENT_SECRET=$$NETSAPIENS_CLIENT_SECRET' >> /workspace/.env &&
-      echo -e 'NETSAPIENS_INTROSPECT_TOKEN_URL=$_NETSAPIENS_INTROSPECT_TOKEN_URL' >> /workspace/.env &&
-      echo -e 'ENVIRONMENT=$_ENVIRONMENT' >> /workspace/.env &&
-      echo -e 'PAGE_SIZE=$_PAGE_SIZE' >> /workspace/.env &&
-      echo -e 'POSTGRES_DB=$_POSTGRES_DB' >> /workspace/.env &&
-      echo -e 'POSTGRES_PEERLOGIC_PASSWORD=$$POSTGRES_PEERLOGIC_PASSWORD' >> /workspace/.env &&
-      echo -e 'POSTGRES_USER=$_POSTGRES_USER' >> /workspace/.env
-  secretEnv:
-    - "BANDWIDTH_API_PASSWORD"
-    - "DJANGO_SECRET_KEY"
-    - "NETSAPIENS_CLIENT_SECRET"
-    - "NETSAPIENS_API_PASSWORD"
-    - "POSTGRES_PEERLOGIC_PASSWORD"
 
 - id: Copy requirements.txt to root of directory for app engine to see
   name: "ubuntu"
   entrypoint: "cp"
-  args: ["/workspace/requirements/requirements.txt", "/workspace/requirements.txt"]
+  args: ["/workspace/", "/workspace/requirements.txt"]
   timeout: "1600s"
+
+- id: Copy app engine modules to root of directory for app engine to see
+  name: "ubuntu"
+  entrypoint: "cp"
+  args: ["-R", "/workspace/deployment/app_engine/*", "/workspace/"]
+  timeout: "1600s"
+
+
+# TODO: move app.yaml, main.py and __init__.py from root directory into deployment/app_engine/
+# then add steps to copy them to root
 
 - id: "Validate the workspace looks right"
   name: ubuntu
