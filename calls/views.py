@@ -88,11 +88,15 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
         # validate that we have a legitimate value from the database
         # we may have a legitimate but stale value, that's fine
         # however, if we don't have a caller_name_type record, this is an incomplete record from our get_or_create above then roll it back / kill it
-        if telecom_caller_name_info.caller_name_type is None:
+        log.info(f"Verifying we have a legitimate caller_name_info to send to client for '{phone_number}'")
+        if created and telecom_caller_name_info.caller_name_type is None:
+            log.warn(f"Warning caller_name_info does not have a type! An earlier error was encountered and we DO NOT have even stale data to return!! ROLLING BACK. phone_number: '{phone_number}'")
             telecom_caller_name_info.delete()
+            log.warn(f"ROLLED BACK / DELETED incomplete record for phone_number: '{phone_number}'")
             raise Http404
 
         # win
+        log.info("caller_name_info available to send to client for '{phone_number}'")
         return Response(TelecomCallerNameInfoSerializer(telecom_caller_name_info).data)
 
 
@@ -144,7 +148,7 @@ def update_telecom_caller_name_info_with_twilio_data(telecom_caller_name_info: T
     # }
     log.debug(twilio_phone_number_info.__dict__)
 
-    log.info("Updated telecom caller name info from twilio. NOTE: validation has occurred before this point. If there is an error in this function, we need to update our validation codes!")
+    log.info("Attempting to get data from twilio's response to update telecom caller name info. NOTE: validation has occurred before this point. If there is an error in this function, we need to update our validation codes!")
     caller_name_section = twilio_phone_number_info.caller_name
     caller_name = caller_name_section.get("caller_name", None)
     caller_type = caller_name_section.get("caller_type", "")  # BUSINESS CONSUMER UNDETERMINED
@@ -158,3 +162,5 @@ def update_telecom_caller_name_info_with_twilio_data(telecom_caller_name_info: T
     telecom_caller_name_info.caller_name_type = caller_type
     telecom_caller_name_info.phone_number = phone_number
     telecom_caller_name_info.source = source
+
+    log.info("Updated local model with twilio response data")
