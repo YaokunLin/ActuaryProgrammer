@@ -75,16 +75,6 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
         return Response(TelecomCallerNameInfoSerializer(telecom_caller_name_info).data)
 
 
-def get_or_none(classmodel, **kwargs):
-    try:
-        return classmodel.objects.get(**kwargs)
-    except classmodel.MultipleObjectsReturned as e:
-        # TODO: explode
-        pass
-    except classmodel.DoesNotExist:
-        return None
-
-
 def get_caller_name_info_from_twilio(phone_number, client=None) -> PhoneNumberInstance:
     if not client:
         client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
