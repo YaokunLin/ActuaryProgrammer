@@ -124,3 +124,5 @@ volumes/postgres/data
 # GCP
 transaction.yaml
 key-file
+
+.DS_Store
