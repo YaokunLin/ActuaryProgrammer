@@ -63,15 +63,15 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
             return Response(TelecomCallerNameInfoSerializer(telecom_caller_name_info).data)
         
         # fetch from twilio
+        log.info(f"Requesting data from twilio for phone_number: '{phone_number}'")
         twilio_caller_name_info = get_caller_name_info_from_twilio(phone_number=phone_number)
         
         # update local object
+        log.info(f"Saving data from twilio for phone_number: '{phone_number}'")
         update_telecom_caller_name_info_with_twilio_data(telecom_caller_name_info, twilio_caller_name_info)
-
-        # save
         telecom_caller_name_info.save()
 
-        # return
+        log.info(f"Saved data from twilio for phone_number: '{phone_number}'")
         return Response(TelecomCallerNameInfoSerializer(telecom_caller_name_info).data)
 
 
@@ -83,6 +83,24 @@ def get_or_none(classmodel, **kwargs):
         pass
     except classmodel.DoesNotExist:
         return None
+
+
+def get_caller_name_info_from_twilio(phone_number, client=None) -> PhoneNumberInstance:
+    if not client:
+        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+    
+    # lookup value in twilio
+    phone_number_info = client.lookups.v1.phone_numbers(phone_number).fetch(type=["caller-name", "carrier"])  # you must specify the types whose values you want to have filled in, otherwise they will be None
+    return phone_number_info
+
+
+# def validate_twilio_data(twilio_phone_number_info: PhoneNumberInstance):
+#     caller_name_section = twilio_phone_number_info.caller_name
+#     if caller_name_section is None:
+#         log.error(f"Twilio ")
+#         return None
+
+#     if caller_name_section.get("error_code", None) :
 
 
 def update_telecom_caller_name_info_with_twilio_data(telecom_caller_name_info: TelecomCallerNameInfo, twilio_phone_number_info: PhoneNumberInstance):
@@ -101,7 +119,7 @@ def update_telecom_caller_name_info_with_twilio_data(telecom_caller_name_info: T
     log.debug(twilio_phone_number_info.__dict__)
 
     caller_name_section = twilio_phone_number_info.caller_name
-    if caller_name_section is None:
+    if caller_name_section is None :
         # TODO explode
         return None
 
@@ -117,17 +135,3 @@ def update_telecom_caller_name_info_with_twilio_data(telecom_caller_name_info: T
     telecom_caller_name_info.caller_name_type = caller_type
     telecom_caller_name_info.phone_number = phone_number
     telecom_caller_name_info.source = source
-
-
-def get_caller_name_info_and_validate_success_from_twilio(phone_number, client=None):
-    phone_number_info = get_caller_name_info_from_twilio(phone_number=phone_number, client=client)
-    #phone_number_info.
-
-
-def get_caller_name_info_from_twilio(phone_number, client=None) -> PhoneNumberInstance:
-    if not client:
-        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-    
-    # lookup value in twilio
-    phone_number_info = client.lookups.v1.phone_numbers(phone_number).fetch(type=["caller-name", "carrier"])  # you must specify the types whose values you want to have filled in, otherwise they will be None
-    return phone_number_info
