@@ -24,7 +24,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 PROJECT_ID = os.getenv("PROJECT_ID", "peerlogic-api-dev")
-GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT", None) # WE'RE IN GCP
+GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT", None)  # WE'RE IN GCP
 ENV_CONFIG_SECRET_NAME = os.environ.get("ENV_CONFIG_SECRET_NAME", "peerlogic-api-env")
 
 if GOOGLE_CLOUD_PROJECT:
