@@ -44,9 +44,9 @@ class CallLabelViewset(viewsets.ModelViewSet):
 class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
     queryset = TelecomCallerNameInfo.objects.all()
     serializer_class = TelecomCallerNameInfoSerializer
-    lookup_field = "phone_number"
 
-    def retrieve(self, request, phone_number):
+    def retrieve(self, request, pk):
+        phone_number = pk
         log.info(f"Retrieving caller_name_info for phone_number: '{phone_number}'")
 
         # use whatever we find and 404 if we don't find anything
