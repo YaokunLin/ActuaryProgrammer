@@ -84,6 +84,7 @@ def get_or_none(classmodel, **kwargs):
     except classmodel.DoesNotExist:
         return None
 
+
 def update_telecom_caller_name_info_with_twilio_data(telecom_caller_name_info: TelecomCallerNameInfo, twilio_phone_number_info: PhoneNumberInstance):
     # twilio lookup API: https://support.twilio.com/hc/en-us/articles/360050891214-Getting-Started-with-the-Twilio-Lookup-API
     # Example lookups in python: https://www.twilio.com/docs/lookup/api
@@ -116,39 +117,6 @@ def update_telecom_caller_name_info_with_twilio_data(telecom_caller_name_info: T
     telecom_caller_name_info.caller_name_type = caller_type
     telecom_caller_name_info.phone_number = phone_number
     telecom_caller_name_info.source = source
-
-
-def convert_twilio_phone_number_info_to_telecom_caller_name_info(twilio_phone_number_info: PhoneNumberInstance) -> TelecomCallerNameInfo:
-    # twilio lookup API: https://support.twilio.com/hc/en-us/articles/360050891214-Getting-Started-with-the-Twilio-Lookup-API
-    # Example lookups in python: https://www.twilio.com/docs/lookup/api
-    # API Explorer - "Lookup": https://console.twilio.com/us1/develop/api-explorer/endpoints?frameUrl=%2Fconsole%2Fapi-explorer%3Fx-target-region%3Dus1&currentFrameUrl=%2Fconsole%2Fapi-explorer%2Flookup%2Flookup-phone-numbers%2Ffetch%3F__override_layout__%3Dembed%26bifrost%3Dtrue%26x-target-region%3Dus1
-
-    # shape of the date
-    # {
-    #    "caller_name": {"caller_name": "", "caller_type", "error_code": ""}
-    #    "carrier": {"mobile_country_code": "313", "mobile_network_code": "981", "name": "Bandwidth/13 - Bandwidth.com - SVR", "type": "voip", "error_code": None}
-    #    "country_code": "",
-    #    "phone_number": "",
-    #    "national_format": ""
-    # }
-    # TODO debug log
-    log.debug(twilio_phone_number_info.__dict__)
-
-    caller_name_section = twilio_phone_number_info.caller_name
-    if caller_name_section is None:
-        # TODO explode
-        return None
-
-    caller_name = caller_name_section.get("caller_name", None)
-    caller_type = caller_name_section.get("caller_type", "")  # BUSINESS CONSUMER UNDETERMINED
-    caller_type = caller_type.lower()
-    if caller_type not in TelecomCallerNameInfoTypes.values:
-        caller_type = None
-    phone_number = twilio_phone_number_info.phone_number
-    source = TelecomCallerNameInfoSourceTypes.TWILIO
-
-    telcom_caller_name_info = TelecomCallerNameInfo(phone_number=phone_number, caller_name=caller_name, caller_name_type=caller_type, source=source)
-    return telcom_caller_name_info
 
 
 def get_caller_name_info_and_validate_success_from_twilio(phone_number, client=None):
