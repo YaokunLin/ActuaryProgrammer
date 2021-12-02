@@ -1,6 +1,7 @@
 import logging
 
 from django.conf import settings
+from django.db import DatabaseError
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from twilio.rest.lookups.v1.phone_number import PhoneNumberInstance
@@ -80,7 +81,9 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
             telecom_caller_name_info.save()
             log.info(f"Saved data from twilio for phone_number: '{phone_number}'")
         except TwilioException as e:
-            log.exception(f"Unable to call Twilio to obtain caller name information for: '{phone_number}'", e)
+            log.exception(f"Unable to call Twilio to obtain or update caller name information for: '{phone_number}'. This does not mean we were unable to fulfill the request for data if we have a stale value available.", e)
+        except DatabaseError as e:
+            log.exception(f"Problem occurred saving updated values for phone number: '{phone_number}'. This does not mean we were unable to fulfill the request for data if we have a stale value available", e)
 
         # validate that we have a legitimate value from the database
         # we may have a legitimate but stale value, that's fine
@@ -119,18 +122,18 @@ def get_caller_name_info_from_twilio(phone_number: str, client: Client=None) -> 
     return phone_number_info
 
 
-# def validate_twilio_data(twilio_phone_number_info: PhoneNumberInstance):
-#     caller_name_section = twilio_phone_number_info.caller_name
-#     if caller_name_section is None:
-#         log.error(f"Twilio ")
-#         return None
+def validate_twilio_data(twilio_phone_number_info: PhoneNumberInstance):
+    caller_name_section = twilio_phone_number_info.caller_name
+    if caller_name_section is None:
+        log.error(f"Twilio ")
+        return None
 
-#     if caller_name_section.get("error_code", None) :
+    if caller_name_section.get("error_code", None):
+        pass
 
 
 def update_telecom_caller_name_info_with_twilio_data(telecom_caller_name_info: TelecomCallerNameInfo, twilio_phone_number_info: PhoneNumberInstance) -> None:
-    
-    # shape of the date
+    # Shape of the data
     # {
     #    "caller_name": {"caller_name": "", "caller_type", "error_code": ""}
     #    "carrier": {"mobile_country_code": "313", "mobile_network_code": "981", "name": "Bandwidth/13 - Bandwidth.com - SVR", "type": "voip", "error_code": None}
