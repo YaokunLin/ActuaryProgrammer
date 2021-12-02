@@ -44,32 +44,35 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
 
 
     def retrieve(self, request, phone_number):
-        print("hello")
+        log.info(f"Retrieving caller_name_info for phone_number: '{phone_number}'")
         if not settings.TWILIO_IS_ENABLED:
+            log.info(f"Twilio is off. Using existing database lookup for phone_number: '{phone_number}'")
             return super().retrieve(request, phone_number)
+
+        log.info(f"Twilio is on. Performing lookups for phone_number: '{phone_number}'")
 
         # modify phone number formatting (country code +1)
         
         # search database for record
-        telecom_caller_name_info = get_or_none(TelecomCallerNameInfo, phone_number=phone_number)
 
-        if telecom_caller_name_info and not telecom_caller_name_info.is_caller_name_info_stale():
-            # TODO log 
-            print("exists and is not stale")
-            return Response(TelecomCallerNameInfoSerializer(telecom_caller_name_info).data)
+        # TODO: make this get or create, we need to update the stupid model if it exists, sigh
+        existing_caller_name_info = get_or_none(TelecomCallerNameInfo, phone_number=phone_number)
 
-        print("IT' STALE!")
+        if existing_caller_name_info and not existing_caller_name_info.is_caller_name_info_stale():
+            log.info(f"Using existing caller_name_info from database since it exists and is not expired.")
+            return Response(TelecomCallerNameInfoSerializer(existing_caller_name_info).data)
+
         # fetch from twilio
         twilio_caller_name_info = get_caller_name_info_from_twilio(phone_number=phone_number)
         
         # create object
-        telecom_caller_name_info = convert_twilio_phone_number_info_to_telecom_caller_name_info(twilio_caller_name_info)
+        twilio_caller_name_info = convert_twilio_phone_number_info_to_telecom_caller_name_info(twilio_caller_name_info)
 
         # save
-        telecom_caller_name_info.save()
+        twilio_caller_name_info.save()
 
         # return
-        return Response(TelecomCallerNameInfoSerializer(telecom_caller_name_info).data)
+        return Response(TelecomCallerNameInfoSerializer(twilio_caller_name_info).data)
 
 
 def get_or_none(classmodel, **kwargs):

@@ -63,34 +63,11 @@ class CallLabel(AuditTrailModel):
     label = models.CharField(max_length=255, db_index=True)
 
 class TelecomCallerNameInfo(AuditTrailModel):
-    id = None
+    id = None  # override id, we have a natural primary key
     phone_number = PhoneNumberField(primary_key=True)
     caller_name = models.CharField(max_length=255)
     caller_name_type = models.CharField(choices=TelecomCallerNameInfoTypes.choices, max_length=50, null=True)
-    source = models.CharField(choices=TelecomCallerNameInfoSourceTypes.choices, max_length=50)
-
-    # created_at = models.DateTimeField(auto_now_add=True, db_index=True)
-    # modified_at = models.DateTimeField(auto_now=True, db_index=True)
-    # created_by = UserForeignKey(
-    #     on_delete=models.SET_NULL,
-    #     auto_user_add=True,
-    #     verbose_name="The user that is automatically assigned",
-    #     related_name="%(class)s_created",
-    #     blank=True,
-    #     null=True,
-    # )
-    # modified_by = UserForeignKey(
-    #     on_delete=models.SET_NULL,
-    #     auto_user_add=True,
-    #     verbose_name="The user that is automatically assigned",
-    #     related_name="%(class)s_modified",
-    #     blank=True,
-    #     null=True,
-    # )
-
-    # class Meta:
-    #     get_latest_by = "modified_at"
-
+    source = models.CharField(choices=TelecomCallerNameInfoSourceTypes.choices, max_length=50, null=True, default=None)
 
     def is_caller_name_info_stale(self) -> bool:
         time_zone = self.modified_at.tzinfo  # use database standard timezone
