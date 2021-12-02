@@ -1,5 +1,12 @@
 #!/bin/bash
-KUBERNETES_BASE_DIR="./kubernetes/base"
+
+# STOP! THIS NEEDS TO BE RE-WRITTEN TO USE THE FILE STRUCTURE PRESENT IN THE deployment DIRECTORY
+# This cloudbuild file is for a Kubernetes cluster, we now use app_engine.
+
+# We moved it to a different directory so it wasn't in the root anymore
+# TODO: make this work again (when we have more DevOps personell to manage a kube cluster)
+
+KUBERNETES_BASE_DIR="./kubernetes/clusters/base"
 PROJECT_ID=$(gcloud config list --format='value(core.project)')
 PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
 DOCKER_REPO="gcr.io/${PROJECT_ID}/peerlogic-api"
@@ -43,7 +50,7 @@ fi
 
 
 
-KUBERNETES_OVERLAY_DIR="./kubernetes/overlays/${PROJECT_ID}"
+KUBERNETES_OVERLAY_DIR="./kubernetes/clusters/overlays/${PROJECT_ID}"
 KUBERNETES_ENV_FILE="${KUBERNETES_OVERLAY_DIR}/.env"
 
 rm -f $KUBERNETES_ENV_FILE
@@ -160,7 +167,7 @@ echo "${textgreen}Creating kubectl secrets${textreset}"
 kubectl create secret generic cloudsql-oauth-credentials --from-file=credentials.json=key-file
 kubectl create secret generic cloudsql --from-literal=POSTGRES_DB=peerlogic \
     --from-literal=POSTGRES_USER=peerlogic \
-    --from-literal=POSTGRES_PASSWORD=${POSTGRES_PEERLOGIC_PASSWORD}
+    --from-literal=POSTGRES_PEERLOGIC_PASSWORD=${POSTGRES_PEERLOGIC_PASSWORD}
 kubectl create secret generic django --from-literal=DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY}
 kubectl create secret generic netsapiens --from-literal=NETSAPIENS_CLIENT_SECRET=${NETSAPIENS_CLIENT_SECRET} \
 --from-literal=NETSAPIENS_API_USERNAME=${NETSAPIENS_API_USERNAME} \
@@ -210,7 +217,7 @@ envsubst < "$KUBERNETES_BASE_DIR/configmap.yaml" > "$KUBERNETES_OVERLAY_DIR/conf
 # TODO: get cloud build to work someday
 # cd ..
 # gcloud builds submit --project=$PROJECT_ID --config ./cloudbuild.yaml \
-#   --substitutions "_DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY},_POSTGRES_USER=peerlogic,_POSTGRES_DB=peerlogic,_POSTGRES_PASSWORD=${POSTGRES_PEERLOGIC_PASSWORD},_DOCKER_REPO=${DOCKER_REPO}"
+#   --substitutions "_DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY},_POSTGRES_USER=peerlogic,_POSTGRES_DB=peerlogic,_POSTGRES_PEERLOGIC_PASSWORD=${POSTGRES_PEERLOGIC_PASSWORD},_DOCKER_REPO=${DOCKER_REPO}"
 
 
 echo "${textgreen}Start cloud_sql_proxy.bash in a new window and continue to the next script - psql_deploy.bash ${textreset}"
