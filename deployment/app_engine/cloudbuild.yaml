@@ -31,11 +31,11 @@ steps:
 
   - id: "celery-worker service App Engine Deploy"
     name: "gcr.io/cloud-builders/gcloud"
-    args: ["app", "deploy", "/workspace/celery_beat.yaml"]
+    args: ["app", "deploy", "/workspace/celery_worker.yaml"]
     timeout: "1600s"
 
-  # - id: "django_migrate service App Engine Deploy"
-  #   name: "gcr.io/cloud-builders/gcloud"
-  #   args: ["app", "deploy", "/workspace/django_migrate.yaml"]
-  #   timeout: "1600s"
+  - id: "django_migrate service App Engine Deploy"
+    name: "gcr.io/cloud-builders/gcloud"
+    args: ["app", "deploy", "/workspace/django_migrate.yaml"]
+    timeout: "1600s"
 
