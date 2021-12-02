@@ -82,8 +82,9 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
         except TwilioException as e:
             log.exception(f"Unable to call Twilio to obtain caller name information for: '{phone_number}'", e)
 
-        # validate that we have a legitimate value from the database, otherwise roll it back / kill it
-        # this occurs with the get_or_create and a failure to reach twilio
+        # validate that we have a legitimate value from the database
+        # we may have a legitimate but stale value, that's fine
+        # however, if we don't have a caller_name_type record, this is an incomplete record from our get_or_create above then roll it back / kill it
         if telecom_caller_name_info.caller_name_type is None:
             telecom_caller_name_info.delete()
             raise Http404
