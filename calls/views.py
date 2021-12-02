@@ -1,11 +1,14 @@
 import logging
 
 from django.conf import settings
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from twilio.rest.lookups.v1.phone_number import PhoneNumberInstance
 from rest_framework import viewsets
 from rest_framework.response import Response
+from twilio.base.exceptions import TwilioException
 from twilio.rest import Client
+
 
 from .field_choices import (
     TelecomCallerNameInfoTypes,
@@ -55,27 +58,58 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
             return super().retrieve(request, phone_number)
 
         # search database for record
-        log.info(f"Twilio is on. Performing lookups for phone_number: '{phone_number}'")
+        log.info(f"Performing lookups for phone_number: '{phone_number}'")
         telecom_caller_name_info, created = TelecomCallerNameInfo.objects.get_or_create(phone_number=phone_number)
 
-        if not created and not telecom_caller_name_info.is_caller_name_info_stale():
+        # existing row that has legitimate values and is not stale
+        if not created \
+            and telecom_caller_name_info.caller_name_type is not None \
+            and not telecom_caller_name_info.is_caller_name_info_stale():
+            
             log.info(f"Using existing caller_name_info from database since it exists and is not expired.")
             return Response(TelecomCallerNameInfoSerializer(telecom_caller_name_info).data)
         
-        # fetch from twilio
-        log.info(f"Requesting data from twilio for phone_number: '{phone_number}'")
-        twilio_caller_name_info = get_caller_name_info_from_twilio(phone_number=phone_number)
-        
-        # update local object
-        log.info(f"Saving data from twilio for phone_number: '{phone_number}'")
-        update_telecom_caller_name_info_with_twilio_data(telecom_caller_name_info, twilio_caller_name_info)
-        telecom_caller_name_info.save()
+        # fetch from twilio and update database
+        try:
+            log.info(f"Twilio is on and we have stale or missing data. Requesting data from twilio for phone_number: '{phone_number}'")
+            twilio_caller_name_info = get_caller_name_info_from_twilio(phone_number=phone_number)
+            
+            # update local object
+            log.info(f"Saving data from twilio for phone_number: '{phone_number}'")
+            update_telecom_caller_name_info_with_twilio_data(telecom_caller_name_info, twilio_caller_name_info)
+            telecom_caller_name_info.save()
+            log.info(f"Saved data from twilio for phone_number: '{phone_number}'")
+        except TwilioException as e:
+            log.exception(f"Unable to call Twilio to obtain caller name information for: '{phone_number}'", e)
 
-        log.info(f"Saved data from twilio for phone_number: '{phone_number}'")
+        # validate that we have a legitimate value from the database, otherwise roll it back / kill it
+        # this occurs with the get_or_create and a failure to reach twilio
+        if telecom_caller_name_info.caller_name_type is None:
+            telecom_caller_name_info.delete()
+            raise Http404
+
+        # win
         return Response(TelecomCallerNameInfoSerializer(telecom_caller_name_info).data)
 
 
-def get_caller_name_info_from_twilio(phone_number, client=None) -> PhoneNumberInstance:
+def get_caller_name_info_from_twilio(phone_number: str, client: Client=None) -> PhoneNumberInstance:
+    """Retrieves caller information from the Twilio API."""
+    # Phone Number Formats:
+    # - E.164 International Standard (https://en.wikipedia.org/wiki/E.164) - Use this one
+    # - National Formatting (012) 345-6789
+
+    # Authorization: Basic <credentials> - handled by Twilio client
+    # username = key_sid
+    # password = key_secret
+
+    # Example from API docs
+    #   curl -X GET 'https://lookups.twilio.com/v1/PhoneNumbers/3105555555' \
+    #   -u ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX:your_auth_token
+
+    # twilio lookup API: https://support.twilio.com/hc/en-us/articles/360050891214-Getting-Started-with-the-Twilio-Lookup-API
+    # Example lookups in python: https://www.twilio.com/docs/lookup/api
+    # API Explorer - "Lookup": https://console.twilio.com/us1/develop/api-explorer/endpoints?frameUrl=%2Fconsole%2Fapi-explorer%3Fx-target-region%3Dus1&currentFrameUrl=%2Fconsole%2Fapi-explorer%2Flookup%2Flookup-phone-numbers%2Ffetch%3F__override_layout__%3Dembed%26bifrost%3Dtrue%26x-target-region%3Dus1
+
     if not client:
         client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
     
@@ -93,11 +127,8 @@ def get_caller_name_info_from_twilio(phone_number, client=None) -> PhoneNumberIn
 #     if caller_name_section.get("error_code", None) :
 
 
-def update_telecom_caller_name_info_with_twilio_data(telecom_caller_name_info: TelecomCallerNameInfo, twilio_phone_number_info: PhoneNumberInstance):
-    # twilio lookup API: https://support.twilio.com/hc/en-us/articles/360050891214-Getting-Started-with-the-Twilio-Lookup-API
-    # Example lookups in python: https://www.twilio.com/docs/lookup/api
-    # API Explorer - "Lookup": https://console.twilio.com/us1/develop/api-explorer/endpoints?frameUrl=%2Fconsole%2Fapi-explorer%3Fx-target-region%3Dus1&currentFrameUrl=%2Fconsole%2Fapi-explorer%2Flookup%2Flookup-phone-numbers%2Ffetch%3F__override_layout__%3Dembed%26bifrost%3Dtrue%26x-target-region%3Dus1
-
+def update_telecom_caller_name_info_with_twilio_data(telecom_caller_name_info: TelecomCallerNameInfo, twilio_phone_number_info: PhoneNumberInstance) -> None:
+    
     # shape of the date
     # {
     #    "caller_name": {"caller_name": "", "caller_type", "error_code": ""}
