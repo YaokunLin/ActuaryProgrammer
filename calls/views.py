@@ -45,34 +45,34 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, phone_number):
         log.info(f"Retrieving caller_name_info for phone_number: '{phone_number}'")
+
+        # validate and modify phone number formatting (country code +1)
+
+
+        # use whatever we find and 404 if we don't find anything
         if not settings.TWILIO_IS_ENABLED:
             log.info(f"Twilio is off. Using existing database lookup for phone_number: '{phone_number}'")
             return super().retrieve(request, phone_number)
 
-        log.info(f"Twilio is on. Performing lookups for phone_number: '{phone_number}'")
-
-        # modify phone number formatting (country code +1)
-        
         # search database for record
+        log.info(f"Twilio is on. Performing lookups for phone_number: '{phone_number}'")
+        telecom_caller_name_info, created = TelecomCallerNameInfo.objects.get_or_create(phone_number=phone_number)
 
-        # TODO: make this get or create, we need to update the stupid model if it exists, sigh
-        existing_caller_name_info = get_or_none(TelecomCallerNameInfo, phone_number=phone_number)
-
-        if existing_caller_name_info and not existing_caller_name_info.is_caller_name_info_stale():
+        if not created and not telecom_caller_name_info.is_caller_name_info_stale():
             log.info(f"Using existing caller_name_info from database since it exists and is not expired.")
-            return Response(TelecomCallerNameInfoSerializer(existing_caller_name_info).data)
-
+            return Response(TelecomCallerNameInfoSerializer(telecom_caller_name_info).data)
+        
         # fetch from twilio
         twilio_caller_name_info = get_caller_name_info_from_twilio(phone_number=phone_number)
         
-        # create object
-        twilio_caller_name_info = convert_twilio_phone_number_info_to_telecom_caller_name_info(twilio_caller_name_info)
+        # update local object
+        update_telecom_caller_name_info_with_twilio_data(telecom_caller_name_info, twilio_caller_name_info)
 
         # save
-        twilio_caller_name_info.save()
+        telecom_caller_name_info.save()
 
         # return
-        return Response(TelecomCallerNameInfoSerializer(twilio_caller_name_info).data)
+        return Response(TelecomCallerNameInfoSerializer(telecom_caller_name_info).data)
 
 
 def get_or_none(classmodel, **kwargs):
@@ -83,6 +83,39 @@ def get_or_none(classmodel, **kwargs):
         pass
     except classmodel.DoesNotExist:
         return None
+
+def update_telecom_caller_name_info_with_twilio_data(telecom_caller_name_info: TelecomCallerNameInfo, twilio_phone_number_info: PhoneNumberInstance):
+    # twilio lookup API: https://support.twilio.com/hc/en-us/articles/360050891214-Getting-Started-with-the-Twilio-Lookup-API
+    # Example lookups in python: https://www.twilio.com/docs/lookup/api
+    # API Explorer - "Lookup": https://console.twilio.com/us1/develop/api-explorer/endpoints?frameUrl=%2Fconsole%2Fapi-explorer%3Fx-target-region%3Dus1&currentFrameUrl=%2Fconsole%2Fapi-explorer%2Flookup%2Flookup-phone-numbers%2Ffetch%3F__override_layout__%3Dembed%26bifrost%3Dtrue%26x-target-region%3Dus1
+
+    # shape of the date
+    # {
+    #    "caller_name": {"caller_name": "", "caller_type", "error_code": ""}
+    #    "carrier": {"mobile_country_code": "313", "mobile_network_code": "981", "name": "Bandwidth/13 - Bandwidth.com - SVR", "type": "voip", "error_code": None}
+    #    "country_code": "",
+    #    "phone_number": "",
+    #    "national_format": ""
+    # }
+    log.debug(twilio_phone_number_info.__dict__)
+
+    caller_name_section = twilio_phone_number_info.caller_name
+    if caller_name_section is None:
+        # TODO explode
+        return None
+
+    caller_name = caller_name_section.get("caller_name", None)
+    caller_type = caller_name_section.get("caller_type", "")  # BUSINESS CONSUMER UNDETERMINED
+    caller_type = caller_type.lower()
+    if caller_type not in TelecomCallerNameInfoTypes.values:
+        caller_type = None
+    phone_number = twilio_phone_number_info.phone_number
+    source = TelecomCallerNameInfoSourceTypes.TWILIO
+
+    telecom_caller_name_info.caller_name = caller_name
+    telecom_caller_name_info.caller_name_type = caller_type
+    telecom_caller_name_info.phone_number = phone_number
+    telecom_caller_name_info.source = source
 
 
 def convert_twilio_phone_number_info_to_telecom_caller_name_info(twilio_phone_number_info: PhoneNumberInstance) -> TelecomCallerNameInfo:
@@ -99,7 +132,7 @@ def convert_twilio_phone_number_info_to_telecom_caller_name_info(twilio_phone_nu
     #    "national_format": ""
     # }
     # TODO debug log
-    print(twilio_phone_number_info.__dict__)
+    log.debug(twilio_phone_number_info.__dict__)
 
     caller_name_section = twilio_phone_number_info.caller_name
     if caller_name_section is None:
@@ -118,7 +151,12 @@ def convert_twilio_phone_number_info_to_telecom_caller_name_info(twilio_phone_nu
     return telcom_caller_name_info
 
 
-def get_caller_name_info_from_twilio(phone_number, client=None):
+def get_caller_name_info_and_validate_success_from_twilio(phone_number, client=None):
+    phone_number_info = get_caller_name_info_from_twilio(phone_number=phone_number, client=client)
+    #phone_number_info.
+
+
+def get_caller_name_info_from_twilio(phone_number, client=None) -> PhoneNumberInstance:
     if not client:
         client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
     
