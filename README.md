@@ -41,21 +41,25 @@ Make sure to run these commands from the root of the project.
 
 ### Initial setup
 
-If you haven't created an .env file go ahead and make one from the example file:
-`cp .envexample .env`
+Fill in the necessary creds and values in `.env`.
 
-Fill in the necessary creds in `.env`. See 1Password for examples: [peerlogic-api.env](https://start.1password.com/open/i?a=P3RU52IFYBEH3GKEDF2UBYENBQ&v=wlmpasbyyncmhpjji3lfc7ra4a&i=sxjcghmtefeqvdystb2l6q7k5y&h=my.1password.com)
+See 1Password for a starter file: [peerlogic-api LOCAL  starter .env file](https://start.1password.com/open/i?a=P3RU52IFYBEH3GKEDF2UBYENBQ&v=wlmpasbyyncmhpjji3lfc7ra4a&i=sxjcghmtefeqvdystb2l6q7k5y&h=my.1password.com)
 
-Make sure Docker is running, then do the following steps:
+### Docker commands:
+
+`docker-compose up postgres`
+
+This will initialize Postgres and create the peerlogic database, without tables.
+
 `docker-compose build api`
 
-After initial build and servers are running, in a separate terminal window run the following:
+After initial build and api and postgres are running, run the following:
 
 `docker-compose run api python3 manage.py migrate`
 
 `docker-compose run api python3 manage.py createsuperuser`
 
-`docker-compose run api python3 manage.py loaddata fixtures/django_celery_beat.json`
+<!-- TODO: Generate fixtures to play with locally) -->
 
 
 All done!
@@ -67,6 +71,11 @@ Start:
 
 End all processes:
 `docker-compose down  --remove-orphans`
+
+## Database and Data Schema Creations
+
+`docker-compose run api python3 manage.py makemigrations --name {name}`
+
 
 ## Run it Locally (w/o Docker)
 
@@ -101,12 +110,4 @@ There is a Postman Collection that can be used to validate setup and test change
 
 # Deployment
 
-GKE ships with kubernetes version 1.19 in gcloud installation, which means it ships with kustomize version 2.0.3 at the time of this writing:
-
-Helpful Docs:
-* [Kustomize 2.0.3](https://github.com/kubernetes-sigs/kustomize/tree/v2.0.3/docs)
-
-
-See REDEPLOYMENT.md for steps on updating development and staging environments with configuration or code changes.
-
-See DEPLOYMENT.md for steps to create a completely new environment from scratch.
+CI/CD is set up for deploying to development with App Engine.
