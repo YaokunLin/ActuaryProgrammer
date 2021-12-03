@@ -2,10 +2,18 @@ import logging
 
 from django.conf import settings
 from django.db import DatabaseError
-from django.http import Http404
-from django.shortcuts import get_object_or_404
+from django.http import (
+    HttpResponseBadRequest,
+    Http404,
+)
+from phonenumber_field.modelfields import (
+    PhoneNumber,
+)
 from twilio.rest.lookups.v1.phone_number import PhoneNumberInstance
 from rest_framework import viewsets
+from rest_framework.exceptions import (
+    bad_request
+)
 from rest_framework.response import Response
 from twilio.base.exceptions import TwilioException
 from twilio.rest import Client
@@ -46,8 +54,23 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
     serializer_class = TelecomCallerNameInfoSerializer
 
     def retrieve(self, request, pk):
-        phone_number = pk
-        log.info(f"Retrieving caller_name_info for phone_number: '{phone_number}'")
+        phone_number_raw = pk
+        log.info(f"Retrieving caller_name_info for phone_number: '{phone_number_raw}'")
+
+        # validate and normalize phone number
+        try:
+            phone_number = PhoneNumber.from_string(phone_number_raw)  # this will explode for obviously bad phone numbers
+            if not phone_number.is_valid():  # true for not so obviously bad phone numbers
+                raise Exception(f"Invalid phone number detected: '{phone_number_raw}'")
+        except Exception as e:
+            return HttpResponseBadRequest(f"Invalid phone number detected: '{phone_number_raw}'")
+
+        # be aware strange phone numbers will survive the above
+        # strange phone numbers from the above include ones where a phone number has numbers appended: 14401234567bb
+        # strange phone numbers like this will be accepted by twilio which will truncate the bad parts
+        # we MUST normalize to get something reasonable-looking for our system's storage
+        phone_number = phone_number.as_e164
+        log.info(f"Normalized phone_number_raw: '{phone_number_raw}' to phone_number: '{phone_number}'")
 
         # use whatever we find and 404 if we don't find anything
         if not settings.TWILIO_IS_ENABLED:
@@ -90,7 +113,7 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
         # however, if we don't have a caller_name_type record, this is an incomplete record from our get_or_create above then roll it back / kill it
         log.info(f"Verifying we have a legitimate caller_name_info to send to client for '{phone_number}'")
         if created and telecom_caller_name_info.caller_name_type is None:
-            log.warn(f"Warning caller_name_info does not have a type! An earlier error was encountered and we DO NOT have even stale data to return!! ROLLING BACK. phone_number: '{phone_number}'")
+            log.warn(f"Incompleted caller_name_info record. No stale or fresh caller_name_info data is available. We've created a new caller_name_info object but couldn't fill it with Twilio values. ROLLING BACK. phone_number: '{phone_number}'")
             telecom_caller_name_info.delete()
             log.warn(f"ROLLED BACK / DELETED incomplete record for phone_number: '{phone_number}'")
             raise Http404
