@@ -6,9 +6,7 @@ from django.http import (
     HttpResponseBadRequest,
     Http404,
 )
-from phonenumber_field.modelfields import (
-    PhoneNumber,
-)
+from phonenumber_field.modelfields import to_python as to_phone_number
 from twilio.rest.lookups.v1.phone_number import PhoneNumberInstance
 from rest_framework import viewsets
 from rest_framework.exceptions import (
@@ -59,10 +57,10 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
 
         # validate and normalize phone number
         try:
-            phone_number = PhoneNumber.from_string(phone_number_raw)  # this will explode for obviously bad phone numbers
+            phone_number = to_phone_number(phone_number_raw)  # this will explode for obviously bad phone numbers
             if not phone_number.is_valid():  # true for not so obviously bad phone numbers
-                raise Exception(f"Invalid phone number detected: '{phone_number_raw}'")
-        except Exception as e:
+                raise TypeError(f"Invalid phone number detected: '{phone_number_raw}'")
+        except TypeError as e:
             return HttpResponseBadRequest(f"Invalid phone number detected: '{phone_number_raw}'")
 
         # be aware strange phone numbers will survive the above
