@@ -53,9 +53,7 @@ class UserManager(_UserManager):
             pass
 
         # Set group domain
-        group, created = Group.objects.get_or_create(name=payload["domain"])
-        if not created:
-            raise ValueError("Group not created - cannot create user")
+        group, _ = Group.objects.get_or_create(name=payload["domain"])
 
         try:
             user = self.create(
