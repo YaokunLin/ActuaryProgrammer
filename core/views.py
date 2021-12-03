@@ -16,14 +16,11 @@ class ClientViewset(viewsets.ModelViewSet):
             queryset = queryset.filter(group__name=domain)
         return queryset
 
-class ContactViewSet(viewsets.ModelViewSet):
+class ContactViewset(viewsets.ModelViewSet):
     queryset = Contact.objects.all()
     serializer_class = ContactSerializer
 
     def get_queryset(self):
         queryset = Contact.objects.all()
-        domain = self.request.query_params.get("domain", None)
-        if domain is not None:
-            queryset = queryset.filter(group__name=domain)
         return queryset
         
