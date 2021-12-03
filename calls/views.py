@@ -143,7 +143,8 @@ def get_caller_name_info_from_twilio(phone_number: str, client: Client=None) -> 
         client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
     
     # lookup value in twilio
-    phone_number_info = client.lookups.v1.phone_numbers(phone_number).fetch(type=["caller-name", "carrier"])  # you must specify the types whose values you want to have filled in, otherwise they will be None
+    # you must specify the types whose values you want to have filled in, otherwise they will be None
+    phone_number_info = client.lookups.v1.phone_numbers(phone_number).fetch(type=["caller-name", "carrier"])
     return phone_number_info
 
 
