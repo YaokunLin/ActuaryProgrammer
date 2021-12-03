@@ -6,7 +6,6 @@ from django_extensions.db.fields import ShortUUIDField
 from django_userforeignkey.models.fields import UserForeignKey
 from phonenumber_field.modelfields import PhoneNumberField
 
-
 from core.models import AuditTrailModel
 from calls.field_choices import (
     CallConnectionTypes,
@@ -65,7 +64,7 @@ class CallLabel(AuditTrailModel):
 class TelecomCallerNameInfo(AuditTrailModel):
     id = None  # override id, we have a natural primary key
     phone_number = PhoneNumberField(primary_key=True)
-    caller_name = models.CharField(max_length=255)
+    caller_name = models.CharField(max_length=255, null=True)
     caller_name_type = models.CharField(choices=TelecomCallerNameInfoTypes.choices, max_length=50, null=True)
     source = models.CharField(choices=TelecomCallerNameInfoSourceTypes.choices, max_length=50, null=True, default=None)
 
