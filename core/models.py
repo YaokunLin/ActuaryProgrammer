@@ -53,7 +53,7 @@ class UserManager(_UserManager):
             pass
 
         # Set group domain
-        group = Group.objects.get_or_create(name=payload["domain"])
+        group, _ = Group.objects.get_or_create(name=payload["domain"])
 
         try:
             user = self.create(

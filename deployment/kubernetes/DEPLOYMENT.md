@@ -7,6 +7,11 @@ Install GCP Dependencies to your local machine:
 
 Save kustomize with executable permissions.
 
+GKE ships with kubernetes version 1.19 in gcloud installation, which means it ships with kustomize version 2.0.3 at the time of this writing:
+
+Helpful Docs:
+* [Kustomize 2.0.3](https://github.com/kubernetes-sigs/kustomize/tree/v2.0.3/docs)
+
 # Creating a new environment
 
 ## Create a new project
@@ -90,7 +95,7 @@ Where:
 
 ## Update GKE kustomization yaml file with the appropriate image name
 
-This is titled kubernetes/overlays/<project_id>/kustomization.yaml
+This is titled kubernetes/clusters/overlays/<project_id>/kustomization.yaml
 
 Update the image value with this value:
 
