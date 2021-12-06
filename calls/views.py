@@ -84,13 +84,13 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
             and telecom_caller_name_info.caller_name_type is not None \
             and not telecom_caller_name_info.is_caller_name_info_stale():
             
-            log.info(f"Using existing caller_name_info from database since it exists and is not expired.")
+            log.info(f"Using existing caller_name_info from database since it exists and is not stale / expired for phone_number: '{phone_number}'.")
             return Response(TelecomCallerNameInfoSerializer(telecom_caller_name_info).data)
         
         # fetch from twilio and update database
         try:
             # get and validate twilio data
-            log.info(f"Twilio is on and we have stale or missing data. Requesting data from twilio for phone_number: '{phone_number}'")
+            log.info(f"Twilio is on and we have stale / expired or missing data. Requesting data from twilio for phone_number: '{phone_number}'")
             twilio_caller_name_info = get_caller_name_info_from_twilio(phone_number=phone_number)
             validate_twilio_data(twilio_caller_name_info)
 
