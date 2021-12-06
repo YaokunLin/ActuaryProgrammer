@@ -117,7 +117,7 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
             raise Http404
 
         # win
-        log.info("caller_name_info available to send to client for '{phone_number}'")
+        log.info(f"caller_name_info available to send to client for '{phone_number}'")
         return Response(TelecomCallerNameInfoSerializer(telecom_caller_name_info).data)
 
 
