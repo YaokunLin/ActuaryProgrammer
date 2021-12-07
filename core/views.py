@@ -20,7 +20,4 @@ class ContactViewset(viewsets.ModelViewSet):
     queryset = Contact.objects.all()
     serializer_class = ContactSerializer
 
-    def get_queryset(self):
-        queryset = Contact.objects.all()
-        return queryset
         
