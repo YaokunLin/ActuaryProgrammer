@@ -6,7 +6,6 @@ set -x #echo on
 
 PROJECT_ID=$(gcloud config list --format='value(core.project)')
 PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
-DOCKER_REPO="gcr.io/${PROJECT_ID}/peerlogic-api"
 CLOUDBUILD_SERVICE_ACCOUNT="${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com"
 APP_ENGINE_SERVICE_ACCOUNT="${PROJECT_ID}@appspot.gserviceaccount.com"
 VAULT_ID="wlmpasbyyncmhpjji3lfc7ra4a"
@@ -38,7 +37,6 @@ DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management import utils; print(
 
 eval $(op signin my)
 
-export DOCKER_REPO
 ENV_FILE="${PROJECT_ID}.env"
 
 
@@ -101,44 +99,44 @@ export CLOUDSQL_CONNECTION_NAME
 
 
 
-# echo "${textgreen}Creating cloud sql service account${textreset}"
-# gcloud iam service-accounts create $CLOUD_SQL_SERVICE_ACCOUNT_ID \
-#     --display-name="${PROJECT_ID}"
+echo "${textgreen}Creating cloud sql service account${textreset}"
+gcloud iam service-accounts create $CLOUD_SQL_SERVICE_ACCOUNT_ID \
+    --display-name="${PROJECT_ID}"
 
 
-# echo "${textgreen}Adding Cloud SQL roles${textreset}"
-# gcloud projects add-iam-policy-binding $PROJECT_ID \
-#     --member="serviceAccount:${CLOUD_SQL_SERVICE_ACCOUNT_NAME}" \
-#     --role="roles/cloudsql.client"
+echo "${textgreen}Adding Cloud SQL roles${textreset}"
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:${CLOUD_SQL_SERVICE_ACCOUNT_NAME}" \
+    --role="roles/cloudsql.client"
 
-# echo "${textgreen}Adding Cloudbuild roles${textreset}"
-# gcloud projects add-iam-policy-binding $PROJECT_ID \
-#       --member="serviceAccount:${CLOUDBUILD_SERVICE_ACCOUNT}" \
-#       --role="roles/secretmanager.secretAccessor"
-# gcloud projects add-iam-policy-binding $PROJECT_ID \
-#       --member="serviceAccount:${CLOUDBUILD_SERVICE_ACCOUNT}" \
-#       --role="roles/appengine.serviceAdmin"
-# gcloud projects add-iam-policy-binding $PROJECT_ID \
-#       --member="serviceAccount:${CLOUDBUILD_SERVICE_ACCOUNT}" \
-#       --role="roles/iam.serviceAccountUser"
+echo "${textgreen}Adding Cloudbuild roles${textreset}"
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+      --member="serviceAccount:${CLOUDBUILD_SERVICE_ACCOUNT}" \
+      --role="roles/secretmanager.secretAccessor"
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+      --member="serviceAccount:${CLOUDBUILD_SERVICE_ACCOUNT}" \
+      --role="roles/appengine.serviceAdmin"
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+      --member="serviceAccount:${CLOUDBUILD_SERVICE_ACCOUNT}" \
+      --role="roles/iam.serviceAccountUser"
 
-# echo "${textgreen}Adding App engine roles${textreset}"
-# gcloud secrets add-iam-policy-binding peerlogic-api-env \
-#     --member="serviceAccount:${APP_ENGINE_SERVICE_ACCOUNT}" \
-#     --role="roles/secretmanager.secretAccessor"
+echo "${textgreen}Adding App engine roles${textreset}"
+gcloud secrets add-iam-policy-binding peerlogic-api-env \
+    --member="serviceAccount:${APP_ENGINE_SERVICE_ACCOUNT}" \
+    --role="roles/secretmanager.secretAccessor"
 
-# echo "${textgreen}Creating redis instance${textreset}"
-# gcloud redis instances create peerlogic-api --size=2 --region=us-west4
+echo "${textgreen}Creating redis instance${textreset}"
+gcloud redis instances create peerlogic-api --size=2 --region=us-west4
 
-# echo "${textblue}Reading redis url${textreset}"
-# REDIS_IP_RANGE=$(gcloud redis instances describe peerlogic-api --region=us-west4 --format "value(
-# reservedIpRange)")
-# REDIS_PORT=$(gcloud redis instances describe peerlogic-api --region=us-west4 --format "value(port)")
-# REDIS_IP=${REDIS_IP_RANGE%/*}
+echo "${textblue}Reading redis url${textreset}"
+REDIS_IP_RANGE=$(gcloud redis instances describe peerlogic-api --region=us-west4 --format "value(
+reservedIpRange)")
+REDIS_PORT=$(gcloud redis instances describe peerlogic-api --region=us-west4 --format "value(port)")
+REDIS_IP=${REDIS_IP_RANGE%/*}
 
-# export REDIS_URL="redis://${REDIS_IP}:${REDIS_PORT}/0"
+export REDIS_URL="redis://${REDIS_IP}:${REDIS_PORT}/0"
 
-#example connector name: peerlogic-api-dev-redis-to-shared-vpc-connector
+# example connector name: peerlogic-api-dev-redis-to-shared-vpc-connector
 
 
 # TODO: connect redis
