@@ -40,3 +40,14 @@ class CallDirectionTypes(models.TextChoices):
     INBOUND = "inbound"
     OUTBOUND = "outbound"
     INTERNAL = "internal"
+
+
+class TelecomCallerNameInfoTypes(models.TextChoices):
+    BUSINESS = "business"
+    CONSUMER = "consumer"
+    UNDETERMINED = "undetermined"  # encountered but the type is unknown
+
+
+class TelecomCallerNameInfoSourceTypes(models.TextChoices):
+    PEERLOGIC = "peerlogic"
+    TWILIO = "twilio"

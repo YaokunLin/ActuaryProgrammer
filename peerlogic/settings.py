@@ -22,6 +22,19 @@ from google.cloud import secretmanager
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+}
 
 PROJECT_ID = os.getenv("PROJECT_ID", "peerlogic-api-dev")
 GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT", None)  # WE'RE IN GCP
@@ -59,17 +72,26 @@ BANDWIDTH_API_PASSWORD = os.getenv("BANDWIDTH_API_PASSWORD")
 BANDWIDTH_CLIENT = requests.Session()
 BANDWIDTH_CLIENT.auth = HTTPBasicAuth(BANDWIDTH_API_USERNAME, BANDWIDTH_API_PASSWORD)
 
-
 # Netsapiens Communications Info
 NETSAPIENS_CLIENT_ID = os.getenv("NETSAPIENS_CLIENT_ID")
 NETSAPIENS_CLIENT_SECRET = os.getenv("NETSAPIENS_CLIENT_SECRET")
 NETSAPIENS_BASE_URL = os.getenv("NETSAPIENS_BASE_URL")
 NETSAPIENS_ACCESS_TOKEN_URL = os.getenv("NETSAPIENS_ACCESS_TOKEN_URL")
 NETSAPIENS_INTROSPECT_TOKEN_URL = os.getenv("NETSAPIENS_INTROSPECT_TOKEN_URL")
-
-
 NETSAPIENS_API_USERNAME = os.getenv("NETSAPIENS_API_USERNAME")
 NETSAPIENS_API_PASSWORD = os.getenv("NETSAPIENS_API_PASSWORD")
+
+# Twilio API CNAM / Phone Lookup Support
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
+TWILIO_IS_ENABLED = os.getenv("TWILIO_IS_ENABLED", "False").lower() in ("true", "1", "t")
+
+TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS_DEFAULT = 60 * 60 * 24 * 365  # seconds in a year
+try:
+    TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS = int(os.getenv("TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS"))
+except (ValueError, TypeError) as error:
+    # TODO log this recoverable configuration error
+    TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS = TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS_DEFAULT
 
 # CORS
 CORS_ORIGIN_ALLOW_ALL = DEBUG

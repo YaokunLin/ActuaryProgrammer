@@ -24,7 +24,7 @@ then
 fi
 
 
-echo "${textblue}Granting privileges to peerlogic user $ENV_FILE ${textreset}"
-PGPASSWORD=${POSTGRES_ROOT_PASSWORD} psql --host 127.0.0.1 --user postgres -c "GRANT ALL PRIVILEGES ON DATABASE peerlogic TO peerlogic;"
-PGPASSWORD=${POSTGRES_ROOT_PASSWORD} psql --host 127.0.0.1 --user postgres -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO peerlogic;"
+echo "${textblue}Granting privileges to peerlogic user $ENV_FILE"
+PGPASSWORD=${POSTGRES_PASSWORD} psql --host 127.0.0.1 --user postgres -c "GRANT ALL PRIVILEGES ON DATABASE peerlogic TO peerlogic;"
+PGPASSWORD=${POSTGRES_PASSWORD} psql --host 127.0.0.1 --user postgres -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO peerlogic;"
  

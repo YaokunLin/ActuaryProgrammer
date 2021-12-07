@@ -1,6 +1,9 @@
+import datetime
+
+from django.conf import settings
 from django.db import models
 from django_extensions.db.fields import ShortUUIDField
-
+from django_userforeignkey.models.fields import UserForeignKey
 from phonenumber_field.modelfields import PhoneNumberField
 
 from core.models import AuditTrailModel
@@ -10,6 +13,8 @@ from calls.field_choices import (
     EngagementPersonaTypes,
     NonAgentEngagementPersonaTypes,
     ReferralSourceTypes,
+    TelecomCallerNameInfoTypes,
+    TelecomCallerNameInfoSourceTypes,
     TelecomPersonaTypes,
 )
 
@@ -55,3 +60,17 @@ class CallLabel(AuditTrailModel):
     call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="The call being labeled", related_name="labeled_calls")
     metric = models.CharField(max_length=255, db_index=True)
     label = models.CharField(max_length=255, db_index=True)
+
+class TelecomCallerNameInfo(AuditTrailModel):
+    id = None  # override id, we have a natural primary key
+    phone_number = PhoneNumberField(primary_key=True)
+    caller_name = models.CharField(max_length=255, null=True)
+    caller_name_type = models.CharField(choices=TelecomCallerNameInfoTypes.choices, max_length=50, null=True)
+    source = models.CharField(choices=TelecomCallerNameInfoSourceTypes.choices, max_length=50, null=True, default=None)
+
+    def is_caller_name_info_stale(self) -> bool:
+        time_zone = self.modified_at.tzinfo  # use database standard timezone
+        today = datetime.datetime.now(time_zone)  # today by the database's standard
+        expiration_time = self.modified_at + datetime.timedelta(seconds=settings.TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS)  # calculate expiration time
+        
+        return today > expiration_time

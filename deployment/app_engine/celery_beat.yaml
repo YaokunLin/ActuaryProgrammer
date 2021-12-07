@@ -1,0 +1,10 @@
+#
+#
+#
+
+# [START celery_beat]
+runtime: python39
+service: celery-beat
+entrypoint: "celery -A peerlogic beat -l INFO -S django_celery_beat.schedulers:DatabaseScheduler"
+
+# [END celery_beat]
