@@ -1,7 +1,7 @@
 # Git branch to use off of main or development:
 `git checkout -b app-engine` - this way you can test it out in the resulting Cloud Build trigger.
 
-# Setting up a New App Engine Project
+# Setting up a New GCP Project
 
 1. Google Cloud Platform provides a list of instructions for creating a project here: [GCP's Instructions for Creating a Project](https://cloud.google.com/appengine/docs/standard/nodejs/building-app/creating-project) The following list are notes that correspond to specific steps in the process listed in the link. 
 
@@ -20,7 +20,7 @@ We created the app.yaml in the root level of our project using thse 2 sources:
 * GCP basic reference here [GCP app.yaml example](https://cloud.google.com/appengine/docs/standard/nodejs/config/appref)
 
 
-# Deploying to App Engine from Cloud Build
+# Deploying to App Engine
 
 If the previous steps have already been completed you are now ready to run `gcloud init`.
 
@@ -30,11 +30,12 @@ If the previous steps have already been completed you are now ready to run `gclo
 4. Do you want to configure a default Compute Region and Zone?
    * Hit `Y` and then enter
    * Set the zone to `us-west4-a`
-5. Uncomment all lines in this file (\*except this one) if running for the first time `./deployment/gcloud_init.bash` and then run it from the root of this repository.
+5. Create an environment file (like peerlogic-api-<environment>.env or peerlogic-api-dev.env) and then add it here `gcloud secrets create peerlogic-api-env --data-file=/path/to/your/environment/file`
+6. Uncomment all lines in this file (\*except this one) if running for the first time `./deployment/gcloud_deploy.bash` and then run it from the root of this repository.
    * \* Except for this line - At the time of this writing Celery does not work in App Engine Standard because it cannot connect to Redis. See [JIRA ticket](https://peerlogictech.atlassian.net/browse/PTECH-1011) for this.)
-6. The resulting Cloud Build trigger will be pointed at the `app-engine` branch so you can see it in action after you `git add` your files and `git commit`, `git push origin app-engine`.
-7. Verify your peerlogic-api works in the environment you're using by going to Logging in the console.cloud.google.com and running a couple of GET and POST calls.
-8. You can change the build trigger to point at the branch you want to update from when you've verified everything looks good.
+7. The resulting Cloud Build trigger will be pointed at the `app-engine` branch so you can see it in action after you `git add` your files and `git commit`, `git push origin app-engine`.
+8. Verify your peerlogic-api works in the environment you're using by going to Logging in the console.cloud.google.com and running a couple of GET and POST calls.
+9. You can change the build trigger to point at the branch you want to update from when you've verified everything looks good.
 
 ## Troubleshooting Deploys
 
