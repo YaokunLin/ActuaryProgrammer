@@ -110,3 +110,5 @@ There is a Postman Collection that can be used to validate setup and test change
 # Deployment
 
 CI/CD is set up for deploying to development with App Engine.
+
+See `deployment/app_engine/DEPLOYMENT.md` for deploying to another environment with App Engine.
