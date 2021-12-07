@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from rest_framework import viewsets
 
-from .models import Client
-from .serializers import ClientSerializer
+from .models import Client, Contact
+from .serializers import ClientSerializer, ContactSerializer
 
 
 class ClientViewset(viewsets.ModelViewSet):
@@ -15,3 +15,9 @@ class ClientViewset(viewsets.ModelViewSet):
         if domain is not None:
             queryset = queryset.filter(group__name=domain)
         return queryset
+
+class ContactViewset(viewsets.ModelViewSet):
+    queryset = Contact.objects.all()
+    serializer_class = ContactSerializer
+
+        
