@@ -17,6 +17,7 @@
 # [START django_app]
 # [START gaestd_py_django_app_yaml]
 runtime: python39
+service: default
 
 handlers:
 # This configures Google App Engine to serve the files in the app's static
