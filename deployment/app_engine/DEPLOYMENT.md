@@ -1,7 +1,7 @@
 # Git branch to use off of main or development:
 `git checkout -b app-engine` - this way you can test it out in the resulting Cloud Build trigger.
 
-# Setting up a New App Engine Project
+# Setting up a GCP Project
 
 1. Google Cloud Platform provides a list of instructions for creating a project here: [GCP's Instructions for Creating a Project](https://cloud.google.com/appengine/docs/standard/nodejs/building-app/creating-project) The following list are notes that correspond to specific steps in the process listed in the link. 
 
