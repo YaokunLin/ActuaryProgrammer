@@ -9,9 +9,7 @@ from django.http import (
 from phonenumber_field.modelfields import to_python as to_phone_number
 from twilio.rest.lookups.v1.phone_number import PhoneNumberInstance
 from rest_framework import viewsets
-from rest_framework.exceptions import (
-    bad_request
-)
+from rest_framework.exceptions import bad_request
 from rest_framework.response import Response
 from twilio.base.exceptions import TwilioException
 from twilio.rest import Client
@@ -83,13 +81,11 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
         telecom_caller_name_info, created = TelecomCallerNameInfo.objects.get_or_create(phone_number=phone_number)
 
         # existing row that has legitimate values and is not stale
-        if not created \
-            and telecom_caller_name_info.caller_name_type is not None \
-            and not telecom_caller_name_info.is_caller_name_info_stale():
-            
+        if not created and telecom_caller_name_info.caller_name_type is not None and not telecom_caller_name_info.is_caller_name_info_stale():
+
             log.info(f"Using existing caller_name_info from database since it exists and is not stale / expired for phone_number: '{phone_number}'.")
             return Response(TelecomCallerNameInfoSerializer(telecom_caller_name_info).data)
-        
+
         # fetch from twilio and update database
         try:
             # get and validate twilio data
@@ -103,18 +99,26 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
             telecom_caller_name_info.save()
             log.info(f"Saved data from twilio for phone_number: '{phone_number}'")
         except TwilioException as e:
-            log.exception(f"Unable to call Twilio to obtain or update caller name information for: '{phone_number}'. This does not mean we were unable to fulfill the request for data if we have a stale value available.", e)
+            log.exception(
+                f"Unable to call Twilio to obtain or update caller name information for: '{phone_number}'. This does not mean we were unable to fulfill the request for data if we have a stale value available.",
+                e,
+            )
         except ValueError as e:
             log.exception(f"Problems occurred extracting values from Twilio's response for: '{phone_number}'", e)
         except DatabaseError as e:
-            log.exception(f"Problem occurred saving updated values for phone number: '{phone_number}'. This does not mean we were unable to fulfill the request for data if we have a stale value available", e)
-        
+            log.exception(
+                f"Problem occurred saving updated values for phone number: '{phone_number}'. This does not mean we were unable to fulfill the request for data if we have a stale value available",
+                e,
+            )
+
         # validate that we have a legitimate value from the database
         # we may have a legitimate but stale value, that's fine
         # however, if we don't have a caller_name_type record, this is an incomplete record from our get_or_create above then roll it back / kill it
         log.info(f"Verifying we have a legitimate caller_name_info to send to client for '{phone_number}'")
         if created and telecom_caller_name_info.caller_name_type is None:
-            log.warn(f"Incompleted caller_name_info record. No stale or fresh caller_name_info data is available. We've created a new caller_name_info object but couldn't fill it with Twilio values. ROLLING BACK. phone_number: '{phone_number}'")
+            log.warn(
+                f"Incompleted caller_name_info record. No stale or fresh caller_name_info data is available. We've created a new caller_name_info object but couldn't fill it with Twilio values. ROLLING BACK. phone_number: '{phone_number}'"
+            )
             telecom_caller_name_info.delete()
             log.warn(f"ROLLED BACK / DELETED incomplete record for phone_number: '{phone_number}'")
             raise Http404
@@ -124,7 +128,7 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
         return Response(TelecomCallerNameInfoSerializer(telecom_caller_name_info).data)
 
 
-def get_caller_name_info_from_twilio(phone_number: str, client: Client=None) -> PhoneNumberInstance:
+def get_caller_name_info_from_twilio(phone_number: str, client: Client = None) -> PhoneNumberInstance:
     """Retrieves caller information from the Twilio API."""
     # Phone Number Formats:
     # - E.164 International Standard (https://en.wikipedia.org/wiki/E.164) - Use this one
@@ -144,7 +148,7 @@ def get_caller_name_info_from_twilio(phone_number: str, client: Client=None) -> 
 
     if not client:
         client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-    
+
     # lookup value in twilio
     # you must specify the types whose values you want to have filled in, otherwise they will be None
     phone_number_info = client.lookups.v1.phone_numbers(phone_number).fetch(type=["caller-name", "carrier"])
@@ -161,7 +165,6 @@ def validate_twilio_data(twilio_phone_number_info: PhoneNumberInstance):
         raise ValueError(f"Twilio response has an error_code of '{error_code}' in caller_name section!")
 
 
-
 def update_telecom_caller_name_info_with_twilio_data(telecom_caller_name_info: TelecomCallerNameInfo, twilio_phone_number_info: PhoneNumberInstance) -> None:
     # Shape of the data
     # {
@@ -173,7 +176,9 @@ def update_telecom_caller_name_info_with_twilio_data(telecom_caller_name_info: T
     # }
     log.debug(twilio_phone_number_info.__dict__)
 
-    log.info("Attempting to get data from twilio's response to update telecom caller name info. NOTE: validation has occurred before this point. If there is an error in this function, we need to update our validation codes!")
+    log.info(
+        "Attempting to get data from twilio's response to update telecom caller name info. NOTE: validation has occurred before this point. If there is an error in this function, we need to update our validation codes!"
+    )
     caller_name_section = twilio_phone_number_info.caller_name
     caller_name = caller_name_section.get("caller_name", None)
     caller_type = caller_name_section.get("caller_type", "")  # BUSINESS CONSUMER UNDETERMINED
