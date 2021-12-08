@@ -1,8 +1,8 @@
 #!/bin/bash
 set -x #echo on
 
-# First, gcloud init
-# Then, run as ./deployment/app_engine/gcloud_deploy.bash from the root of the peerlogic-api repo.
+# 1. gcloud init
+# 2. run as ./deployment/app_engine/gcloud_deploy.bash from the root of the peerlogic-api repo.
 
 PROJECT_ID=$(gcloud config list --format='value(core.project)')
 PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
@@ -37,7 +37,7 @@ DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management import utils; print(
 
 eval $(op signin my)
 
-ENV_FILE="${PROJECT_ID}.env"
+ENV_FILE="./deployment/${PROJECT_ID}.env"
 
 
 
