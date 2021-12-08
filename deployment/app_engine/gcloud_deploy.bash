@@ -119,6 +119,10 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
 gcloud projects add-iam-policy-binding $PROJECT_ID \
       --member="serviceAccount:${CLOUDBUILD_SERVICE_ACCOUNT}" \
       --role="roles/iam.serviceAccountUser"
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+      --member="serviceAccount:${CLOUDBUILD_SERVICE_ACCOUNT}" \
+      --role="roles/appengine.deployer"
+
 
 echo "${textgreen}Adding App engine roles${textreset}"
 gcloud secrets add-iam-policy-binding peerlogic-api-env \
