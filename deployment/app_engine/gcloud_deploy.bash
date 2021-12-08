@@ -23,19 +23,9 @@ textcyn=$(tput setaf 6) # Cyan
 textwht=$(tput setaf 7) # White
 textreset=$(tput sgr0) # Text reset.
 
-# TODO: check if python 3 is installed as 'python3' first, otherwise use 'python'
-# TODO: check op (1Password) is installed before continuing
-# TODO: check project name before continuing
 
-# if [ -z $VIRTUAL_ENV ];
-# then
-#   echo "${textred}Error: please activate a virtual environment before running this script"
-#   exit 1
-# fi
-
-# DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management import utils; print(utils.get_random_secret_key())')
-
-# eval $(op signin my)
+# TODO: check project name before continuing to avoid fat-fingering
+# and deploying to the wrong environment
 
 ENV_FILE="./deployment/${PROJECT_ID}.env"
 
