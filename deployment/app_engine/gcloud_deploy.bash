@@ -154,8 +154,7 @@ if  [[ "$PROJECT_ID" ==  *"dev" ]]; then
       --repo-name=peerlogic-api \
       --repo-owner=peerlogictech \
       --branch-pattern="^development$" \
-      --build-config="deployment/app_engine/cloudbuild.yaml" \
-      --service-account="projects/${PROJECT_ID}/serviceAccounts/${CLOUDBUILD_SERVICE_ACCOUNT}"
+      --build-config="deployment/app_engine/cloudbuild.yaml"
 fi
 
 if [[ "$PROJECT_ID" ==  *"stage" ]]; then
@@ -165,8 +164,7 @@ if [[ "$PROJECT_ID" ==  *"stage" ]]; then
       --repo-name=peerlogic-api \
       --repo-owner=peerlogictech \
       --branch-pattern="^hotfix/.*$" \
-      --build-config="deployment/app_engine/cloudbuild.yaml" \
-      --service-account="projects/${PROJECT_ID}/serviceAccounts/${CLOUDBUILD_SERVICE_ACCOUNT}"
+      --build-config="deployment/app_engine/cloudbuild.yaml"
 
       echo "${textgreen}Creating cloud build trigger using tags${textreset}"
       gcloud beta builds triggers create github \
