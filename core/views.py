@@ -20,3 +20,6 @@ class ClientViewset(viewsets.ModelViewSet):
 class ContactViewset(viewsets.ModelViewSet):
     queryset = Contact.objects.all()
     serializer_class = ContactSerializer
+
+    filterset_fields = ["mobile_number"]
+    search_fields = ["first_name", "last_name"]

@@ -12,6 +12,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 from core.field_choices import ClientTypes
 from core.managers import PracticeManager, UserManager
 
+
 class AuditTrailModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     modified_at = models.DateTimeField(auto_now=True, db_index=True)
@@ -78,10 +79,10 @@ class PracticeTelecom(AuditTrailModel):
 
 class Contact(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
-    first_name = models.CharField(blank=True, max_length=255)
-    last_name = models.CharField(blank=True, max_length=255)
+    first_name = models.CharField(blank=True, max_length=255, db_index=True)
+    last_name = models.CharField(blank=True, max_length=255, db_index=True)
     placeholder = models.CharField(blank=True, max_length=255)
-    mobile_number = PhoneNumberField()
+    mobile_number = PhoneNumberField(db_index=True)
     fax_number = PhoneNumberField(blank=True)
     address_line_1 = models.CharField(blank=True, max_length=255)
     address_line_2 = models.CharField(blank=True, max_length=255)
