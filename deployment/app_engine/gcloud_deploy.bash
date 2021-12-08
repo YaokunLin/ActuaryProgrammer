@@ -23,19 +23,9 @@ textcyn=$(tput setaf 6) # Cyan
 textwht=$(tput setaf 7) # White
 textreset=$(tput sgr0) # Text reset.
 
-# TODO: check if python 3 is installed as 'python3' first, otherwise use 'python'
-# TODO: check op (1Password) is installed before continuing
-# TODO: check project name before continuing
 
-if [ -z $VIRTUAL_ENV ];
-then
-  echo "${textred}Error: please activate a virtual environment before running this script"
-  exit 1
-fi
-
-DJANGO_SECRET_KEY=$(python3 -c 'from django.core.management import utils; print(utils.get_random_secret_key())')
-
-eval $(op signin my)
+# TODO: check project name before continuing to avoid fat-fingering
+# and deploying to the wrong environment
 
 ENV_FILE="./deployment/${PROJECT_ID}.env"
 
@@ -83,7 +73,7 @@ gcloud sql instances create $PROJECT_ID \
 echo "${textgreen}Setting the password for the 'postgres' user: ${textreset}"
 gcloud sql users set-password postgres \
 --instance=$PROJECT_ID \
---password=${POSTGRES_ROOT_PASSWORD}
+--password=${POSTGRES_PASSWORD}
 
 
 echo "${textgreen}Creating peerlogic database: ${textreset}"
@@ -157,12 +147,46 @@ export REDIS_URL="redis://${REDIS_IP}:${REDIS_PORT}/0"
 # --region $REGION
 
 
-echo "${textgreen}Creating cloud build trigger using branch name app-engine to start${textreset}"
-gcloud beta builds triggers create app-engine \
---repo=peerlogic-api \
---branch-pattern=^app-engine$ \
---build-config=deployment/app_engine/cloudbuild.yaml \
---service-account="${CLOUDBUILD_SERVICE_ACCOUNT}"
+if  [[ "$PROJECT_ID" ==  *"dev" ]]; then
+      echo "${textgreen}Creating cloud build trigger using development branch${textreset}"
+      gcloud beta builds triggers create github \
+      --name=app-engine \
+      --repo-name=peerlogic-api \
+      --repo-owner=peerlogictech \
+      --branch-pattern="^development$" \
+      --build-config="deployment/app_engine/cloudbuild.yaml"
+fi
+
+if [[ "$PROJECT_ID" ==  *"stage" ]]; then
+      echo "${textgreen}Creating cloud build trigger using hotfix/ branch prefix${textreset}"
+      gcloud beta builds triggers create github \
+      --name=hotfixes \
+      --repo-name=peerlogic-api \
+      --repo-owner=peerlogictech \
+      --branch-pattern="^hotfix/.*$" \
+      --build-config="deployment/app_engine/cloudbuild.yaml"
+
+      echo "${textgreen}Creating cloud build trigger using tags${textreset}"
+      gcloud beta builds triggers create github \
+      --name=releases \
+      --repo-name=peerlogic-api \
+      --repo-owner=peerlogictech \
+      --tag-pattern="^.*$" \
+      --build-config="deployment/app_engine/cloudbuild.yaml"
+fi
+
+if [[ "$PROJECT_ID" ==  *"prod" ]]; then
+      echo "${textgreen}Creating cloud build trigger using main branch${textreset}"
+      gcloud beta builds triggers create github \
+      --name=app-engine \
+      --repo-name=peerlogic-api \
+      --repo-owner=peerlogictech \
+      --branch-pattern="^main$" \
+      --build-config="deployment/app_engine/cloudbuild.yaml"
+fi
+
+
+
 
 # TODO: Add substitutions
 
