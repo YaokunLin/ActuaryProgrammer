@@ -168,14 +168,13 @@ if [[ "$PROJECT_ID" ==  *"stage" ]]; then
       --build-config="deployment/app_engine/cloudbuild.yaml" \
       --service-account="projects/${PROJECT_ID}/serviceAccounts/${CLOUDBUILD_SERVICE_ACCOUNT}"
 
-      echo "${textgreen}Creating cloud build trigger using release/ tag prefix${textreset}"
+      echo "${textgreen}Creating cloud build trigger using tags${textreset}"
       gcloud beta builds triggers create github \
       --name=releases \
       --repo-name=peerlogic-api \
       --repo-owner=peerlogictech \
-      --tag-pattern="^release/.*$" \
-      --build-config="deployment/app_engine/cloudbuild.yaml" \
-      --service-account="projects/${PROJECT_ID}/serviceAccounts/${CLOUDBUILD_SERVICE_ACCOUNT}"
+      --tag-pattern="^.*$" \
+      --build-config="deployment/app_engine/cloudbuild.yaml"
 fi
 
 if [[ "$PROJECT_ID" ==  *"prod" ]]; then
@@ -185,8 +184,7 @@ if [[ "$PROJECT_ID" ==  *"prod" ]]; then
       --repo-name=peerlogic-api \
       --repo-owner=peerlogictech \
       --branch-pattern="^main$" \
-      --build-config="deployment/app_engine/cloudbuild.yaml" \
-      --service-account="projects/${PROJECT_ID}/serviceAccounts/${CLOUDBUILD_SERVICE_ACCOUNT}"
+      --build-config="deployment/app_engine/cloudbuild.yaml"
 fi
 
 
