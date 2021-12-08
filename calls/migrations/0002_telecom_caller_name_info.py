@@ -11,25 +11,50 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('calls', '0001_initial'),
+        ("calls", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='TelecomCallerNameInfo',
+            name="TelecomCallerNameInfo",
             fields=[
-                ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('modified_at', models.DateTimeField(auto_now=True, db_index=True)),
-                ('phone_number', phonenumber_field.modelfields.PhoneNumberField(max_length=128, primary_key=True, region=None, serialize=False)),
-                ('caller_name', models.CharField(max_length=255, null=True)),
-                ('caller_name_type', models.CharField(choices=[('business', 'Business'), ('consumer', 'Consumer'), ('undetermined', 'Undetermined')], max_length=50, null=True)),
-                ('source', models.CharField(choices=[('peerlogic', 'Peerlogic'), ('twilio', 'Twilio')], default=None, max_length=50, null=True)),
-                ('created_by', django_userforeignkey.models.fields.UserForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='telecomcallernameinfo_created', to=settings.AUTH_USER_MODEL, verbose_name='The user that is automatically assigned')),
-                ('modified_by', django_userforeignkey.models.fields.UserForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='telecomcallernameinfo_modified', to=settings.AUTH_USER_MODEL, verbose_name='The user that is automatically assigned')),
+                ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("modified_at", models.DateTimeField(auto_now=True, db_index=True)),
+                ("phone_number", phonenumber_field.modelfields.PhoneNumberField(max_length=128, primary_key=True, region=None, serialize=False)),
+                ("caller_name", models.CharField(max_length=255, null=True)),
+                (
+                    "caller_name_type",
+                    models.CharField(choices=[("business", "Business"), ("consumer", "Consumer"), ("undetermined", "Undetermined")], max_length=50, null=True),
+                ),
+                ("source", models.CharField(choices=[("peerlogic", "Peerlogic"), ("twilio", "Twilio")], default=None, max_length=50, null=True)),
+                (
+                    "created_by",
+                    django_userforeignkey.models.fields.UserForeignKey(
+                        blank=True,
+                        editable=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="telecomcallernameinfo_created",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="The user that is automatically assigned",
+                    ),
+                ),
+                (
+                    "modified_by",
+                    django_userforeignkey.models.fields.UserForeignKey(
+                        blank=True,
+                        editable=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="telecomcallernameinfo_modified",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="The user that is automatically assigned",
+                    ),
+                ),
             ],
             options={
-                'get_latest_by': 'modified_at',
-                'abstract': False,
+                "get_latest_by": "modified_at",
+                "abstract": False,
             },
         ),
     ]

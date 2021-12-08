@@ -1,6 +1,6 @@
 from django.db import models
 from django.db import IntegrityError
-from django.contrib.auth.models import AbstractUser, UserManager as _UserManager
+from django.contrib.auth.models import AbstractUser, Permission, UserManager as _UserManager
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -10,8 +10,7 @@ from django_extensions.db.fields import ShortUUIDField
 from phonenumber_field.modelfields import PhoneNumberField
 
 from core.field_choices import ClientTypes
-class ShortUUIDPrimaryKeyModel(models.Model):
-    id = ShortUUIDField(primary_key=True, editable=False)
+from core.managers import PracticeManager, UserManager
 
 class AuditTrailModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
@@ -38,71 +37,47 @@ class AuditTrailModel(models.Model):
         get_latest_by = "modified_at"
 
 
-class UserManager(_UserManager):
-    INTROSPECT_TOKEN_PAYLOAD_KEYS = ["token", "client_id", "territory", "domain", "uid", "expires", "scope", "mask_chain"]
-
-    def get_or_create_from_introspect_token_payload(self, payload):
-        self._validate_introspect_token_payload(payload)
-        uid = payload["uid"]
-
-        try:
-            user = self.get(username=uid)
-            user.last_login = timezone.now()
-            user.is_active = True
-            user.save()
-            return user
-        except self.model.DoesNotExist:
-            pass
-
-        # Set practice domain
-        practice, _ = Practice.objects.get_or_create(name=payload["domain"])
-
-        try:
-            user = self.create(
-                username=uid,
-                date_joined=timezone.now(),
-                last_login=timezone.now(),
-                is_active=True,
-            )
-            practice.user_set.add(user)
-        except IntegrityError:
-            user = self.get(username=uid)
-
-        return user
-
-    def _validate_introspect_token_payload(self, payload):
-        if not all(key in self.INTROSPECT_TOKEN_PAYLOAD_KEYS for key in payload):
-            raise ValueError("Wrong payload to get or create a user")
-
-
-class User(AbstractUser, ShortUUIDPrimaryKeyModel):
+class User(AbstractUser):
+    id = ShortUUIDField(primary_key=True, editable=False)
     # Using plain "name" here since we may not have it broken out into
     # first and last
     name = models.CharField(_("name"), max_length=300, blank=True)
     telecom_user = models.CharField(_("telecom user (not sip username)"), max_length=80, blank=True)
     objects = UserManager()
 
-class PracticePerson(AuditTrailModel, ShortUUIDPrimaryKeyModel):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+
+class PracticePerson(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    user = models.OneToOneField("User", on_delete=models.CASCADE)
 
 
-class Practice(AuditTrailModel, ShortUUIDPrimaryKeyModel):
-    name = models.CharField(_("name"), max_length=300)
+class Practice(models.Model):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    name = models.CharField(_("name"), max_length=150, unique=True)
+    permissions = models.ManyToManyField(
+        Permission,
+        verbose_name=_("permissions"),
+        blank=True,
+    )
 
-class Client(models.Model):
+    objects = PracticeManager()
+
+
+class Client(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     client_type = models.CharField(choices=ClientTypes.choices, max_length=50, default=ClientTypes.PRACTICE_MANAGEMENT_SOFTWARE)
     practice = models.OneToOneField(Practice, on_delete=models.CASCADE)
     rest_base_url = models.CharField(max_length=300)  # Can be Dentrix, another EMR, or some other system
 
 
-class PracticeTelecom(models.Model):
+class PracticeTelecom(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     practice = models.OneToOneField(Practice, on_delete=models.CASCADE)
     sms_number = PhoneNumberField(blank=True)
 
 
-class Contact(AuditTrailModel, ShortUUIDPrimaryKeyModel):
+class Contact(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
     first_name = models.CharField(blank=True, max_length=255)
     last_name = models.CharField(blank=True, max_length=255)
     placeholder = models.CharField(blank=True, max_length=255)

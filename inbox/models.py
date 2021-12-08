@@ -7,7 +7,7 @@ from .field_choices import MESSAGE_STATUSES, MESSAGE_PRIORITIES, MESSAGE_PRIORIT
 
 
 class SMSMessage(AuditTrailModel):
-    id = models.CharField(primary_key=True, editable=False, max_length=255)
+    id = models.CharField(primary_key=True, editable=False, max_length=255) # using telecom's sent short uuid
     contact = models.ForeignKey("core.Contact", on_delete=models.SET_NULL, null=True)
     assigned_to = models.ForeignKey("core.User", on_delete=models.SET_NULL, null=True)
     owner = PhoneNumberField()

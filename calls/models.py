@@ -20,6 +20,7 @@ from calls.field_choices import (
 
 
 class Call(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
     telecom_call_id = models.CharField(max_length=255)
     caller_audio_url = models.CharField(max_length=255)
     callee_audio_url = models.CharField(max_length=255)
@@ -50,19 +51,20 @@ class Call(AuditTrailModel):
     metadata_file_uri = models.CharField(max_length=255)
 
 
-class AgentEngagedWith(models.Model):
+class AgentEngagedWith(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="The call engaged with", related_name="engaged_in_calls")
     non_agent_engagement_persona_type = models.CharField(choices=NonAgentEngagementPersonaTypes.choices, max_length=50, blank=True)
 
 
 class CallLabel(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
     call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="The call being labeled", related_name="labeled_calls")
     metric = models.CharField(max_length=255, db_index=True)
     label = models.CharField(max_length=255, db_index=True)
 
+
 class TelecomCallerNameInfo(AuditTrailModel):
-    id = None  # override id, we have a natural primary key
     phone_number = PhoneNumberField(primary_key=True)
     caller_name = models.CharField(max_length=255, null=True)
     caller_name_type = models.CharField(choices=TelecomCallerNameInfoTypes.choices, max_length=50, null=True)
@@ -72,5 +74,5 @@ class TelecomCallerNameInfo(AuditTrailModel):
         time_zone = self.modified_at.tzinfo  # use database standard timezone
         today = datetime.datetime.now(time_zone)  # today by the database's standard
         expiration_time = self.modified_at + datetime.timedelta(seconds=settings.TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS)  # calculate expiration time
-        
+
         return today > expiration_time

@@ -23,7 +23,6 @@ from inbox.urls import urlpatterns as inbox_urlpatterns
 from reminders.urls import urlpatterns as reminders_urlpatterns
 
 
-
 admin.site.site_header = "Peerlogic API Admin Portal"
 
 urlpatterns = [

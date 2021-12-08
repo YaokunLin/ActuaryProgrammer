@@ -8,6 +8,7 @@ class ClientSerializer(serializers.ModelSerializer):
         model = Client
         fields = ["id", "group", "rest_base_url"]
 
+
 class ContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contact

@@ -22,11 +22,33 @@ class Migration(migrations.Migration):
                     "id",
                     django_extensions.db.fields.ShortUUIDField(blank=True, editable=False, primary_key=True, serialize=False),
                 ),
+                (
+                    "client_type",
+                    models.CharField(choices=[("pms", "Practice Management System")], db_index=True, max_length=50),
+                ),
                 ("rest_base_url", models.URLField()),
                 (
                     "practice",
                     models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to="core.Practice"),
                 ),
+            ],
+        ),
+        migrations.CreateModel(
+            name="Practice",
+            fields=[
+                (
+                    "id",
+                    django_extensions.db.fields.ShortUUIDField(blank=True, editable=False, primary_key=True, serialize=False),
+                ),
+                ("name", models.CharField(unique=True, max_length=80, verbose_name="name")),
+                ("permissions", models.ManyToManyField(to="auth.Permission", verbose_name="permissions", blank=True)),
+            ],
+            options={
+                "verbose_name": "practice",
+                "verbose_name_plural": "practices",
+            },
+            managers=[
+                ("objects", django.contrib.auth.models.GroupManager()),
             ],
         ),
         migrations.CreateModel(

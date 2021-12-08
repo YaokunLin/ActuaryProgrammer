@@ -16,8 +16,7 @@ class ClientViewset(viewsets.ModelViewSet):
             queryset = queryset.filter(group__name=domain)
         return queryset
 
+
 class ContactViewset(viewsets.ModelViewSet):
     queryset = Contact.objects.all()
     serializer_class = ContactSerializer
-
-        
