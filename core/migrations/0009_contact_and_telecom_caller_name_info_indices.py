@@ -7,23 +7,23 @@ import phonenumber_field.modelfields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0008_zip_code_add_on_field'),
+        ("core", "0008_zip_code_add_on_field"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='contact',
-            name='first_name',
+            model_name="contact",
+            name="first_name",
             field=models.CharField(blank=True, db_index=True, max_length=255),
         ),
         migrations.AlterField(
-            model_name='contact',
-            name='last_name',
+            model_name="contact",
+            name="last_name",
             field=models.CharField(blank=True, db_index=True, max_length=255),
         ),
         migrations.AlterField(
-            model_name='contact',
-            name='mobile_number',
+            model_name="contact",
+            name="mobile_number",
             field=phonenumber_field.modelfields.PhoneNumberField(db_index=True, max_length=128, region=None),
         ),
     ]
