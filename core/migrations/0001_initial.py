@@ -16,24 +16,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name="Client",
-            fields=[
-                (
-                    "id",
-                    django_extensions.db.fields.ShortUUIDField(blank=True, editable=False, primary_key=True, serialize=False),
-                ),
-                (
-                    "client_type",
-                    models.CharField(choices=[("pms", "Practice Management System")], db_index=True, max_length=50),
-                ),
-                ("rest_base_url", models.URLField()),
-                (
-                    "practice",
-                    models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to="core.Practice"),
-                ),
-            ],
-        ),
-        migrations.CreateModel(
             name="Practice",
             fields=[
                 (
@@ -49,6 +31,24 @@ class Migration(migrations.Migration):
             },
             managers=[
                 ("objects", django.contrib.auth.models.GroupManager()),
+            ],
+        ),
+        migrations.CreateModel(
+            name="Client",
+            fields=[
+                (
+                    "id",
+                    django_extensions.db.fields.ShortUUIDField(blank=True, editable=False, primary_key=True, serialize=False),
+                ),
+                (
+                    "client_type",
+                    models.CharField(choices=[("pms", "Practice Management System")], db_index=True, max_length=50),
+                ),
+                ("rest_base_url", models.URLField()),
+                (
+                    "practice",
+                    models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to="core.Practice"),
+                ),
             ],
         ),
         migrations.CreateModel(
