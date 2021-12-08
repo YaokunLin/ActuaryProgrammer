@@ -95,10 +95,10 @@ class GroupTelecom(models.Model):
 
 class Contact(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
-    first_name = models.CharField(blank=True, max_length=255)
-    last_name = models.CharField(blank=True, max_length=255)
+    first_name = models.CharField(blank=True, max_length=255, db_index=True)
+    last_name = models.CharField(blank=True, max_length=255, db_index=True)
     placeholder = models.CharField(blank=True, max_length=255)
-    mobile_number = PhoneNumberField()
+    mobile_number = PhoneNumberField(db_index=True)
     fax_number = PhoneNumberField(blank=True)
     address_line_1 = models.CharField(blank=True, max_length=255)
     address_line_2 = models.CharField(blank=True, max_length=255)

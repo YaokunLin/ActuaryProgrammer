@@ -50,6 +50,9 @@ class CallLabelViewset(viewsets.ModelViewSet):
 class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
     queryset = TelecomCallerNameInfo.objects.all()
     serializer_class = TelecomCallerNameInfoSerializer
+    filter_fields = ["caller_name_type", "source"]
+    search_fields = ["caller_name"]
+    ordering = ["caller_name"]
 
     def retrieve(self, request, pk):
         phone_number_raw = pk
