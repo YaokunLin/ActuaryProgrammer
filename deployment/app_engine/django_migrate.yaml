@@ -3,7 +3,7 @@
 #
 
 # [START django_migrate]
-runtime: python39
+runtime: python37
 service: django-migrate
 entrypoint: "python3 manage.py migrate --noinput"
 
