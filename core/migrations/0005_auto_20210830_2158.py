@@ -19,11 +19,11 @@ class Migration(migrations.Migration):
             name="sms_number",
         ),
         migrations.CreateModel(
-            name="GroupTelecom",
+            name="PracticeTelecom",
             fields=[
                 ("id", django_extensions.db.fields.ShortUUIDField(blank=True, editable=False, primary_key=True, serialize=False)),
                 ("sms_number", phonenumber_field.modelfields.PhoneNumberField(blank=True, max_length=128, region=None)),
-                ("group", models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to="auth.group")),
+                ("practice", models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to="core.practice")),
             ],
         ),
     ]

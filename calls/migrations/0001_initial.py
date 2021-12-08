@@ -83,7 +83,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
                         related_name="calls",
-                        to="auth.group",
+                        to="core.practice",
                         verbose_name="The domain the call pertains to",
                     ),
                 ),

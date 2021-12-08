@@ -24,8 +24,8 @@ class Migration(migrations.Migration):
                 ),
                 ("rest_base_url", models.URLField()),
                 (
-                    "group",
-                    models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to="auth.Group"),
+                    "practice",
+                    models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to="core.Practice"),
                 ),
             ],
         ),
@@ -34,12 +34,7 @@ class Migration(migrations.Migration):
             fields=[
                 (
                     "id",
-                    models.AutoField(
-                        auto_created=True,
-                        primary_key=True,
-                        serialize=False,
-                        verbose_name="ID",
-                    ),
+                    django_extensions.db.fields.ShortUUIDField(blank=True, editable=False, primary_key=True, serialize=False),
                 ),
                 ("password", models.CharField(max_length=128, verbose_name="password")),
                 (
@@ -123,14 +118,14 @@ class Migration(migrations.Migration):
                 ),
                 ("sms_number", models.CharField(blank=True, max_length=10)),
                 (
-                    "groups",
+                    "practices",
                     models.ManyToManyField(
                         blank=True,
-                        help_text="The groups this user belongs to. A user will get all permissions granted to each of their groups.",
+                        help_text="The practice this user belongs to. A user will get all permissions granted to each of their practices.",
                         related_name="user_set",
                         related_query_name="user",
-                        to="auth.Group",
-                        verbose_name="groups",
+                        to="core.Practice",
+                        verbose_name="practices",
                     ),
                 ),
                 (

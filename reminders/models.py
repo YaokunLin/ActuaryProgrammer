@@ -2,7 +2,6 @@ from django.db import models
 from django.conf import settings
 
 from django_extensions.db.fields import ShortUUIDField
-from django_userforeignkey.models.fields import UserForeignKey
 
 from core.models import AuditTrailModel
 from .managers import CadenceManager
