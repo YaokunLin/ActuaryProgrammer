@@ -3,7 +3,7 @@
 #
 
 # [START celery_worker]
-runtime: python39
+runtime: python37
 service: celery-worker
 entrypoint: "celery -A peerlogic worker -l INFO"
 
