@@ -58,16 +58,20 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
 
         # validate and normalize phone number
         try:
+            log.info(f"Validating phone number: phone_number_raw: '{phone_number_raw}'")
             phone_number = to_phone_number(phone_number_raw)  # this will explode for obviously bad phone numbers
             if not phone_number.is_valid():  # true for not so obviously bad phone numbers
-                raise TypeError(f"Invalid phone number detected: '{phone_number_raw}'")
-        except TypeError as e:
-            return HttpResponseBadRequest(f"Invalid phone number detected: '{phone_number_raw}'")
+                msg = f"Invalid phone number detected, phone_number_raw: '{phone_number_raw}'"
+                log.error(msg)
+                raise TypeError(msg)
+        except Exception as e:
+            return HttpResponseBadRequest(f"Invalid phone number detected, phone_number_raw: '{phone_number_raw}'")
 
         # be aware strange phone numbers will survive the above
         # strange phone numbers from the above include ones where a phone number has numbers appended: 14401234567bb
         # strange phone numbers like this will be accepted by twilio which will truncate the bad parts
         # we MUST normalize to get something reasonable-looking for our system's storage
+        log.info(f"Normalizing phone_number_raw: '{phone_number_raw}'")
         phone_number = phone_number.as_e164
         log.info(f"Normalized phone_number_raw: '{phone_number_raw}' to phone_number: '{phone_number}'")
 
@@ -180,11 +184,14 @@ def update_telecom_caller_name_info_with_twilio_data(telecom_caller_name_info: T
         "Attempting to get data from twilio's response to update telecom caller name info. NOTE: validation has occurred before this point. If there is an error in this function, we need to update our validation codes!"
     )
     caller_name_section = twilio_phone_number_info.caller_name
-    caller_name = caller_name_section.get("caller_name", None)
+    caller_name = caller_name_section.get("caller_name", "")
+    caller_name = caller_name or ""
+    
     caller_type = caller_name_section.get("caller_type", "")  # BUSINESS CONSUMER UNDETERMINED
-    caller_type = caller_type.lower()
+    caller_type = caller_type.lower()  # accept empty strings but not null
     if caller_type not in TelecomCallerNameInfoTypes.values:
         caller_type = None
+    
     phone_number = twilio_phone_number_info.phone_number
     source = TelecomCallerNameInfoSourceTypes.TWILIO
 
