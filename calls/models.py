@@ -61,6 +61,7 @@ class CallLabel(AuditTrailModel):
     metric = models.CharField(max_length=255, db_index=True)
     label = models.CharField(max_length=255, db_index=True)
 
+
 class TelecomCallerNameInfo(AuditTrailModel):
     id = None  # override id, we have a natural primary key
     phone_number = PhoneNumberField(primary_key=True)
@@ -72,5 +73,5 @@ class TelecomCallerNameInfo(AuditTrailModel):
         time_zone = self.modified_at.tzinfo  # use database standard timezone
         today = datetime.datetime.now(time_zone)  # today by the database's standard
         expiration_time = self.modified_at + datetime.timedelta(seconds=settings.TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS)  # calculate expiration time
-        
+
         return today > expiration_time

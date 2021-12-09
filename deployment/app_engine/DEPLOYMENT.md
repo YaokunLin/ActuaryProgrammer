@@ -34,11 +34,9 @@ If the previous steps have already been completed you are now ready to run `gclo
 6. Run `gcloud secrets create peerlogic-api-env --data-file=/path/to/your/environment/file`
 7. Uncomment all lines in this file (\*except this one) if running for the first time `./deployment/gcloud_deploy.bash` and then run it from the root of this repository.
    * \* Except for this line - At the time of this writing Celery does not work in App Engine Standard because it cannot connect to Redis. See [JIRA ticket](https://peerlogictech.atlassian.net/browse/PTECH-1011) for this.)
-8. The resulting Cloud Build trigger will be pointed at the `app-engine` branch so you can see it in action after you `git add` your files and `git commit`, `git push origin app-engine`.
-9. Escape any funny characters in your `./deployment/<PROJECT_ID>.env` file that bash doesn't like with " " around the value after the `=` sign.
-10. Run `./deployment/cloud_sql_proxy.bash` and `./deployment/psql_deploy.bash` in another terminal.
-11. Verify your peerlogic-api works in the environment you're using by going to Logging in the console.cloud.google.com and running a couple of GET and POST calls.
-12. You can change the build trigger to point at the branch you want to update from when you've verified everything looks good.
+8. Escape any funny characters in your `./deployment/<PROJECT_ID>.env` file that bash doesn't like with " " around the value after the `=` sign.
+9.  Run `./deployment/cloud_sql_proxy.bash` and `./deployment/psql_deploy.bash` in another terminal.
+10. Verify your peerlogic-api works in the environment you're using by going to Logging in the console.cloud.google.com and running a couple of GET and POST calls.
 
 ## Troubleshooting Deploys
 
