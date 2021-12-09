@@ -53,7 +53,7 @@ def send_sms_reminders(reminder_type=MORNING_OF):
         patient_name = patient["first_name"].rstrip().title()
         body = f"Hello {patient_name}. You have an appointment at {start_hour}:{start_minute}. Ready to see you soon!"
 
-        to = patient["phone_mobile"].strip()
+        to = patient["mobile_phone"].strip()
         url = f"{settings.NETSAPIENS_BASE_URL}/?object=message&action=create&domain={domain}&user={user}&from_num={sms_number}&type=sms&destination={to}&message={body}"
         print(url)
 
