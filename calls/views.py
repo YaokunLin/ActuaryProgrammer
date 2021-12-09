@@ -70,7 +70,6 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
 
         # existing row that has legitimate values and is not stale
         if not created and telecom_caller_name_info.caller_name_type is not None and not telecom_caller_name_info.is_caller_name_info_stale():
-
             log.info(f"Using existing caller_name_info from database since it exists and is not stale / expired for phone_number: '{phone_number}'.")
             return Response(TelecomCallerNameInfoSerializer(telecom_caller_name_info).data)
 
@@ -131,18 +130,18 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
                 msg = f"Invalid phone number detected, phone_number_raw: '{phone_number_raw}'"
                 log.error(msg)
                 raise TypeError(msg)
+
+            # be aware strange phone numbers will survive the above
+            # strange phone numbers from the above include ones where a phone number has numbers appended: 14401234567bb
+            # strange phone numbers like this will be accepted by twilio which will truncate the bad parts
+            # we MUST normalize to get something reasonable-looking for our system's storage
+            log.info(f"Normalizing phone_number_raw: '{phone_number_raw}'")
+            phone_number = phone_number.as_e164
+            log.info(f"Normalized phone_number_raw: '{phone_number_raw}' to phone_number: '{phone_number}'")
+
+            return phone_number
         except Exception as e:
             return HttpResponseBadRequest(f"Invalid phone number detected, phone_number_raw: '{phone_number_raw}'")
-
-        # be aware strange phone numbers will survive the above
-        # strange phone numbers from the above include ones where a phone number has numbers appended: 14401234567bb
-        # strange phone numbers like this will be accepted by twilio which will truncate the bad parts
-        # we MUST normalize to get something reasonable-looking for our system's storage
-        log.info(f"Normalizing phone_number_raw: '{phone_number_raw}'")
-        phone_number = phone_number.as_e164
-        log.info(f"Normalized phone_number_raw: '{phone_number_raw}' to phone_number: '{phone_number}'")
-
-        return phone_number
 
 
 def get_caller_name_info_from_twilio(phone_number: str, client: Client = None) -> PhoneNumberInstance:
