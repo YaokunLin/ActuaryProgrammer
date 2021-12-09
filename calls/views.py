@@ -1,4 +1,5 @@
 import logging
+import re
 
 from django.conf import settings
 from django.db import DatabaseError
@@ -56,24 +57,7 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
         phone_number_raw = pk
         log.info(f"Retrieving caller_name_info for phone_number: '{phone_number_raw}'")
 
-        # validate and normalize phone number
-        try:
-            log.info(f"Validating phone number: phone_number_raw: '{phone_number_raw}'")
-            phone_number = to_phone_number(phone_number_raw)  # this will explode for obviously bad phone numbers
-            if not phone_number.is_valid():  # true for not so obviously bad phone numbers
-                msg = f"Invalid phone number detected, phone_number_raw: '{phone_number_raw}'"
-                log.error(msg)
-                raise TypeError(msg)
-        except Exception as e:
-            return HttpResponseBadRequest(f"Invalid phone number detected, phone_number_raw: '{phone_number_raw}'")
-
-        # be aware strange phone numbers will survive the above
-        # strange phone numbers from the above include ones where a phone number has numbers appended: 14401234567bb
-        # strange phone numbers like this will be accepted by twilio which will truncate the bad parts
-        # we MUST normalize to get something reasonable-looking for our system's storage
-        log.info(f"Normalizing phone_number_raw: '{phone_number_raw}'")
-        phone_number = phone_number.as_e164
-        log.info(f"Normalized phone_number_raw: '{phone_number_raw}' to phone_number: '{phone_number}'")
+        phone_number = validate_and_normalize_phone_number(phone_number_raw=phone_number_raw)
 
         # use whatever we find and 404 if we don't find anything
         if not settings.TWILIO_IS_ENABLED:
@@ -130,6 +114,31 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
         # win
         log.info(f"caller_name_info available to send to client for '{phone_number}'")
         return Response(TelecomCallerNameInfoSerializer(telecom_caller_name_info).data)
+
+
+def validate_and_normalize_phone_number(phone_number_raw: str) -> str:
+    # validate and normalize phone number
+    try:
+        log.info(f"Validating phone number: phone_number_raw: '{phone_number_raw}'")
+        phone_number_raw = re.sub("[^0-9]", "", phone_number_raw)
+        phone_number_raw = f"+{phone_number_raw}"
+        phone_number = to_phone_number(phone_number_raw)  # this will explode for obviously bad phone numbers
+        if not phone_number.is_valid():  # true for not so obviously bad phone numbers
+            msg = f"Invalid phone number detected, phone_number_raw: '{phone_number_raw}'"
+            log.error(msg)
+            raise TypeError(msg)
+    except Exception as e:
+        return HttpResponseBadRequest(f"Invalid phone number detected, phone_number_raw: '{phone_number_raw}'")
+
+    # be aware strange phone numbers will survive the above
+    # strange phone numbers from the above include ones where a phone number has numbers appended: 14401234567bb
+    # strange phone numbers like this will be accepted by twilio which will truncate the bad parts
+    # we MUST normalize to get something reasonable-looking for our system's storage
+    log.info(f"Normalizing phone_number_raw: '{phone_number_raw}'")
+    phone_number = phone_number.as_e164
+    log.info(f"Normalized phone_number_raw: '{phone_number_raw}' to phone_number: '{phone_number}'")
+
+    return phone_number
 
 
 def get_caller_name_info_from_twilio(phone_number: str, client: Client = None) -> PhoneNumberInstance:
