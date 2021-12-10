@@ -50,7 +50,7 @@ def send_sms_reminders(reminder_type=MORNING_OF):
         user = django_user.telecom_user
         patient = requests.request("GET", f"{rest_base_url}/patients/{patient_guid}").json()
 
-        patient_name = patient["first_name"].rstrip().title()
+        patient_name = patient["name_first"].rstrip().title()
         body = f"Hello {patient_name}. You have an appointment at {start_hour}:{start_minute}. Ready to see you soon!"
 
         to = patient["mobile_phone"].strip()

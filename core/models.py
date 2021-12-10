@@ -94,9 +94,12 @@ class GroupTelecom(models.Model):
 
 
 class Patient(AuditTrailModel):
+    def velox_extract_data_default():
+        return {}
+
     id = ShortUUIDField(primary_key=True, editable=False)
-    first_name = models.CharField(blank=True, max_length=255, db_index=True)
-    last_name = models.CharField(blank=True, max_length=255, db_index=True)
+    name_first = models.CharField(blank=True, max_length=255, db_index=True)
+    name_last = models.CharField(blank=True, max_length=255, db_index=True)
     placeholder = models.CharField(blank=True, max_length=255)
     phone_mobile = PhoneNumberField(db_index=True, blank=True, null=False, default="")
     phone_home = PhoneNumberField(db_index=True, blank=True, null=False, default="")
@@ -106,5 +109,5 @@ class Patient(AuditTrailModel):
     address_line_2 = models.CharField(blank=True, max_length=255)
     zip_code = models.CharField(max_length=50)
     zip_code_add_on = models.CharField(max_length=50, blank=True)
-    dob = models.DateTimeField()
-    guarantor_id = models.IntegerField(blank=True)
+    date_of_birth = models.DateTimeField()
+    velox_extract_data = models.JSONField(default=velox_extract_data_default)

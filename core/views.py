@@ -22,4 +22,4 @@ class PatientViewset(viewsets.ModelViewSet):
     serializer_class = PatientSerializer
 
     filterset_fields = ["phone_mobile", "phone_home", "phone_work", "phone_fax"]
-    search_fields = ["first_name", "last_name"]
+    search_fields = ["name_first", "name_last"]
