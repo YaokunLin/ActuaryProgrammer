@@ -24,7 +24,7 @@ class PracticeAdminForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         # Do the normal form initialisation.
         super(PracticeAdminForm, self).__init__(*args, **kwargs)
-        # If it is an existing group (saved objects have a pk).
+        # If it is an existing practice (saved objects have a pk).
         if self.instance.pk:
             # Populate the users field with the current Practice users.
             self.fields["users"].initial = self.instance.user_set.all()

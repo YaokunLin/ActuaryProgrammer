@@ -5,7 +5,6 @@ from django.contrib.auth.models import UserManager as _UserManager
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-
 class PracticeManager(models.Manager):
     use_in_migrations = True
 
@@ -19,6 +18,7 @@ class UserManager(_UserManager):
     def get_or_create_from_introspect_token_payload(self, payload):
         self._validate_introspect_token_payload(payload)
         uid = payload["uid"]
+        domain = payload["domain"]
 
         try:
             user = self.get(username=uid)
@@ -29,10 +29,13 @@ class UserManager(_UserManager):
         except self.model.DoesNotExist:
             pass
 
-        # Set practice domain
+        # Set practice and its telecom record
+        Practice = apps.get_model("core", "Practice")
+        practice, created = Practice.objects.get_or_create(name=domain)
+        if created:
 
-        Practice = apps.get_model("app_name", "ModelName")
-        practice, _ = Practice.objects.get_or_create(name=payload["domain"])
+            PracticeTelecom = apps.get_model("core", "PracticeTelecom")
+            PracticeTelecom.objects.create(domain=domain, practice=practice)
 
         try:
             user = self.create(

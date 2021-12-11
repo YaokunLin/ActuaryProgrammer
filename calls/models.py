@@ -30,10 +30,10 @@ class Call(AuditTrailModel):
     connect_duration_seconds = models.DurationField()
     progress_time_seconds = models.DurationField()
     call_direction = models.CharField(choices=CallDirectionTypes.choices, max_length=50, db_index=True)
-    domain = models.ForeignKey(
-        "core.Practice",
+    practice_telecom = models.ForeignKey(
+        "core.PracticeTelecom",
         on_delete=models.SET_NULL,
-        verbose_name="The domain the call pertains to",
+        verbose_name="The practice telecom id the call pertains to",
         related_name="calls",
         null=True,
     )

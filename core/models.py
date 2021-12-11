@@ -1,6 +1,7 @@
 from django.db import models
 from django.db import IntegrityError
 from django.contrib.auth.models import AbstractUser, Permission, UserManager as _UserManager, _user_get_permissions, _user_has_perm, _user_has_module_perms
+from django.db.models.fields.related import ForeignKey
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
@@ -39,12 +40,14 @@ class Practice(models.Model):
 
     objects = PracticeManager()
 
-class Person(models.Model):
+
+class UserPerson(models.Model):
     id = ShortUUIDField(primary_key=True, editable=False)
     name = models.CharField(_("name"), max_length=300, unique=True)
-    practices = models.ManyToManyField(Practice, verbose_name=_("practices"), blank=True)
-
-
+    practice_id =  ForeignKey(
+        
+    )
+    user_id = ShortUUIDField(editable=False)
 
 class PermissionsMixin(models.Model):
     """
@@ -60,8 +63,9 @@ class PermissionsMixin(models.Model):
     practices = models.ManyToManyField(
         Practice,
         verbose_name=_("practices"),
+        through="core.UserPerson"
         blank=True,
-        help_text=_("The practices this user belongs to. A user will get all permissions " "granted to each of their groups."),
+        help_text=_("The practices this user belongs to. A user will get all permissions " "granted to each of their practices."),
         related_name="user_set",
         related_query_name="user",
     )
@@ -85,13 +89,13 @@ class PermissionsMixin(models.Model):
         """
         return _user_get_permissions(self, obj, "user")
 
-    def get_group_permissions(self, obj=None):
+    def get_practice_permissions(self, obj=None):
         """
         Return a list of permission strings that this user has through their
-        groups. Query all available auth backends. If an object is passed in,
+        practices. Query all available auth backends. If an object is passed in,
         return only permissions matching this object.
         """
-        return _user_get_permissions(self, obj, "group")
+        return _user_get_permissions(self, obj, "practice")
 
     def get_all_permissions(self, obj=None):
         return _user_get_permissions(self, obj, "all")
@@ -129,6 +133,14 @@ class PermissionsMixin(models.Model):
 
         return _user_has_module_perms(self, app_label)
 
+class Person(PermissionsMixin):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    name = models.CharField(_("name"), max_length=300, unique=True)
+
+
+class PracticePerson(models.Model):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    practice_id = ShortUUIDField(editable=False)
 
 class AuditTrailModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
@@ -155,7 +167,7 @@ class AuditTrailModel(models.Model):
         get_latest_by = "modified_at"
 
 
-class User(AbstractUser):
+class User(AbstractUser, PermissionsMixin):
     id = ShortUUIDField(primary_key=True, editable=False)
     # Using plain "name" here since we may not have it broken out into
     # first and last
@@ -185,6 +197,7 @@ class Client(AuditTrailModel):
 class PracticeTelecom(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     practice = models.OneToOneField(Practice, on_delete=models.CASCADE)
+    domain = models.CharField(max_length=80, db_index=True)
     phone_sms = PhoneNumberField(blank=True)
     phone_callback = PhoneNumberField(blank=True)
 

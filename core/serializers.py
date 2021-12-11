@@ -6,7 +6,7 @@ from .models import Client, Contact
 class ClientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Client
-        fields = ["id", "group", "rest_base_url"]
+        fields = ["id", "practice", "rest_base_url"]
 
 
 class ContactSerializer(serializers.ModelSerializer):

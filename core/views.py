@@ -11,9 +11,9 @@ class ClientViewset(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Client.objects.all()
-        domain = self.request.query_params.get("domain", None)
-        if domain is not None:
-            queryset = queryset.filter(group__name=domain)
+        practice_name = self.request.query_params.get("practice_name", None)
+        if practice_name is not None:
+            queryset = queryset.filter(practice__name=practice_name)
         return queryset
 
 
