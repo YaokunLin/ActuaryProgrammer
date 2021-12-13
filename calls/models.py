@@ -66,7 +66,7 @@ class CallLabel(AuditTrailModel):
 
 class TelecomCallerNameInfo(AuditTrailModel):
     phone_number = PhoneNumberField(primary_key=True)
-    caller_name = models.CharField(max_length=255, null=True, db_index=True)
+    caller_name = models.CharField(max_length=255, blank=True, default="", null=False, db_index=True)
     caller_name_type = models.CharField(choices=TelecomCallerNameInfoTypes.choices, max_length=50, null=True)
     source = models.CharField(choices=TelecomCallerNameInfoSourceTypes.choices, max_length=50, null=True, default=None)
 
