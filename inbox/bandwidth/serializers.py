@@ -17,7 +17,7 @@ class MessageSerializer(serializers.Serializer):
     to_number = ListField(child=PhoneNumberField(), source="to")
     from_number = PhoneNumberField(source="from")
     applicationId = serializers.CharField(max_length=255)
-    media = ListField(serializers.CharField(max_length=255), allow_null=True)
+    media = ListField(child=serializers.CharField(max_length=255), allow_null=True)
     tag = serializers.CharField(max_length=255)
     segmentCount = serializers.IntegerField(min_value=1)
 
