@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from rest_framework import viewsets
 
-from .models import Client, Contact
-from .serializers import ClientSerializer, ContactSerializer
+from .models import Client, Patient
+from .serializers import ClientSerializer, PatientSerializer
 
 
 class ClientViewset(viewsets.ModelViewSet):
@@ -17,9 +17,9 @@ class ClientViewset(viewsets.ModelViewSet):
         return queryset
 
 
-class ContactViewset(viewsets.ModelViewSet):
-    queryset = Contact.objects.all()
-    serializer_class = ContactSerializer
+class PatientViewset(viewsets.ModelViewSet):
+    queryset = Patient.objects.all()
+    serializer_class = PatientSerializer
 
     filterset_fields = ["phone_mobile", "phone_home", "phone_work", "phone_fax"]
-    search_fields = ["first_name", "last_name"]
+    search_fields = ["name_first", "name_last", "phone_mobile", "phone_home", "phone_work"]
