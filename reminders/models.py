@@ -3,7 +3,7 @@ from django.conf import settings
 
 from django_extensions.db.fields import ShortUUIDField
 
-from core.models import AuditTrailModel
+from core.abstract_models import AuditTrailModel
 from .managers import CadenceManager
 from .field_choices import CADENCES
 

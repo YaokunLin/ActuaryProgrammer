@@ -6,7 +6,7 @@ from django_extensions.db.fields import ShortUUIDField
 from django_userforeignkey.models.fields import UserForeignKey
 from phonenumber_field.modelfields import PhoneNumberField
 
-from core.models import AuditTrailModel
+from core.abstract_models import AuditTrailModel
 from calls.field_choices import (
     CallConnectionTypes,
     CallDirectionTypes,

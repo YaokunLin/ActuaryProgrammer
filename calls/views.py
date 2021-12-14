@@ -119,7 +119,7 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
         # validate and normalize phone number
         try:
             log.info(f"Validating phone number: phone_number_raw: '{phone_number_raw}'")
-            
+
             # first level of normalization because we're generous with our input
             phone_number_raw = re.sub("[^0-9]", "", phone_number_raw)  # remove non-digits
             phone_number_raw = f"+{phone_number_raw}"  # add preceding plus sign
@@ -198,12 +198,12 @@ def update_telecom_caller_name_info_with_twilio_data(telecom_caller_name_info: T
     caller_name_section = twilio_phone_number_info.caller_name
     caller_name = caller_name_section.get("caller_name", "")
     caller_name = caller_name or ""
-    
+
     caller_type = caller_name_section.get("caller_type", "")  # BUSINESS CONSUMER UNDETERMINED
     caller_type = caller_type.lower()  # accept empty strings but not null
     if caller_type not in TelecomCallerNameInfoTypes.values:
         caller_type = None
-    
+
     phone_number = twilio_phone_number_info.phone_number
     source = TelecomCallerNameInfoSourceTypes.TWILIO
 

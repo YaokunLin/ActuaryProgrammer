@@ -5,6 +5,7 @@ from django.contrib.auth.models import UserManager as _UserManager
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+
 class PracticeManager(models.Manager):
     use_in_migrations = True
 

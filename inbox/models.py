@@ -2,12 +2,12 @@ from django.conf import settings
 from django.db import models
 from phonenumber_field.modelfields import PhoneNumberField
 
-from core.models import AuditTrailModel
+from core.abstract_models import AuditTrailModel
 from .field_choices import MESSAGE_STATUSES, MESSAGE_PRIORITIES, MESSAGE_PRIORITIES_DEFAULT
 
 
 class SMSMessage(AuditTrailModel):
-    id = models.CharField(primary_key=True, editable=False, max_length=255) # using telecom's sent short uuid
+    id = models.CharField(primary_key=True, editable=False, max_length=255)  # using telecom's sent short uuid
     patient = models.ForeignKey("core.Patient", on_delete=models.SET_NULL, null=True)
     assigned_to = models.ForeignKey("core.User", on_delete=models.SET_NULL, null=True)
     owner = PhoneNumberField()

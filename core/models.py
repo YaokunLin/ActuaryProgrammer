@@ -10,46 +10,12 @@ from django_extensions.db.fields import ShortUUIDField
 
 from phonenumber_field.modelfields import PhoneNumberField
 
+from core.abstract_models import AuditTrailModel
 from core.field_choices import ClientTypes, IndustryTypes
 from core.managers import PracticeManager, UserManager
 
 
-
-
-class Practice(models.Model):
-    id = ShortUUIDField(primary_key=True, editable=False)
-    name = models.CharField(_("name"), max_length=150, unique=True)
-    industry = models.CharField(choices=IndustryTypes.choices, default=IndustryTypes.DENTISTRY_GENERAL, max_length=250)
-    permissions = models.ManyToManyField(
-        Permission,
-        verbose_name=_("permissions"),
-        blank=True,
-    )
-
-    objects = PracticeManager()
-
-    class Meta:
-        verbose_name = _("practice")
-        verbose_name_plural = _("practices")
-
-    def __str__(self):
-        return self.name
-
-    def natural_key(self):
-        return (self.name,)
-
-    objects = PracticeManager()
-
-
-class UserPerson(models.Model):
-    id = ShortUUIDField(primary_key=True, editable=False)
-    name = models.CharField(_("name"), max_length=300, unique=True)
-    practice_id =  ForeignKey(
-        
-    )
-    user_id = ShortUUIDField(editable=False)
-
-class PermissionsMixin(models.Model):
+class PermissionsMixin(AuditTrailModel):
     """
     Add the fields and methods necessary to support the Practice and Permission
     models using the ModelBackend.
@@ -59,15 +25,6 @@ class PermissionsMixin(models.Model):
         _("superuser status"),
         default=False,
         help_text=_("Designates that this user has all permissions without " "explicitly assigning them."),
-    )
-    practices = models.ManyToManyField(
-        Practice,
-        verbose_name=_("practices"),
-        through="core.UserPerson"
-        blank=True,
-        help_text=_("The practices this user belongs to. A user will get all permissions " "granted to each of their practices."),
-        related_name="user_set",
-        related_query_name="user",
     )
     user_permissions = models.ManyToManyField(
         Permission,
@@ -88,14 +45,6 @@ class PermissionsMixin(models.Model):
         return only permissions matching this object.
         """
         return _user_get_permissions(self, obj, "user")
-
-    def get_practice_permissions(self, obj=None):
-        """
-        Return a list of permission strings that this user has through their
-        practices. Query all available auth backends. If an object is passed in,
-        return only permissions matching this object.
-        """
-        return _user_get_permissions(self, obj, "practice")
 
     def get_all_permissions(self, obj=None):
         return _user_get_permissions(self, obj, "all")
@@ -133,39 +82,6 @@ class PermissionsMixin(models.Model):
 
         return _user_has_module_perms(self, app_label)
 
-class Person(PermissionsMixin):
-    id = ShortUUIDField(primary_key=True, editable=False)
-    name = models.CharField(_("name"), max_length=300, unique=True)
-
-
-class PracticePerson(models.Model):
-    id = ShortUUIDField(primary_key=True, editable=False)
-    practice_id = ShortUUIDField(editable=False)
-
-class AuditTrailModel(models.Model):
-    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
-    modified_at = models.DateTimeField(auto_now=True, db_index=True)
-    created_by = UserForeignKey(
-        on_delete=models.SET_NULL,
-        auto_user_add=True,
-        verbose_name="The user that is automatically assigned",
-        related_name="%(class)s_created",
-        blank=True,
-        null=True,
-    )
-    modified_by = UserForeignKey(
-        on_delete=models.SET_NULL,
-        auto_user_add=True,
-        verbose_name="The user that is automatically assigned",
-        related_name="%(class)s_modified",
-        blank=True,
-        null=True,
-    )
-
-    class Meta:
-        abstract = True
-        get_latest_by = "modified_at"
-
 
 class User(AbstractUser, PermissionsMixin):
     id = ShortUUIDField(primary_key=True, editable=False)
@@ -177,14 +93,56 @@ class User(AbstractUser, PermissionsMixin):
 
 class UserTelecom(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     phone_sms = PhoneNumberField(blank=True)
     phone_callback = PhoneNumberField(blank=True)
 
-    # TODO: Strip off the prefix in User model's username
+    # TODO: test
     @property
     def telecom_user(self):
         """Often a 4-6 digit user extension"""
-        return ""
+        return self.user.split("@")[0]
+
+
+class Person(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    name = models.CharField(_("name"), max_length=300, unique=True)
+    user_accounts = models.ManyToManyField(User, through="UserPerson", through_fields=("person", "user"))
+
+
+class UserPerson(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    person = models.ForeignKey(Person, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    # TODO: get practice subscription perms
+
+
+class Practice(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    name = models.CharField(_("name"), max_length=150, unique=True)
+    industry = models.CharField(choices=IndustryTypes.choices, default=IndustryTypes.DENTISTRY_GENERAL, max_length=250)
+    persons = models.ManyToManyField(Person, through="PracticePerson")
+
+    objects = PracticeManager()
+
+    class Meta:
+        verbose_name = _("practice")
+        verbose_name_plural = _("practices")
+
+    def __str__(self):
+        return self.name
+
+    def natural_key(self):
+        return (self.name,)
+
+    objects = PracticeManager()
+
+
+class PracticePerson(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    practice = models.ForeignKey(Practice, on_delete=models.CASCADE)
+    person = models.ForeignKey(Person, on_delete=models.CASCADE)
 
 
 class Client(AuditTrailModel):
