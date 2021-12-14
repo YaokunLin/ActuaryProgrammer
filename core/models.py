@@ -1,11 +1,8 @@
 from django.db import models
-from django.db import IntegrityError
 from django.contrib.auth.models import AbstractUser, Permission, UserManager as _UserManager, _user_get_permissions, _user_has_perm, _user_has_module_perms
-from django.db.models.fields.related import ForeignKey
-from django.utils import timezone
+
 from django.utils.translation import gettext_lazy as _
 
-from django_userforeignkey.models.fields import UserForeignKey
 from django_extensions.db.fields import ShortUUIDField
 
 from phonenumber_field.modelfields import PhoneNumberField
