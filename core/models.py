@@ -46,6 +46,8 @@ class PermissionsMixin(AuditTrailModel):
         """
         return _user_get_permissions(self, obj, "user")
 
+    # TODO: get practice subscription perms when available
+
     def get_all_permissions(self, obj=None):
         return _user_get_permissions(self, obj, "all")
 
@@ -85,6 +87,7 @@ class PermissionsMixin(AuditTrailModel):
 
 class User(AbstractUser, PermissionsMixin):
     id = ShortUUIDField(primary_key=True, editable=False)
+    groups = None
     # Using plain "name" here since we may not have it broken out into
     # first and last
     name = models.CharField(_("name"), max_length=300, blank=True)
@@ -109,13 +112,14 @@ class Person(AuditTrailModel):
     name = models.CharField(_("name"), max_length=300, unique=True)
     user_accounts = models.ManyToManyField(User, through="UserPerson", through_fields=("person", "user"))
 
+    def __str__(self):
+        return self.name
+
 
 class UserPerson(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     person = models.ForeignKey(Person, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-
-    # TODO: get practice subscription perms
 
 
 class Practice(AuditTrailModel):
