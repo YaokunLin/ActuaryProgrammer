@@ -130,6 +130,7 @@ INSTALLED_APPS = [
     "django_extensions",
     "django_celery_beat",
     "phonenumber_field",
+    "peerlogic_admin",
     "corsheaders",
     "core",
     "calls",

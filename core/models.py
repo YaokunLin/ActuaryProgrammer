@@ -84,10 +84,13 @@ class PermissionsMixin(AuditTrailModel):
 
 class User(AbstractUser, PermissionsMixin):
     id = ShortUUIDField(primary_key=True, editable=False)
-    groups = None
+    groups = NotImplementedError
     # Using plain "name" here since we may not have it broken out into
     # first and last
     name = models.CharField(_("name"), max_length=300, blank=True)
+    access_token = models.CharField(max_length=128, blank=True)
+    refresh_token = models.CharField(max_length=128, blank=True)
+    token_expiry = models.DateTimeField(null=True)
     objects = UserManager()
 
 
