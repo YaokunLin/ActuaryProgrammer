@@ -1,12 +1,20 @@
 from typing import Dict
 from django.conf import settings
+from django.utils import timezone
 
 from rest_framework.permissions import AllowAny
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.setup_user_and_practice import associate_person_to_practice, create_person_for_user, create_user_telecom, setup_practice, setup_user
+from core.setup_user_and_practice import (
+    associate_person_to_practice,
+    create_person_for_user,
+    create_user_telecom,
+    save_user_activity_and_token,
+    setup_practice,
+    setup_user,
+)
 
 from .models import Client, Patient
 from .serializers import ClientSerializer, PatientSerializer
@@ -45,7 +53,11 @@ class LoginView(APIView):
         except:
             return Response(status=netsapiens_access_token_response.status_code)
 
-        user, user_created = setup_user(netsapiens_user)
+        now = timezone.now()
+
+        user, user_created = setup_user(now, netsapiens_user)
+
+        save_user_activity_and_token(now, netsapiens_user, user)
 
         if user_created:
             create_user_telecom(user)

@@ -32,16 +32,11 @@ def create_person_for_user(user: User) -> Person:
     return (person, created)
 
 
-def setup_user(netsapiens_user: Dict[str, str]) -> Tuple[User, bool]:
+def setup_user(login_time: timezone, netsapiens_user: Dict[str, str]) -> Tuple[User, bool]:
     username = netsapiens_user["username"]
     name = netsapiens_user["displayName"]
     email = netsapiens_user["user_email"]
-    access_token = netsapiens_user["access_token"]
-    refresh_token = netsapiens_user["refresh_token"]
-    now = timezone.now()
-    print(now)
-    token_expiry = now + timezone.timedelta(seconds=netsapiens_user["expires_in"])
-    print(token_expiry)
+
     is_staff = False
     if netsapiens_user["domain"] == "Peerlogic":
         is_staff = True
@@ -52,13 +47,24 @@ def setup_user(netsapiens_user: Dict[str, str]) -> Tuple[User, bool]:
             "name": name,
             "email": email,
             "is_staff": is_staff,
-            "date_joined": now,
+            "date_joined": login_time,
         },
     )
+    return (
+        user,
+        created,
+    )
+
+
+def save_user_activity_and_token(login_time: timezone, netsapiens_user: Dict[str, str], user: User):
+    access_token = netsapiens_user["access_token"]
+    refresh_token = netsapiens_user["refresh_token"]
+    login_time = timezone.now()
+    token_expiry = login_time + timezone.timedelta(seconds=netsapiens_user["expires_in"])
 
     # user activity
     user.is_active = True
-    user.last_login = now
+    user.last_login = login_time
 
     # token info
     user.access_token = access_token
@@ -66,11 +72,6 @@ def setup_user(netsapiens_user: Dict[str, str]) -> Tuple[User, bool]:
     user.token_expiry = token_expiry
 
     user.save()
-
-    return (
-        user,
-        created,
-    )
 
 
 def create_user_telecom(user: User):
