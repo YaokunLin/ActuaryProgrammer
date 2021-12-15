@@ -13,25 +13,56 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('core', '0001_initial'),
+        ("core", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Cadence',
+            name="Cadence",
             fields=[
-                ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('modified_at', models.DateTimeField(auto_now=True, db_index=True)),
-                ('id', django_extensions.db.fields.ShortUUIDField(blank=True, editable=False, primary_key=True, serialize=False)),
-                ('cadence_type', models.CharField(choices=[('night_before', 'Night before'), ('morning_of', 'Morning of')], max_length=40)),
-                ('client', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='core.client')),
-                ('created_by', django_userforeignkey.models.fields.UserForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='cadence_created', to=settings.AUTH_USER_MODEL, verbose_name='The user that is automatically assigned')),
-                ('modified_by', django_userforeignkey.models.fields.UserForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='cadence_modified', to=settings.AUTH_USER_MODEL, verbose_name='The user that is automatically assigned')),
-                ('telecom_user_sending_reminder', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='cadences', to='core.usertelecom', verbose_name='The telecom user that is sending the reminder')),
+                ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("modified_at", models.DateTimeField(auto_now=True, db_index=True)),
+                ("id", django_extensions.db.fields.ShortUUIDField(blank=True, editable=False, primary_key=True, serialize=False)),
+                ("cadence_type", models.CharField(choices=[("night_before", "Night before"), ("morning_of", "Morning of")], max_length=40)),
+                ("client", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="core.client")),
+                (
+                    "created_by",
+                    django_userforeignkey.models.fields.UserForeignKey(
+                        blank=True,
+                        editable=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="cadence_created",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="The user that is automatically assigned",
+                    ),
+                ),
+                (
+                    "modified_by",
+                    django_userforeignkey.models.fields.UserForeignKey(
+                        blank=True,
+                        editable=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="cadence_modified",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="The user that is automatically assigned",
+                    ),
+                ),
+                (
+                    "telecom_user_sending_reminder",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="cadences",
+                        to="core.usertelecom",
+                        verbose_name="The telecom user that is sending the reminder",
+                    ),
+                ),
             ],
             options={
-                'get_latest_by': 'modified_at',
-                'abstract': False,
+                "get_latest_by": "modified_at",
+                "abstract": False,
             },
         ),
     ]

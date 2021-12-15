@@ -1,3 +1,21 @@
 [tool.black]
 line-length = 160
 target-version = ["py39"]
+exclude = '''
+(
+  /(
+      \.eggs         # exclude a few common directories in the
+    | \.git          # root of the project
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | \**\migrations\**.py
+    | _build
+    | buck-out
+    | build
+    | dist
+    | env
+  )/
+)
+'''
