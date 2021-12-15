@@ -1,3 +1,4 @@
+from django.utils import timezone
 from typing import Dict, Tuple
 from django.utils import timezone
 
@@ -35,14 +36,36 @@ def setup_user(netsapiens_user: Dict[str, str]) -> Tuple[User, bool]:
     username = netsapiens_user["username"]
     name = netsapiens_user["displayName"]
     email = netsapiens_user["user_email"]
+    access_token = netsapiens_user["access_token"]
+    refresh_token = netsapiens_user["refresh_token"]
+    now = timezone.now()
+    print(now)
+    token_expiry = now + timezone.timedelta(seconds=netsapiens_user["expires_in"])
+    print(token_expiry)
     is_staff = False
     if netsapiens_user["domain"] == "Peerlogic":
         is_staff = True
 
     user, created = User.objects.get_or_create(
         username=username,
-        defaults={"name": name, "email": email, "is_staff": is_staff, "date_joined": timezone.now(), "last_login": timezone.now(), "is_active": True},
+        defaults={
+            "name": name,
+            "email": email,
+            "is_staff": is_staff,
+            "date_joined": now,
+        },
     )
+
+    # user activity
+    user.is_active = True
+    user.last_login = now
+
+    # token info
+    user.access_token = access_token
+    user.refresh_token = refresh_token
+    user.token_expiry = token_expiry
+
+    user.save()
 
     return (
         user,
