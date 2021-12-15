@@ -1,7 +1,7 @@
 [tool.black]
 line-length = 160
 target-version = ["py39"]
-exclude = '''
+exclude = """
 (
   /(
       \.eggs         # exclude a few common directories in the
@@ -18,4 +18,4 @@ exclude = '''
     | env
   )/
 )
-'''
+"""
