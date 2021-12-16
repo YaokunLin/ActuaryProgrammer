@@ -51,7 +51,8 @@ class LoginView(APIView):
             log.info(f"User is attempting login. username: '{username}'")
 
             if not (username and password):
-                return HttpResponseBadRequest("Missing one ore more required fields: 'username' and 'password'")
+                log.info(f"Bad Request detected for login. Missing one or more required fields.")
+                return HttpResponseBadRequest("Missing one or more required fields: 'username' and 'password'")
 
             data = {
                 "grant_type": "password",
