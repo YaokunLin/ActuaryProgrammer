@@ -157,8 +157,8 @@ class Patient(AuditTrailModel):
     def velox_extract_data_default():
         return {}
 
-    practice = models.ForeignKey(Practice, on_delete=models.CASCADE)
     id = ShortUUIDField(primary_key=True, editable=False)
+    practice = models.ForeignKey(Practice, on_delete=models.CASCADE)
     name_first = models.CharField(blank=True, max_length=255, db_index=True)
     name_last = models.CharField(blank=True, max_length=255, db_index=True)
     placeholder = models.CharField(blank=True, max_length=255)

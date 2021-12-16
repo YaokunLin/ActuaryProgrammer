@@ -11,7 +11,7 @@ from .field_choices import CADENCES
 class Cadence(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     client = models.ForeignKey("core.Client", on_delete=models.CASCADE)
-    telecom_user_sending_reminder = models.ForeignKey(
+    user_telecom_sending_reminder = models.ForeignKey(
         "core.UserTelecom",
         on_delete=models.SET_NULL,
         verbose_name="The telecom user that is sending the reminder",

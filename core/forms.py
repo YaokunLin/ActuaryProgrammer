@@ -35,7 +35,7 @@ class PracticeAdminForm(forms.ModelForm):
 
     def save(self, *args, **kwargs):
         # Default save
-        instance = super(PracticeAdminForm, self).save()
+        instance = super().save()
         # Save many-to-many data
         self.save_m2m()
         return instance

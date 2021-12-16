@@ -26,10 +26,7 @@ def setup_user(login_time: timezone, netsapiens_user: Dict[str, str]) -> Tuple[U
     username = netsapiens_user["username"]
     name = netsapiens_user["displayName"]
     email = netsapiens_user["user_email"]
-
-    is_staff = False
-    if netsapiens_user["domain"] == settings.IS_STAFF_TELECOM_DOMAN:
-        is_staff = True
+    is_staff = netsapiens_user["domain"] == settings.IS_STAFF_TELECOM_DOMAN
 
     user, created = User.objects.get_or_create(
         username=username,
