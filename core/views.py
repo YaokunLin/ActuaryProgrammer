@@ -2,6 +2,9 @@ import logging
 from typing import Dict
 
 from django.conf import settings
+from django.http import (
+    HttpResponseBadRequest,
+)
 from django.db import transaction
 from django.utils import timezone
 from rest_framework import viewsets
@@ -43,7 +46,23 @@ class LoginView(APIView):
 
     def post(self, request, format=None):
         try:
-            netsapiens_access_token_response = settings.NETSAPIENS_SYSTEM_CLIENT.request("POST", settings.NETSAPIENS_ACCESS_TOKEN_URL, data=request.data)
+            username = request.data.get("username")
+            password = request.data.get("password")
+            log.info(f"User is attempting login. username: '{username}'")
+
+            if not (username and password):
+                return HttpResponseBadRequest("Missing one ore more required fields: 'username' and 'password'")
+
+            data = {
+                "grant_type": "password",
+                "format": "json",
+                "client_id": settings.NETSAPIENS_CLIENT_ID,
+                "client_secret": settings.NETSAPIENS_CLIENT_SECRET,
+                "username": username,
+                "password": password,
+            }
+
+            netsapiens_access_token_response = settings.NETSAPIENS_SYSTEM_CLIENT.request("POST", settings.NETSAPIENS_ACCESS_TOKEN_URL, data=data)
             netsapiens_access_token_response.raise_for_status()
             netsapiens_user = netsapiens_access_token_response.json()
             self._validate_access_token_response(netsapiens_user)
