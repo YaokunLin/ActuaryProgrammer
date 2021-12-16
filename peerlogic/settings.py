@@ -120,6 +120,7 @@ INSTALLED_APPS = [
     "calls",
     "reminders",
     "inbox",
+    "etl"
 ]
 
 MIDDLEWARE = [

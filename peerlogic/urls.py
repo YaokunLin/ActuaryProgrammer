@@ -21,6 +21,7 @@ from core.urls import urlpatterns as core_urlpatterns
 from calls.urls import urlpatterns as calls_urlpatterns
 from inbox.urls import urlpatterns as inbox_urlpatterns
 from reminders.urls import urlpatterns as reminders_urlpatterns
+from etl.urls import urlpatterns as etl_urlpatterns
 
 
 admin.site.site_header = "Peerlogic API Admin Portal"
@@ -30,6 +31,7 @@ urlpatterns = [
     path("api/", include(calls_urlpatterns)),
     path("api/", include(inbox_urlpatterns)),
     path("api/", include(reminders_urlpatterns)),
+    path("api/", include(etl_urlpatterns)),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     path("admin/", admin.site.urls),
 ]
