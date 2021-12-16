@@ -14,5 +14,5 @@ class VeloxExtractData(models.Model):
     address_line2 = models.CharField(max_length=255)
     zip = models.IntegerField()
     email = models.EmailField(max_length=254)
-    status = models.IntegerField(max_length=255)
+    status = models.IntegerField()
 
