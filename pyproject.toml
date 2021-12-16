@@ -1,7 +1,8 @@
 [tool.black]
 line-length = 160
 target-version = ["py39"]
-exclude = """
+# single quotes are required for this config file - do not change to double quotes
+exclude = '''
 (
   /(
       \.eggs         # exclude a few common directories in the
@@ -18,4 +19,4 @@ exclude = """
     | env
   )/
 )
-"""
+'''

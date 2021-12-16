@@ -9,15 +9,14 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.setup_user_and_practice import (create_agent, create_user_telecom,
-                                          save_user_activity_and_token,
-                                          setup_practice, setup_user)
+from core.setup_user_and_practice import create_agent, create_user_telecom, save_user_activity_and_token, setup_practice, setup_user
 
 from .models import Client, Patient
 from .serializers import ClientSerializer, PatientSerializer
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
+
 
 class LoginView(APIView):
     authentication_classes = []

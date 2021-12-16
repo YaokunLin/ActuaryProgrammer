@@ -7,13 +7,16 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 
 from core.abstract_models import AuditTrailModel
-from calls.field_choices import (CallConnectionTypes, CallDirectionTypes,
-                                 EngagementPersonaTypes,
-                                 NonAgentEngagementPersonaTypes,
-                                 ReferralSourceTypes,
-                                 TelecomCallerNameInfoSourceTypes,
-                                 TelecomCallerNameInfoTypes,
-                                 TelecomPersonaTypes)
+from calls.field_choices import (
+    CallConnectionTypes,
+    CallDirectionTypes,
+    EngagementPersonaTypes,
+    NonAgentEngagementPersonaTypes,
+    ReferralSourceTypes,
+    TelecomCallerNameInfoSourceTypes,
+    TelecomCallerNameInfoTypes,
+    TelecomPersonaTypes,
+)
 
 
 class Call(AuditTrailModel):

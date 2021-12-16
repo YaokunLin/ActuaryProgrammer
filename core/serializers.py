@@ -10,7 +10,6 @@ class ClientSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
 
 
-
 class PatientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Patient
