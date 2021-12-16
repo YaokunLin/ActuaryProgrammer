@@ -2,7 +2,11 @@ from django.contrib import admin
 from django.contrib.auth.models import Group
 
 
-from .models import Client, User, Practice
+from .models import (
+    Client,
+    Practice,
+    User,
+)
 
 
 admin.site.unregister(Group)
