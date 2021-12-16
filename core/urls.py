@@ -10,7 +10,7 @@ router.register(r"clients", ClientViewset)
 router.register(r"patients", PatientViewset)
 
 urlpatterns = [
-    path("login/", LoginView.as_view()),
+    path("login", LoginView.as_view()),
 ]
 
 

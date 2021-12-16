@@ -3,20 +3,17 @@ import datetime
 from django.conf import settings
 from django.db import models
 from django_extensions.db.fields import ShortUUIDField
-from django_userforeignkey.models.fields import UserForeignKey
 from phonenumber_field.modelfields import PhoneNumberField
 
+
 from core.abstract_models import AuditTrailModel
-from calls.field_choices import (
-    CallConnectionTypes,
-    CallDirectionTypes,
-    EngagementPersonaTypes,
-    NonAgentEngagementPersonaTypes,
-    ReferralSourceTypes,
-    TelecomCallerNameInfoTypes,
-    TelecomCallerNameInfoSourceTypes,
-    TelecomPersonaTypes,
-)
+from calls.field_choices import (CallConnectionTypes, CallDirectionTypes,
+                                 EngagementPersonaTypes,
+                                 NonAgentEngagementPersonaTypes,
+                                 ReferralSourceTypes,
+                                 TelecomCallerNameInfoSourceTypes,
+                                 TelecomCallerNameInfoTypes,
+                                 TelecomPersonaTypes)
 
 
 class Call(AuditTrailModel):
@@ -37,6 +34,8 @@ class Call(AuditTrailModel):
         related_name="calls",
         null=True,
     )
+    caller_id = models.ForeignKey("core.UserTelecom", on_delete=models.SET_NULL, null=True, related_name="calls_made")
+    callee_id = models.ForeignKey("core.UserTelecom", on_delete=models.SET_NULL, null=True, related_name="calls_recieved")
     sip_caller_number = PhoneNumberField()
     sip_caller_name = models.CharField(max_length=255, blank=True)
     sip_callee_number = PhoneNumberField()

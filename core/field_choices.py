@@ -1,10 +1,6 @@
 from django.db import models
 
 
-class ClientTypes(models.TextChoices):
-    PRACTICE_MANAGEMENT_SOFTWARE = "pms"
-
-
 class IndustryTypes(models.TextChoices):
     DENTISTRY_GENERAL = "dentistry_general"
     DENTISTRY_PEDIATRIC = "dentistry_pediatric"

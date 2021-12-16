@@ -63,6 +63,7 @@ ALLOWED_HOSTS = ["127.0.0.1", "localhost", os.getenv("DJANGO_ALLOWED_HOSTS", "*"
 if GKE_APPLICATION == "True":
     ALLOWED_HOSTS.append(os.getenv("KUBERNETES_SERVICE_HOST"))
 
+IS_STAFF_TELECOM_DOMAN = os.getenv("IS_STAFF_TELECOM_DOMAN", "Peerlogic")
 
 # Bandwidth
 BANDWIDTH_APPLICATION_ID = os.getenv("BANDWIDTH_APPLICATION_ID")

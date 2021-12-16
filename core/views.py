@@ -1,30 +1,29 @@
+import logging
 from typing import Dict
-from django.conf import settings
-from django.utils import timezone
 
-from rest_framework.permissions import AllowAny
+from django.conf import settings
+from django.db import transaction
+from django.utils import timezone
 from rest_framework import viewsets
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.setup_user_and_practice import (
-    associate_person_to_practice,
-    create_person_for_user,
-    create_user_telecom,
-    save_user_activity_and_token,
-    setup_practice,
-    setup_user,
-)
+from core.setup_user_and_practice import (create_agent, create_user_telecom,
+                                          save_user_activity_and_token,
+                                          setup_practice, setup_user)
 
 from .models import Client, Patient
 from .serializers import ClientSerializer, PatientSerializer
 
+# Get an instance of a logger
+log = logging.getLogger(__name__)
 
 class LoginView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
 
-    NETSAPIENS_AUTH_TOKEN_RESPONSE_KEYS = [
+    NETSAPIENS_AUTH_TOKEN_REQUIRED_KEYS = [
         "username",
         "user",
         "territory",
@@ -49,27 +48,28 @@ class LoginView(APIView):
             netsapiens_access_token_response.raise_for_status()
             netsapiens_user = netsapiens_access_token_response.json()
             self._validate_access_token_response(netsapiens_user)
-            print(netsapiens_user)
-        except:
-            return Response(status=netsapiens_access_token_response.status_code)
+        except Exception as e:
+            log.exception(e)
+            return Response(status=netsapiens_access_token_response.status_code, data={"error": e})
 
         now = timezone.now()
 
-        user, user_created = setup_user(now, netsapiens_user)
+        with transaction.atomic():
+            user, user_created = setup_user(now, netsapiens_user)
 
-        save_user_activity_and_token(now, netsapiens_user, user)
+            save_user_activity_and_token(now, netsapiens_user, user)
 
-        if user_created:
-            create_user_telecom(user)
-            person, _ = create_person_for_user(user)
-            practice, _ = setup_practice(netsapiens_user["domain"])
-            associate_person_to_practice(person, practice)
+            if user_created:
+                create_user_telecom(user)
+                practice, _ = setup_practice(netsapiens_user["domain"])
+                create_agent(user, practice)
 
         return Response(status=200, data=netsapiens_user)
 
     def _validate_access_token_response(self, response_json: Dict):
-        if not all(key in self.NETSAPIENS_AUTH_TOKEN_RESPONSE_KEYS for key in response_json):
-            raise ValueError("Wrong payload to get or create a user")
+        if not all(key in self.NETSAPIENS_AUTH_TOKEN_REQUIRED_KEYS for key in response_json):
+            log.exception("Wrong netsapiens payload to get or create a user")
+            raise ValueError("Wrong netsapiens payload to get or create a user")
 
 
 class ClientViewset(viewsets.ModelViewSet):

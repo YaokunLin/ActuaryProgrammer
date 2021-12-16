@@ -9,7 +9,7 @@ class SMSMessageSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "patient",
-            "assigned_to",
+            "assigned_to_agent",
             "owner",
             "source_number",
             "destination_number",

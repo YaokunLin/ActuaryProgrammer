@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser, Permission, UserManager as _UserManager, _user_get_permissions, _user_has_perm, _user_has_module_perms
+from django.contrib.auth.models import AbstractUser, Permission, _user_get_permissions, _user_has_perm, _user_has_module_perms
 
 from django.utils.translation import gettext_lazy as _
 
@@ -8,10 +8,11 @@ from django_extensions.db.fields import ShortUUIDField
 from phonenumber_field.modelfields import PhoneNumberField
 
 from core.abstract_models import AuditTrailModel
-from core.field_choices import ClientTypes, IndustryTypes
+from core.field_choices import IndustryTypes
 from core.managers import PracticeManager, UserManager
 
-
+# This is to mimick Django's permissions mixin
+# Don't change this mixin unless you know what you're doing :)
 class PermissionsMixin(AuditTrailModel):
     """
     Add the fields and methods necessary to support the Practice and Permission
@@ -84,7 +85,7 @@ class PermissionsMixin(AuditTrailModel):
 
 class User(AbstractUser, PermissionsMixin):
     id = ShortUUIDField(primary_key=True, editable=False)
-    groups = NotImplementedError
+    groups = None
     # Using plain "name" here since we may not have it broken out into
     # first and last
     name = models.CharField(_("name"), max_length=300, blank=True)
@@ -96,37 +97,21 @@ class User(AbstractUser, PermissionsMixin):
 
 class UserTelecom(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    username = models.CharField(_("username"), max_length=150, unique=True)
     phone_sms = PhoneNumberField(blank=True)
     phone_callback = PhoneNumberField(blank=True)
 
-    # TODO: test
     @property
     def telecom_user(self):
         """Often a 4-6 digit user extension"""
-        return self.user.split("@")[0]
-
-
-class Person(AuditTrailModel):
-    id = ShortUUIDField(primary_key=True, editable=False)
-    name = models.CharField(_("name"), max_length=300, unique=True)
-    user_accounts = models.ManyToManyField(User, through="UserPerson", through_fields=("person", "user"))
-
-    def __str__(self):
-        return self.name
-
-
-class UserPerson(AuditTrailModel):
-    id = ShortUUIDField(primary_key=True, editable=False)
-    person = models.ForeignKey(Person, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+        return self.username.split("@")[0]
 
 
 class Practice(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     name = models.CharField(_("name"), max_length=150, unique=True)
     industry = models.CharField(choices=IndustryTypes.choices, default=IndustryTypes.DENTISTRY_GENERAL, max_length=250)
-    persons = models.ManyToManyField(Person, through="PracticePerson")
 
     objects = PracticeManager()
 
@@ -137,21 +122,22 @@ class Practice(AuditTrailModel):
     def __str__(self):
         return self.name
 
+    # This is to mimick Django's group model
     def natural_key(self):
         return (self.name,)
 
     objects = PracticeManager()
 
 
-class PracticePerson(AuditTrailModel):
+class Agent(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     practice = models.ForeignKey(Practice, on_delete=models.CASCADE)
-    person = models.ForeignKey(Person, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
 
 class Client(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
-    client_type = models.CharField(choices=ClientTypes.choices, max_length=50, default=ClientTypes.PRACTICE_MANAGEMENT_SOFTWARE)
+    description = models.CharField(max_length=300)
     practice = models.OneToOneField(Practice, on_delete=models.CASCADE)
     rest_base_url = models.CharField(max_length=300)  # Can be Dentrix, another EMR, or some other system
 
@@ -168,6 +154,7 @@ class Patient(AuditTrailModel):
     def velox_extract_data_default():
         return {}
 
+    practice = models.ForeignKey(Practice, on_delete=models.CASCADE)
     id = ShortUUIDField(primary_key=True, editable=False)
     name_first = models.CharField(blank=True, max_length=255, db_index=True)
     name_last = models.CharField(blank=True, max_length=255, db_index=True)
@@ -182,3 +169,9 @@ class Patient(AuditTrailModel):
     zip_code_add_on = models.CharField(max_length=50, blank=True)
     date_of_birth = models.DateTimeField()
     velox_extract_data = models.JSONField(default=velox_extract_data_default)
+
+
+class UserPatient(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)

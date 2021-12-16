@@ -11,7 +11,6 @@ admin.site.unregister(Group)
 class ClientAdmin(admin.ModelAdmin):
     list_display = (
         "id",
-        "client_type",
         "practice",
         "rest_base_url",
     )

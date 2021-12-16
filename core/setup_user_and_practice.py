@@ -1,11 +1,12 @@
-from django.utils import timezone
 from typing import Dict, Tuple
+
+from django.conf import settings
 from django.utils import timezone
 
-from .models import Person, Practice, PracticePerson, PracticeTelecom, User, UserPerson, UserTelecom
+from .models import Agent, Practice, PracticeTelecom, User, UserTelecom
 
 
-def setup_practice(domain: str):
+def setup_practice(domain: str) -> Tuple[Practice, bool]:
 
     # Set practice and its telecom record
     practice, created = Practice.objects.get_or_create(name=domain)
@@ -21,24 +22,13 @@ def create_practice_telecom(domain: str, practice: Practice):
     return (practice_telecom, created)
 
 
-def associate_person_to_practice(person: Person, practice: Practice):
-    return PracticePerson.objects.get_or_create(person=person, practice=practice)
-
-
-def create_person_for_user(user: User) -> Person:
-    person, created = Person.objects.get_or_create(name=user.name)
-    user_person, created = UserPerson.objects.get_or_create(user=user, person=person)
-
-    return (person, created)
-
-
 def setup_user(login_time: timezone, netsapiens_user: Dict[str, str]) -> Tuple[User, bool]:
     username = netsapiens_user["username"]
     name = netsapiens_user["displayName"]
     email = netsapiens_user["user_email"]
 
     is_staff = False
-    if netsapiens_user["domain"] == "Peerlogic":
+    if netsapiens_user["domain"] == settings.IS_STAFF_TELECOM_DOMAN:
         is_staff = True
 
     user, created = User.objects.get_or_create(
@@ -56,10 +46,9 @@ def setup_user(login_time: timezone, netsapiens_user: Dict[str, str]) -> Tuple[U
     )
 
 
-def save_user_activity_and_token(login_time: timezone, netsapiens_user: Dict[str, str], user: User):
+def save_user_activity_and_token(login_time: timezone, netsapiens_user: Dict[str, str], user: User) -> User:
     access_token = netsapiens_user["access_token"]
     refresh_token = netsapiens_user["refresh_token"]
-    login_time = timezone.now()
     token_expiry = login_time + timezone.timedelta(seconds=netsapiens_user["expires_in"])
 
     # user activity
@@ -73,8 +62,15 @@ def save_user_activity_and_token(login_time: timezone, netsapiens_user: Dict[str
 
     user.save()
 
+    return user
 
-def create_user_telecom(user: User):
-    user_telecom, created = UserTelecom.objects.get_or_create(user=user)
+
+def create_user_telecom(user: User) -> Tuple[UserTelecom, bool]:
+    user_telecom, created = UserTelecom.objects.get_or_create(user=user, username=user.username)
     # TODO: associate telephone number and sms number from netsapiens
     return (user_telecom, created)
+
+
+def create_agent(user: str, practice: Practice) -> Tuple[Agent, bool]:
+    agent, created = Agent.objects.get_or_create(user=user, practice=practice)
+    return (agent, created)
