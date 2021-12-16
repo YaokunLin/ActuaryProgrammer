@@ -1,13 +1,4 @@
 steps:
-- id: "Store environment variables in .env"
-  name: ubuntu
-  entrypoint: bash
-  args: 
-    - -c
-    - |
-      # Save env vars to persistent volume mount: "/workspace"
-      echo -e 'GOOGLE_SECRET_MANAGER_ENV_FILE_NAME=$_GOOGLE_SECRET_MANAGER_ENV_FILE_NAME' >> /workspace/.env
-
   - id: Copy requirements.txt to root of directory for app engine to see
     name: "ubuntu"
     entrypoint: "cp"
@@ -17,16 +8,18 @@ steps:
         "/workspace/requirements.txt",
       ]
     timeout: "1600s"
-  - id: "django_migrate service App Engine Deploy"
-    name: "gcr.io/cloud-builders/gcloud"
-    args: ["app", "deploy", "/workspace/django_migrate.yaml"]
-    timeout: "1600s"
 
   - id: Copy app engine modules to root of directory for app engine to see
     name: "ubuntu"
     entrypoint: "cp"
     args: ["-a", "/workspace/deployment/app_engine/.", "/workspace/"]
     timeout: "1600s"
+
+  - id: "django_migrate service App Engine Deploy"
+    name: "gcr.io/cloud-builders/gcloud"
+    args: ["app", "deploy", "/workspace/django_migrate.yaml"]
+    timeout: "1600s"
+
 
   - id: "Validate the workspace looks right"
     name: ubuntu
