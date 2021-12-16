@@ -16,7 +16,6 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
-from peerlogic_admin.admin import peerlogic_super_admin_site
 
 from core.urls import urlpatterns as core_urlpatterns
 from calls.urls import urlpatterns as calls_urlpatterns
@@ -32,5 +31,5 @@ urlpatterns = [
     path("api/", include(inbox_urlpatterns)),
     path("api/", include(reminders_urlpatterns)),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
-    path("admin/", peerlogic_super_admin_site.urls),
+    path("admin/", admin.site.urls),
 ]

@@ -134,6 +134,9 @@ class Agent(AuditTrailModel):
     practice = models.ForeignKey(Practice, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f"{self.id} - {self.user.name}"
+
 
 class Client(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
