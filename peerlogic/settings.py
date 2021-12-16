@@ -63,6 +63,7 @@ ALLOWED_HOSTS = ["127.0.0.1", "localhost", os.getenv("DJANGO_ALLOWED_HOSTS", "*"
 if GKE_APPLICATION == "True":
     ALLOWED_HOSTS.append(os.getenv("KUBERNETES_SERVICE_HOST"))
 
+IS_STAFF_TELECOM_DOMAN = os.getenv("IS_STAFF_TELECOM_DOMAN", "Peerlogic")
 
 # Bandwidth
 BANDWIDTH_APPLICATION_ID = os.getenv("BANDWIDTH_APPLICATION_ID")
@@ -80,6 +81,21 @@ NETSAPIENS_ACCESS_TOKEN_URL = os.getenv("NETSAPIENS_ACCESS_TOKEN_URL")
 NETSAPIENS_INTROSPECT_TOKEN_URL = os.getenv("NETSAPIENS_INTROSPECT_TOKEN_URL")
 NETSAPIENS_API_USERNAME = os.getenv("NETSAPIENS_API_USERNAME")
 NETSAPIENS_API_PASSWORD = os.getenv("NETSAPIENS_API_PASSWORD")
+NETSAPIENS_SYSTEM_CLIENT = requests.Session()
+
+
+token_payload = {
+    "format": "json",
+    "grant_type": "password",
+    "client_id": NETSAPIENS_CLIENT_ID,
+    "client_secret": NETSAPIENS_CLIENT_SECRET,
+    "username": NETSAPIENS_API_USERNAME,
+    "password": NETSAPIENS_API_PASSWORD,
+}
+token_response = NETSAPIENS_SYSTEM_CLIENT.request("POST", NETSAPIENS_ACCESS_TOKEN_URL, data=token_payload)
+
+headers = {"Authorization": f"Bearer {token_response.json()['access_token']}"}
+NETSAPIENS_SYSTEM_CLIENT.headers = headers
 
 # Twilio API CNAM / Phone Lookup Support
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
@@ -115,6 +131,7 @@ INSTALLED_APPS = [
     "django_extensions",
     "django_celery_beat",
     "phonenumber_field",
+    "peerlogic_admin",
     "corsheaders",
     "core",
     "calls",

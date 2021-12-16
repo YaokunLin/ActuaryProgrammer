@@ -27,25 +27,7 @@ class UserManager(_UserManager):
             user.save()
             return user
         except self.model.DoesNotExist:
-            pass
-
-        # Set practice domain
-
-        Practice = apps.get_model("app_name", "ModelName")
-        practice, _ = Practice.objects.get_or_create(name=payload["domain"])
-
-        try:
-            user = self.create(
-                username=uid,
-                date_joined=timezone.now(),
-                last_login=timezone.now(),
-                is_active=True,
-            )
-            practice.user_set.add(user)
-        except IntegrityError:
-            user = self.get(username=uid)
-
-        return user
+            pass  # you shall not pass
 
     def _validate_introspect_token_payload(self, payload):
         if not all(key in self.INTROSPECT_TOKEN_PAYLOAD_KEYS for key in payload):

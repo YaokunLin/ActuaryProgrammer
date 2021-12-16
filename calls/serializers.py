@@ -2,6 +2,8 @@ from django.contrib.auth.models import Group
 
 from rest_framework import serializers
 
+from core.models import PracticeTelecom
+
 from .models import (
     Call,
     CallLabel,
@@ -10,7 +12,7 @@ from .models import (
 
 
 class CallSerializer(serializers.ModelSerializer):
-    domain = serializers.SlugRelatedField(queryset=Group.objects.all(), slug_field="name")
+    domain = serializers.SlugRelatedField(queryset=PracticeTelecom.objects.all(), slug_field="domain")
 
     class Meta:
         model = Call

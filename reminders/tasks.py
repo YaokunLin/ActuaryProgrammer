@@ -43,7 +43,8 @@ def send_sms_reminders(reminder_type=MORNING_OF):
         start_minute = appointment["start_minute"]
         start_minute = f"0{start_minute}" if int(start_minute) < 10 else start_minute
         patient_guid = appointment["patient_guid"]
-        domain = appointment["client"].group.name
+        # TODO: test
+        domain = appointment["client"].practice.practice_telecom.domain
         user = appointment["cadence"].user_sending_reminder
         django_user = User.objects.get(pk=appointment["cadence"].user_sending_reminder.id)
         sms_number = django_user.sms_number
