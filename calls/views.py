@@ -11,8 +11,7 @@ from twilio.base.exceptions import TwilioException
 
 from calls.twilio_etl import (
     get_caller_name_info_from_twilio,
-    update_telecom_caller_name_info_with_twilio_data,
-    validate_twilio_data
+    update_telecom_caller_name_info_with_twilio_data_for_valid_sections,
 )
 
 from .models import (
@@ -51,7 +50,10 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
         phone_number_raw = pk
         log.info(f"Retrieving caller_name_info for phone_number: '{phone_number_raw}'")
 
-        phone_number = TelecomCallerNameInfoViewSet.validate_and_normalize_phone_number(phone_number_raw=phone_number_raw)
+        try:
+            phone_number = TelecomCallerNameInfoViewSet.validate_and_normalize_phone_number(phone_number_raw=phone_number_raw)
+        except Exception as e:
+            return HttpResponseBadRequest(f"Invalid phone number detected, phone_number_raw: '{phone_number_raw}'")
 
         # use whatever we find and 404 if we don't find anything
         if not settings.TWILIO_IS_ENABLED:
@@ -72,11 +74,11 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
             # get and validate twilio data
             log.info(f"Twilio is on and we have stale / expired or missing data. Requesting data from twilio for phone_number: '{phone_number}'")
             twilio_caller_name_info = get_caller_name_info_from_twilio(phone_number=phone_number)
-            validate_twilio_data(twilio_caller_name_info)
 
             # update local object
-            log.info(f"Saving data from twilio for phone_number: '{phone_number}'")
-            update_telecom_caller_name_info_with_twilio_data(telecom_caller_name_info, twilio_caller_name_info)
+            log.info(f"Extracting and transforming data from twilio for phone_number: '{phone_number}'.")
+            update_telecom_caller_name_info_with_twilio_data_for_valid_sections(telecom_caller_name_info, twilio_caller_name_info)
+
             telecom_caller_name_info.save()
             log.info(f"Saved data from twilio for phone_number: '{phone_number}'")
         except TwilioException as e:
@@ -96,7 +98,7 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
         # we may have a legitimate but stale value, that's fine
         # however, if we don't have a caller_name_type record, this is an incomplete record from our get_or_create above then roll it back / kill it
         log.info(f"Verifying we have a legitimate caller_name_info to send to client for '{phone_number}'")
-        if created and telecom_caller_name_info.caller_name_type is None:
+        if created and (telecom_caller_name_info.caller_name_type is "" and telecom_caller_name_info.telecom_caller_name_info.carrier_type is ""):
             log.warn(
                 f"Incompleted caller_name_info record. No stale or fresh caller_name_info data is available. We've created a new caller_name_info object but couldn't fill it with Twilio values. ROLLING BACK. phone_number: '{phone_number}'"
             )
@@ -111,28 +113,26 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
     @classmethod
     def validate_and_normalize_phone_number(cls, phone_number_raw: str) -> str:
         # validate and normalize phone number
-        try:
-            log.info(f"Validating phone number: phone_number_raw: '{phone_number_raw}'")
+        log.info(f"Validating phone number: phone_number_raw: '{phone_number_raw}'")
 
-            # first level of normalization because we're generous with our input
-            phone_number_raw = re.sub("[^0-9]", "", phone_number_raw)  # remove non-digits
-            phone_number_raw = f"+{phone_number_raw}"  # add preceding plus sign
+        # first level of normalization because we're generous with our input
+        phone_number_raw = re.sub("[^0-9]", "", phone_number_raw)  # remove non-digits
+        phone_number_raw = f"+{phone_number_raw}"  # add preceding plus sign
 
-            # first validation
-            phone_number = to_phone_number(phone_number_raw)  # this will explode for obviously bad phone numbers
-            if not phone_number.is_valid():  # true for not so obviously bad phone numbers
-                msg = f"Invalid phone number detected, phone_number_raw: '{phone_number_raw}'"
-                log.error(msg)
-                raise TypeError(msg)
+        # first validation
+        phone_number = to_phone_number(phone_number_raw)  # this will explode for obviously bad phone numbers
+        if not phone_number.is_valid():  # true for not so obviously bad phone numbers
+            msg = f"Invalid phone number detected, phone_number_raw: '{phone_number_raw}'"
+            log.error(msg)
+            raise TypeError(msg)
 
-            # be aware strange phone numbers will survive the above
-            # strange phone numbers from the above include ones where a phone number has letters appended: 14401234567bb
-            # strange phone numbers like this will be accepted by twilio which will truncate the bad parts
-            # we MUST normalize to get something reasonable-looking for our system's storage, reduce duplicates, and reduce costs
-            log.info(f"Normalizing phone_number_raw: '{phone_number_raw}'")
-            phone_number = phone_number.as_e164
-            log.info(f"Normalized phone_number_raw: '{phone_number_raw}' to phone_number: '{phone_number}'")
+        # be aware strange phone numbers will survive the above
+        # strange phone numbers from the above include ones where a phone number has letters appended: 14401234567bb
+        # strange phone numbers like this will be accepted by twilio which will truncate the bad parts
+        # we MUST normalize to get something reasonable-looking for our system's storage, reduce duplicates, and reduce costs
+        log.info(f"Normalizing phone_number_raw: '{phone_number_raw}'")
+        phone_number = phone_number.as_e164
+        log.info(f"Normalized phone_number_raw: '{phone_number_raw}' to phone_number: '{phone_number}'")
 
-            return phone_number
-        except Exception as e:
-            return HttpResponseBadRequest(f"Invalid phone number detected, phone_number_raw: '{phone_number_raw}'")
+        return phone_number
+
