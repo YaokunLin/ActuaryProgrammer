@@ -95,7 +95,7 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
         # we may have a legitimate but stale value, that's fine
         # however, if we don't have a caller_name_type record, this is an incomplete record from our get_or_create above then roll it back / kill it
         log.info(f"Verifying we have a legitimate caller_name_info to send to client for '{phone_number}'")
-        if created and telecom_caller_name_info.caller_name_type is "":
+        if created and (telecom_caller_name_info.caller_name_type is "" and telecom_caller_name_info.telecom_caller_name_info.carrier_type is ""):
             log.warn(
                 f"Incompleted caller_name_info record. No stale or fresh caller_name_info data is available. We've created a new caller_name_info object but couldn't fill it with Twilio values. ROLLING BACK. phone_number: '{phone_number}'"
             )
