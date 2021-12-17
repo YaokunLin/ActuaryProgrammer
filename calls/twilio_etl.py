@@ -44,6 +44,7 @@ def get_caller_name_info_from_twilio(phone_number: str, client: Client=None) -> 
 
 
 def validate_twilio_data(twilio_phone_number_info: PhoneNumberInstance):
+    # validate caller_name
     caller_name_section = twilio_phone_number_info.caller_name
     if caller_name_section is None:
         raise ValueError("Twilio response missing caller_name section!")
@@ -51,6 +52,14 @@ def validate_twilio_data(twilio_phone_number_info: PhoneNumberInstance):
     error_code = caller_name_section.get("error_code")
     if error_code is not None:
         raise ValueError(f"Twilio response has an error_code of '{error_code}' in caller_name section!")
+
+    # validate carrier_type
+    carrier_type_section = twilio_phone_number_info.caller_name
+    if carrier_type_section is None:
+        raise ValueError("Twilio response missing carrier_type section!")
+    
+    if error_code is not None:
+        raise ValueError(f"Twilio response has an error_code of '{error_code}' in carrier_type section!")
 
 
 def update_telecom_caller_name_info_with_twilio_data(telecom_caller_name_info: TelecomCallerNameInfo, twilio_phone_number_info: PhoneNumberInstance) -> None:
