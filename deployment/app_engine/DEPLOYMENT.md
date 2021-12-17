@@ -32,8 +32,27 @@ If the previous steps have already been completed you are now ready to run `gclo
    * Set the zone to `us-west4-a`
 5. Create an environment file  `./deployment/<PROJECT_ID>.env` with the project id you chose above
 6. Run `gcloud secrets create peerlogic-api-env --data-file=/path/to/your/environment/file`
-7. Uncomment all lines in this file (\*except this one) if running for the first time `./deployment/gcloud_deploy.bash` and then run it from the root of this repository.
-   * \* Except for this line - At the time of this writing Celery does not work in App Engine Standard because it cannot connect to Redis. See [JIRA ticket](https://peerlogictech.atlassian.net/browse/PTECH-1011) for this.)
+7. Uncomment all lines in this file (\*except this one) if running for the first time `./deployment/app_engine/gcloud_deploy.bash` and then run it from the root of this repository.
+   * \* Except for these lines - At the time of this writing Celery does not work in App Engine Standard because it cannot connect to Redis. See [JIRA ticket](https://peerlogictech.atlassian.net/browse/PTECH-1011) for this.)
+
+   ```
+   # example connector name: peerlogic-api-dev-redis-to-shared-vpc-connector
+
+
+   # TODO: connect redis
+   # gcloud redis instances describe peerlogic-api --region=us-west4
+   # gcloud compute networks vpc-access connectors create redis-to-shared-vpc-connector \
+   # --region="${REGION}" \
+   # --subnet="${SUBNET}" \
+   # --subnet-project="${HOST_PROJECT_ID}" \
+   # --min-instances=2 \
+   # --max-instances=10 \
+   # --machine-type=e2-micro
+
+   # gcloud compute networks vpc-access connectors describe redis-to-shared-vpc-connector \
+   # --region $REGION
+   ```
+
 8. Escape any funny characters in your `./deployment/<PROJECT_ID>.env` file that bash doesn't like with " " around the value after the `=` sign.
 9.  Run `./deployment/cloud_sql_proxy.bash` and `./deployment/psql_deploy.bash` in another terminal.
 10. Verify your peerlogic-api works in the environment you're using by going to Logging in the console.cloud.google.com and running a couple of GET and POST calls.
