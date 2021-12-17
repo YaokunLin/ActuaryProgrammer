@@ -50,7 +50,10 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
         phone_number_raw = pk
         log.info(f"Retrieving caller_name_info for phone_number: '{phone_number_raw}'")
 
-        phone_number = TelecomCallerNameInfoViewSet.validate_and_normalize_phone_number(phone_number_raw=phone_number_raw)
+        try:
+            phone_number = TelecomCallerNameInfoViewSet.validate_and_normalize_phone_number(phone_number_raw=phone_number_raw)
+        except Exception as e:
+            return HttpResponseBadRequest(f"Invalid phone number detected, phone_number_raw: '{phone_number_raw}'")
 
         # use whatever we find and 404 if we don't find anything
         if not settings.TWILIO_IS_ENABLED:
@@ -110,28 +113,26 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
     @classmethod
     def validate_and_normalize_phone_number(cls, phone_number_raw: str) -> str:
         # validate and normalize phone number
-        try:
-            log.info(f"Validating phone number: phone_number_raw: '{phone_number_raw}'")
+        log.info(f"Validating phone number: phone_number_raw: '{phone_number_raw}'")
 
-            # first level of normalization because we're generous with our input
-            phone_number_raw = re.sub("[^0-9]", "", phone_number_raw)  # remove non-digits
-            phone_number_raw = f"+{phone_number_raw}"  # add preceding plus sign
+        # first level of normalization because we're generous with our input
+        phone_number_raw = re.sub("[^0-9]", "", phone_number_raw)  # remove non-digits
+        phone_number_raw = f"+{phone_number_raw}"  # add preceding plus sign
 
-            # first validation
-            phone_number = to_phone_number(phone_number_raw)  # this will explode for obviously bad phone numbers
-            if not phone_number.is_valid():  # true for not so obviously bad phone numbers
-                msg = f"Invalid phone number detected, phone_number_raw: '{phone_number_raw}'"
-                log.error(msg)
-                raise TypeError(msg)
+        # first validation
+        phone_number = to_phone_number(phone_number_raw)  # this will explode for obviously bad phone numbers
+        if not phone_number.is_valid():  # true for not so obviously bad phone numbers
+            msg = f"Invalid phone number detected, phone_number_raw: '{phone_number_raw}'"
+            log.error(msg)
+            raise TypeError(msg)
 
-            # be aware strange phone numbers will survive the above
-            # strange phone numbers from the above include ones where a phone number has letters appended: 14401234567bb
-            # strange phone numbers like this will be accepted by twilio which will truncate the bad parts
-            # we MUST normalize to get something reasonable-looking for our system's storage, reduce duplicates, and reduce costs
-            log.info(f"Normalizing phone_number_raw: '{phone_number_raw}'")
-            phone_number = phone_number.as_e164
-            log.info(f"Normalized phone_number_raw: '{phone_number_raw}' to phone_number: '{phone_number}'")
+        # be aware strange phone numbers will survive the above
+        # strange phone numbers from the above include ones where a phone number has letters appended: 14401234567bb
+        # strange phone numbers like this will be accepted by twilio which will truncate the bad parts
+        # we MUST normalize to get something reasonable-looking for our system's storage, reduce duplicates, and reduce costs
+        log.info(f"Normalizing phone_number_raw: '{phone_number_raw}'")
+        phone_number = phone_number.as_e164
+        log.info(f"Normalized phone_number_raw: '{phone_number_raw}' to phone_number: '{phone_number}'")
 
-            return phone_number
-        except Exception as e:
-            return HttpResponseBadRequest(f"Invalid phone number detected, phone_number_raw: '{phone_number_raw}'")
+        return phone_number
+
