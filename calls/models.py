@@ -77,12 +77,10 @@ class TelecomCallerNameInfo(AuditTrailModel):
 
     carrier_name = models.CharField(max_length=255, blank=True, null=False, default="")
     carrier_type = models.CharField(choices=TelecomCarrierTypes.choices, max_length=50, blank=True, null=False, default="")
-    mobile_country_code = models.IntegerField(
-        max_length=3, null=True, default=None
-    )  # three digit mobile country code of the carrier, used with the mobile network code to identify a mobile network operator
-    mobile_network_code = models.IntegerField(
-        max_length=3, null=True, default=None
-    )  # two-three digit mobile network code of the carrier, used with the mobile country code to identify a mobile network operator (only returned for mobile numbers).
+
+    # the following are used together to identify a mobile network operator
+    mobile_country_code = models.IntegerField(max_length=3, null=True, default=None)  # 3 digit mobile country code of the carrier
+    mobile_network_code = models.IntegerField(max_length=3, null=True, default=None)  # 2-3 digit mobile network code of the carrier, (only for mobile numbers)
 
     extract_raw_json = models.JSONField(default=None, null=True)  # raw value used to generate this, if received
 
