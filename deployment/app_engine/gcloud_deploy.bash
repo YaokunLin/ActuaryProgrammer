@@ -75,6 +75,11 @@ gcloud sql users set-password postgres \
 --instance=$PROJECT_ID \
 --password=${POSTGRES_PASSWORD}
 
+echo "${textgreen}Creating 'peerlogic' user: ${textreset}"
+gcloud sql users create peerlogic \
+--instance=$PROJECT_ID \
+--password=${POSTGRES_PEERLOGIC_PASSWORD}
+
 
 echo "${textgreen}Creating peerlogic database: ${textreset}"
 gcloud sql databases create peerlogic \
