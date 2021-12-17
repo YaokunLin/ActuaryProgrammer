@@ -1,3 +1,4 @@
+import json
 import logging
 import re
 
@@ -19,6 +20,7 @@ from twilio.rest import Client
 from .field_choices import (
     TelecomCallerNameInfoTypes,
     TelecomCallerNameInfoSourceTypes,
+    TelecomCarrierTypes,
 )
 
 from .models import (
@@ -132,9 +134,9 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
                 raise TypeError(msg)
 
             # be aware strange phone numbers will survive the above
-            # strange phone numbers from the above include ones where a phone number has numbers appended: 14401234567bb
+            # strange phone numbers from the above include ones where a phone number has letters appended: 14401234567bb
             # strange phone numbers like this will be accepted by twilio which will truncate the bad parts
-            # we MUST normalize to get something reasonable-looking for our system's storage
+            # we MUST normalize to get something reasonable-looking for our system's storage, reduce duplicates, and reduce costs
             log.info(f"Normalizing phone_number_raw: '{phone_number_raw}'")
             phone_number = phone_number.as_e164
             log.info(f"Normalized phone_number_raw: '{phone_number_raw}' to phone_number: '{phone_number}'")
@@ -182,7 +184,7 @@ def validate_twilio_data(twilio_phone_number_info: PhoneNumberInstance):
 
 
 def update_telecom_caller_name_info_with_twilio_data(telecom_caller_name_info: TelecomCallerNameInfo, twilio_phone_number_info: PhoneNumberInstance) -> None:
-    # Shape of the data
+    # Shape of the twilio data
     # {
     #    "caller_name": {"caller_name": "", "caller_type", "error_code": ""}
     #    "carrier": {"mobile_country_code": "313", "mobile_network_code": "981", "name": "Bandwidth/13 - Bandwidth.com - SVR", "type": "voip", "error_code": None}
@@ -195,6 +197,21 @@ def update_telecom_caller_name_info_with_twilio_data(telecom_caller_name_info: T
     log.info(
         "Attempting to get data from twilio's response to update telecom caller name info. NOTE: validation has occurred before this point. If there is an error in this function, we need to update our validation codes!"
     )
+
+    source = TelecomCallerNameInfoSourceTypes.TWILIO
+
+    # raw - extract and load
+    telecom_caller_name_info.extract_raw_json = json.dumps(twilio_phone_number_info.__dict__)
+
+    # root - extraction
+    phone_number = twilio_phone_number_info.phone_number
+    country_code = twilio_phone_number_info.country_code
+
+    # root - load
+    telecom_caller_name_info.phone_number = phone_number
+    telecom_caller_name_info.country_code = country_code
+
+    # caller_name section - extraction
     caller_name_section = twilio_phone_number_info.caller_name
     caller_name = caller_name_section.get("caller_name", "")
     caller_name = caller_name or ""
@@ -202,14 +219,27 @@ def update_telecom_caller_name_info_with_twilio_data(telecom_caller_name_info: T
     caller_type = caller_name_section.get("caller_type", "")  # BUSINESS CONSUMER UNDETERMINED
     caller_type = caller_type.lower()  # accept empty strings but not null
     if caller_type not in TelecomCallerNameInfoTypes.values:
-        caller_type = None
+        caller_type = ""
 
-    phone_number = twilio_phone_number_info.phone_number
-    source = TelecomCallerNameInfoSourceTypes.TWILIO
-
+    # caller_name section - load
     telecom_caller_name_info.caller_name = caller_name
     telecom_caller_name_info.caller_name_type = caller_type
-    telecom_caller_name_info.phone_number = phone_number
     telecom_caller_name_info.source = source
+
+    # carrier type - extraction
+    carrier_section = twilio_phone_number_info.carrier
+    mobile_country_code = carrier_section.get("mobile_country_code", "")
+    mobile_network_code = carrier_section.get("mobile_network_code", "")
+    carrier_name = carrier_section.get("name", "")
+    carrier_type = carrier_section.get("type", "")
+    carrier_type = carrier_type.lower()  # accept empty strings but not null
+    if carrier_type not in TelecomCarrierTypes.values:
+        carrier_type = ""
+
+    # carrier type - load
+    telecom_caller_name_info.mobile_country_code = mobile_country_code
+    telecom_caller_name_info.mobile_network_code = mobile_network_code
+    telecom_caller_name_info.carrier_name = carrier_name
+    telecom_caller_name_info.carrier_type = carrier_type
 
     log.info("Updated local model with twilio response data")
