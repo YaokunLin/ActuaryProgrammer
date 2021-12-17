@@ -192,7 +192,7 @@ def update_telecom_caller_name_info_with_twilio_data(telecom_caller_name_info: T
     #    "phone_number": "",
     #    "national_format": ""
     # }
-    log.debug(twilio_phone_number_info.__dict__)
+    log.debug(f"Twilio phone number object with all properties: '{twilio_phone_number_info.__dict__}'")
 
     log.info(
         "Attempting to get data from twilio's response to update telecom caller name info. NOTE: validation has occurred before this point. If there is an error in this function, we need to update our validation codes!"
@@ -201,7 +201,7 @@ def update_telecom_caller_name_info_with_twilio_data(telecom_caller_name_info: T
     source = TelecomCallerNameInfoSourceTypes.TWILIO
 
     # raw - extract and load
-    telecom_caller_name_info.extract_raw_json = json.dumps(twilio_phone_number_info.__dict__)
+    telecom_caller_name_info.extract_raw_json = twilio_phone_number_info._properties
 
     # root - extraction
     phone_number = twilio_phone_number_info.phone_number
