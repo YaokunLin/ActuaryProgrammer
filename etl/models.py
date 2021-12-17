@@ -1,8 +1,11 @@
 from django.db import models
 
-# Create your models here.
+from core.models import Patient
+
+
 class VeloxExtractData(models.Model):
     velox_id = models.IntegerField(primary_key=True) # Velox id, not peerlogic-api id
+    peerlogic_id = models.CharField(max_length=255)
     deleted = models.BooleanField()
     pms_id = models.IntegerField()
     first_name = models.CharField(max_length=255)
