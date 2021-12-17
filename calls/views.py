@@ -11,8 +11,7 @@ from twilio.base.exceptions import TwilioException
 
 from calls.twilio_etl import (
     get_caller_name_info_from_twilio,
-    update_telecom_caller_name_info_with_twilio_data,
-    validate_twilio_data
+    update_telecom_caller_name_info_with_twilio_data_for_valid_sections,
 )
 
 from .models import (
@@ -72,11 +71,11 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
             # get and validate twilio data
             log.info(f"Twilio is on and we have stale / expired or missing data. Requesting data from twilio for phone_number: '{phone_number}'")
             twilio_caller_name_info = get_caller_name_info_from_twilio(phone_number=phone_number)
-            validate_twilio_data(twilio_caller_name_info)
 
             # update local object
-            log.info(f"Saving data from twilio for phone_number: '{phone_number}'")
-            update_telecom_caller_name_info_with_twilio_data(telecom_caller_name_info, twilio_caller_name_info)
+            log.info(f"Extracting and transforming data from twilio for phone_number: '{phone_number}'.")
+            update_telecom_caller_name_info_with_twilio_data_for_valid_sections(telecom_caller_name_info, twilio_caller_name_info)
+
             telecom_caller_name_info.save()
             log.info(f"Saved data from twilio for phone_number: '{phone_number}'")
         except TwilioException as e:
@@ -96,7 +95,7 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
         # we may have a legitimate but stale value, that's fine
         # however, if we don't have a caller_name_type record, this is an incomplete record from our get_or_create above then roll it back / kill it
         log.info(f"Verifying we have a legitimate caller_name_info to send to client for '{phone_number}'")
-        if created and telecom_caller_name_info.caller_name_type is None:
+        if created and telecom_caller_name_info.caller_name_type is "":
             log.warn(
                 f"Incompleted caller_name_info record. No stale or fresh caller_name_info data is available. We've created a new caller_name_info object but couldn't fill it with Twilio values. ROLLING BACK. phone_number: '{phone_number}'"
             )
