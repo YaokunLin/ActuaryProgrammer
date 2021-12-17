@@ -1,9 +1,9 @@
 from rest_framework import serializers
 
-from .models import VeloxExtractData
+from .models import VeloxPatientExtract
 
 
 class VeloxExtractDataSerializer(serializers.ModelSerializer):
     class Meta:
-        model = VeloxExtractData
-        # fields = []
+        model = VeloxPatientExtract
+        fields = "__all__"
