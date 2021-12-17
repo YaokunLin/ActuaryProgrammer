@@ -13,10 +13,30 @@ services:
 
   api:
       build: .
+      # using runserver for hot reloading, instead of gunicorn
+      command: python3 manage.py runserver 0.0.0.0:8000
       volumes:
           - .:/app
       ports:
           - 8000:8000
+      depends_on:
+          - postgres
+      env_file:
+          - .env
+      environment:
+          - PORT=8000
+          - WAIT_HOSTS=postgres:5432
+          - WAIT_HOSTS_TIMEOUT=300
+          - WAIT_SLEEP_INTERVAL=30
+          - WAIT_HOST_CONNECT_TIMEOUT=30
+          - DB_HOST=postgres
+          - USE_CLOUD_SQL_AUTH_PROXY=False
+
+  migrate:
+      build: .
+      command: python3 manage.py migrate
+      volumes:
+          - .:/app
       depends_on:
           - postgres
       env_file:
@@ -39,12 +59,12 @@ services:
       env_file:
           - .env
       environment:
-          - PORT=8000
           - WAIT_HOSTS=postgres:5432
           - WAIT_HOSTS_TIMEOUT=300
           - WAIT_SLEEP_INTERVAL=60
           - WAIT_HOST_CONNECT_TIMEOUT=60
           - DB_HOST=postgres
+          - USE_CLOUD_SQL_AUTH_PROXY=False
           - CELERY_BROKER_URL=redis://redis:6379/0
           - CELERY_RESULT_BACKEND=redis://redis:6379/0
 
@@ -58,12 +78,12 @@ services:
       env_file:
           - .env
       environment:
-          - PORT=8000
           - WAIT_HOSTS=postgres:5432,redis:6379
           - WAIT_HOSTS_TIMEOUT=300
           - WAIT_SLEEP_INTERVAL=180
           - WAIT_HOST_CONNECT_TIMEOUT=180
           - DB_HOST=postgres
+          - USE_CLOUD_SQL_AUTH_PROXY=False
           - CELERY_BROKER_URL=redis://redis:6379/0
           - CELERY_RESULT_BACKEND=redis://redis:6379/0
 

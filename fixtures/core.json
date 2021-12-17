@@ -1,0 +1,165 @@
+[
+{
+  "model": "core.user",
+  "pk": 1,
+  "fields": {
+    "password": "pbkdf2_sha256$260000$tTH1nxZAV1Mj0nuuMKqlwh$mEef/rsxduIM6kiT3JJQ4oijr1RQWoXcO/QudE5UhvY=",
+    "last_login": "2021-07-08T21:00:10.762Z",
+    "is_superuser": true,
+    "username": "admin",
+    "name_first": "",
+    "name_last": "",
+    "email": "ana@peerlogic.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2020-12-04T18:02:21.772Z",
+    "name": "",
+    "telecom_user": "",
+    "access_token": "",
+    "refresh_token": "",
+    "expires_at": null,
+    "sms_number": "",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "core.user",
+  "pk": 2,
+  "fields": {
+    "password": "1Zquz@$3",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "1554@Peerlogic",
+    "name_first": "",
+    "name_last": "",
+    "email": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2020-12-04T18:04:20Z",
+    "name": "",
+    "telecom_user": "1554",
+    "access_token": "",
+    "refresh_token": "",
+    "expires_at": "2020-12-05T00:00:00Z",
+    "sms_number": "4805611554",
+    "groups": [
+      1
+    ],
+    "user_permissions": []
+  }
+},
+{
+  "model": "core.user",
+  "pk": 3,
+  "fields": {
+    "password": "1Zquz@$3",
+    "last_login": "2021-01-01T00:18:14Z",
+    "is_superuser": false,
+    "username": "1554@peerlogictest",
+    "name_first": "",
+    "name_last": "",
+    "email": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2021-01-01T00:18:06Z",
+    "name": "",
+    "telecom_user": "",
+    "access_token": "",
+    "refresh_token": "",
+    "expires_at": "2021-01-01T00:19:06Z",
+    "sms_number": "",
+    "groups": [
+      2
+    ],
+    "user_permissions": [
+      29,
+      30,
+      31,
+      32
+    ]
+  }
+},
+{
+  "model": "core.user",
+  "pk": 4,
+  "fields": {
+    "password": "@Peerlogic19",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "2019@PeerlogicAdmin",
+    "name_first": "",
+    "name_last": "",
+    "email": "",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2021-06-10T22:14:41Z",
+    "name": "",
+    "telecom_user": "",
+    "access_token": "",
+    "refresh_token": "",
+    "expires_at": "2021-06-10T22:15:22Z",
+    "sms_number": "",
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "core.user",
+  "pk": 5,
+  "fields": {
+    "password": "acx*zwz3JXW.jfa8pvq",
+    "last_login": null,
+    "is_superuser": false,
+    "username": "101@varianceinfotech",
+    "name_first": "Viral",
+    "name_last": "Patel",
+    "email": "viral.patel@varianceinfotech.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2021-07-08T19:43:05Z",
+    "name": "",
+    "telecom_user": "101",
+    "access_token": "",
+    "refresh_token": "",
+    "expires_at": "2021-07-08T19:44:48Z",
+    "sms_number": "",
+    "groups": [
+      5
+    ],
+    "user_permissions": []
+  }
+},
+{
+  "model": "core.client",
+  "pk": "eRjACMX8H8mGzfLW5tHd2b",
+  "fields": {
+    "group": 1,
+    "rest_base_url": "http://192.168.1.25:3000"
+  }
+},
+{
+  "model": "core.client",
+  "pk": "HJ8dpsyHMeHCLXhLRKcS2A",
+  "fields": {
+    "group": 3,
+    "rest_base_url": "http://localhost:3000"
+  }
+},
+{
+  "model": "core.client",
+  "pk": "ktwaNQhRoZQwY3FCpLEqEA",
+  "fields": {
+    "group": 2,
+    "rest_base_url": "http://localhost:3000"
+  }
+},
+{
+  "model": "core.client",
+  "pk": "MwDDKNCKib9BEXBLBdb2gN",
+  "fields": {
+    "group": 4,
+    "rest_base_url": "http://localhost:3000"
+  }
+}
+]

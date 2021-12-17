@@ -1,0 +1,10 @@
+#
+#
+#
+
+# [START celery_worker]
+runtime: python37
+service: celery-worker
+entrypoint: "celery -A peerlogic worker -l INFO"
+
+# [END celery_worker]

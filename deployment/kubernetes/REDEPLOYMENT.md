@@ -1,7 +1,24 @@
 # Deployment steps for GKE
 
-Install GCP Dependencies to your local machine:
-* [gcloud SDK](https://cloud.google.com/sdk/docs/quickstart)
+## Set up gcloud
+
+Run the following command and select the following:
+
+* your new project from the list
+* select your login or log in for the first time
+* select `us-west4-a` as your default region. If you don't see it listed, type `list` to find it.
+
+```bash
+gcloud init
+```
+
+## Connect to the GKE Cluster
+
+Use the kubectl command-line tool, which is integrated with the gcloud tool, to interact with your GKE cluster. Because gcloud and kubectl are separate tools, make sure kubectl is configured to interact with the right cluster.
+
+```bash
+gcloud container clusters get-credentials peerlogic-api --zone "us-west4-a"
+```
 
 ## Troubleshooting
 
@@ -87,3 +104,5 @@ https://codelabs.developers.google.com/codelabs/cloud-sql-connectivity-gce-priva
 ```bash
 gcloud sql instances describe peerlogic-dev | grep connectionName
 ```
+
+

@@ -16,14 +16,20 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
+
+from core.urls import urlpatterns as core_urlpatterns
+from calls.urls import urlpatterns as calls_urlpatterns
+from inbox.urls import urlpatterns as inbox_urlpatterns
+from reminders.urls import urlpatterns as reminders_urlpatterns
+
+
 admin.site.site_header = "Peerlogic API Admin Portal"
 
-from reminders.urls import urlpatterns as reminders_urlpatterns
-from core.urls import urlpatterns as company_urlpatterns
-
 urlpatterns = [
-    path("api/reminders/", include(reminders_urlpatterns)),
-    path("api/companies/", include(company_urlpatterns)),
+    path("api/", include(core_urlpatterns)),
+    path("api/", include(calls_urlpatterns)),
+    path("api/", include(inbox_urlpatterns)),
+    path("api/", include(reminders_urlpatterns)),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     path("admin/", admin.site.urls),
 ]
