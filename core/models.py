@@ -171,7 +171,7 @@ class Patient(AuditTrailModel):
     zip_code = models.CharField(max_length=50)
     zip_code_add_on = models.CharField(max_length=50, blank=True)
     date_of_birth = models.DateTimeField()
-
+    #velox_extract_data = models.JSONField(default=dict())
 
 class UserPatient(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
