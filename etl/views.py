@@ -3,12 +3,11 @@ from django.shortcuts import render
 from rest_framework import viewsets
 
 from .models import VeloxPatientExtract
-from .serializers import VeloxExtractDataSerializer
+from .serializers import VeloxPatientExtractSerializer
 
 
 class ETLViewset(viewsets.ModelViewSet):
     queryset = VeloxPatientExtract.objects.all()
-    serializer_class = VeloxExtractDataSerializer
+    serializer_class = VeloxPatientExtractSerializer
 
-    filterset_fields = ["velox_id", "peerlogic_patient_id"]
-    search_fields = ["velox_id", "peerlogic_patient_id"]
+    filterset_fields = ["peerlogic_patient_id", "velox_id"]
