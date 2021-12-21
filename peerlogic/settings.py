@@ -120,8 +120,9 @@ INSTALLED_APPS = [
     "corsheaders",
     "core",
     "calls",
-    "reminders",
+    "etl",
     "inbox",
+    "reminders",
 ]
 
 MIDDLEWARE = [
