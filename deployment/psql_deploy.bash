@@ -23,8 +23,8 @@ then
   source $ENV_FILE
 fi
 
-
-echo "${textblue}Granting privileges to peerlogic user $ENV_FILE"
+echo "${textblue}Granting privileges to peerlogic user ${textreset}"
+PGPASSWORD=${POSTGRES_PASSWORD} psql --host 127.0.0.1 --user postgres -c "CREATE USER peerlogic WITH PASSWORD ${POSTGRES_PEERLOGIC_PASSWORD};"
 PGPASSWORD=${POSTGRES_PASSWORD} psql --host 127.0.0.1 --user postgres -c "GRANT ALL PRIVILEGES ON DATABASE peerlogic TO peerlogic;"
 PGPASSWORD=${POSTGRES_PASSWORD} psql --host 127.0.0.1 --user postgres -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO peerlogic;"
  
