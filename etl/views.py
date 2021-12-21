@@ -6,7 +6,7 @@ from .models import VeloxPatientExtract
 from .serializers import VeloxPatientExtractSerializer
 
 
-class ETLViewset(viewsets.ModelViewSet):
+class VeloxPatientExtractViewset(viewsets.ModelViewSet):
     queryset = VeloxPatientExtract.objects.all()
     serializer_class = VeloxPatientExtractSerializer
 
