@@ -1,4 +1,3 @@
-
 from django.contrib import admin
 from django.contrib.auth.models import Group
 
@@ -18,12 +17,14 @@ class UserAdmin(admin.ModelAdmin):
         "is_superuser",
     )
 
+
 class ClientAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "practice",
         "rest_base_url",
     )
+
 
 class PracticeAdmin(admin.ModelAdmin):
     form = PracticeAdminForm

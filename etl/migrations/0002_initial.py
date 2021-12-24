@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('etl', '0001_initial'),
+        ("etl", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='veloxpatientextract',
-            name='peerlogic_patient_id',
-            field=models.CharField(blank=True, default='', max_length=22),
+            model_name="veloxpatientextract",
+            name="peerlogic_patient_id",
+            field=models.CharField(blank=True, default="", max_length=22),
         ),
     ]

@@ -7,48 +7,50 @@ import django_countries.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('calls', '0001_initial'),
+        ("calls", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='telecomcallernameinfo',
-            name='carrier_name',
-            field=models.CharField(blank=True, default='', max_length=255),
+            model_name="telecomcallernameinfo",
+            name="carrier_name",
+            field=models.CharField(blank=True, default="", max_length=255),
         ),
         migrations.AddField(
-            model_name='telecomcallernameinfo',
-            name='carrier_type',
-            field=models.CharField(blank=True, choices=[('landline', 'Landline'), ('mobile', 'Mobile'), ('voip', 'Voip')], default='', max_length=50),
+            model_name="telecomcallernameinfo",
+            name="carrier_type",
+            field=models.CharField(blank=True, choices=[("landline", "Landline"), ("mobile", "Mobile"), ("voip", "Voip")], default="", max_length=50),
         ),
         migrations.AddField(
-            model_name='telecomcallernameinfo',
-            name='country_code',
-            field=django_countries.fields.CountryField(blank=True, default='US', max_length=2),
+            model_name="telecomcallernameinfo",
+            name="country_code",
+            field=django_countries.fields.CountryField(blank=True, default="US", max_length=2),
         ),
         migrations.AddField(
-            model_name='telecomcallernameinfo',
-            name='extract_raw_json',
+            model_name="telecomcallernameinfo",
+            name="extract_raw_json",
             field=models.JSONField(default=None, null=True),
         ),
         migrations.AddField(
-            model_name='telecomcallernameinfo',
-            name='mobile_country_code',
+            model_name="telecomcallernameinfo",
+            name="mobile_country_code",
             field=models.IntegerField(default=None, max_length=3, null=True),
         ),
         migrations.AddField(
-            model_name='telecomcallernameinfo',
-            name='mobile_network_code',
+            model_name="telecomcallernameinfo",
+            name="mobile_network_code",
             field=models.IntegerField(default=None, max_length=3, null=True),
         ),
         migrations.AlterField(
-            model_name='telecomcallernameinfo',
-            name='caller_name_type',
-            field=models.CharField(blank=True, choices=[('business', 'Business'), ('consumer', 'Consumer'), ('undetermined', 'Undetermined')], default='', max_length=50),
+            model_name="telecomcallernameinfo",
+            name="caller_name_type",
+            field=models.CharField(
+                blank=True, choices=[("business", "Business"), ("consumer", "Consumer"), ("undetermined", "Undetermined")], default="", max_length=50
+            ),
         ),
         migrations.AlterField(
-            model_name='telecomcallernameinfo',
-            name='source',
-            field=models.CharField(blank=True, choices=[('peerlogic', 'Peerlogic'), ('twilio', 'Twilio')], default='', max_length=50),
+            model_name="telecomcallernameinfo",
+            name="source",
+            field=models.CharField(blank=True, choices=[("peerlogic", "Peerlogic"), ("twilio", "Twilio")], default="", max_length=50),
         ),
     ]
