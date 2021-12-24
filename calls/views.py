@@ -135,4 +135,3 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
         log.info(f"Normalized phone_number_raw: '{phone_number_raw}' to phone_number: '{phone_number}'")
 
         return phone_number
-

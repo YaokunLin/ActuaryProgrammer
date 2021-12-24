@@ -17,19 +17,41 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='VeloxPatientExtract',
+            name="VeloxPatientExtract",
             fields=[
-                ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('modified_at', models.DateTimeField(auto_now=True, db_index=True)),
-                ('velox_id', models.IntegerField(primary_key=True, serialize=False)),
-                ('peerlogic_patient_id', django_extensions.db.fields.ShortUUIDField(blank=True, editable=False)),
-                ('velox_patient_extract_data', models.JSONField(default=dict)),
-                ('created_by', django_userforeignkey.models.fields.UserForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='veloxpatientextract_created', to=settings.AUTH_USER_MODEL, verbose_name='The user that is automatically assigned')),
-                ('modified_by', django_userforeignkey.models.fields.UserForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='veloxpatientextract_modified', to=settings.AUTH_USER_MODEL, verbose_name='The user that is automatically assigned')),
+                ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("modified_at", models.DateTimeField(auto_now=True, db_index=True)),
+                ("velox_id", models.IntegerField(primary_key=True, serialize=False)),
+                ("peerlogic_patient_id", django_extensions.db.fields.ShortUUIDField(blank=True, editable=False)),
+                ("velox_patient_extract_data", models.JSONField(default=dict)),
+                (
+                    "created_by",
+                    django_userforeignkey.models.fields.UserForeignKey(
+                        blank=True,
+                        editable=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="veloxpatientextract_created",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="The user that is automatically assigned",
+                    ),
+                ),
+                (
+                    "modified_by",
+                    django_userforeignkey.models.fields.UserForeignKey(
+                        blank=True,
+                        editable=False,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="veloxpatientextract_modified",
+                        to=settings.AUTH_USER_MODEL,
+                        verbose_name="The user that is automatically assigned",
+                    ),
+                ),
             ],
             options={
-                'get_latest_by': 'modified_at',
-                'abstract': False,
+                "get_latest_by": "modified_at",
+                "abstract": False,
             },
         ),
     ]
