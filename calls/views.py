@@ -74,11 +74,13 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
 
         # certain area codes are always business numbers if configured
         us_area_code = get_us_area_code(phone_number)
-        log.info(f"Checking area code: '{us_area_code}' from phone_number: '{phone_number}' against known business telecom area codes: '{settings.TELECOM_AREA_CODES_TO_MARK_AS_BUSINESS_NUMBERS}'")
+        log.info(
+            f"Checking area code: '{us_area_code}' from phone_number: '{phone_number}' against known business telecom area codes: '{settings.TELECOM_AREA_CODES_TO_MARK_AS_BUSINESS_NUMBERS}'"
+        )
         if us_area_code in settings.TELECOM_AREA_CODES_TO_MARK_AS_BUSINESS_NUMBERS:
             log.info(f"Area code is a known business area code for phone_number: '{phone_number}'")
             telecom_caller_name_info.source = TelecomCallerNameInfoSourceTypes.PEERLOGIC
-            telecom_caller_name_info.caller_name_type=TelecomCallerNameInfoTypes.BUSINESS
+            telecom_caller_name_info.caller_name_type = TelecomCallerNameInfoTypes.BUSINESS
             telecom_caller_name_info.save()
             return Response(TelecomCallerNameInfoSerializer(telecom_caller_name_info).data)
 
