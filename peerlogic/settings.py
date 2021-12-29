@@ -82,6 +82,10 @@ NETSAPIENS_API_USERNAME = os.getenv("NETSAPIENS_API_USERNAME")
 NETSAPIENS_API_PASSWORD = os.getenv("NETSAPIENS_API_PASSWORD")
 NETSAPIENS_SYSTEM_CLIENT = requests.Session()
 
+# Business Phone Number Detection
+# See FCC: https://www.fcc.gov/consumers/guides/what-toll-free-number-and-how-does-it-work
+TELECOM_AREA_CODES_TO_MARK_AS_BUSINESS_NUMBERS = os.getenv("AREA_CODES_TO_MARK_AS_BUSINESS_NUMBERS", ["800", "888", "877", "866", "855", "844", "833"])
+
 # Twilio API CNAM / Phone Lookup Support
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
