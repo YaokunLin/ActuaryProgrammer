@@ -13,7 +13,10 @@ from calls.twilio_etl import (
     get_caller_name_info_from_twilio,
     update_telecom_caller_name_info_with_twilio_data_for_valid_sections,
 )
-
+from .field_choices import (
+    TelecomCallerNameInfoSourceTypes,
+    TelecomCallerNameInfoTypes,
+)
 from .models import (
     Call,
     CallLabel,
@@ -67,6 +70,18 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
         # existing row that has legitimate values and is not stale
         if not created and telecom_caller_name_info.caller_name_type is not None and not telecom_caller_name_info.is_caller_name_info_stale():
             log.info(f"Using existing caller_name_info from database since it exists and is not stale / expired for phone_number: '{phone_number}'.")
+            return Response(TelecomCallerNameInfoSerializer(telecom_caller_name_info).data)
+
+        # certain area codes are always business numbers if configured
+        us_area_code = get_us_area_code(phone_number)
+        log.info(
+            f"Checking area code: '{us_area_code}' from phone_number: '{phone_number}' against known business telecom area codes: '{settings.TELECOM_AREA_CODES_TO_MARK_AS_BUSINESS_NUMBERS}'"
+        )
+        if us_area_code in settings.TELECOM_AREA_CODES_TO_MARK_AS_BUSINESS_NUMBERS:
+            log.info(f"Area code is a known business area code for phone_number: '{phone_number}'")
+            telecom_caller_name_info.source = TelecomCallerNameInfoSourceTypes.PEERLOGIC
+            telecom_caller_name_info.caller_name_type = TelecomCallerNameInfoTypes.BUSINESS
+            telecom_caller_name_info.save()
             return Response(TelecomCallerNameInfoSerializer(telecom_caller_name_info).data)
 
         # fetch from twilio and update database
@@ -136,3 +151,14 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
 
         return phone_number
 
+
+def get_us_area_code(us_phone_number_in_e164: str) -> str:
+    # number: +1 [234] 567 8910
+    # index:  01  234  5(exclusive)
+    example_phone_number = "+12345678910"
+    us_phone_number_in_e164_length = len(example_phone_number)
+    if len(us_phone_number_in_e164) != us_phone_number_in_e164_length:
+        # this should never occur if we're using this at the appropriate point in the code
+        raise TypeError(f"Invalid normalized us phone_number: '{us_phone_number_in_e164}' detected. Function used erroneously.")
+
+    return us_phone_number_in_e164[2:5]

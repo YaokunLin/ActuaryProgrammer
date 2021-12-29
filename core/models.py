@@ -154,9 +154,6 @@ class PracticeTelecom(AuditTrailModel):
 
 
 class Patient(AuditTrailModel):
-    def velox_extract_data_default():
-        return {}
-
     id = ShortUUIDField(primary_key=True, editable=False)
     practice = models.ForeignKey(Practice, on_delete=models.CASCADE)
     name_first = models.CharField(blank=True, max_length=255, db_index=True)
@@ -171,7 +168,6 @@ class Patient(AuditTrailModel):
     zip_code = models.CharField(max_length=50)
     zip_code_add_on = models.CharField(max_length=50, blank=True)
     date_of_birth = models.DateTimeField()
-    velox_extract_data = models.JSONField(default=velox_extract_data_default)
 
 
 class UserPatient(AuditTrailModel):

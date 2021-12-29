@@ -131,7 +131,7 @@ class Migration(migrations.Migration):
                 ("zip_code", models.CharField(max_length=50)),
                 ("zip_code_add_on", models.CharField(blank=True, max_length=50)),
                 ("date_of_birth", models.DateTimeField()),
-                ("velox_extract_data", models.JSONField(default=core.models.Patient.velox_extract_data_default)),
+                ("velox_extract_data", models.JSONField(default=dict)),
                 (
                     "created_by",
                     django_userforeignkey.models.fields.UserForeignKey(
