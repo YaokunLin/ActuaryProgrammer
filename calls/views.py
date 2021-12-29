@@ -158,6 +158,7 @@ def get_us_area_code(us_phone_number_in_e164: str) -> str:
     example_phone_number = "+12345678910"
     us_phone_number_in_e164_length = len(example_phone_number)
     if len(us_phone_number_in_e164) != us_phone_number_in_e164_length:
-        return None
+        # this should never occur if we're using this at the appropriate point in the code
+        raise TypeError(f"Invalid normalized us phone_number: '{us_phone_number_in_e164}' detected. Function used erroneously.")
 
     return us_phone_number_in_e164[2:5]
