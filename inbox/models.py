@@ -28,5 +28,5 @@ class SMSMessage(AuditTrailModel):
     tag = models.CharField(max_length=180)
 
     @property
-    def application_id():
+    def application_id(self):
         settings.BANDWIDTH_APPLICATION_ID

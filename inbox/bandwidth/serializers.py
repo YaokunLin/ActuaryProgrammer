@@ -1,3 +1,4 @@
+from typing import Dict
 from django.conf import settings
 from django.db.models.fields import CharField, DateTimeField
 from django.http.request import RawPostDataException
@@ -19,7 +20,7 @@ class MessageSerializer(serializers.Serializer):
     from_number = PhoneNumberField(source="from")
     # TODO: change to UUIDField
     applicationId = serializers.CharField(max_length=255)
-    media = ListField(serializers.CharField(max_length=255), allow_null=True)
+    media = ListField(child=serializers.CharField(max_length=255), allow_null=True)
     tag = serializers.CharField(max_length=255)
     segmentCount = serializers.IntegerField(min_value=1)
 
@@ -27,30 +28,46 @@ class MessageSerializer(serializers.Serializer):
 
 
 class MessageDeliveredEventSerializer(serializers.Serializer):
-    message_status = serializers.CharField(max_length=255, source="type")  # 'type' is a reserved keyword in python
-    delivered_date_time = serializers.DateTimeField(source="time")
+    message_status = serializers.CharField(max_length=255)
+    delivered_date_time = serializers.DateTimeField()
     description = serializers.CharField(max_length=255)
     destination_number = PhoneNumberField(source="to")
     # add error code to ErroredEventSerializer
     # error_code = serializers.IntegerField(source="errorCode")
     message = MessageSerializer()
 
+    # Takes the unvalidated incoming data as input and 
+    # should return the validated data that will be
+    # made available as serializer.validated_data
+    # internal value runs first
     def to_internal_value(self, data):
-        print("to_internal_value")
-        print(data)
         data["message_status"] = data.pop("type")
         data["delivered_date_time"] = data.pop("time")
         data["destination_number"] = data.pop("to")
 
         return data
 
-    def to_representation(self, instance):
-        ret = super().to_representation(instance)
-        print("to_representation")
-        print(ret)
-        return ret
+    def to_representation(self, instance: SMSMessage) -> Dict:
+        dict_return_value = dict()
+        dict_return_value["type"] = instance.message_status
+        dict_return_value["time"] = instance.delivered_date_time
+        dict_return_value["description"] = "ok"
+        dict_return_value["message"] = dict()
+        dict_return_value["message"]["id"] = instance.id
+        dict_return_value["message"]["time"] = dict_return_value["time"]
+        dict_return_value["message"]["to"] = instance.to_numbers
+        dict_return_value["message"]["from"] = str(instance.from_number)
+        dict_return_value["message"]["text"] = instance.text
+        dict_return_value["message"]["applicationId"] = instance.application_id
+        dict_return_value["message"]["owner"] = str(instance.owner)
+        dict_return_value["message"]["direction"] = instance.direction
+        dict_return_value["message"]["segment_count"] = instance.segment_count
+
+
+        return dict_return_value
 
     def update(self, instance, validated_data):
+        instance.message_status = validated_data.get("message_status")
         instance.delivered_date_time = validated_data.get("delivered_date_time")
         instance.destination_number = validated_data.get("destination_number")
         instance.direction = validated_data.get("direction", instance.direction)

@@ -30,19 +30,15 @@ class SMSMessagesDeliveredCallbackView(APIView):
         # Get the existing database records
         sms_messages = SMSMessage.objects.filter(pk__in=sms_message_ids)
 
+
         # Check inputs
-        message_delivered_event_serializer = MessageDeliveredEventSerializer(sms_messages, data=request.data, many=True)
+        message_delivered_event_serializer = MessageDeliveredEventSerializer(sms_messages[0], data=request.data[0])
         message_delivered_event_serializer_is_valid = message_delivered_event_serializer.is_valid()
         if not message_delivered_event_serializer_is_valid:
             return Response(message_delivered_event_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        print("message_delivered_event_serializer data")
-        print(message_delivered_event_serializer.data)
-
         # Update the record in the database
         sms_messages = message_delivered_event_serializer.save()
-        print("sms_messages objects")
-        print(sms_messages)
 
         return Response(message_delivered_event_serializer.data, status=status.HTTP_202_ACCEPTED)
         # # Response serializer is a normal sms_message serializer
