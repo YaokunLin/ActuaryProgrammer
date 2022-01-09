@@ -27,7 +27,7 @@ class SMSMessagesDeliveredCallbackView(APIView):
         bandwidth_ids = [item["message"]["id"] for item in request.data]
 
         # Get the existing database records
-        sms_messages = SMSMessage.objects.filter(bandwidth_id__in=bandwidth_ids)
+        sms_message = SMSMessage.objects.filter(bandwidth_id__in=bandwidth_ids).first()
 
         # Check inputs
         # IMPORTANT NOTE ABOUT MMS AND GROUP MESSAGES!
@@ -38,7 +38,7 @@ class SMSMessagesDeliveredCallbackView(APIView):
         # This will mean your message has been handed off to the Bandwidth's MMSC network,
         # but has not been confirmed at the downstream carrier.
         # https://dev.bandwidth.com/messaging/callbacks/msgDelivered.html
-        message_delivered_event_serializer = MessageDeliveredEventSerializer(sms_messages[0], data=request.data[0])
+        message_delivered_event_serializer = MessageDeliveredEventSerializer(sms_message, data=request.data[0])
         message_delivered_event_serializer_is_valid = message_delivered_event_serializer.is_valid()
         if not message_delivered_event_serializer_is_valid:
             return Response(message_delivered_event_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -46,13 +46,11 @@ class SMSMessagesDeliveredCallbackView(APIView):
         # Update the record in the database
         message_delivered_event_serializer.save()
 
-        return Response(message_delivered_event_serializer.data, status=status.HTTP_202_ACCEPTED)
-        # # Response serializer is a normal sms_message serializer
-        # serializer = SMSMessageSerializer(sms_message)
-        # print("sms_message serializer")
-        # print(serializer.data)
+        # Response serializer is a normal sms_message serializer
+        sms_message.refresh_from_db()
+        serializer = SMSMessageSerializer(sms_message)
 
-        # return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 
 
 class SMSMessagesErroredCallbackView(APIView):
@@ -74,6 +72,7 @@ class SMSMessagesView(APIView):
         if not create_message_serializer_is_valid:
             return Response(create_message_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+        pprint(create_message_serializer.data)
         # Call Telecom Client
         response = settings.BANDWIDTH_CLIENT.post(settings.BANDWIDTH_MESSAGING_URI, json=create_message_serializer.data)
         response_data = response.json()
