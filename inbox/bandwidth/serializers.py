@@ -24,8 +24,6 @@ class MessageSerializer(serializers.Serializer):
     tag = serializers.CharField(max_length=255)
     segmentCount = serializers.IntegerField(min_value=1)
 
-    # def to_internal_value
-
 
 class MessageDeliveredEventSerializer(serializers.Serializer):
     message_status = serializers.CharField(max_length=255)
@@ -36,7 +34,7 @@ class MessageDeliveredEventSerializer(serializers.Serializer):
     # error_code = serializers.IntegerField(source="errorCode")
     message = MessageSerializer()
 
-    # Takes the unvalidated incoming data as input and 
+    # Takes the unvalidated incoming data as input and
     # should return the validated data that will be
     # made available as serializer.validated_data
     # internal value runs first
@@ -48,23 +46,22 @@ class MessageDeliveredEventSerializer(serializers.Serializer):
         return data
 
     def to_representation(self, instance: SMSMessage) -> Dict:
-        dict_return_value = dict()
-        dict_return_value["type"] = instance.message_status
-        dict_return_value["time"] = instance.delivered_date_time
-        dict_return_value["description"] = "ok"
-        dict_return_value["message"] = dict()
-        dict_return_value["message"]["id"] = instance.id
-        dict_return_value["message"]["time"] = dict_return_value["time"]
-        dict_return_value["message"]["to"] = instance.to_numbers
-        dict_return_value["message"]["from"] = str(instance.from_number)
-        dict_return_value["message"]["text"] = instance.text
-        dict_return_value["message"]["applicationId"] = instance.application_id
-        dict_return_value["message"]["owner"] = str(instance.owner)
-        dict_return_value["message"]["direction"] = instance.direction
-        dict_return_value["message"]["segment_count"] = instance.segment_count
+        representation = dict()
+        representation["type"] = instance.message_status
+        representation["time"] = instance.delivered_date_time
+        representation["description"] = "ok"
+        representation["message"] = dict()
+        representation["message"]["id"] = instance.bandwidth_id
+        representation["message"]["time"] = representation["time"]
+        representation["message"]["to"] = instance.to_numbers
+        representation["message"]["from"] = str(instance.from_number)
+        representation["message"]["text"] = instance.text
+        representation["message"]["applicationId"] = instance.application_id
+        representation["message"]["owner"] = str(instance.owner)
+        representation["message"]["direction"] = instance.direction
+        representation["message"]["segment_count"] = instance.segment_count
 
-
-        return dict_return_value
+        return representation
 
     def update(self, instance, validated_data):
         instance.message_status = validated_data.get("message_status")
@@ -95,7 +92,7 @@ class CreateSMSMessageAndConvertToBandwidthRequestSerializer(serializers.Seriali
 
 
 class BandwidthResponseToSMSMessageSerializer(serializers.Serializer):
-    id = CharField(max_length=30)
+    bandwidth_id = CharField(max_length=30)
     owner = PhoneNumberField()
     sent_date_time = serializers.DateTimeField(source="time")
     direction = serializers.CharField(max_length=255)
@@ -106,6 +103,7 @@ class BandwidthResponseToSMSMessageSerializer(serializers.Serializer):
     segment_count = serializers.IntegerField(source="segmentCount")
 
     def to_internal_value(self, data):
+        data["bandwidth_id"] = data.pop("id")
         data["sent_date_time"] = data.pop("time")
         data["from_number"] = data.pop("from")
         data["to_numbers"] = data.pop("to")

@@ -8,6 +8,7 @@ class SMSMessageSerializer(serializers.ModelSerializer):
         model = SMSMessage
         fields = [
             "id",
+            "bandwidth_id",
             "patient",
             "assigned_to_agent",
             "owner",
@@ -28,6 +29,7 @@ class SMSMessageSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "id",
+            "bandwidth_id",
             "owner",
             "source_number",
             "destination_number",

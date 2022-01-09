@@ -1,4 +1,3 @@
-import json
 from django.conf import settings
 from django.http import Http404
 
@@ -25,20 +24,27 @@ class SMSMessagesDeliveredCallbackView(APIView):
     """Callback from Bandwidth letting us know the message was delivered"""
 
     def post(self, request, format=None):
-        sms_message_ids = [item["message"]["id"] for item in request.data]
+        bandwidth_ids = [item["message"]["id"] for item in request.data]
 
         # Get the existing database records
-        sms_messages = SMSMessage.objects.filter(pk__in=sms_message_ids)
-
+        sms_messages = SMSMessage.objects.filter(bandwidth_id__in=bandwidth_ids)
 
         # Check inputs
+        # IMPORTANT NOTE ABOUT MMS AND GROUP MESSAGES!
+        # MMS and Group messages do currently support delivery receipts.
+        # However, you will need to have this enabled. Without the delivery receipts enabled,
+        # you will still receive a message delivered event when the message is sent.
+        # The message delivered event will not represent true delivery for only MMS and Group Messages.
+        # This will mean your message has been handed off to the Bandwidth's MMSC network,
+        # but has not been confirmed at the downstream carrier.
+        # https://dev.bandwidth.com/messaging/callbacks/msgDelivered.html
         message_delivered_event_serializer = MessageDeliveredEventSerializer(sms_messages[0], data=request.data[0])
         message_delivered_event_serializer_is_valid = message_delivered_event_serializer.is_valid()
         if not message_delivered_event_serializer_is_valid:
             return Response(message_delivered_event_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         # Update the record in the database
-        sms_messages = message_delivered_event_serializer.save()
+        message_delivered_event_serializer.save()
 
         return Response(message_delivered_event_serializer.data, status=status.HTTP_202_ACCEPTED)
         # # Response serializer is a normal sms_message serializer
