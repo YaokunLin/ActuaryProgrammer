@@ -123,13 +123,6 @@ class SMSMessagesView(APIView):
 
         return Response(status=status.HTTP_202_ACCEPTED, data=serializer.data)
 
-    def get(self, request, format=None):
-        """
-        Return a list of all users.
-        """
-        usernames = [user.username for sms_message in SMSMessage.objects.all()]
-        return Response(usernames)
-
 
 class SMSMessageDetail(APIView):
     """
