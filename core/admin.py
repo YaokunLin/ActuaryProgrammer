@@ -1,29 +1,36 @@
 from django.contrib import admin
 from django.contrib.auth.models import Group
 
+from core.forms import PracticeAdminForm
 
-from .forms import GroupAdminForm
-from .models import Client, User
-
+from .models import Agent, Client, Practice, User
 
 admin.site.unregister(Group)
+
+
+class UserAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "name",
+        "email",
+        "is_staff",
+        "is_superuser",
+    )
 
 
 class ClientAdmin(admin.ModelAdmin):
     list_display = (
         "id",
-        "group",
+        "practice",
         "rest_base_url",
     )
 
 
-class GroupAdmin(admin.ModelAdmin):
-    # Use our custom form.
-    form = GroupAdminForm
-    # Filter permissions horizontal as well.
-    filter_horizontal = ["permissions"]
+class PracticeAdmin(admin.ModelAdmin):
+    form = PracticeAdminForm
 
 
-admin.site.register(User)
+admin.site.register(User, UserAdmin)
+admin.site.register(Agent)
+admin.site.register(Practice, PracticeAdmin)
 admin.site.register(Client, ClientAdmin)
-admin.site.register(Group, GroupAdmin)

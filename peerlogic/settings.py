@@ -12,12 +12,11 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 
 import io
 import os
-import requests
-from requests.auth import HTTPBasicAuth
-from pathlib import Path
 
+import requests
 from dotenv import load_dotenv
 from google.cloud import secretmanager
+from requests.auth import HTTPBasicAuth
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -63,6 +62,7 @@ ALLOWED_HOSTS = ["127.0.0.1", "localhost", os.getenv("DJANGO_ALLOWED_HOSTS", "*"
 if GKE_APPLICATION == "True":
     ALLOWED_HOSTS.append(os.getenv("KUBERNETES_SERVICE_HOST"))
 
+IS_STAFF_TELECOM_DOMAN = os.getenv("IS_STAFF_TELECOM_DOMAN", "Peerlogic")
 
 # Bandwidth
 BANDWIDTH_APPLICATION_ID = os.getenv("BANDWIDTH_APPLICATION_ID")
@@ -80,6 +80,11 @@ NETSAPIENS_ACCESS_TOKEN_URL = os.getenv("NETSAPIENS_ACCESS_TOKEN_URL")
 NETSAPIENS_INTROSPECT_TOKEN_URL = os.getenv("NETSAPIENS_INTROSPECT_TOKEN_URL")
 NETSAPIENS_API_USERNAME = os.getenv("NETSAPIENS_API_USERNAME")
 NETSAPIENS_API_PASSWORD = os.getenv("NETSAPIENS_API_PASSWORD")
+NETSAPIENS_SYSTEM_CLIENT = requests.Session()
+
+# Business Phone Number Detection
+# See FCC: https://www.fcc.gov/consumers/guides/what-toll-free-number-and-how-does-it-work
+TELECOM_AREA_CODES_TO_MARK_AS_BUSINESS_NUMBERS = os.getenv("AREA_CODES_TO_MARK_AS_BUSINESS_NUMBERS", ["800", "888", "877", "866", "855", "844", "833"])
 
 # Twilio API CNAM / Phone Lookup Support
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
@@ -115,11 +120,13 @@ INSTALLED_APPS = [
     "django_extensions",
     "django_celery_beat",
     "phonenumber_field",
+    "peerlogic_admin",
     "corsheaders",
     "core",
     "calls",
-    "reminders",
+    "etl",
     "inbox",
+    "reminders",
 ]
 
 MIDDLEWARE = [

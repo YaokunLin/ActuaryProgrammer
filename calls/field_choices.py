@@ -51,3 +51,9 @@ class TelecomCallerNameInfoTypes(models.TextChoices):
 class TelecomCallerNameInfoSourceTypes(models.TextChoices):
     PEERLOGIC = "peerlogic"
     TWILIO = "twilio"
+
+
+class TelecomCarrierTypes(models.TextChoices):
+    LANDLINE = "landline"  # aka "fixed" or "wireline" - designation provided by the carrier
+    MOBILE = "mobile"  # aka "non-fixed" or "wireless" - designation provided by the carrier
+    VOIP = "voip"  # - classification on the carrier
