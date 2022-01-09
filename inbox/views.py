@@ -10,6 +10,7 @@ from .bandwidth.serializers import (
     BandwidthResponseToSMSMessageSerializer,
     CreateSMSMessageAndConvertToBandwidthRequestSerializer,
     MessageDeliveredEventSerializer,
+    MessageFailedEventSerializer,
 )
 from .models import SMSMessage
 from .serializers import SMSMessageSerializer
@@ -53,9 +54,33 @@ class SMSMessagesDeliveredCallbackView(APIView):
         return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 
 
-class SMSMessagesErroredCallbackView(APIView):
+class SMSMessagesFailedCallbackView(APIView):
+    """Callback from Bandwidth letting us know the message failed to be delivered"""
+
     def post(self, request, format=None):
-        pass
+        bandwidth_ids = [item["message"]["id"] for item in request.data]
+
+        # Get the existing database records
+        sms_message = SMSMessage.objects.filter(bandwidth_id__in=bandwidth_ids).first()
+
+        # Check inputs
+        # In order to receive message events, you need to ensure you have set up your application to send
+        # callbacks to your server's URL.
+        # For MMS and Group Messages, you will only receive this callback if you have enabled
+        # delivery receipts on MMS.
+        message_delivered_event_serializer = MessageFailedEventSerializer(sms_message, data=request.data[0])
+        message_delivered_event_serializer_is_valid = message_delivered_event_serializer.is_valid()
+        if not message_delivered_event_serializer_is_valid:
+            return Response(message_delivered_event_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # Update the record in the database
+        message_delivered_event_serializer.save()
+
+        # Response serializer is a normal sms_message serializer
+        sms_message.refresh_from_db()
+        serializer = SMSMessageSerializer(sms_message)
+
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 
 
 class SMSMessagesView(APIView):
@@ -72,7 +97,6 @@ class SMSMessagesView(APIView):
         if not create_message_serializer_is_valid:
             return Response(create_message_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        pprint(create_message_serializer.data)
         # Call Telecom Client
         response = settings.BANDWIDTH_CLIENT.post(settings.BANDWIDTH_MESSAGING_URI, json=create_message_serializer.data)
         response_data = response.json()

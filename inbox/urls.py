@@ -6,6 +6,6 @@ from . import views
 urlpatterns = [
     path("sms-messages", views.SMSMessagesView.as_view()),
     path("sms-messages/delivered-callback", views.SMSMessagesDeliveredCallbackView.as_view()),
-    path("sms-messages/errored-callback", views.SMSMessagesErroredCallbackView.as_view()),
+    path("sms-messages/failed-callback", views.SMSMessagesFailedCallbackView.as_view()),
     path("sms-messages/<pk>", views.SMSMessageDetail.as_view()),
 ]
