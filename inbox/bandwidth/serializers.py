@@ -125,6 +125,27 @@ class MessageFailedEventSerializer(serializers.Serializer):
 
         return data
 
+    # To Bandwidth representation, example below:
+    # [
+    #   {
+    #       'description': 'delivery-receipt-expired',
+    #       'errorCode': 9902,
+    #       'message': {
+    #             'applicationId': '93de2206-9669-4e07-948d-329f4b722ee2',
+    #             'direction': 'out',
+    #             'from': '+16026757838',
+    #             'id': '16418405240215zg3xeivt636ktzw',
+    #             'owner': '+16026757838',
+    #             'segmentCount': 1,
+    #             'text': 'error test #4',
+    #             'time': '2016-09-14T18:20:16Z',
+    #             'to': ['+14806525408']
+    #       },
+    #       'time': '2016-09-14T18:20:16Z',
+    #       'to': '+14806525408',
+    #       'type': 'message-failed'
+    #   }
+    # ]
     def to_representation(self, instance: SMSMessage) -> Dict:
         representation = dict()
         representation["type"] = instance.message_status
