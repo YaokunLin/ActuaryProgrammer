@@ -29,7 +29,10 @@ class SMSMessageList(generics.ListCreateAPIView):
 
 
 class SMSMessagesDeliveredCallbackView(APIView):
-    """Callback from Bandwidth letting us know the message was delivered"""
+    """
+    Callback from Bandwidth letting us know the message was delivered
+    https://dev.bandwidth.com/docs/messaging/webhooks/#message-delivered
+    """
 
     def post(self, request, format=None):
         bandwidth_ids = [item["message"]["id"] for item in request.data]
@@ -62,7 +65,10 @@ class SMSMessagesDeliveredCallbackView(APIView):
 
 
 class SMSMessagesFailedCallbackView(APIView):
-    """Callback from Bandwidth letting us know the message failed to be delivered"""
+    """
+    Callback from Bandwidth letting us know the message failed to be delivered
+    https://dev.bandwidth.com/docs/messaging/webhooks/#message-failed
+    """
 
     def post(self, request, format=None):
         bandwidth_ids = [item["message"]["id"] for item in request.data]

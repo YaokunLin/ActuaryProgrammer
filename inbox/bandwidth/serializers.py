@@ -26,6 +26,8 @@ class MessageSerializer(serializers.Serializer):
 
 
 class MessageDeliveredEventSerializer(serializers.Serializer):
+    """https://dev.bandwidth.com/docs/messaging/webhooks/#message-delivered"""
+
     message_status = serializers.CharField(max_length=255)
     delivered_date_time = serializers.DateTimeField()
     description = serializers.CharField(max_length=255)
@@ -59,7 +61,7 @@ class MessageDeliveredEventSerializer(serializers.Serializer):
     #   'to': ['+14806525408']
     # }
     def to_representation(self, instance: SMSMessage) -> Dict:
-        representation = dict()
+        representation = {}
         representation["type"] = instance.message_status
         representation["time"] = instance.delivered_date_time
         representation["description"] = "ok"
@@ -105,6 +107,8 @@ class CreateSMSMessageAndConvertToBandwidthRequestSerializer(serializers.Seriali
 
 
 class MessageFailedEventSerializer(serializers.Serializer):
+    """https://dev.bandwidth.com/docs/messaging/webhooks/#message-failed"""
+
     message_status = serializers.CharField(max_length=255)
     delivered_date_time = serializers.DateTimeField()
     description = serializers.CharField(max_length=255)
@@ -147,12 +151,12 @@ class MessageFailedEventSerializer(serializers.Serializer):
     #   }
     # ]
     def to_representation(self, instance: SMSMessage) -> Dict:
-        representation = dict()
+        representation = {}
         representation["type"] = instance.message_status
         representation["time"] = instance.errored_date_time
         representation["error_code"] = instance.errorCode
         representation["description"] = instance.error_message
-        representation["message"] = dict()
+        representation["message"] = {}
         representation["message"]["id"] = instance.bandwidth_id
         representation["message"]["time"] = representation["time"]
         representation["message"]["to"] = instance.to_numbers
