@@ -8,6 +8,7 @@ class SMSMessageSerializer(serializers.ModelSerializer):
         model = SMSMessage
         fields = [
             "id",
+            "bandwidth_id",
             "patient",
             "assigned_to_agent",
             "owner",
@@ -17,8 +18,8 @@ class SMSMessageSerializer(serializers.ModelSerializer):
             "to_numbers",
             "from_number",
             "text",
-            "from_date_time",
-            "to_date_time",
+            "sent_date_time",
+            "delivered_date_time",
             "direction",
             "media",
             "segment_count",
@@ -28,13 +29,14 @@ class SMSMessageSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = [
             "id",
+            "bandwidth_id",
             "owner",
             "source_number",
             "destination_number",
             "to_numbers",
             "from_number",
             "text",
-            "from_date_time",
+            "sent_date_time",
             "direction",
             "segment_count",
             "priority",

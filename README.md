@@ -47,17 +47,25 @@ See 1Password for a starter file: [peerlogic-api LOCAL  starter .env file](https
 
 ### Docker commands:
 
-`docker-compose up postgres`
+Initialize Postgres and create the peerlogic database, without tables:
 
-This will initialize Postgres and create the peerlogic database, without tables.
+`docker-compose up postgres` 
 
-`docker-compose build api`
+Apply the structure of the tables to the database.
 
-After initial build and api and postgres are running, run the following:
+`docker-compose up migrate`
 
-`docker-compose run api python3 manage.py migrate`
+Add the super user with username of `admin` and password of `password`.
 
 `docker-compose run api python3 manage.py createsuperuser`
+
+
+
+After initial build and api and postgres are running, start it all up:
+
+`docker-compose up`
+
+
 
 <!-- TODO: Generate fixtures to play with locally) -->
 

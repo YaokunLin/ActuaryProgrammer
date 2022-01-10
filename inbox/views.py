@@ -1,4 +1,3 @@
-import json
 from django.conf import settings
 from django.http import Http404
 
@@ -7,7 +6,11 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from .bandwidth.serializers import BandwidthResponseToSMSMessageSerializer, CreateMessageSerializer
+from .bandwidth.serializers import (
+    BandwidthResponseToSMSMessageSerializer,
+    CreateSMSMessageAndConvertToBandwidthRequestSerializer,
+    MessageDeliveredEventSerializer,
+)
 from .models import SMSMessage
 from .serializers import SMSMessageSerializer
 
@@ -17,25 +20,63 @@ class SMSMessageViewSet(viewsets.ModelViewSet):
     serializer_class = SMSMessageSerializer
 
 
+class SMSMessagesDeliveredCallbackView(APIView):
+    """Callback from Bandwidth letting us know the message was delivered"""
+
+    def post(self, request, format=None):
+        bandwidth_ids = [item["message"]["id"] for item in request.data]
+
+        # Get the existing database records
+        sms_message = SMSMessage.objects.filter(bandwidth_id__in=bandwidth_ids).first()
+
+        # Check inputs
+        # IMPORTANT NOTE ABOUT MMS AND GROUP MESSAGES!
+        # MMS and Group messages do currently support delivery receipts.
+        # However, you will need to have this enabled. Without the delivery receipts enabled,
+        # you will still receive a message delivered event when the message is sent.
+        # The message delivered event will not represent true delivery for only MMS and Group Messages.
+        # This will mean your message has been handed off to the Bandwidth's MMSC network,
+        # but has not been confirmed at the downstream carrier.
+        # https://dev.bandwidth.com/messaging/callbacks/msgDelivered.html
+        message_delivered_event_serializer = MessageDeliveredEventSerializer(sms_message, data=request.data[0])
+        message_delivered_event_serializer_is_valid = message_delivered_event_serializer.is_valid()
+        if not message_delivered_event_serializer_is_valid:
+            return Response(message_delivered_event_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # Update the record in the database
+        message_delivered_event_serializer.save()
+
+        # Response serializer is a normal sms_message serializer
+        sms_message.refresh_from_db()
+        serializer = SMSMessageSerializer(sms_message)
+
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+
+
+class SMSMessagesErroredCallbackView(APIView):
+    def post(self, request, format=None):
+        pass
+
+
 class SMSMessagesView(APIView):
     """
     Create a new SMSMessage.
-    # TODO: list once pagination comes available
+    # TODO: list once Bandwidth callbacks are available
     # TODO: from_number will always come from 1 assigned group/domain's sms number, not willy-nilly
-
-    # TODO: lock down authorization
     """
 
     def post(self, request, format=None):
         # Check inputs
-        create_message_serializer = CreateMessageSerializer(data=request.data)
+        create_message_serializer = CreateSMSMessageAndConvertToBandwidthRequestSerializer(data=request.data)
         create_message_serializer_is_valid = create_message_serializer.is_valid()
         if not create_message_serializer_is_valid:
             return Response(create_message_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
         # Call Telecom Client
         response = settings.BANDWIDTH_CLIENT.post(settings.BANDWIDTH_MESSAGING_URI, json=create_message_serializer.data)
         response_data = response.json()
+
         if response.status_code >= 300:
             return Response(response_data, status=response.status_code)
 

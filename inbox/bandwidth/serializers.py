@@ -1,3 +1,4 @@
+from typing import Dict
 from django.conf import settings
 from django.db.models.fields import CharField, DateTimeField
 from django.http.request import RawPostDataException
@@ -13,25 +14,80 @@ class MessageSerializer(serializers.Serializer):
     id = serializers.CharField(max_length=255)
     owner = PhoneNumberField()
     time = serializers.DateTimeField()
+    text = serializers.CharField(max_length=2048)
     direction = serializers.CharField(max_length=255)
     to_number = ListField(child=PhoneNumberField(), source="to")
     from_number = PhoneNumberField(source="from")
+    # TODO: change to UUIDField
     applicationId = serializers.CharField(max_length=255)
     media = ListField(child=serializers.CharField(max_length=255), allow_null=True)
     tag = serializers.CharField(max_length=255)
     segmentCount = serializers.IntegerField(min_value=1)
 
 
-class MessageEventSerializer(serializers.Serializer):
-    event_type = serializers.CharField(source=type, max_length=255)  # 'type' is a reserved keyword in python
-    time = serializers.DateTimeField()
+class MessageDeliveredEventSerializer(serializers.Serializer):
+    message_status = serializers.CharField(max_length=255)
+    delivered_date_time = serializers.DateTimeField()
     description = serializers.CharField(max_length=255)
-    to_number = PhoneNumberField(source="to")
-    error_code = serializers.IntegerField(source="errorCode")
+    destination_number = PhoneNumberField(source="to")
+    # add error code to ErroredEventSerializer
+    # error_code = serializers.IntegerField(source="errorCode")
     message = MessageSerializer()
 
+    # Takes the unvalidated incoming data as input and
+    # should return the validated data that will be
+    # made available as serializer.validated_data
+    # internal value runs first
+    def to_internal_value(self, data):
+        data["message_status"] = data.pop("type")
+        data["delivered_date_time"] = data.pop("time")
+        data["destination_number"] = data.pop("to")
 
-class CreateMessageSerializer(serializers.Serializer):
+        return data
+
+    # To Bandwidth representation, example below:
+    # {
+    #   'applicationId': 'c1d4708e-78d1-46fc-9b75-7770b4545a15',
+    #   'direction': 'out',
+    #   'from': '+16026757838',
+    #   'id': '16418405240215zg3xeivt636ktzw',
+    #   'owner': '+16026757838',
+    #   'segmentCount': 1,
+    #   'tag': 'test message',
+    #   'text': 'sms test',
+    #   'time': '2022-01-10T18:48:44.021Z',
+    #   'to': ['+14806525408']
+    # }
+    def to_representation(self, instance: SMSMessage) -> Dict:
+        representation = dict()
+        representation["type"] = instance.message_status
+        representation["time"] = instance.delivered_date_time
+        representation["description"] = "ok"
+        representation["message"] = {}
+        representation["message"]["id"] = instance.bandwidth_id
+        representation["message"]["time"] = representation["time"]
+        representation["message"]["to"] = instance.to_numbers
+        representation["message"]["from"] = str(instance.from_number)
+        representation["message"]["text"] = instance.text
+        representation["message"]["applicationId"] = instance.application_id
+        representation["message"]["owner"] = str(instance.owner)
+        representation["message"]["direction"] = instance.direction
+        representation["message"]["segment_count"] = instance.segment_count
+
+        return representation
+
+    def update(self, instance, validated_data):
+        instance.message_status = validated_data.get("message_status")
+        instance.delivered_date_time = validated_data.get("delivered_date_time")
+        instance.destination_number = validated_data.get("destination_number")
+        instance.direction = validated_data.get("direction", instance.direction)
+        instance.segment_count = validated_data.get("segment_count", instance.segment_count)
+        instance.owner = validated_data.get("owner", instance.owner)
+        instance.save()
+        return instance
+
+
+class CreateSMSMessageAndConvertToBandwidthRequestSerializer(serializers.Serializer):
     to_numbers = ListField(child=PhoneNumberField())
     from_number = PhoneNumberField()
     text = serializers.CharField(max_length=2048)
@@ -49,9 +105,9 @@ class CreateMessageSerializer(serializers.Serializer):
 
 
 class BandwidthResponseToSMSMessageSerializer(serializers.Serializer):
-    id = CharField(max_length=30)
+    bandwidth_id = CharField(max_length=30)
     owner = PhoneNumberField()
-    from_date_time = serializers.DateTimeField(source="time")
+    sent_date_time = serializers.DateTimeField(source="time")
     direction = serializers.CharField(max_length=255)
     to_numbers = ListField(child=PhoneNumberField(), source="to")
     from_number = PhoneNumberField(source="from")
@@ -60,7 +116,8 @@ class BandwidthResponseToSMSMessageSerializer(serializers.Serializer):
     segment_count = serializers.IntegerField(source="segmentCount")
 
     def to_internal_value(self, data):
-        data["from_date_time"] = data.pop("time")
+        data["bandwidth_id"] = data.pop("id")
+        data["sent_date_time"] = data.pop("time")
         data["from_number"] = data.pop("from")
         data["to_numbers"] = data.pop("to")
         data["segment_count"] = data.pop("segmentCount")
