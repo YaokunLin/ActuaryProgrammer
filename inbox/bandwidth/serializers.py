@@ -26,6 +26,8 @@ class MessageSerializer(serializers.Serializer):
 
 
 class MessageDeliveredEventSerializer(serializers.Serializer):
+    """https://dev.bandwidth.com/docs/messaging/webhooks/#message-delivered"""
+
     message_status = serializers.CharField(max_length=255)
     delivered_date_time = serializers.DateTimeField()
     description = serializers.CharField(max_length=255)
@@ -59,7 +61,7 @@ class MessageDeliveredEventSerializer(serializers.Serializer):
     #   'to': ['+14806525408']
     # }
     def to_representation(self, instance: SMSMessage) -> Dict:
-        representation = dict()
+        representation = {}
         representation["type"] = instance.message_status
         representation["time"] = instance.delivered_date_time
         representation["description"] = "ok"
@@ -102,6 +104,82 @@ class CreateSMSMessageAndConvertToBandwidthRequestSerializer(serializers.Seriali
         # always pass applicationId
         representation["applicationId"] = settings.BANDWIDTH_APPLICATION_ID
         return representation
+
+
+class MessageFailedEventSerializer(serializers.Serializer):
+    """https://dev.bandwidth.com/docs/messaging/webhooks/#message-failed"""
+
+    message_status = serializers.CharField(max_length=255)
+    delivered_date_time = serializers.DateTimeField()
+    description = serializers.CharField(max_length=255)
+    destination_number = PhoneNumberField(source="to")
+    error_code = serializers.IntegerField(source="errorCode")
+    message = MessageSerializer()
+
+    # Takes the unvalidated incoming data as input and
+    # should return the validated data that will be
+    # made available as serializer.validated_data
+    # to_internal_value runs first
+    def to_internal_value(self, data):
+        data["message_status"] = data.pop("type")
+        data["errored_date_time"] = data.pop("time")
+        data["destination_number"] = data.pop("to")
+        data["error_code"] = data.pop("errorCode")
+        data["error_message"] = data.pop("description")
+
+        return data
+
+    # To Bandwidth representation, example below:
+    # [
+    #   {
+    #       'description': 'delivery-receipt-expired',
+    #       'errorCode': 9902,
+    #       'message': {
+    #             'applicationId': '93de2206-9669-4e07-948d-329f4b722ee2',
+    #             'direction': 'out',
+    #             'from': '+16026757838',
+    #             'id': '16418405240215zg3xeivt636ktzw',
+    #             'owner': '+16026757838',
+    #             'segmentCount': 1,
+    #             'text': 'error test #4',
+    #             'time': '2016-09-14T18:20:16Z',
+    #             'to': ['+14806525408']
+    #       },
+    #       'time': '2016-09-14T18:20:16Z',
+    #       'to': '+14806525408',
+    #       'type': 'message-failed'
+    #   }
+    # ]
+    def to_representation(self, instance: SMSMessage) -> Dict:
+        representation = {}
+        representation["type"] = instance.message_status
+        representation["time"] = instance.errored_date_time
+        representation["error_code"] = instance.errorCode
+        representation["description"] = instance.error_message
+        representation["message"] = {}
+        representation["message"]["id"] = instance.bandwidth_id
+        representation["message"]["time"] = representation["time"]
+        representation["message"]["to"] = instance.to_numbers
+        representation["message"]["from"] = str(instance.from_number)
+        representation["message"]["text"] = instance.text
+        representation["message"]["applicationId"] = instance.application_id
+        representation["message"]["owner"] = str(instance.owner)
+        representation["message"]["direction"] = instance.direction
+        representation["message"]["segment_count"] = instance.segment_count
+
+        return representation
+
+    def update(self, instance, validated_data):
+        instance.message_status = validated_data.get("message_status")
+        instance.errored_date_time = validated_data.get("errored_date_time")
+        instance.error_code = validated_data.get("error_code")
+        instance.error_message = validated_data.get("error_message")
+        instance.destination_number = validated_data.get("destination_number")
+        instance.direction = validated_data.get("direction", instance.direction)
+        instance.segment_count = validated_data.get("segment_count", instance.segment_count)
+        instance.owner = validated_data.get("owner", instance.owner)
+        instance.save()
+        return instance
 
 
 class BandwidthResponseToSMSMessageSerializer(serializers.Serializer):

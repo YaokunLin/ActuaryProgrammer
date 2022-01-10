@@ -23,6 +23,8 @@ class SMSMessage(AuditTrailModel):
     message_status = models.CharField(choices=MESSAGE_STATUSES, blank=True, max_length=255)
     sent_date_time = models.DateTimeField()
     delivered_date_time = models.DateTimeField(null=True)
+    errored_date_time = models.DateTimeField(null=True)
+    error_message = models.CharField(max_length=180, blank=True)
     direction = models.CharField(max_length=255)
     media = models.JSONField(null=True)
     segment_count = models.IntegerField(null=True)
