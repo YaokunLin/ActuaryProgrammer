@@ -97,7 +97,6 @@ class SMSMessagesView(APIView):
         if not create_message_serializer_is_valid:
             return Response(create_message_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
         # Call Telecom Client
         response = settings.BANDWIDTH_CLIENT.post(settings.BANDWIDTH_MESSAGING_URI, json=create_message_serializer.data)
         response_data = response.json()
