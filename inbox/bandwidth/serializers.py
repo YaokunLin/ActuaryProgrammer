@@ -45,12 +45,25 @@ class MessageDeliveredEventSerializer(serializers.Serializer):
 
         return data
 
+    # To Bandwidth representation, example below:
+    # {
+    #   'applicationId': 'c1d4708e-78d1-46fc-9b75-7770b4545a15',
+    #   'direction': 'out',
+    #   'from': '+16026757838',
+    #   'id': '16418405240215zg3xeivt636ktzw',
+    #   'owner': '+16026757838',
+    #   'segmentCount': 1,
+    #   'tag': 'test message',
+    #   'text': 'sms test',
+    #   'time': '2022-01-10T18:48:44.021Z',
+    #   'to': ['+14806525408']
+    # }
     def to_representation(self, instance: SMSMessage) -> Dict:
         representation = dict()
         representation["type"] = instance.message_status
         representation["time"] = instance.delivered_date_time
         representation["description"] = "ok"
-        representation["message"] = dict()
+        representation["message"] = {}
         representation["message"]["id"] = instance.bandwidth_id
         representation["message"]["time"] = representation["time"]
         representation["message"]["to"] = instance.to_numbers
