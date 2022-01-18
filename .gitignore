@@ -126,3 +126,6 @@ transaction.yaml
 key-file
 
 .DS_Store
+
+# Security / Credentials
+.credentials
