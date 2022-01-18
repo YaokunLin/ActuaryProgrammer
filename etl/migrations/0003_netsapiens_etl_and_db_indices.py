@@ -25,15 +25,15 @@ class Migration(migrations.Migration):
             field=models.IntegerField(db_index=True, primary_key=True, serialize=False),
         ),
         migrations.CreateModel(
-            name='NetsapiensCallExtract',
+            name='NetsapiensCdrsExtract',
             fields=[
                 ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
                 ('modified_at', models.DateTimeField(auto_now=True, db_index=True)),
                 ('netsapiens_callid', models.CharField(db_index=True, max_length=127, primary_key=True, serialize=False)),
                 ('peerlogic_call_id', models.CharField(blank=True, db_index=True, default='', max_length=22)),
                 ('netsapiens_cdrs_extract', models.JSONField(default=dict, help_text='CDRs')),
-                ('created_by', django_userforeignkey.models.fields.UserForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='netsapienscallextract_created', to=settings.AUTH_USER_MODEL, verbose_name='The user that is automatically assigned')),
-                ('modified_by', django_userforeignkey.models.fields.UserForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='netsapienscallextract_modified', to=settings.AUTH_USER_MODEL, verbose_name='The user that is automatically assigned')),
+                ('created_by', django_userforeignkey.models.fields.UserForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='NetsapiensCdrsExtract_created', to=settings.AUTH_USER_MODEL, verbose_name='The user that is automatically assigned')),
+                ('modified_by', django_userforeignkey.models.fields.UserForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='NetsapiensCdrsExtract_modified', to=settings.AUTH_USER_MODEL, verbose_name='The user that is automatically assigned')),
             ],
             options={
                 'get_latest_by': 'modified_at',

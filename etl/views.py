@@ -2,13 +2,13 @@ from django.shortcuts import render
 
 from rest_framework import viewsets
 
-from .models import NetsapiensCallExtract, VeloxPatientExtract
-from .serializers import NetsapiensCallExtractSerializer, VeloxPatientExtractSerializer
+from .models import NetsapiensCdrsExtract, VeloxPatientExtract
+from .serializers import NetsapiensCdrsExtractSerializer, VeloxPatientExtractSerializer
 
 
-class NetsapiensCallExtractViewset(viewsets.ModelViewSet):
-    queryset = NetsapiensCallExtract.objects.all()
-    serializer_class = NetsapiensCallExtractSerializer
+class NetsapiensCdrsExtractViewset(viewsets.ModelViewSet):
+    queryset = NetsapiensCdrsExtract.objects.all()
+    serializer_class = NetsapiensCdrsExtractSerializer
 
     filterset_fields = ["peerlogic_call_id", "netsapiens_callid"]
 

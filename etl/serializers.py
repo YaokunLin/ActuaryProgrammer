@@ -1,11 +1,11 @@
 from rest_framework import serializers
 
-from .models import NetsapiensCallExtract, VeloxPatientExtract
+from .models import NetsapiensCdrsExtract, VeloxPatientExtract
 
 
-class NetsapiensCallExtractSerializer(serializers.ModelSerializer):
+class NetsapiensCdrsExtractSerializer(serializers.ModelSerializer):
     class Meta:
-        model = NetsapiensCallExtract
+        model = NetsapiensCdrsExtract
         fields = "__all__"
 
 
