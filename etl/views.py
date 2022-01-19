@@ -9,6 +9,7 @@ from .serializers import NetsapiensCdrsExtractSerializer, VeloxPatientExtractSer
 
 class NetsapiensCdrsExtractViewset(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
+    authentication_classes = []
     queryset = NetsapiensCdrsExtract.objects.all()
     serializer_class = NetsapiensCdrsExtractSerializer
 
