@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 @authentication_classes([])
 @permission_classes([AllowAny])
 def netsapiens_call_subscription_view(request):
-    log.info(f"Netsapiens Call subscription: \nHeaders: {request.headers} POST Data {request.data}")
+    log.info(f"Netsapiens Call subscription: \nHeaders: {request.headers}\nPOST Data {request.data}")
     return Response(request.data)
 
 
@@ -26,7 +26,7 @@ def netsapiens_call_subscription_view(request):
 @authentication_classes([])
 @permission_classes([AllowAny])
 def netsapiens_call_origid_subscription_view(request):
-    log.info(f"Netsapiens Call ORIG id subscription: \nHeaders: {request.headers} POST Data {request.data}")
+    log.info(f"Netsapiens Call ORIG id subscription: \nHeaders: {request.headers}\nPOST Data {request.data}")
     return Response(request.data)
 
 
