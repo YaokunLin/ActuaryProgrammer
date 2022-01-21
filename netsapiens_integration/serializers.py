@@ -90,4 +90,4 @@ class NetsapiensSubscriptionClientSerializer(serializers.ModelSerializer):
     class Meta:
         model = NetsapiensSubscriptionClient
         read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
-        fields = ["id", "created_at", "modified_by", "modified_at", "voip_provider"]  # do not include secret_key
+        fields = ["id", "created_at", "modified_by", "modified_at", "voip_provider"]
