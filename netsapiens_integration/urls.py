@@ -1,0 +1,17 @@
+from django.urls import include, path, re_path
+from rest_framework import routers
+from .views import netsapiens_call_origid_subscription_view, netsapiens_call_subscription_view, NetsapiensSubscriptionClientViewset
+
+app_name = "netsapiens_integration"
+
+router = routers.DefaultRouter()
+
+
+router.register(r"netsapiens-subscription-clients", NetsapiensSubscriptionClientViewset, basename="netsapiens-subscription-clients")
+
+
+urlpatterns = [
+    path("", include(router.urls)),
+    path("<voip_provider_id>/<client_id>/call-subscription/", netsapiens_call_subscription_view),
+    # path('call-origid-subscription/', netsapiens_call_origid_subscription_view),
+]

@@ -8,7 +8,7 @@ from django_extensions.db.fields import ShortUUIDField
 from phonenumber_field.modelfields import PhoneNumberField
 
 from core.abstract_models import AuditTrailModel
-from core.field_choices import IndustryTypes
+from core.field_choices import IndustryTypes, VoipProviderIntegrationTypes
 from core.managers import PracticeManager, UserManager
 
 # This is to mimick Django's permissions mixin
@@ -174,3 +174,9 @@ class UserPatient(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+
+
+class VoipProvider(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    company_name = models.CharField(max_length=160)  # OIT Services
+    integration_type = models.CharField(max_length=150, choices=VoipProviderIntegrationTypes.choices, default=VoipProviderIntegrationTypes.NETSAPIENS)

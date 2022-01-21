@@ -25,6 +25,10 @@ from reminders.urls import urlpatterns as reminders_urlpatterns
 
 admin.site.site_header = "Peerlogic API Admin Portal"
 
+integration_url_patterns = [
+    path("netsapiens/", include("netsapiens_integration.urls", namespace="netsapiens")),
+]
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
@@ -32,5 +36,6 @@ urlpatterns = [
     path("api/", include(core_urlpatterns)),
     path("api/", include(etl_urlpatterns)),
     path("api/", include(inbox_urlpatterns)),
+    path("api/integrations/", include(integration_url_patterns)),
     path("api/", include(reminders_urlpatterns)),
 ]
