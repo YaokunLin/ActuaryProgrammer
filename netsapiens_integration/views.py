@@ -116,14 +116,16 @@ log = logging.getLogger(__name__)
 @authentication_classes([])
 @permission_classes([AllowAny])
 def netsapiens_call_subscription_view(request, voip_provider_id=None, client_id=None):
-    # Check VOIP provider id
     log.info(f"VOIP provider id: {voip_provider_id}")
-    # Check VOIP client id
-    log.info(f"VOIP Client id: {client_id}")
+    log.info(f"VOIP NetsapiensSubscriptionClient id: {client_id}")
+    client = NetsapiensSubscriptionClient.objects.get(pk=client_id)
+    if client.voip_provider.id != voip_provider_id:
+        return Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": "Invalid VOIP Provider."})
 
     log.info(f"Netsapiens Call subscription: Headers: {request.headers} POST Data {request.data}")
     event_data = request.data
-    event_data["netsapiens_subscription_client"] = client_id
+    for cdr in event_data:
+        cdr["netsapiens_subscription_client"] = client_id
     callid_orig_by_term_pairings_list = get_callid_tuples_from_subscription_event(event_data)
     if settings.NETSAPIENS_ETL_CALL_MODEL_SUBSCRIPTION_TYPE == "call":
         # Convert subscription payload to NetsapiensCallsSubscriptionEventExtract
