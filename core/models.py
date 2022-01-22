@@ -178,5 +178,5 @@ class UserPatient(AuditTrailModel):
 
 class VoipProvider(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
-    company_name = models.CharField(max_length=160)  # OIT Services
+    company_name = models.CharField(max_length=160)  # e.g. OIT Services
     integration_type = models.CharField(max_length=150, choices=VoipProviderIntegrationTypes.choices, default=VoipProviderIntegrationTypes.NETSAPIENS)
