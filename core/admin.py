@@ -29,8 +29,7 @@ class ClientAdmin(admin.ModelAdmin):
 class VoipProviderAdmin(admin.ModelAdmin):
     list_display = (
         "id",
-        "company_name",
-        "rest_base_url",
+        "company_name"
     )
 
 
