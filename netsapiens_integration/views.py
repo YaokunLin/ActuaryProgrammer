@@ -12,8 +12,13 @@ from netsapiens_integration.helpers import get_callid_tuples_from_subscription_e
 from netsapiens_integration.publishers import publish_leg_b_ready_cdrs
 
 
-from .models import NetsapiensSubscriptionClient
-from .serializers import NetsapiensCallsSubscriptionEventExtractSerializer, NetsapiensSubscriptionClientSerializer
+from .models import NetsapiensCdr2Extract, NetsapiensCallsSubscriptionEventExtract, NetsapiensSubscriptionClient
+from .serializers import (
+    NetsapiensCdr2ExtractSerializer,
+    NetsapiensCallsSubscriptionEventExtract,
+    NetsapiensCallsSubscriptionEventExtractSerializer,
+    NetsapiensSubscriptionClientSerializer,
+)
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -224,3 +229,17 @@ class NetsapiensSubscriptionClientViewset(viewsets.ModelViewSet):
     serializer_class = NetsapiensSubscriptionClientSerializer
 
     filterset_fields = ["voip_provider"]
+
+
+class NetsapiensCdr2ExtractViewset(viewsets.ModelViewSet):
+    queryset = NetsapiensCdr2Extract.objects.all()
+    serializer_class = NetsapiensCdr2ExtractSerializer
+
+    filterset_fields = ["orig_callid", "by_callid", "term_callid"]
+
+
+class NetsapiensCallsSubscriptionEventExtractViewset(viewsets.ModelViewSet):
+    queryset = NetsapiensCallsSubscriptionEventExtract.objects.all()
+    serializer_class = NetsapiensCallsSubscriptionEventExtractSerializer
+
+    filterset_fields = ["orig_callid", "by_callid", "term_callid"]
