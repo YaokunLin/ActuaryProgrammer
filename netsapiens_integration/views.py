@@ -152,7 +152,10 @@ def netsapiens_call_subscription_view(request, voip_provider_id=None, client_id=
     try:
         publish_cdrs(event_data)
     except PermissionDenied:
-        log.exception("Must add role")
+        message = "Must add role 'roles/pubsub.publisher'. Exiting."
+        log.exception(message)
+        return Response(status=status.HTTP_403_FORBIDDEN, data={"error": message})
+
 
     # publish_futures = publish_cdrs(event_data)
     # Experimenting with NOT waiting for all the publish futures to resolve before responding.
