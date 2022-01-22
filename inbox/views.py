@@ -24,7 +24,7 @@ log = logging.getLogger(__name__)
 
 
 class SMSMessageList(generics.ListCreateAPIView):
-    queryset = SMSMessage.objects.all()
+    queryset = SMSMessage.objects.all().order_by("-modified_at")
     serializer_class = SMSMessageSerializer
 
 

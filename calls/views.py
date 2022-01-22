@@ -33,17 +33,17 @@ log = logging.getLogger(__name__)
 
 
 class CallViewset(viewsets.ModelViewSet):
-    queryset = Call.objects.all()
+    queryset = Call.objects.all().order_by("-created_at")
     serializer_class = CallSerializer
 
 
 class CallLabelViewset(viewsets.ModelViewSet):
-    queryset = CallLabel.objects.all()
+    queryset = CallLabel.objects.all().order_by("-created_at")
     serializer_class = CallLabelSerializer
 
 
 class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
-    queryset = TelecomCallerNameInfo.objects.all()
+    queryset = TelecomCallerNameInfo.objects.all().order_by("-modified_at")
     serializer_class = TelecomCallerNameInfoSerializer
     filter_fields = ["caller_name_type", "source"]
     search_fields = ["caller_name"]

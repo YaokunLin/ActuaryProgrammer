@@ -92,11 +92,11 @@ class LoginView(APIView):
 
 
 class ClientViewset(viewsets.ModelViewSet):
-    queryset = Client.objects.all()
+    queryset = Client.objects.all().order_by("-modified_at")
     serializer_class = ClientSerializer
 
     def get_queryset(self):
-        queryset = Client.objects.all()
+        queryset = Client.objects.all().order_by("-modified_at")
         practice_name = self.request.query_params.get("practice_name", None)
         if practice_name is not None:
             queryset = queryset.filter(practice__name=practice_name)
@@ -104,7 +104,7 @@ class ClientViewset(viewsets.ModelViewSet):
 
 
 class PatientViewset(viewsets.ModelViewSet):
-    queryset = Patient.objects.all()
+    queryset = Patient.objects.all().order_by("-modified_at")
     serializer_class = PatientSerializer
 
     filterset_fields = ["phone_mobile", "phone_home", "phone_work", "phone_fax"]
@@ -112,7 +112,7 @@ class PatientViewset(viewsets.ModelViewSet):
 
 
 class VoipProviderViewset(viewsets.ModelViewSet):
-    queryset = VoipProvider.objects.all()
+    queryset = VoipProvider.objects.all().order_by("-modified_at")
     serializer_class = VoipProviderSerializer
 
     filterset_fields = ["company_name"]
