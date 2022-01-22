@@ -128,6 +128,7 @@ INSTALLED_APPS = [
     "etl",
     "inbox",
     "reminders",
+    "netsapiens_integration",
 ]
 
 MIDDLEWARE = [

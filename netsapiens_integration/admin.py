@@ -1,0 +1,6 @@
+from django.contrib import admin
+
+from netsapiens_integration.models import NetsapiensCallsSubscriptionEventExtract, NetsapiensSubscriptionClient
+
+admin.site.register(NetsapiensSubscriptionClient)
+admin.site.register(NetsapiensCallsSubscriptionEventExtract)
