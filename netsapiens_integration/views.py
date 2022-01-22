@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from google.api_core.exceptions import PermissionDenied
 
 from netsapiens_integration.helpers import get_callid_tuples_from_subscription_event
-from netsapiens_integration.publishers import publish_cdrs
+from netsapiens_integration.publishers import publish_leg_b_ready_cdrs
 
 
 from .models import NetsapiensSubscriptionClient
@@ -150,14 +150,13 @@ def netsapiens_call_subscription_view(request, voip_provider_id=None, client_id=
     log.info(f"Extract data for call ids: {callid_orig_by_term_pairings_list} from Call subscription saved to netsapiens etl cdrs extract.")
 
     try:
-        publish_cdrs(event_data)
+        publish_leg_b_ready_cdrs(event_data)
     except PermissionDenied:
         message = "Must add role 'roles/pubsub.publisher'. Exiting."
         log.exception(message)
         return Response(status=status.HTTP_403_FORBIDDEN, data={"error": message})
 
-
-    # publish_futures = publish_cdrs(event_data)
+    # publish_futures = publish_leg_b_ready_cdrs(event_data)
     # Experimenting with NOT waiting for all the publish futures to resolve before responding.
     # futures.wait(publish_futures, return_when=futures.ALL_COMPLETED)
 
