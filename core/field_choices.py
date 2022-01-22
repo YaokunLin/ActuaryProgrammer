@@ -12,3 +12,7 @@ class IndustryTypes(models.TextChoices):
     DENTISTRY_ORAL_SURGERY = "dentistry_oral_surgery"
     DENTISTRY_OTHERS = "dentistry_others"
     OTHERS = "others"
+
+
+class VoipProviderIntegrationTypes(models.TextChoices):
+    NETSAPIENS = "netsapiens"

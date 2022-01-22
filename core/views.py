@@ -14,8 +14,8 @@ from rest_framework.views import APIView
 
 from core.setup_user_and_practice import create_agent, create_user_telecom, save_user_activity_and_token, setup_practice, setup_user
 
-from .models import Client, Patient
-from .serializers import ClientSerializer, PatientSerializer
+from .models import Client, Patient, VoipProvider
+from .serializers import ClientSerializer, PatientSerializer, VoipProviderSerializer
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -109,3 +109,10 @@ class PatientViewset(viewsets.ModelViewSet):
 
     filterset_fields = ["phone_mobile", "phone_home", "phone_work", "phone_fax"]
     search_fields = ["name_first", "name_last", "phone_mobile", "phone_home", "phone_work"]
+
+
+class VoipProviderViewset(viewsets.ModelViewSet):
+    queryset = VoipProvider.objects.all()
+    serializer_class = VoipProviderSerializer
+
+    filterset_fields = ["company_name"]
