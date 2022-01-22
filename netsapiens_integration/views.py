@@ -6,7 +6,11 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from google.api_core.exceptions import PermissionDenied
+
 from netsapiens_integration.helpers import get_callid_tuples_from_subscription_event
+from netsapiens_integration.publishers import publish_cdrs
+
 
 from .models import NetsapiensSubscriptionClient
 from .serializers import NetsapiensCallsSubscriptionEventExtractSerializer, NetsapiensSubscriptionClientSerializer
@@ -116,32 +120,45 @@ log = logging.getLogger(__name__)
 @authentication_classes([])
 @permission_classes([AllowAny])
 def netsapiens_call_subscription_view(request, voip_provider_id=None, client_id=None):
-    log.info(f"VOIP provider id: {voip_provider_id}")
-    log.info(f"VOIP NetsapiensSubscriptionClient id: {client_id}")
+    log.info(
+        f"Netsapiens Call subscription: Headers: {request.headers} POST Data {request.data} VOIP provider id: {voip_provider_id} and VOIP NetsapiensSubscriptionClient id: {client_id}"
+    )
+
     client = NetsapiensSubscriptionClient.objects.get(pk=client_id)
     if client.voip_provider.id != voip_provider_id:
         return Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": "Invalid VOIP Provider."})
 
-    log.info(f"Netsapiens Call subscription: Headers: {request.headers} POST Data {request.data}")
     event_data = request.data
     for cdr in event_data:
         cdr["netsapiens_subscription_client"] = client_id
-    callid_orig_by_term_pairings_list = get_callid_tuples_from_subscription_event(event_data)
-    if settings.NETSAPIENS_ETL_CALL_MODEL_SUBSCRIPTION_TYPE == "call":
-        # Convert subscription payload to NetsapiensCallsSubscriptionEventExtract
-        subscription_event_serializer = NetsapiensCallsSubscriptionEventExtractSerializer(data=request.data, many=True)
-        subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
-        if not subscription_event_serializer_is_valid:
-            log.exception(
-                f"Error from subscription_event_serializer validation from callids {callid_orig_by_term_pairings_list}: {subscription_event_serializer.errors}"
-            )
-            return Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": subscription_event_serializer.errors})
 
-        subscription_events = subscription_event_serializer.save()
-        log.info(f"Extract data for call ids: {callid_orig_by_term_pairings_list} from Call subscription saved to netsapiens etl cdrs extract.")
-    else:
+    callid_orig_by_term_pairings_list = get_callid_tuples_from_subscription_event(event_data)
+    if settings.NETSAPIENS_ETL_CALL_MODEL_SUBSCRIPTION_TYPE != "call":
         log.info(f"NETSAPIENS_ETL_CALL_MODEL_SUBSCRIPTION_TYPE not set to call. Not saving to database for call ids {callid_orig_by_term_pairings_list}")
-    return Response(request.data)
+        return Response(request.data)
+
+    # Convert subscription payload to NetsapiensCallsSubscriptionEventExtract
+    subscription_event_serializer = NetsapiensCallsSubscriptionEventExtractSerializer(data=request.data, many=True)
+    subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
+    if not subscription_event_serializer_is_valid:
+        log.exception(
+            f"Error from subscription_event_serializer validation from callids {callid_orig_by_term_pairings_list}: {subscription_event_serializer.errors}"
+        )
+        return Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": subscription_event_serializer.errors})
+
+    subscription_event_serializer.save()
+    log.info(f"Extract data for call ids: {callid_orig_by_term_pairings_list} from Call subscription saved to netsapiens etl cdrs extract.")
+
+    try:
+        publish_cdrs(event_data)
+    except PermissionDenied:
+        log.exception("Must add role")
+
+    # publish_futures = publish_cdrs(event_data)
+    # Experimenting with NOT waiting for all the publish futures to resolve before responding.
+    # futures.wait(publish_futures, return_when=futures.ALL_COMPLETED)
+
+    return Response(status=status.HTTP_202_ACCEPTED, data=event_data)
 
 
 # Headers:
