@@ -225,7 +225,7 @@ def netsapiens_call_origid_subscription_view(request):
 
 
 class NetsapiensSubscriptionClientViewset(viewsets.ModelViewSet):
-    queryset = NetsapiensSubscriptionClient.objects.all()
+    queryset = NetsapiensSubscriptionClient.objects.all().order_by("-modified_at")
     serializer_class = NetsapiensSubscriptionClientSerializer
 
     filterset_fields = ["voip_provider"]

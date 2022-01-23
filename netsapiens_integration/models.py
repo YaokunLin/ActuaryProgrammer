@@ -1,4 +1,5 @@
 from django.db import models
+from django.urls import reverse
 
 from django_extensions.db.fields import ShortUUIDField
 
@@ -8,6 +9,10 @@ from core.abstract_models import AuditTrailModel
 class NetsapiensSubscriptionClient(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     voip_provider = models.ForeignKey("core.VoipProvider", on_delete=models.CASCADE)
+
+    @property
+    def call_subscription_uri(self):
+        return reverse("netsapiens:call-subscription", kwargs={"voip_provider_id": self.voip_provider.pk, "client_id": self.id})
 
 
 class NetsapiensCallsSubscriptionEventExtract(AuditTrailModel):
