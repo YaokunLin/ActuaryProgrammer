@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 
 
 import io
+import logging
 import os
 
 import requests
@@ -22,6 +23,9 @@ from google.cloud import pubsub_v1
 from google.cloud import secretmanager
 
 from requests.auth import HTTPBasicAuth
+
+# Get an instance of a logger
+log = logging.getLogger(__name__)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -90,7 +94,8 @@ NETSAPIENS_INTROSPECT_TOKEN_URL = os.getenv("NETSAPIENS_INTROSPECT_TOKEN_URL")
 NETSAPIENS_API_USERNAME = os.getenv("NETSAPIENS_API_USERNAME")
 NETSAPIENS_API_PASSWORD = os.getenv("NETSAPIENS_API_PASSWORD")
 NETSAPIENS_SYSTEM_CLIENT = requests.Session()
-NETSAPIENS_ETL_CALL_MODEL_SUBSCRIPTION_TYPE = os.getenv("NETSAPIENS_ETL_CALL_MODEL_SUBSCRIPTION_TYPE")
+NETSAPIENS_INTEGRATION_CALL_MODEL_SUBSCRIPTION_IS_ENABLED = os.getenv("NETSAPIENS_INTEGRATION_CALL_MODEL_SUBSCRIPTION_IS_ENABLED", "False").lower() in ("true", "1", "t")
+NETSAPIENS_INTEGRATION_CALL_ORIGID_MODEL_SUBSCRIPTION_IS_ENABLED = os.getenv("NETSAPIENS_INTEGRATION_CALL_ORIGID_MODEL_SUBSCRIPTION_IS_ENABLED", "False").lower() in ("true", "1", "t")
 
 # Business Phone Number Detection
 # See FCC: https://www.fcc.gov/consumers/guides/what-toll-free-number-and-how-does-it-work
@@ -105,21 +110,28 @@ TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS_DEFAULT = 60 * 60 * 24 * 365  # seco
 try:
     TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS = int(os.getenv("TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS"))
 except (ValueError, TypeError) as error:
-    # TODO log this recoverable configuration error
+    log.exception(error)
+    log.info(f"Setting TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS to the default of {TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS_DEFAULT}")
     TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS = TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS_DEFAULT
 
 # CORS
 CORS_ORIGIN_ALLOW_ALL = DEBUG
 CORS_ORIGIN_WHITELIST = ("http://localhost:3000", "app://.")
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+# DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "core.User"
 
 # Pub/Sub
 PUBLISHER = pubsub_v1.PublisherClient()
 PUBSUB_TOPIC_ID_NETSAPIENS_LEG_B_FINISHED = os.getenv("PUBSUB_TOPIC_ID_NETSAPIENS_LEG_B_FINISHED", "dev-netsapiens-leg_b_finished")
 PUBSUB_TOPIC_PATH_NETSAPIENS_LEG_B_FINISHED = PUBLISHER.topic_path(PROJECT_ID, PUBSUB_TOPIC_ID_NETSAPIENS_LEG_B_FINISHED)
-
+PUBLISH_FUTURE_TIMEOUT_IN_SECONDS_DEFAULT = 60
+try:
+    PUBLISH_FUTURE_TIMEOUT_IN_SECONDS = int(os.getenv("PUBLISH_FUTURE_TIMEOUT_IN_SECONDS"))
+except (ValueError, TypeError) as error:
+    log.exception(error)
+    log.info(f"Setting PUBLISH_FUTURE_TIMEOUT_IN_SECONDS to the default of {PUBLISH_FUTURE_TIMEOUT_IN_SECONDS_DEFAULT}")
+    PUBLISH_FUTURE_TIMEOUT_IN_SECONDS = PUBLISH_FUTURE_TIMEOUT_IN_SECONDS_DEFAULT
 
 
 # Application definition
