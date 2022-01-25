@@ -9,9 +9,9 @@ from rest_framework.response import Response
 from netsapiens_integration.helpers import get_callid_tuples_from_subscription_event
 from .models import NetsapiensAPICredentials, NetsapiensSubscriptionClient
 from .serializers import (
-    NetsapiensAPICredentialsReadNonAdminSerializer,
+    NetsapiensAPICredentialsReadSerializer,
     AdminNetsapiensAPICredentialsSerializer,
-    NetsapiensAPICredentialsWriteNonAdminSerializer,
+    NetsapiensAPICredentialsWriteSerializer,
     NetsapiensCallsSubscriptionEventExtractSerializer,
     NetsapiensSubscriptionClientSerializer,
 )
@@ -210,8 +210,8 @@ class NetsapiensAPICredentialsViewset(viewsets.ModelViewSet):
     queryset = NetsapiensAPICredentials.objects.all()
     filterset_fields = ["voip_provider"]
 
-    serializer_class_read = NetsapiensAPICredentialsReadNonAdminSerializer
-    serializer_class_write = NetsapiensAPICredentialsWriteNonAdminSerializer
+    serializer_class_read = NetsapiensAPICredentialsReadSerializer
+    serializer_class_write = NetsapiensAPICredentialsWriteSerializer
 
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
