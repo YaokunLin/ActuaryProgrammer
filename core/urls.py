@@ -1,8 +1,8 @@
-from django.urls import include, path
+from django.urls import path
 from rest_framework import routers
 
 
-from .views import ClientViewset, LoginView, PatientViewset, PracticeViewSet, PracticeTelecomViewSet, VoipProviderViewset
+from .views import ClientViewset, LoginView, PatientViewset, PracticeTelecomViewSet, PracticeViewSet, VoipProviderViewset
 
 router = routers.DefaultRouter()
 
