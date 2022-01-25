@@ -13,7 +13,7 @@ from .models import (
 
 
 class CallSerializer(serializers.ModelSerializer):
-    domain = serializers.SlugRelatedField(queryset=PracticeTelecom.objects.all(), slug_field="domain")
+    practice_telecom = serializers.SlugRelatedField(queryset=PracticeTelecom.objects.all(), slug_field="domain")
 
     class Meta:
         model = Call

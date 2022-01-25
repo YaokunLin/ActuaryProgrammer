@@ -12,8 +12,8 @@ app_name = "netsapiens_integration"
 router = routers.DefaultRouter()
 
 
-router.register(r"netsapiens-subscription-clients", NetsapiensSubscriptionClientViewset, basename="netsapiens-subscription-clients")
-router.register(r"netsapiens-cdr2-extracts", NetsapiensCdr2ExtractViewset, basename="netsapiens-cdr2-extracts")
+router.register(r"subscription-clients", NetsapiensSubscriptionClientViewset, basename="subscription-clients")
+router.register(r"cdr2-extracts", NetsapiensCdr2ExtractViewset, basename="cdr2-extracts")
 
 urlpatterns = [
     path("", include(router.urls)),
