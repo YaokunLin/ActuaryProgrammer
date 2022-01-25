@@ -23,15 +23,12 @@ from calls.field_choices import (
 
 class Call(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
-    telecom_call_id = models.CharField(max_length=255)
-    caller_audio_url = models.CharField(max_length=255)
-    callee_audio_url = models.CharField(max_length=255)
     call_start_time = models.DateTimeField()
     call_end_time = models.DateTimeField()
     duration_seconds = models.DurationField()
-    connect_duration_seconds = models.DurationField()
-    progress_time_seconds = models.DurationField()
-    call_direction = models.CharField(choices=CallDirectionTypes.choices, max_length=50, db_index=True)
+    connect_duration_seconds = models.DurationField(null=True)
+    progress_time_seconds = models.DurationField(null=True)
+    call_direction = models.CharField(choices=CallDirectionTypes.choices, max_length=50, db_index=True, blank=True)
     practice_telecom = models.ForeignKey(
         "core.PracticeTelecom",
         on_delete=models.SET_NULL,
@@ -41,18 +38,18 @@ class Call(AuditTrailModel):
     )
     caller_id = models.ForeignKey("core.UserTelecom", on_delete=models.SET_NULL, null=True, related_name="calls_made")
     callee_id = models.ForeignKey("core.UserTelecom", on_delete=models.SET_NULL, null=True, related_name="calls_recieved")
-    sip_caller_number = PhoneNumberField()
+    sip_caller_number = PhoneNumberField(blank=True)
     sip_caller_name = models.CharField(max_length=255, blank=True)
-    sip_callee_number = PhoneNumberField()
+    sip_callee_number = PhoneNumberField(blank=True)
     sip_callee_name = models.CharField(max_length=255, blank=True)
-    checked_voicemail = models.BooleanField()
-    went_to_voicemail = models.BooleanField()
-    call_connection = models.CharField(choices=CallConnectionTypes.choices, max_length=50)
-    who_terminated_call = models.CharField(choices=TelecomPersonaTypes.choices, max_length=50)
+    checked_voicemail = models.BooleanField(null=True)
+    went_to_voicemail = models.BooleanField(null=True)
+    call_connection = models.CharField(choices=CallConnectionTypes.choices, max_length=50, blank=True)
+    who_terminated_call = models.CharField(choices=TelecomPersonaTypes.choices, max_length=50, blank=True)
     referral_source = models.CharField(choices=ReferralSourceTypes.choices, max_length=50, blank=True)
-    caller_type = models.CharField(choices=EngagementPersonaTypes.choices, max_length=50)
-    callee_type = models.CharField(choices=EngagementPersonaTypes.choices, max_length=50)
-    metadata_file_uri = models.CharField(max_length=255)
+    caller_type = models.CharField(choices=EngagementPersonaTypes.choices, max_length=50, blank=True)
+    callee_type = models.CharField(choices=EngagementPersonaTypes.choices, max_length=50, blank=True)
+    metadata_file_uri = models.CharField(max_length=255, blank=True)  # Planning to deprecate
 
 
 class AgentEngagedWith(AuditTrailModel):

@@ -145,8 +145,15 @@ class Client(AuditTrailModel):
     rest_base_url = models.CharField(max_length=300)  # Can be Dentrix, another EMR, or some other system
 
 
+class VoipProvider(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    company_name = models.CharField(max_length=160)  # e.g. OIT Services
+    integration_type = models.CharField(max_length=150, choices=VoipProviderIntegrationTypes.choices, default=VoipProviderIntegrationTypes.NETSAPIENS)
+
+
 class PracticeTelecom(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
+    voip_provider = models.ForeignKey(VoipProvider, on_delete=models.SET_NULL, null=True)
     practice = models.OneToOneField(Practice, on_delete=models.CASCADE)
     domain = models.CharField(max_length=80, db_index=True)
     phone_sms = PhoneNumberField(blank=True)
@@ -174,9 +181,3 @@ class UserPatient(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
-
-
-class VoipProvider(AuditTrailModel):
-    id = ShortUUIDField(primary_key=True, editable=False)
-    company_name = models.CharField(max_length=160)  # e.g. OIT Services
-    integration_type = models.CharField(max_length=150, choices=VoipProviderIntegrationTypes.choices, default=VoipProviderIntegrationTypes.NETSAPIENS)
