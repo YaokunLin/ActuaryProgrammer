@@ -96,15 +96,10 @@ class NetsapiensCallsSubscriptionEventExtract(AuditTrailModel):
     remove = models.CharField(max_length=255, blank=True, null=True, db_index=True)  # yes
 
 
-class NetsapiensCall(models.Model):
-    id = ShortUUIDField(primary_key=True, editable=False)
-    peerlogic_call_id = models.CharField(blank=True, default="", max_length=22, db_index=True)  # maps to calls/models.py Call model's id
-
-
 class NetsapiensCdr2Extract(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     netsapiens_subscription_client = models.ForeignKey(NetsapiensSubscriptionClient, null=True, on_delete=models.SET_NULL)
-    netsapiens_call = models.ForeignKey(NetsapiensCall, on_delete=models.CASCADE, null=True)
+    peerlogic_call_id = models.CharField(blank=True, default="", max_length=22, db_index=True)  # maps to calls/models.py Call model's id
     # These max_lengths are best guesses based on Core1-phx's CdrDomain.201904_r table, unless otherwise specified
     # To be the truest extract we can make without using JSONField, making blank=True for CharFields and null=True for all others
     domain = models.CharField(max_length=63, blank=True, null=True)  # e.g. "pleasantdental-peoria"

@@ -24,9 +24,9 @@ class NetsapiensCdr2ExtractSerializer(serializers.ModelSerializer):
 
 
 class NetsapiensSubscriptionClientSerializer(serializers.ModelSerializer):
-    call_subscription_uri = serializers.CharField()
+    call_subscription_uri = serializers.CharField(required=False)
 
     class Meta:
         model = NetsapiensSubscriptionClient
-        read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
+        read_only_fields = ["id", "created_at", "modified_by", "modified_at", "call_subscription_uri"]
         fields = ["id", "created_at", "modified_by", "modified_at", "voip_provider", "call_subscription_uri"]
