@@ -6,13 +6,22 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 
+from google.api_core.exceptions import PermissionDenied
+
 from netsapiens_integration.helpers import get_callid_tuples_from_subscription_event
-from .models import NetsapiensAPICredentials, NetsapiensSubscriptionClient
+from netsapiens_integration.publishers import publish_leg_b_ready_cdrs
+from .models import (
+    NetsapiensAPICredentials,
+    NetsapiensCallsSubscriptionEventExtract,
+    NetsapiensCdr2Extract,
+    NetsapiensSubscriptionClient,
+)
 from .serializers import (
-    NetsapiensAPICredentialsReadSerializer,
     AdminNetsapiensAPICredentialsSerializer,
+    NetsapiensAPICredentialsReadSerializer,
     NetsapiensAPICredentialsWriteSerializer,
     NetsapiensCallsSubscriptionEventExtractSerializer,
+    NetsapiensCdr2ExtractSerializer,
     NetsapiensSubscriptionClientSerializer,
 )
 
@@ -121,33 +130,48 @@ log = logging.getLogger(__name__)
 @api_view(["POST"])
 @authentication_classes([])
 @permission_classes([AllowAny])
-def netsapiens_call_subscription_view(request, voip_provider_id=None, client_id=None):
-    log.info(f"VOIP provider id: {voip_provider_id}")
-    log.info(f"VOIP NetsapiensSubscriptionClient id: {client_id}")
+def netsapiens_call_subscription_event_receiver_view(request, voip_provider_id=None, client_id=None):
+    log.info(
+        f"Netsapiens Call subscription: Headers: {request.headers} POST Data {request.data} VOIP provider id: {voip_provider_id} and VOIP NetsapiensSubscriptionClient id: {client_id}"
+    )
+
     client = NetsapiensSubscriptionClient.objects.get(pk=client_id)
     if client.voip_provider.id != voip_provider_id:
         return Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": "Invalid VOIP Provider."})
 
-    log.info(f"Netsapiens Call subscription: Headers: {request.headers} POST Data {request.data}")
     event_data = request.data
     for cdr in event_data:
         cdr["netsapiens_subscription_client"] = client_id
-    callid_orig_by_term_pairings_list = get_callid_tuples_from_subscription_event(event_data)
-    if settings.NETSAPIENS_ETL_CALL_MODEL_SUBSCRIPTION_TYPE == "call":
-        # Convert subscription payload to NetsapiensCallsSubscriptionEventExtract
-        subscription_event_serializer = NetsapiensCallsSubscriptionEventExtractSerializer(data=request.data, many=True)
-        subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
-        if not subscription_event_serializer_is_valid:
-            log.exception(
-                f"Error from subscription_event_serializer validation from callids {callid_orig_by_term_pairings_list}: {subscription_event_serializer.errors}"
-            )
-            return Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": subscription_event_serializer.errors})
 
-        subscription_events = subscription_event_serializer.save()
-        log.info(f"Extract data for call ids: {callid_orig_by_term_pairings_list} from Call subscription saved to netsapiens etl cdrs extract.")
-    else:
-        log.info(f"NETSAPIENS_ETL_CALL_MODEL_SUBSCRIPTION_TYPE not set to call. Not saving to database for call ids {callid_orig_by_term_pairings_list}")
-    return Response(request.data)
+    callid_orig_by_term_pairings_list = get_callid_tuples_from_subscription_event(event_data)
+    if settings.NETSAPIENS_INTEGRATION_CALL_MODEL_SUBSCRIPTION_IS_ENABLED:
+        log.info(f"NETSAPIENS_INTEGRATION_CALL_MODEL_SUBSCRIPTION_IS_ENABLED  is false. Not saving to database for call ids {callid_orig_by_term_pairings_list}")
+        return Response(request.data)
+
+    # Convert subscription payload to NetsapiensCallsSubscriptionEventExtract
+    subscription_event_serializer = NetsapiensCallsSubscriptionEventExtractSerializer(data=request.data, many=True)
+    subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
+    if not subscription_event_serializer_is_valid:
+        log.exception(
+            f"Error from subscription_event_serializer validation from callids {callid_orig_by_term_pairings_list}: {subscription_event_serializer.errors}"
+        )
+        return Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": subscription_event_serializer.errors})
+
+    subscription_event_serializer.save()
+    log.info(f"Extract data for call ids: {callid_orig_by_term_pairings_list} from Call subscription saved to netsapiens etl cdrs extract.")
+
+    try:
+        publish_leg_b_ready_cdrs(event_data)
+    except PermissionDenied:
+        message = "Must add role 'roles/pubsub.publisher'. Exiting."
+        log.exception(message)
+        return Response(status=status.HTTP_403_FORBIDDEN, data={"error": message})
+
+    # publish_futures = publish_leg_b_ready_cdrs(event_data)
+    # Experimenting with NOT waiting for all the publish futures to resolve before responding.
+    # futures.wait(publish_futures, return_when=futures.ALL_COMPLETED)
+
+    return Response(status=status.HTTP_202_ACCEPTED, data=event_data)
 
 
 # Headers:
@@ -194,14 +218,14 @@ def netsapiens_call_subscription_view(request, voip_provider_id=None, client_id=
 @api_view(["POST"])
 @authentication_classes([])
 @permission_classes([AllowAny])
-def netsapiens_call_origid_subscription_view(request):
+def netsapiens_call_origid_subscription_event_receiver_view(request):
     log.info(f"Netsapiens Call ORIG id subscription: Headers: {request.headers} POST Data {request.data}")
     callid_orig_by_term_pairings_list = get_callid_tuples_from_subscription_event(request.data)
-    if settings.NETSAPIENS_ETL_CALL_MODEL_SUBSCRIPTION_TYPE == "call_origid":
+    if settings.NETSAPIENS_INTEGRATION_CALL_ORIGID_MODEL_SUBSCRIPTION_IS_ENABLED:
         # NetsapiensCallOrigIdSubscriptionEventExtract creation
         log.info(f"Extract data for call ids: {callid_orig_by_term_pairings_list} from Call ORIG id subscription saved to netsapiens etl cdrs extract.")
     else:
-        log.info(f"NETSAPIENS_ETL_CALL_MODEL_SUBSCRIPTION_TYPE not set to call_origid. Not saving to database for call ids {callid_orig_by_term_pairings_list}")
+        log.info(f"NETSAPIENS_INTEGRATION_CALL_ORIGID_MODEL_SUBSCRIPTION_IS_ENABLED is false. Not saving to database for call ids {callid_orig_by_term_pairings_list}")
 
     return Response(request.data)
 
@@ -233,3 +257,17 @@ class NetsapiensSubscriptionClientViewset(viewsets.ModelViewSet):
     serializer_class = NetsapiensSubscriptionClientSerializer
 
     filterset_fields = ["voip_provider"]
+
+
+class NetsapiensCdr2ExtractViewset(viewsets.ModelViewSet):
+    queryset = NetsapiensCdr2Extract.objects.all()
+    serializer_class = NetsapiensCdr2ExtractSerializer
+
+    filterset_fields = ["orig_callid", "by_callid", "term_callid"]
+
+
+class NetsapiensCallsSubscriptionEventExtractViewset(viewsets.ModelViewSet):
+    queryset = NetsapiensCallsSubscriptionEventExtract.objects.all()
+    serializer_class = NetsapiensCallsSubscriptionEventExtractSerializer
+
+    filterset_fields = ["orig_callid", "by_callid", "term_callid"]
