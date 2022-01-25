@@ -8,6 +8,7 @@ PROJECT_ID=$(gcloud config list --format='value(core.project)')
 PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
 CLOUDBUILD_SERVICE_ACCOUNT="${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com"
 APP_ENGINE_SERVICE_ACCOUNT="${PROJECT_ID}@appspot.gserviceaccount.com"
+LOCAL_DEVELOPMENT_SERVICE_ACCOUNT="local-development@${PROJECT_ID}.iam.gserviceaccount.com"
 VAULT_ID="wlmpasbyyncmhpjji3lfc7ra4a"
 REGION=$(gcloud config list --format='value(compute.region)')
 ZONE=$(gcloud config list --format='value(compute.zone)')
@@ -58,6 +59,7 @@ gcloud services enable redis.googleapis.com
 gcloud services enable cloudbuild.googleapis.com
 gcloud services enable secretmanager.googleapis.com
 gcloud services enable vpcaccess.googleapis.com
+gcloud services enable pubsub.googleapis.com
 
 echo "${textgreen}Creating App Engine project ${textreset}"
 gcloud app create
@@ -118,6 +120,10 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
       --member="serviceAccount:${CLOUDBUILD_SERVICE_ACCOUNT}" \
       --role="roles/appengine.deployer"
 
+echo "${textgreen}Adding Local Development roles${textreset}"
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member=serviceAccount:${LOCAL_DEVELOPMENT_SERVICE_ACCOUNT} \
+    --role="roles/pubsub.publisher"
 
 echo "${textgreen}Adding App engine roles${textreset}"
 gcloud secrets add-iam-policy-binding peerlogic-api-env \
