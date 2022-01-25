@@ -1,6 +1,10 @@
 from rest_framework import serializers
 
-from .models import NetsapiensCallsSubscriptionEventExtract, NetsapiensSubscriptionClient
+from .models import (
+    NetsapiensAPICredentials,
+    NetsapiensCallsSubscriptionEventExtract,
+    NetsapiensSubscriptionClient,
+)
 
 
 class NetsapiensCallsSubscriptionEventExtractSerializer(serializers.ModelSerializer):
@@ -84,6 +88,20 @@ class NetsapiensCallSubscriptionPayloadSerializer(serializers.Serializer):
     time_begin = serializers.CharField()  # 2022-01-19 00:48:25
     acr_id = serializers.CharField()  # 0_1063160652@192.168.168.127_20220119004825004745-8d8a5d555a2bdaa84182cb8f8d613b03_16616077417
     remove = serializers.CharField(allow_null=True)  # yes
+
+
+class NetsapiensAPICredentialsReadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NetsapiensAPICredentials
+        read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
+        fields = ["id", "created_at", "modified_by", "modified_at", "voip_provider", "authentication_url", "call_subscription_url", "client_id", "username"]
+
+
+class NetsapiensAPICredentialsWriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NetsapiensAPICredentials
+        read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
+        fields = ["id", "created_at", "modified_by", "modified_at", "voip_provider", "authentication_url", "call_subscription_url", "client_id", "client_secret", "username", "password"]
 
 
 class NetsapiensSubscriptionClientSerializer(serializers.ModelSerializer):

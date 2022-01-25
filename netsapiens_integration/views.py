@@ -1,15 +1,23 @@
 import logging
 
 from django.conf import settings
+from drf_rw_serializers import generics
 from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
+from rest_framework.viewsets import ViewSetMixin
 
 from netsapiens_integration.helpers import get_callid_tuples_from_subscription_event
 
-from .models import NetsapiensSubscriptionClient
-from .serializers import NetsapiensCallsSubscriptionEventExtractSerializer, NetsapiensSubscriptionClientSerializer
+from .models import NetsapiensAPICredentials, NetsapiensSubscriptionClient
+from .serializers import (
+    NetsapiensAPICredentialsReadSerializer,
+    NetsapiensAPICredentialsWriteSerializer,
+    NetsapiensCallsSubscriptionEventExtractSerializer,
+    NetsapiensSubscriptionClientSerializer,
+)
+
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -198,6 +206,23 @@ def netsapiens_call_origid_subscription_view(request):
         log.info(f"NETSAPIENS_ETL_CALL_MODEL_SUBSCRIPTION_TYPE not set to call_origid. Not saving to database for call ids {callid_orig_by_term_pairings_list}")
 
     return Response(request.data)
+
+
+class NetsapiensAPICredentialsViewset(ViewSetMixin, generics.ListCreateAPIView, generics.RetrieveUpdateAPIView):
+    queryset = NetsapiensAPICredentials.objects.all()
+    read_serializer_class = NetsapiensAPICredentialsReadSerializer
+    write_serializer_class = NetsapiensAPICredentialsWriteSerializer
+
+    filterset_fields = ["voip_provider"]
+
+
+class AdminNetsapiensAPICredentialsViewset(viewsets.ModelViewSet):
+    queryset = NetsapiensAPICredentials.objects.all()
+    serializer_class = NetsapiensAPICredentialsWriteSerializer
+    permission_classes = [IsAdminUser]
+
+    filterset_fields = ["voip_provider"]
+
 
 
 class NetsapiensSubscriptionClientViewset(viewsets.ModelViewSet):
