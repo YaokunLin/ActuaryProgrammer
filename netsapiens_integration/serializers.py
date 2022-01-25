@@ -1,7 +1,12 @@
 from rest_framework import serializers
 
 from core.serializers import UnixEpochDateField
-from .models import NetsapiensCallsSubscriptionEventExtract, NetsapiensCdr2Extract, NetsapiensSubscriptionClient
+from .models import (
+    NetsapiensAPICredentials,
+    NetsapiensCallsSubscriptionEventExtract,
+    NetsapiensCdr2Extract,
+    NetsapiensSubscriptionClient,
+)
 
 
 class NetsapiensCallsSubscriptionEventExtractSerializer(serializers.ModelSerializer):
@@ -21,6 +26,27 @@ class NetsapiensCdr2ExtractSerializer(serializers.ModelSerializer):
         model = NetsapiensCdr2Extract
         read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
         fields = "__all__"
+
+
+class NetsapiensAPICredentialsReadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NetsapiensAPICredentials
+        read_only_fields = ["id", "created_at", "modified_by", "modified_at", "active"]
+        fields = ["id", "created_at", "modified_by", "modified_at", "voip_provider", "authentication_url", "call_subscription_url", "client_id", "username"]
+
+
+class NetsapiensAPICredentialsWriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NetsapiensAPICredentials
+        read_only_fields = ["id", "created_at", "modified_by", "modified_at", "active"]
+        fields = ["id", "created_at", "modified_by", "modified_at", "voip_provider", "authentication_url", "call_subscription_url", "client_id", "client_secret", "username", "password"]
+
+
+class AdminNetsapiensAPICredentialsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NetsapiensAPICredentials
+        read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
+        fields = ["id", "created_at", "modified_by", "modified_at", "voip_provider", "authentication_url", "call_subscription_url", "client_id", "client_secret", "username", "password", "active"]
 
 
 class NetsapiensSubscriptionClientSerializer(serializers.ModelSerializer):

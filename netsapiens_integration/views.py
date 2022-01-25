@@ -3,22 +3,28 @@ import logging
 from django.conf import settings
 from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 
 from google.api_core.exceptions import PermissionDenied
 
 from netsapiens_integration.helpers import get_callid_tuples_from_subscription_event
 from netsapiens_integration.publishers import publish_leg_b_ready_cdrs
-
-
-from .models import NetsapiensCallsSubscriptionEventExtract, NetsapiensCdr2Extract, NetsapiensSubscriptionClient
-from .serializers import (
-    NetsapiensCdr2ExtractSerializer,
+from .models import (
+    NetsapiensAPICredentials,
     NetsapiensCallsSubscriptionEventExtract,
+    NetsapiensCdr2Extract,
+    NetsapiensSubscriptionClient,
+)
+from .serializers import (
+    AdminNetsapiensAPICredentialsSerializer,
+    NetsapiensAPICredentialsReadSerializer,
+    NetsapiensAPICredentialsWriteSerializer,
     NetsapiensCallsSubscriptionEventExtractSerializer,
+    NetsapiensCdr2ExtractSerializer,
     NetsapiensSubscriptionClientSerializer,
 )
+
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -222,6 +228,28 @@ def netsapiens_call_origid_subscription_event_receiver_view(request):
         log.info(f"NETSAPIENS_INTEGRATION_CALL_ORIGID_MODEL_SUBSCRIPTION_IS_ENABLED is false. Not saving to database for call ids {callid_orig_by_term_pairings_list}")
 
     return Response(request.data)
+
+
+class NetsapiensAPICredentialsViewset(viewsets.ModelViewSet):
+    queryset = NetsapiensAPICredentials.objects.all()
+    filterset_fields = ["voip_provider"]
+
+    serializer_class_read = NetsapiensAPICredentialsReadSerializer
+    serializer_class_write = NetsapiensAPICredentialsWriteSerializer
+
+    def get_serializer_class(self):
+        if self.action in ["create", "update", "partial_update"]:
+            return self.serializer_class_write
+
+        return self.serializer_class_read
+
+
+class AdminNetsapiensAPICredentialsViewset(viewsets.ModelViewSet):
+    queryset = NetsapiensAPICredentials.objects.all()
+    serializer_class = AdminNetsapiensAPICredentialsSerializer
+    permission_classes = [IsAdminUser]
+
+    filterset_fields = ["voip_provider"]
 
 
 class NetsapiensSubscriptionClientViewset(viewsets.ModelViewSet):
