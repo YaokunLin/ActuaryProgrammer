@@ -36,8 +36,6 @@ class Call(AuditTrailModel):
         related_name="calls",
         null=True,
     )
-    telecom_orig_callid = models.CharField(max_length=127)
-    telecom_term_callid = models.CharField(max_length=127)
     caller_id = models.ForeignKey("core.UserTelecom", on_delete=models.SET_NULL, null=True, related_name="calls_made")
     callee_id = models.ForeignKey("core.UserTelecom", on_delete=models.SET_NULL, null=True, related_name="calls_recieved")
     sip_caller_number = PhoneNumberField(blank=True)

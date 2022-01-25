@@ -1,10 +1,11 @@
+from datetime import datetime
 from rest_framework import serializers
 
 from .models import Client, Patient, Practice, PracticeTelecom, VoipProvider
 
 
 class UnixEpochDateField(serializers.DateTimeField):
-    def to_representation(self, value):
+    def to_representation(self, value: datetime) -> int:
         """Return epoch time for a datetime object or ``None``"""
         import time
 
@@ -13,10 +14,9 @@ class UnixEpochDateField(serializers.DateTimeField):
         except (AttributeError, TypeError):
             return None
 
-    def to_internal_value(self, value):
-        import datetime
+    def to_internal_value(self, value: float) -> datetime:
 
-        return datetime.datetime.fromtimestamp(int(value))
+        return datetime.fromtimestamp(int(value))
 
 
 class ClientSerializer(serializers.ModelSerializer):
