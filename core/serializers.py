@@ -20,5 +20,5 @@ class PatientSerializer(serializers.ModelSerializer):
 class VoipProviderSerializer(serializers.ModelSerializer):
     class Meta:
         model = VoipProvider
-        read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
+        read_only_fields = ["id", "created_at", "modified_by", "modified_at", "active"]
         fields = "__all__"
