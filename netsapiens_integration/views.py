@@ -10,7 +10,7 @@ from netsapiens_integration.helpers import get_callid_tuples_from_subscription_e
 from .models import NetsapiensAPICredentials, NetsapiensSubscriptionClient
 from .serializers import (
     NetsapiensAPICredentialsReadNonAdminSerializer,
-    NetsapiensAPICredentialsAdminSerializer,
+    AdminNetsapiensAPICredentialsSerializer,
     NetsapiensAPICredentialsWriteNonAdminSerializer,
     NetsapiensCallsSubscriptionEventExtractSerializer,
     NetsapiensSubscriptionClientSerializer,
@@ -222,7 +222,7 @@ class NetsapiensAPICredentialsViewset(viewsets.ModelViewSet):
 
 class AdminNetsapiensAPICredentialsViewset(viewsets.ModelViewSet):
     queryset = NetsapiensAPICredentials.objects.all()
-    serializer_class = NetsapiensAPICredentialsAdminSerializer
+    serializer_class = AdminNetsapiensAPICredentialsSerializer
     permission_classes = [IsAdminUser]
 
     filterset_fields = ["voip_provider"]

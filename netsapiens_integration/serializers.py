@@ -104,7 +104,7 @@ class NetsapiensAPICredentialsWriteNonAdminSerializer(serializers.ModelSerialize
         fields = ["id", "created_at", "modified_by", "modified_at", "voip_provider", "authentication_url", "call_subscription_url", "client_id", "client_secret", "username", "password"]
 
 
-class NetsapiensAPICredentialsAdminSerializer(serializers.ModelSerializer):
+class AdminNetsapiensAPICredentialsSerializer(serializers.ModelSerializer):
     class Meta:
         model = NetsapiensAPICredentials
         read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
