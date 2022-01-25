@@ -16,7 +16,6 @@ router.register(r"netsapiens-subscription-clients", NetsapiensSubscriptionClient
 router.register(r"netsapiens-api-credentials", NetsapiensAPICredentialsViewset)
 
 
-
 urlpatterns = [
     path("", include(router.urls)),
     path(

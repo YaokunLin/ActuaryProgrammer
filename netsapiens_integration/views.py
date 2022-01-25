@@ -1,7 +1,8 @@
 import logging
 
 from django.conf import settings
-from drf_rw_serializers import generics
+from drf_rw_serializers import mixins as rw_mixins
+from drf_rw_serializers import viewsets as rw_viewsets
 from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.permissions import AllowAny, IsAdminUser
@@ -208,7 +209,10 @@ def netsapiens_call_origid_subscription_view(request):
     return Response(request.data)
 
 
-class NetsapiensAPICredentialsViewset(ViewSetMixin, generics.ListCreateAPIView, generics.RetrieveUpdateAPIView):
+
+
+# class NetsapiensAPICredentialsViewset(ViewSetMixin, generics.ListCreateAPIView, generics.RetrieveUpdateAPIView):
+class NetsapiensAPICredentialsViewset(rw_viewsets.GenericViewSet, rw_mixins.CreateModelMixin, rw_mixins.UpdateModelMixin, rw_mixins.ListModelMixin, rw_mixins.RetrieveModelMixin):
     queryset = NetsapiensAPICredentials.objects.all()
     read_serializer_class = NetsapiensAPICredentialsReadSerializer
     write_serializer_class = NetsapiensAPICredentialsWriteSerializer
