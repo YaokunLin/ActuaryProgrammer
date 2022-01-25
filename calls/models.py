@@ -9,11 +9,13 @@ from phonenumber_field.modelfields import PhoneNumberField
 
 from core.abstract_models import AuditTrailModel
 from calls.field_choices import (
+    CallAudioStatusTypes,
     CallConnectionTypes,
     CallDirectionTypes,
     EngagementPersonaTypes,
     NonAgentEngagementPersonaTypes,
     ReferralSourceTypes,
+    SupportedAudioMimeTypes,
     TelecomCallerNameInfoSourceTypes,
     TelecomCallerNameInfoTypes,
     TelecomCarrierTypes,
@@ -50,6 +52,24 @@ class Call(AuditTrailModel):
     caller_type = models.CharField(choices=EngagementPersonaTypes.choices, max_length=50, blank=True)
     callee_type = models.CharField(choices=EngagementPersonaTypes.choices, max_length=50, blank=True)
     metadata_file_uri = models.CharField(max_length=255, blank=True)  # Planning to deprecate
+
+
+class CallAudioPartial(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    call = models.ForeignKey(Call, on_delete=models.CASCADE)
+    mime_type = models.CharField(choices=SupportedAudioMimeTypes.choices, max_length=180)
+    status = models.CharField(choices=CallAudioStatusTypes.choices, max_length=80, default=CallAudioStatusTypes.RETRIEVAL_FROM_PROVIDER_IN_PROGRESS)
+
+    @property
+    def signed_url(
+        self,
+        client: str = settings.CLOUD_STORAGE_CLIENT,
+        bucket: str = settings.CALL_AUDIO_BUCKET,
+        expiration: datetime.timedelta = settings.SIGNED_STORAGE_URL_EXPIRATION_DELTA,
+    ) -> str:
+        bucket = client.get_bucket(bucket)
+        blob = bucket.get_blob(self.id)
+        return blob.generate_signed_url(expiration=expiration)
 
 
 class AgentEngagedWith(AuditTrailModel):

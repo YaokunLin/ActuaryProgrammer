@@ -7,6 +7,7 @@ from core.models import PracticeTelecom
 
 from .models import (
     Call,
+    CallAudioPartial,
     CallLabel,
     TelecomCallerNameInfo,
 )
@@ -19,6 +20,15 @@ class CallSerializer(serializers.ModelSerializer):
         model = Call
         fields = "__all__"
         read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
+
+
+class CallAudioPartialSerializer(serializers.ModelSerializer):
+    signed_url = serializers.CharField(required=False)
+
+    class Meta:
+        model = CallAudioPartial
+        fields = "__all__"
+        read_only_fields = ["id", "created_at", "modified_by", "modified_at", "signed_url"]
 
 
 class CallLabelSerializer(serializers.ModelSerializer):
