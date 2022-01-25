@@ -17,6 +17,8 @@ class NetsapiensAPICredentials(AuditTrailModel):
     username = models.CharField(max_length=63, blank=True)  # extension@domain = SiPbxDomain.subscriber_config.subscriber_login 
     password = models.CharField(max_length=255, blank=True)  # unknown, it's a guess, password hash may be 60 in length based upon SiPbxDomain.subscriber_config.pwd_hash
 
+    active = models.BooleanField(null=True, blank=False, default=False)  # whether these credentials are active for usage
+
 
 class NetsapiensSubscriptionClient(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)

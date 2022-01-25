@@ -180,3 +180,5 @@ class VoipProvider(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     company_name = models.CharField(max_length=160)  # e.g. OIT Services
     integration_type = models.CharField(max_length=150, choices=VoipProviderIntegrationTypes.choices, default=VoipProviderIntegrationTypes.NETSAPIENS)
+
+    active = models.BooleanField(null=True, blank=False, default=False)  # whether this integrator is active and we can receive events from them
