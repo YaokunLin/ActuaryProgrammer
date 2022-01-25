@@ -133,8 +133,8 @@ def netsapiens_call_subscription_view(request, voip_provider_id=None, client_id=
         cdr["netsapiens_subscription_client"] = client_id
 
     callid_orig_by_term_pairings_list = get_callid_tuples_from_subscription_event(event_data)
-    if settings.NETSAPIENS_ETL_CALL_MODEL_SUBSCRIPTION_TYPE != "call":
-        log.info(f"NETSAPIENS_ETL_CALL_MODEL_SUBSCRIPTION_TYPE not set to call. Not saving to database for call ids {callid_orig_by_term_pairings_list}")
+    if settings.NETSAPIENS_INTEGRATION_CALL_MODEL_SUBSCRIPTION_IS_ENABLED:
+        log.info(f"NETSAPIENS_INTEGRATION_CALL_MODEL_SUBSCRIPTION_IS_ENABLED not set. Not saving to database for call ids {callid_orig_by_term_pairings_list}")
         return Response(request.data)
 
     # Convert subscription payload to NetsapiensCallsSubscriptionEventExtract
@@ -210,11 +210,11 @@ def netsapiens_call_subscription_view(request, voip_provider_id=None, client_id=
 def netsapiens_call_origid_subscription_view(request):
     log.info(f"Netsapiens Call ORIG id subscription: Headers: {request.headers} POST Data {request.data}")
     callid_orig_by_term_pairings_list = get_callid_tuples_from_subscription_event(request.data)
-    if settings.NETSAPIENS_ETL_CALL_MODEL_SUBSCRIPTION_TYPE == "call_origid":
+    if settings.NETSAPIENS_INTEGRATION_CALL_ORIGID_MODEL_SUBSCRIPTION_IS_ENABLED:
         # NetsapiensCallOrigIdSubscriptionEventExtract creation
         log.info(f"Extract data for call ids: {callid_orig_by_term_pairings_list} from Call ORIG id subscription saved to netsapiens etl cdrs extract.")
     else:
-        log.info(f"NETSAPIENS_ETL_CALL_MODEL_SUBSCRIPTION_TYPE not set to call_origid. Not saving to database for call ids {callid_orig_by_term_pairings_list}")
+        log.info(f"NETSAPIENS_INTEGRATION_CALL_ORIGID_MODEL_SUBSCRIPTION_IS_ENABLED not set to call_origid. Not saving to database for call ids {callid_orig_by_term_pairings_list}")
 
     return Response(request.data)
 
