@@ -10,10 +10,8 @@ from .views import (
 app_name = "netsapiens_integration"
 
 router = routers.DefaultRouter()
-
-
-router.register(r"subscription-clients", NetsapiensSubscriptionClientViewset, basename="subscription-clients")
 router.register(r"cdr2-extracts", NetsapiensCdr2ExtractViewset, basename="cdr2-extracts")
+router.register(r"subscription-clients", NetsapiensSubscriptionClientViewset, basename="subscription-clients")
 
 urlpatterns = [
     path("", include(router.urls)),
