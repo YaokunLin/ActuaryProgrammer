@@ -12,7 +12,7 @@ from netsapiens_integration.helpers import get_callid_tuples_from_subscription_e
 from netsapiens_integration.publishers import publish_leg_b_ready_cdrs
 
 
-from .models import NetsapiensCdr2Extract, NetsapiensCallsSubscriptionEventExtract, NetsapiensSubscriptionClient
+from .models import NetsapiensCallsSubscriptionEventExtract, NetsapiensCdr2Extract, NetsapiensSubscriptionClient
 from .serializers import (
     NetsapiensCdr2ExtractSerializer,
     NetsapiensCallsSubscriptionEventExtract,
