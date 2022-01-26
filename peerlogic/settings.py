@@ -15,16 +15,14 @@ from datetime import timedelta
 import io
 import logging
 import os
-
 import requests
+from requests.auth import HTTPBasicAuth
+
 from dotenv import load_dotenv
-
-
+from gcloud import storage
 from google.cloud import pubsub_v1
 from google.cloud import secretmanager
-from gcloud import storage
 
-from requests.auth import HTTPBasicAuth
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -135,6 +133,8 @@ except (ValueError, TypeError) as error:
     if env_var != None:
         log.exception(error)
     log.info(f"Setting SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS to the default of {SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS_DEFAULT}")
+    SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS = SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS_DEFAULT
+
 
 SIGNED_STORAGE_URL_EXPIRATION_DELTA = timedelta(hours=SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS)
 
