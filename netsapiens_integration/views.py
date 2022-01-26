@@ -231,8 +231,8 @@ def netsapiens_call_origid_subscription_event_receiver_view(request):
 
 
 class NetsapiensAPICredentialsViewset(viewsets.ModelViewSet):
-    queryset = NetsapiensAPICredentials.objects.all()
-    filterset_fields = ["voip_provider"]
+    queryset = NetsapiensAPICredentials.objects.all().order_by("voip_provider", "active", "-created_at")
+    filterset_fields = ["voip_provider", "active"]
 
     serializer_class_read = NetsapiensAPICredentialsReadSerializer
     serializer_class_write = NetsapiensAPICredentialsWriteSerializer
@@ -245,11 +245,11 @@ class NetsapiensAPICredentialsViewset(viewsets.ModelViewSet):
 
 
 class AdminNetsapiensAPICredentialsViewset(viewsets.ModelViewSet):
-    queryset = NetsapiensAPICredentials.objects.all()
+    queryset = NetsapiensAPICredentials.objects.all().order_by("voip_provider", "active", "-created_at")
     serializer_class = AdminNetsapiensAPICredentialsSerializer
     permission_classes = [IsAdminUser]
 
-    filterset_fields = ["voip_provider"]
+    filterset_fields = ["voip_provider", "active"]
 
 
 class NetsapiensSubscriptionClientViewset(viewsets.ModelViewSet):
