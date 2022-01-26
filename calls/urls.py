@@ -18,6 +18,7 @@ call_audio_router.register(r"partials", CallAudioPartialViewset, basename="call-
 router.register(r"labels", CallLabelViewset)
 
 # TODO: I hate this, let's never use underscores in resource names
+# dependency is peerlogic-ml-stream-pipeline repo to change as well
 router.register(r"telecom_caller_name_info", TelecomCallerNameInfoViewSet)
 
 urlpatterns = router.urls
