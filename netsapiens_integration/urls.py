@@ -1,15 +1,20 @@
 from django.urls import include, path
 from rest_framework import routers
+
 from .views import (
-    netsapiens_call_origid_subscription_event_receiver_view, 
+    AdminNetsapiensAPICredentialsViewset,
     netsapiens_call_subscription_event_receiver_view,
+    NetsapiensAPICredentialsViewset,
     NetsapiensCdr2ExtractViewset,
     NetsapiensSubscriptionClientViewset,
 )
 
+
 app_name = "netsapiens_integration"
 
 router = routers.DefaultRouter()
+router.register(r"admin/api-credentials", AdminNetsapiensAPICredentialsViewset)
+router.register(r"api-credentials", NetsapiensAPICredentialsViewset)
 router.register(r"cdr2-extracts", NetsapiensCdr2ExtractViewset, basename="cdr2-extracts")
 router.register(r"subscription-clients", NetsapiensSubscriptionClientViewset, basename="subscription-clients")
 

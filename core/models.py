@@ -1,15 +1,19 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser, Permission, _user_get_permissions, _user_has_perm, _user_has_module_perms
-
+from django.contrib.auth.models import (
+    AbstractUser,
+    Permission,
+    _user_get_permissions,
+    _user_has_perm,
+    _user_has_module_perms
+)
 from django.utils.translation import gettext_lazy as _
-
 from django_extensions.db.fields import ShortUUIDField
-
 from phonenumber_field.modelfields import PhoneNumberField
 
 from core.abstract_models import AuditTrailModel
 from core.field_choices import IndustryTypes, VoipProviderIntegrationTypes
 from core.managers import PracticeManager, UserManager
+
 
 # This is to mimick Django's permissions mixin
 # Don't change this mixin unless you know what you're doing :)
@@ -150,6 +154,7 @@ class VoipProvider(AuditTrailModel):
     company_name = models.CharField(max_length=160)  # e.g. OIT Services
     integration_type = models.CharField(max_length=150, choices=VoipProviderIntegrationTypes.choices, default=VoipProviderIntegrationTypes.NETSAPIENS)
 
+    active = models.BooleanField(null=True, blank=False, default=False)  # whether this integrator is active and we can receive events from them
 
 class PracticeTelecom(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
