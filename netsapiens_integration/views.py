@@ -161,7 +161,7 @@ def netsapiens_call_subscription_event_receiver_view(request, voip_provider_id=N
     log.info(f"Extract data for call ids: {callid_orig_by_term_pairings_list} from Call subscription saved to netsapiens etl cdrs extract.")
 
     try:
-        publish_leg_b_ready_cdrs(event_data)
+        publish_leg_b_ready_cdrs(voip_provider_id=voip_provider_id, event_data=event_data)
     except PermissionDenied:
         message = "Must add role 'roles/pubsub.publisher'. Exiting."
         log.exception(message)

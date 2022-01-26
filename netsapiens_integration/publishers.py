@@ -1,9 +1,10 @@
 from concurrent import futures
 import json
 import logging
+from typing import Dict, List
 
 from django.conf import settings
-from typing import Dict, List
+from google.cloud import pubsub_v1
 
 from core import pubsub_helpers
 
@@ -12,7 +13,10 @@ log = logging.getLogger(__name__)
 
 
 def publish_leg_b_ready_cdrs(
-    event_data: List[Dict], publisher=settings.PUBLISHER, topic_path_leg_b_finished=settings.PUBSUB_TOPIC_PATH_NETSAPIENS_LEG_B_FINISHED
+    voip_provider_id: List[Dict],
+    event_data: List[Dict],
+    publisher: pubsub_v1.PublisherClient = settings.PUBLISHER,
+    topic_path_leg_b_finished=settings.PUBSUB_TOPIC_PATH_NETSAPIENS_LEG_B_FINISHED
 ):
     publish_futures = []
     cdrs_to_publish = []  # for logging
@@ -22,9 +26,12 @@ def publish_leg_b_ready_cdrs(
         # otherwise the leg-b is still on-going and hasn't been finished yet.
         if not (cdr.get("remove") == "yes" and cdr.get("term_leg_tag")):
             continue
+
         cdr_encode_data = json.dumps(cdr, indent=2).encode("utf-8")
+        event_attributes = {"voip_provider_id": voip_provider_id}
+
         # When you publish a message, the client returns a future.
-        publish_future = publisher.publish(topic_path_leg_b_finished, cdr_encode_data)
+        publish_future = publisher.publish(topic=topic_path_leg_b_finished, data=cdr_encode_data, **event_attributes)
         # Non-blocking. Publish failures are handled in the callback function.
         publish_future.add_done_callback(pubsub_helpers.get_callback(publish_future, cdr_encode_data))
         publish_futures.append(publish_future)
