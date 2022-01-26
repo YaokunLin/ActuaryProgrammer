@@ -197,6 +197,16 @@ if [[ "$PROJECT_ID" ==  *"prod" ]]; then
 fi
 
 
+# NS Audio pipeline
+
+# TODO: make these all use stage- prefix
+
+echo "${textgreen}Creating dev-netsapiens-leg_b_finished topic${textreset}"
+gcloud pubsub topics create dev-netsapiens-leg_b_finished
+
+
+echo "${textgreen}Creating dev-netsapiens-get_call_audio topic${textreset}"
+gcloud pubsub topics create dev-netsapiens-get_call_audio
 
 
 # TODO: Add substitutions
