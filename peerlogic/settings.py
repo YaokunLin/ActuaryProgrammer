@@ -15,16 +15,14 @@ from datetime import timedelta
 import io
 import logging
 import os
-
 import requests
+from requests.auth import HTTPBasicAuth
+
 from dotenv import load_dotenv
-
-
+from gcloud import storage
 from google.cloud import pubsub_v1
 from google.cloud import secretmanager
-from gcloud import storage
 
-from requests.auth import HTTPBasicAuth
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
