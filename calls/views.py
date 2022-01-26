@@ -49,39 +49,41 @@ class CallAudioPartialViewset(viewsets.ModelViewSet):
     filter_fields = ["call", "mime_type", "status"]
     parser_classes = (JSONParser, FormParser, MultiPartParser)
 
-    def update(self, request, *args, **kwargs):
+    def update(self, request, pk=None):
         # TODO: Implement
         pass
 
-    def partial_update(self, request, format=None, storage_client=settings.CLOUD_STORAGE_CLIENT, bucket=settings.CALL_AUDIO_BUCKET):
-        user = request.user
-
+    def partial_update(self, request, pk=None, format=None, storage_client=settings.CLOUD_STORAGE_CLIENT, bucket=settings.CALL_AUDIO_BUCKET):
         call_audio_partials = list()
         for file in request.data.items():
+            blob_to_upload = file[1]
             mime_type = file[0]
-            # TODO: strip off prefix and file extension to get id (in cloud function?)
-            audio_id = file[1]
+            log.info(f"Blob to upload is {blob_to_upload} with mimetype {mime_type}.")
             if mime_type not in SupportedAudioMimeTypes.choices:
                 error_message = f"Media type {mime_type} key form-data not in available SupportedAudioMimeTypes"
                 log.exception(error_message)
                 Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": [{"mime_type": error_message}]})
 
-            call_audio_partial = CallAudioPartial.objects.get(pk=audio_id)
+            call_audio_partial = CallAudioPartial.objects.get(pk=pk)
+            call_audio_partial.mime_type = mime_type
+            call_audio_partial.status = CallAudioStatusTypes.UPLOADING
+            call_audio_partial.save()
 
             # Upload to audio bucket
             log.info(f"Saving {call_audio_partial.pk} to bucket {bucket}")
             bucket = storage_client.get_bucket(bucket)
             blob = bucket.blob(call_audio_partial.pk)
-            blob.upload_from_string(file[1].read())
+            blob.upload_from_string(blob_to_upload.read())
 
             log.info(f"Successfully saved {call_audio_partial.pk} to bucket {bucket}")
+
             call_audio_partial.status = CallAudioStatusTypes.UPLOADED
             call_audio_partial.save()
             call_audio_partials.append(call_audio_partial)
 
-        media_serializer = CallAudioPartialSerializer(call_audio_partials, many=True)
+        call_audio_partial_serializer = CallAudioPartialSerializer(call_audio_partials, many=True)
 
-        return Response(status=status.HTTP_200_OK, data=media_serializer.data)
+        return Response(status=status.HTTP_200_OK, data=call_audio_partial_serializer.data)
 
 
 class CallLabelViewset(viewsets.ModelViewSet):
