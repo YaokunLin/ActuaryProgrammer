@@ -71,3 +71,17 @@ class AudioCodecType(models.TextChoices):
     MP3 = "mp3", _("MPEG-1 Audio Layer III")
     OPUS = "opus", _("Opus")
     VORBIS = "vorbis", _("MPEG-1 Audio Layer III")
+
+
+class CallAudioStatusTypes(models.TextChoices):
+    RETRIEVAL_FROM_PROVIDER_IN_PROGRESS = "retrieval_from_provider_in_progress"
+    UPLOADING = "uploading"
+    UPLOADED = "uploaded"
+
+
+class SupportedAudioMimeTypes(models.TextChoices):
+    # https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+    # https://www.iana.org/assignments/media-types/media-types.xhtml#audio
+    AUDIO_PCMU = "audio/PCMU"  # PCM MU-LAW (mlaw)
+    AUDIO_GSM = "audio/GSM"  # Microsoft GSM Audio (agsm)
+    AUDIO_WAV = "audio/WAV"  # Microsoft GSM Audio (agsm)

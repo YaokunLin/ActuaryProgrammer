@@ -14,15 +14,19 @@ from calls.twilio_etl import (
     update_telecom_caller_name_info_with_twilio_data_for_valid_sections,
 )
 from .field_choices import (
+    CallAudioStatusTypes,
+    SupportedAudioMimeTypes,
     TelecomCallerNameInfoSourceTypes,
     TelecomCallerNameInfoTypes,
 )
 from .models import (
     Call,
+    CallAudioPartial,
     CallLabel,
     TelecomCallerNameInfo,
 )
 from .serializers import (
+    CallAudioPartialSerializer,
     CallLabelSerializer,
     CallSerializer,
     TelecomCallerNameInfoSerializer,
@@ -35,6 +39,12 @@ log = logging.getLogger(__name__)
 class CallViewset(viewsets.ModelViewSet):
     queryset = Call.objects.all().order_by("-created_at")
     serializer_class = CallSerializer
+
+
+class CallAudioPartialViewset(viewsets.ModelViewSet):
+    queryset = CallAudioPartial.objects.all().order_by("-created_at")
+    serializer_class = CallAudioPartialSerializer
+    filter_fields = ["call", "mime_type", "status"]
 
 
 class CallLabelViewset(viewsets.ModelViewSet):
