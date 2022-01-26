@@ -84,4 +84,4 @@ class SupportedAudioMimeTypes(models.TextChoices):
     # https://www.iana.org/assignments/media-types/media-types.xhtml#audio
     AUDIO_PCMU = "audio/PCMU"  # PCM MU-LAW (mlaw)
     AUDIO_GSM = "audio/GSM"  # Microsoft GSM Audio (agsm)
-    AUDIO_WAV = "audio/WAV"  # Microsoft GSM Audio (agsm)
+    AUDIO_WAV = "audio/WAV"
