@@ -65,11 +65,8 @@ class CallAudioPartialViewset(viewsets.ModelViewSet):
 
         try:
             file = files[0]
-            print(f"file {file}")
             blob_to_upload = file[1]
-            print(f"blob_to_upload {blob_to_upload}")
             mime_type = file[0]
-            print(f"mime_type {mime_type}")
         except Exception:
             error_message = "In Form Data, Key must be mime_type and Value must be a file."
             return FileToUpload(errors=[{"form_data": error_message}])
