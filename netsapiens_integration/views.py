@@ -130,19 +130,18 @@ log = logging.getLogger(__name__)
 @api_view(["POST"])
 @authentication_classes([])
 @permission_classes([AllowAny])
-def netsapiens_call_subscription_event_receiver_view(request, voip_provider_id=None, client_id=None):
+def netsapiens_call_subscription_event_receiver_view(request, voip_provider_id=None, call_subscription_id=None):
     log.info(
         f"Netsapiens Call subscription: Headers: {request.headers} POST Data {request.data} VOIP provider id: {voip_provider_id} and VOIP NetsapiensCallSubscriptions id: {client_id}"
     )
 
-    client = NetsapiensCallSubscriptions.objects.get(pk=client_id)
+    client = NetsapiensCallSubscriptions.objects.get(pk=call_subscription_id)
     if client.voip_provider.id != voip_provider_id:
         return Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": "Invalid VOIP Provider."})
 
     event_data = request.data
     for cdr in event_data:
-        NetsapiensCallSubscriptionsEventExtract
-        cdr["netsapiens_call_subscription"] = client_id
+        cdr["netsapiens_call_subscription"] = call_subscription_id
 
     callid_orig_by_term_pairings_list = get_callid_tuples_from_subscription_event(event_data)
     if settings.NETSAPIENS_INTEGRATION_CALL_MODEL_SUBSCRIPTION_IS_ENABLED:
@@ -162,7 +161,7 @@ def netsapiens_call_subscription_event_receiver_view(request, voip_provider_id=N
     log.info(f"Extract data for call ids: {callid_orig_by_term_pairings_list} from Call subscription saved to netsapiens etl cdrs extract.")
 
     try:
-        publish_leg_b_ready_cdrs(voip_provider_id=voip_provider_id, event_data=event_data)
+        publish_leg_b_ready_cdrs(voip_provider_id=voip_provider_id, netsapiens_call_subscription_id=call_subscription_id, event_data=event_data)
     except PermissionDenied:
         message = "Must add role 'roles/pubsub.publisher'. Exiting."
         log.exception(message)

@@ -13,7 +13,8 @@ log = logging.getLogger(__name__)
 
 
 def publish_leg_b_ready_cdrs(
-    voip_provider_id: List[Dict],
+    voip_provider_id: str,
+    netsapiens_call_subscription_id: str,
     event_data: List[Dict],
     publisher: pubsub_v1.PublisherClient = settings.PUBLISHER,
     topic_path_leg_b_finished=settings.PUBSUB_TOPIC_PATH_NETSAPIENS_LEG_B_FINISHED
@@ -28,7 +29,7 @@ def publish_leg_b_ready_cdrs(
             continue
 
         cdr_encode_data = json.dumps(cdr, indent=2).encode("utf-8")
-        event_attributes = {"voip_provider_id": voip_provider_id}
+        event_attributes = {"voip_provider_id": voip_provider_id, "netsapiens_call_subscription_id": netsapiens_call_subscription_id}
 
         # When you publish a message, the client returns a future.
         publish_future = publisher.publish(topic=topic_path_leg_b_finished, data=cdr_encode_data, **event_attributes)
