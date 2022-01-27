@@ -3,9 +3,9 @@ from rest_framework import serializers
 from core.serializers import UnixEpochDateField
 from .models import (
     NetsapiensAPICredentials,
+    NetsapiensCallSubscriptions,
     NetsapiensCallSubscriptionsEventExtract,
     NetsapiensCdr2Extract,
-    NetsapiensCallSubscriptions,
 )
 
 
