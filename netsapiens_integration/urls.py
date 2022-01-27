@@ -21,7 +21,7 @@ router.register(r"cdr2-extracts", NetsapiensCdr2ExtractViewset, basename="cdr2-e
 urlpatterns = [
     path("", include(router.urls)),
     path(
-        "<voip_provider_id>/<client_id>/call-subscription-event-receiver/", netsapiens_call_subscription_event_receiver_view, name="call-subscription-event-receiver-event-receiver"
+        "<voip_provider_id>/<client_id>/call-subscription-receiver/", netsapiens_call_subscription_event_receiver_view, name="call-subscription-event-receiver"
     ),  # if we ever change this name, we must change NetsapiensCallsSubscription#get_subscription_url
     # path('call-origid-subscription/', netsapiens_call_origid_subscription_event_receiver_view),
 ]
