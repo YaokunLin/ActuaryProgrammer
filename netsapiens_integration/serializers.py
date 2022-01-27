@@ -32,21 +32,21 @@ class NetsapiensAPICredentialsReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = NetsapiensAPICredentials
         read_only_fields = ["id", "created_at", "modified_by", "modified_at", "active"]
-        fields = ["id", "created_at", "modified_by", "modified_at", "voip_provider", "authentication_url", "call_subscription_url", "client_id", "username", "active"]
+        fields = ["id", "created_at", "modified_by", "modified_at", "voip_provider", "api_url", "call_subscription_url", "client_id", "username", "active"]
 
 
 class NetsapiensAPICredentialsWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = NetsapiensAPICredentials
         read_only_fields = ["id", "created_at", "modified_by", "modified_at", "active"]
-        fields = ["id", "created_at", "modified_by", "modified_at", "voip_provider", "authentication_url", "call_subscription_url", "client_id", "client_secret", "username", "password", "active"]
+        fields = ["id", "created_at", "modified_by", "modified_at", "voip_provider", "api_url", "call_subscription_url", "client_id", "client_secret", "username", "password", "active"]
 
 
 class AdminNetsapiensAPICredentialsSerializer(serializers.ModelSerializer):
     class Meta:
         model = NetsapiensAPICredentials
         read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
-        fields = ["id", "created_at", "modified_by", "modified_at", "voip_provider", "authentication_url", "call_subscription_url", "client_id", "client_secret", "username", "password", "active"]
+        fields = ["id", "created_at", "modified_by", "modified_at", "voip_provider", "api_url", "call_subscription_url", "client_id", "client_secret", "username", "password", "active"]
 
 
 class NetsapiensSubscriptionClientSerializer(serializers.ModelSerializer):
