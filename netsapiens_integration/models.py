@@ -11,7 +11,6 @@ class NetsapiensAPICredentials(AuditTrailModel):
     voip_provider = models.ForeignKey("core.VoipProvider", on_delete=models.CASCADE)
 
     api_url = models.CharField(max_length=2048, blank=True)
-    call_subscription_url = models.CharField(max_length=2048, blank=True)  # url that they push call events to on our side
     client_id = models.CharField(max_length=64, blank=True)  # NsApi.oauth_clients.client_id
     client_secret = models.CharField(max_length=64, blank=True)  # NsApi.oauth_clients.client_secret
     username = models.CharField(max_length=63, blank=True)  # extension@domain = SiPbxDomain.subscriber_config.subscriber_login 
