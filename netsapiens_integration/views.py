@@ -141,7 +141,8 @@ def netsapiens_call_subscription_event_receiver_view(request, voip_provider_id=N
 
     event_data = request.data
     for cdr in event_data:
-        cdr["netsapiens_subscription_client"] = client_id
+        NetsapiensCallSubscriptionsEventExtract
+        cdr["netsapiens_call_subscription"] = client_id
 
     callid_orig_by_term_pairings_list = get_callid_tuples_from_subscription_event(event_data)
     if settings.NETSAPIENS_INTEGRATION_CALL_MODEL_SUBSCRIPTION_IS_ENABLED:

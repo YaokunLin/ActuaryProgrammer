@@ -30,7 +30,7 @@ class NetsapiensCallSubscriptions(AuditTrailModel):
 
 class NetsapiensCallSubscriptionsEventExtract(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
-    netsapiens_subscription_client = models.ForeignKey(NetsapiensCallSubscriptions, null=True, on_delete=models.SET_NULL)
+    netsapiens_call_subscription = models.ForeignKey(NetsapiensCallSubscriptions, null=True, on_delete=models.SET_NULL)
     # These max_lengths are best guesses based on Core1-phx's CdrDomain.201904_r table, unless otherwise specified
     # To be the truest extract we can make without using JSONField, making blank=True for CharFields and null=True for all others
     orig_callid = models.CharField(max_length=127, blank=True, null=True)  # 0_1063160652@192.168.168.127
@@ -111,7 +111,7 @@ class NetsapiensCallSubscriptionsEventExtract(AuditTrailModel):
 
 class NetsapiensCdr2Extract(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
-    netsapiens_subscription_client = models.ForeignKey(NetsapiensCallSubscriptions, null=True, on_delete=models.SET_NULL)
+    netsapiens_call_subscription = models.ForeignKey(NetsapiensCallSubscriptions, null=True, on_delete=models.SET_NULL)
     peerlogic_call_id = models.CharField(blank=True, default="", max_length=22, db_index=True)  # maps to calls/models.py Call model's id
     # These max_lengths are best guesses based on Core1-phx's CdrDomain.201904_r table, unless otherwise specified
     # To be the truest extract we can make without using JSONField, making blank=True for CharFields and null=True for all others
