@@ -19,7 +19,7 @@ class NetsapiensAPICredentials(AuditTrailModel):
     active = models.BooleanField(null=True, blank=False, default=False)  # whether these credentials are active for usage
 
 
-class NetsapiensCallsSubscription(AuditTrailModel):
+class NetsapiensCallSubscriptions(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     voip_provider = models.ForeignKey("core.VoipProvider", on_delete=models.CASCADE)
 
@@ -28,9 +28,9 @@ class NetsapiensCallsSubscription(AuditTrailModel):
         return reverse("netsapiens:call-subscription-event-receiver", kwargs={"voip_provider_id": self.voip_provider.pk, "client_id": self.id})
 
 
-class NetsapiensCallsSubscriptionEventExtract(AuditTrailModel):
+class NetsapiensCallSubscriptionsEventExtract(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
-    netsapiens_subscription_client = models.ForeignKey(NetsapiensCallsSubscription, null=True, on_delete=models.SET_NULL)
+    netsapiens_subscription_client = models.ForeignKey(NetsapiensCallSubscriptions, null=True, on_delete=models.SET_NULL)
     # These max_lengths are best guesses based on Core1-phx's CdrDomain.201904_r table, unless otherwise specified
     # To be the truest extract we can make without using JSONField, making blank=True for CharFields and null=True for all others
     orig_callid = models.CharField(max_length=127, blank=True, null=True)  # 0_1063160652@192.168.168.127
@@ -111,7 +111,7 @@ class NetsapiensCallsSubscriptionEventExtract(AuditTrailModel):
 
 class NetsapiensCdr2Extract(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
-    netsapiens_subscription_client = models.ForeignKey(NetsapiensCallsSubscription, null=True, on_delete=models.SET_NULL)
+    netsapiens_subscription_client = models.ForeignKey(NetsapiensCallSubscriptions, null=True, on_delete=models.SET_NULL)
     peerlogic_call_id = models.CharField(blank=True, default="", max_length=22, db_index=True)  # maps to calls/models.py Call model's id
     # These max_lengths are best guesses based on Core1-phx's CdrDomain.201904_r table, unless otherwise specified
     # To be the truest extract we can make without using JSONField, making blank=True for CharFields and null=True for all others
