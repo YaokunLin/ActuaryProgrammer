@@ -5,7 +5,7 @@ from .models import (
     NetsapiensAPICredentials,
     NetsapiensCallsSubscriptionEventExtract,
     NetsapiensCdr2Extract,
-    NetsapiensSubscriptionClient,
+    NetsapiensCallsSubscription,
 )
 
 
@@ -49,10 +49,10 @@ class AdminNetsapiensAPICredentialsSerializer(serializers.ModelSerializer):
         fields = ["id", "created_at", "modified_by", "modified_at", "voip_provider", "api_url", "client_id", "client_secret", "username", "password", "active"]
 
 
-class NetsapiensSubscriptionClientSerializer(serializers.ModelSerializer):
+class NetsapiensCallsSubscriptionSerializer(serializers.ModelSerializer):
     call_subscription_uri = serializers.CharField(required=False)
 
     class Meta:
-        model = NetsapiensSubscriptionClient
+        model = NetsapiensCallsSubscription
         read_only_fields = ["id", "created_at", "modified_by", "modified_at", "call_subscription_uri"]
         fields = ["id", "created_at", "modified_by", "modified_at", "voip_provider", "call_subscription_uri"]

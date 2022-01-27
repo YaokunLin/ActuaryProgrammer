@@ -14,7 +14,7 @@ from .models import (
     NetsapiensAPICredentials,
     NetsapiensCallsSubscriptionEventExtract,
     NetsapiensCdr2Extract,
-    NetsapiensSubscriptionClient,
+    NetsapiensCallsSubscription,
 )
 from .serializers import (
     AdminNetsapiensAPICredentialsSerializer,
@@ -22,7 +22,7 @@ from .serializers import (
     NetsapiensAPICredentialsWriteSerializer,
     NetsapiensCallsSubscriptionEventExtractSerializer,
     NetsapiensCdr2ExtractSerializer,
-    NetsapiensSubscriptionClientSerializer,
+    NetsapiensCallsSubscriptionSerializer,
 )
 
 
@@ -132,10 +132,10 @@ log = logging.getLogger(__name__)
 @permission_classes([AllowAny])
 def netsapiens_call_subscription_event_receiver_view(request, voip_provider_id=None, client_id=None):
     log.info(
-        f"Netsapiens Call subscription: Headers: {request.headers} POST Data {request.data} VOIP provider id: {voip_provider_id} and VOIP NetsapiensSubscriptionClient id: {client_id}"
+        f"Netsapiens Call subscription: Headers: {request.headers} POST Data {request.data} VOIP provider id: {voip_provider_id} and VOIP NetsapiensCallsSubscription id: {client_id}"
     )
 
-    client = NetsapiensSubscriptionClient.objects.get(pk=client_id)
+    client = NetsapiensCallsSubscription.objects.get(pk=client_id)
     if client.voip_provider.id != voip_provider_id:
         return Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": "Invalid VOIP Provider."})
 
@@ -252,22 +252,22 @@ class AdminNetsapiensAPICredentialsViewset(viewsets.ModelViewSet):
     filterset_fields = ["voip_provider", "active"]
 
 
-class NetsapiensSubscriptionClientViewset(viewsets.ModelViewSet):
-    queryset = NetsapiensSubscriptionClient.objects.all().order_by("-modified_at")
-    serializer_class = NetsapiensSubscriptionClientSerializer
+class NetsapiensCallsSubscriptionViewset(viewsets.ModelViewSet):
+    queryset = NetsapiensCallsSubscription.objects.all().order_by("-modified_at")
+    serializer_class = NetsapiensCallsSubscriptionSerializer
 
     filterset_fields = ["voip_provider"]
-
-
-class NetsapiensCdr2ExtractViewset(viewsets.ModelViewSet):
-    queryset = NetsapiensCdr2Extract.objects.all()
-    serializer_class = NetsapiensCdr2ExtractSerializer
-
-    filterset_fields = ["orig_callid", "by_callid", "term_callid"]
 
 
 class NetsapiensCallsSubscriptionEventExtractViewset(viewsets.ModelViewSet):
     queryset = NetsapiensCallsSubscriptionEventExtract.objects.all()
     serializer_class = NetsapiensCallsSubscriptionEventExtractSerializer
+
+    filterset_fields = ["orig_callid", "by_callid", "term_callid"]
+
+
+class NetsapiensCdr2ExtractViewset(viewsets.ModelViewSet):
+    queryset = NetsapiensCdr2Extract.objects.all()
+    serializer_class = NetsapiensCdr2ExtractSerializer
 
     filterset_fields = ["orig_callid", "by_callid", "term_callid"]
