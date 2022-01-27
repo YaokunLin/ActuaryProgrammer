@@ -9,6 +9,8 @@ PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNum
 CLOUDBUILD_SERVICE_ACCOUNT="${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com"
 APP_ENGINE_SERVICE_ACCOUNT="${PROJECT_ID}@appspot.gserviceaccount.com"
 LOCAL_DEVELOPMENT_SERVICE_ACCOUNT="local-development@${PROJECT_ID}.iam.gserviceaccount.com"
+CLOUD_SQL_SERVICE_ACCOUNT_ID=${PROJECT_ID}-cloud-sql
+CLOUD_SQL_SERVICE_ACCOUNT_NAME=${CLOUD_SQL_SERVICE_ACCOUNT_ID}@${PROJECT_ID}.iam.gserviceaccount.com
 VAULT_ID="wlmpasbyyncmhpjji3lfc7ra4a"
 REGION=$(gcloud config list --format='value(compute.region)')
 ZONE=$(gcloud config list --format='value(compute.zone)')
@@ -39,14 +41,7 @@ then
   source $ENV_FILE
 fi
 
-echo "${textblue}Reading environment and project ID${textreset}"
-export ENVIRONMENT
-export PROJECT_ID
 
-
-
-CLOUD_SQL_SERVICE_ACCOUNT_ID=${PROJECT_ID}-cloud-sql
-CLOUD_SQL_SERVICE_ACCOUNT_NAME=${CLOUD_SQL_SERVICE_ACCOUNT_ID}@${PROJECT_ID}.iam.gserviceaccount.com
 
 gcloud components update
 
