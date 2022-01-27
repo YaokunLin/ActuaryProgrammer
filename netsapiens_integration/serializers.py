@@ -3,15 +3,15 @@ from rest_framework import serializers
 from core.serializers import UnixEpochDateField
 from .models import (
     NetsapiensAPICredentials,
-    NetsapiensCallsSubscriptionEventExtract,
+    NetsapiensCallSubscriptions,
+    NetsapiensCallSubscriptionsEventExtract,
     NetsapiensCdr2Extract,
-    NetsapiensSubscriptionClient,
 )
 
 
-class NetsapiensCallsSubscriptionEventExtractSerializer(serializers.ModelSerializer):
+class NetsapiensCallSubscriptionsEventExtractSerializer(serializers.ModelSerializer):
     class Meta:
-        model = NetsapiensCallsSubscriptionEventExtract
+        model = NetsapiensCallSubscriptionsEventExtract
         read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
         fields = "__all__"
 
@@ -49,10 +49,10 @@ class AdminNetsapiensAPICredentialsSerializer(serializers.ModelSerializer):
         fields = ["id", "created_at", "modified_by", "modified_at", "voip_provider", "api_url", "client_id", "client_secret", "username", "password", "active"]
 
 
-class NetsapiensSubscriptionClientSerializer(serializers.ModelSerializer):
+class NetsapiensCallSubscriptionsSerializer(serializers.ModelSerializer):
     call_subscription_uri = serializers.CharField(required=False)
 
     class Meta:
-        model = NetsapiensSubscriptionClient
+        model = NetsapiensCallSubscriptions
         read_only_fields = ["id", "created_at", "modified_by", "modified_at", "call_subscription_uri"]
         fields = ["id", "created_at", "modified_by", "modified_at", "voip_provider", "call_subscription_uri"]

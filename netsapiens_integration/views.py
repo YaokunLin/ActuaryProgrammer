@@ -12,17 +12,17 @@ from netsapiens_integration.helpers import get_callid_tuples_from_subscription_e
 from netsapiens_integration.publishers import publish_leg_b_ready_cdrs
 from .models import (
     NetsapiensAPICredentials,
-    NetsapiensCallsSubscriptionEventExtract,
+    NetsapiensCallSubscriptionsEventExtract,
     NetsapiensCdr2Extract,
-    NetsapiensSubscriptionClient,
+    NetsapiensCallSubscriptions,
 )
 from .serializers import (
     AdminNetsapiensAPICredentialsSerializer,
     NetsapiensAPICredentialsReadSerializer,
     NetsapiensAPICredentialsWriteSerializer,
-    NetsapiensCallsSubscriptionEventExtractSerializer,
+    NetsapiensCallSubscriptionsEventExtractSerializer,
     NetsapiensCdr2ExtractSerializer,
-    NetsapiensSubscriptionClientSerializer,
+    NetsapiensCallSubscriptionsSerializer,
 )
 
 
@@ -132,24 +132,25 @@ log = logging.getLogger(__name__)
 @permission_classes([AllowAny])
 def netsapiens_call_subscription_event_receiver_view(request, voip_provider_id=None, client_id=None):
     log.info(
-        f"Netsapiens Call subscription: Headers: {request.headers} POST Data {request.data} VOIP provider id: {voip_provider_id} and VOIP NetsapiensSubscriptionClient id: {client_id}"
+        f"Netsapiens Call subscription: Headers: {request.headers} POST Data {request.data} VOIP provider id: {voip_provider_id} and VOIP NetsapiensCallSubscriptions id: {client_id}"
     )
 
-    client = NetsapiensSubscriptionClient.objects.get(pk=client_id)
+    client = NetsapiensCallSubscriptions.objects.get(pk=client_id)
     if client.voip_provider.id != voip_provider_id:
         return Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": "Invalid VOIP Provider."})
 
     event_data = request.data
     for cdr in event_data:
-        cdr["netsapiens_subscription_client"] = client_id
+        NetsapiensCallSubscriptionsEventExtract
+        cdr["netsapiens_call_subscription"] = client_id
 
     callid_orig_by_term_pairings_list = get_callid_tuples_from_subscription_event(event_data)
     if settings.NETSAPIENS_INTEGRATION_CALL_MODEL_SUBSCRIPTION_IS_ENABLED:
         log.info(f"NETSAPIENS_INTEGRATION_CALL_MODEL_SUBSCRIPTION_IS_ENABLED  is false. Not saving to database for call ids {callid_orig_by_term_pairings_list}")
         return Response(request.data)
 
-    # Convert subscription payload to NetsapiensCallsSubscriptionEventExtract
-    subscription_event_serializer = NetsapiensCallsSubscriptionEventExtractSerializer(data=request.data, many=True)
+    # Convert subscription payload to NetsapiensCallSubscriptionsEventExtract
+    subscription_event_serializer = NetsapiensCallSubscriptionsEventExtractSerializer(data=request.data, many=True)
     subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
     if not subscription_event_serializer_is_valid:
         log.exception(
@@ -252,22 +253,22 @@ class AdminNetsapiensAPICredentialsViewset(viewsets.ModelViewSet):
     filterset_fields = ["voip_provider", "active"]
 
 
-class NetsapiensSubscriptionClientViewset(viewsets.ModelViewSet):
-    queryset = NetsapiensSubscriptionClient.objects.all().order_by("-modified_at")
-    serializer_class = NetsapiensSubscriptionClientSerializer
+class NetsapiensCallSubscriptionsViewset(viewsets.ModelViewSet):
+    queryset = NetsapiensCallSubscriptions.objects.all().order_by("-modified_at")
+    serializer_class = NetsapiensCallSubscriptionsSerializer
 
     filterset_fields = ["voip_provider"]
+
+
+class NetsapiensCallSubscriptionsEventExtractViewset(viewsets.ModelViewSet):
+    queryset = NetsapiensCallSubscriptionsEventExtract.objects.all()
+    serializer_class = NetsapiensCallSubscriptionsEventExtractSerializer
+
+    filterset_fields = ["orig_callid", "by_callid", "term_callid"]
 
 
 class NetsapiensCdr2ExtractViewset(viewsets.ModelViewSet):
     queryset = NetsapiensCdr2Extract.objects.all()
     serializer_class = NetsapiensCdr2ExtractSerializer
-
-    filterset_fields = ["orig_callid", "by_callid", "term_callid"]
-
-
-class NetsapiensCallsSubscriptionEventExtractViewset(viewsets.ModelViewSet):
-    queryset = NetsapiensCallsSubscriptionEventExtract.objects.all()
-    serializer_class = NetsapiensCallsSubscriptionEventExtractSerializer
 
     filterset_fields = ["orig_callid", "by_callid", "term_callid"]
