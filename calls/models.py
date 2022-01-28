@@ -1,21 +1,25 @@
 import datetime
 
 from django.conf import settings
+from django.forms import DateTimeField
 from django_countries.fields import CountryField
 from django.db import models
+from django.db.models import Q
 from django_extensions.db.fields import ShortUUIDField
 from phonenumber_field.modelfields import PhoneNumberField
 
 
 from core.abstract_models import AuditTrailModel
 from calls.field_choices import (
-    CallAudioStatusTypes,
+    CallAudioFileStatusTypes,
+    CallTranscriptionFileStatusTypes,
     CallConnectionTypes,
     CallDirectionTypes,
     EngagementPersonaTypes,
     NonAgentEngagementPersonaTypes,
     ReferralSourceTypes,
     SupportedAudioMimeTypes,
+    SupportedTranscriptionMimeTypes,
     TelecomCallerNameInfoSourceTypes,
     TelecomCallerNameInfoTypes,
     TelecomCarrierTypes,
@@ -54,17 +58,50 @@ class Call(AuditTrailModel):
     metadata_file_uri = models.CharField(max_length=255, blank=True)  # Planning to deprecate
 
 
-class CallAudioPartial(AuditTrailModel):
+class CallPartial(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     call = models.ForeignKey(Call, on_delete=models.CASCADE)
+    time_interaction_started = DateTimeField()
+    time_interaction_ended = DateTimeField()
+
+
+class CallAudioPartial(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    call_partial = models.ForeignKey(CallPartial, on_delete=models.CASCADE)
     mime_type = models.CharField(choices=SupportedAudioMimeTypes.choices, max_length=180)
-    status = models.CharField(choices=CallAudioStatusTypes.choices, max_length=80, default=CallAudioStatusTypes.RETRIEVAL_FROM_PROVIDER_IN_PROGRESS)
+    status = models.CharField(choices=CallAudioFileStatusTypes.choices, max_length=80, default=CallAudioFileStatusTypes.RETRIEVAL_FROM_PROVIDER_IN_PROGRESS)
 
     @property
     def signed_url(
         self,
         client: str = settings.CLOUD_STORAGE_CLIENT,
         bucket: str = settings.CALL_AUDIO_BUCKET,
+        expiration: datetime.timedelta = settings.SIGNED_STORAGE_URL_EXPIRATION_DELTA,
+    ) -> str:
+        bucket = client.get_bucket(bucket)
+        blob = bucket.get_blob(self.id)
+        return blob.generate_signed_url(expiration=expiration)
+
+
+class CallTranscriptPartial(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    call_partial = models.ForeignKey(CallPartial, on_delete=models.CASCADE)
+    call_audio_partial = models.ForeignKey(CallAudioPartial, on_delete=models.CASCADE, null=True)
+    mime_type = models.CharField(choices=SupportedTranscriptionMimeTypes.choices, max_length=180, default=SupportedTranscriptionMimeTypes.TEXT_PLAIN)
+    status = models.CharField(
+        choices=CallTranscriptionFileStatusTypes.choices, max_length=80, default=CallTranscriptionFileStatusTypes.RETRIEVAL_FROM_PROVIDER_IN_PROGRESS
+    )
+
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+        if self.call_audio_partial and self.call_audio_partial.call_partial != self.call_partial:
+            raise ValueError("call_audio_partial's call_partial and this object's call_partial must match. Not saving.")
+        super().save(self, force_insert, force_update, using, update_fields)
+
+    @property
+    def signed_url(
+        self,
+        client: str = settings.CLOUD_STORAGE_CLIENT,
+        bucket: str = settings.CALL_TRANSCRIPT_BUCKET,
         expiration: datetime.timedelta = settings.SIGNED_STORAGE_URL_EXPIRATION_DELTA,
     ) -> str:
         bucket = client.get_bucket(bucket)

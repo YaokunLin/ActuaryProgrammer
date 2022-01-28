@@ -1,16 +1,8 @@
-from django.contrib.auth.models import Group
+from core.models import PracticeTelecom
 from django_countries.serializers import CountryFieldMixin
-
 from rest_framework import serializers
 
-from core.models import PracticeTelecom
-
-from .models import (
-    Call,
-    CallAudioPartial,
-    CallLabel,
-    TelecomCallerNameInfo,
-)
+from .models import Call, CallAudioPartial, CallLabel, CallPartial, CallTranscriptPartial, TelecomCallerNameInfo
 
 
 class CallSerializer(serializers.ModelSerializer):
@@ -22,11 +14,27 @@ class CallSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
 
 
+class CallPartialSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CallPartial
+        fields = "__all__"
+        read_only_fields = ["id", "created_at", "modified_by", "modified_at", "signed_url"]
+
+
 class CallAudioPartialSerializer(serializers.ModelSerializer):
     signed_url = serializers.CharField(required=False)
 
     class Meta:
         model = CallAudioPartial
+        fields = "__all__"
+        read_only_fields = ["id", "created_at", "modified_by", "modified_at", "signed_url"]
+
+
+class CallTranscriptPartialSerializer(serializers.ModelSerializer):
+    signed_url = serializers.CharField(required=False)
+
+    class Meta:
+        model = CallTranscriptPartial
         fields = "__all__"
         read_only_fields = ["id", "created_at", "modified_by", "modified_at", "signed_url"]
 

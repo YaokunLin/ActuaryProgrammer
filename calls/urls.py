@@ -1,28 +1,35 @@
 from django.urls import include, path
-from rest_framework import routers
+from rest_framework_nested import routers
 
 from .views import (
     CallAudioPartialViewset,
+    CallPartialViewset,
     CallViewset,
     CallLabelViewset,
+    CallTranscriptPartialViewset,
     TelecomCallerNameInfoViewSet,
 )
 
-router = routers.DefaultRouter()
+calls_app_root_router = routers.SimpleRouter()
 
-router.register(r"calls", CallViewset)
+calls_app_root_router.register(r"calls", CallViewset)
+calls_app_root_router.register(r"labels", CallLabelViewset)
 
-call_audio_router = routers.DefaultRouter()
-call_audio_router.register(r"partials", CallAudioPartialViewset, basename="call-audio-partials")
+call_router = routers.NestedSimpleRouter(calls_app_root_router, r"calls", lookup="call")
+call_router.register(r"partials", CallPartialViewset, basename="call-partials")
 
-router.register(r"labels", CallLabelViewset)
+call_partials_router = routers.NestedSimpleRouter(call_router, r"partials", lookup="call_partial")
+call_partials_router.register(r"audio", CallAudioPartialViewset, basename="call-partial-audio")
+call_partials_router.register(r"transcripts", CallTranscriptPartialViewset, basename="call-partial-transcripts")
+
 
 # TODO: I hate this, let's never use underscores in resource names
 # dependency is peerlogic-ml-stream-pipeline repo to change as well
-router.register(r"telecom_caller_name_info", TelecomCallerNameInfoViewSet)
+calls_app_root_router.register(r"telecom_caller_name_info", TelecomCallerNameInfoViewSet)
 
-urlpatterns = router.urls
 
-urlpatterns += [
-    path("calls/audio/", include(call_audio_router.urls)),
+urlpatterns = [
+    path(r"", include(calls_app_root_router.urls)),
+    path(r"", include(call_router.urls)),
+    path(r"", include(call_partials_router.urls)),
 ]
