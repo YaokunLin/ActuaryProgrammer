@@ -145,7 +145,7 @@ def netsapiens_call_subscription_event_receiver_view(request, voip_provider_id=N
 
     callid_orig_by_term_pairings_list = get_callid_tuples_from_subscription_event(event_data)
     if settings.NETSAPIENS_INTEGRATION_CALL_MODEL_SUBSCRIPTION_IS_ENABLED:
-        log.info(f"NETSAPIENS_INTEGRATION_CALL_MODEL_SUBSCRIPTION_IS_ENABLED  is false. Not saving to database for call ids {callid_orig_by_term_pairings_list}")
+        log.info(f"NETSAPIENS_INTEGRATION_CALL_MODEL_SUBSCRIPTION_IS_ENABLED is false. Not saving to database for call ids {callid_orig_by_term_pairings_list}")
         return Response(request.data)
 
     # Convert subscription payload to NetsapiensCallSubscriptionsEventExtract
