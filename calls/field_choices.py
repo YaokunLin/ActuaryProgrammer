@@ -95,3 +95,4 @@ class SupportedAudioMimeTypes(models.TextChoices):
 
 class SupportedTranscriptMimeTypes(models.TextChoices):
     TEXT_PLAIN = "text/plain"
+    APPLICATION_JSON = "application/json"
