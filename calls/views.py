@@ -21,8 +21,9 @@ from calls.twilio_etl import (
 )
 from .field_choices import (
     CallAudioFileStatusTypes,
+    CallTranscriptFileStatusTypes,
     SupportedAudioMimeTypes,
-    SupportedTranscriptionMimeTypes,
+    SupportedTranscriptMimeTypes,
     TelecomCallerNameInfoSourceTypes,
     TelecomCallerNameInfoTypes,
 )
@@ -55,7 +56,7 @@ class CallViewset(viewsets.ModelViewSet):
 class CallTranscriptPartialViewset(viewsets.ModelViewSet):
     queryset = CallTranscriptPartial.objects.all().order_by("-created_at")
     serializer_class = CallTranscriptPartialSerializer
-    filter_fields = ["call", "mime_type", "status"]
+    filter_fields = ["call_partial", "mime_type", "status"]
     parser_classes = (JSONParser, FormParser, MultiPartParser)
 
     def get_queryset(self):
@@ -79,48 +80,55 @@ class CallTranscriptPartialViewset(viewsets.ModelViewSet):
             error_message = "In Form Data, Key must be mime_type and Value must be a file."
             return FileToUpload(errors=[{"form_data": error_message}])
 
-        if mime_type not in SupportedTranscriptionMimeTypes.values:
-            error_message = f"Media type {mime_type} key form-data not in available SupportedTranscriptionMimeTypes"
+        if mime_type not in SupportedTranscriptMimeTypes.values:
+            error_message = f"Media type {mime_type} key form-data not in available SupportedTranscriptMimeTypes"
             log.exception(error_message)
             return FileToUpload(errors=[{"mime_type": error_message}])
         return FileToUpload(mime_type, blob_to_upload)
 
-    def partial_update(self, request, pk=None, format=None, storage_client=settings.CLOUD_STORAGE_CLIENT, bucket=settings.CALL_TRANSCRIPT_BUCKET):
-        # TODO: Implement
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        # files = request.data.items()
-        # files = list(files)
-        # file_to_upload = self.data_is_valid(files)
-        # if file_to_upload.errors:
-        #     return Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": file_to_upload.errors})
-        # log.info(f"Blob to upload is {file_to_upload.blob} with mimetype {file_to_upload.mime_type}.")
+    def partial_update(
+        self,
+        request,
+        pk=None,
+        call_pk=None,
+        call_partial_pk=None,
+        format=None,
+        storage_client=settings.CLOUD_STORAGE_CLIENT,
+        bucket=settings.CALL_TRANSCRIPT_BUCKET,
+    ):
+        files = request.data.items()
+        files = list(files)
+        file_to_upload = self.data_is_valid(files)
+        if file_to_upload.errors:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": file_to_upload.errors})
+        log.info(f"Blob to upload is {file_to_upload.blob} with mimetype {file_to_upload.mime_type}.")
 
-        # # Set uploading status and mime_type on Object
-        # call_audio_partial = CallAudioPartial.objects.get(pk=pk)
-        # call_audio_partial.mime_type = file_to_upload.mime_type
-        # call_audio_partial.status = CallAudioFileStatusTypes.UPLOADING
-        # call_audio_partial.save()
+        # Set uploading status and mime_type on Object
+        call_transcript_partial = CallTranscriptPartial.objects.get(pk=pk)
+        call_transcript_partial.mime_type = file_to_upload.mime_type
+        call_transcript_partial.status = CallTranscriptFileStatusTypes.UPLOADING
+        call_transcript_partial.save()
 
-        # # Upload to audio bucket
-        # log.info(f"Saving {call_audio_partial.pk} to bucket {bucket}")
-        # bucket = storage_client.get_bucket(bucket)
-        # blob = bucket.blob(call_audio_partial.pk)
-        # blob.upload_from_string(file_to_upload.blob.read())
+        # Upload to audio bucket
+        log.info(f"Saving {call_transcript_partial.pk} to bucket {bucket}")
+        bucket = storage_client.get_bucket(bucket)
+        blob = bucket.blob(call_transcript_partial.pk)
+        blob.upload_from_string(file_to_upload.blob.read())
 
-        # log.info(f"Successfully saved {call_audio_partial.pk} to bucket {bucket}")
+        log.info(f"Successfully saved {call_transcript_partial.pk} to bucket {bucket}")
 
-        # call_audio_partial.status = CallAudioFileStatusTypes.UPLOADED
-        # call_audio_partial.save()
+        call_transcript_partial.status = CallTranscriptFileStatusTypes.UPLOADED
+        call_transcript_partial.save()
 
-        # call_audio_partial_serializer = CallAudioPartialSerializer(call_audio_partial)
+        call_transcript_partial_serializer = CallTranscriptPartialSerializer(call_transcript_partial)
 
-        # return Response(status=status.HTTP_200_OK, data=call_audio_partial_serializer.data)
+        return Response(status=status.HTTP_200_OK, data=call_transcript_partial_serializer.data)
 
 
 class CallAudioPartialViewset(viewsets.ModelViewSet):
     queryset = CallAudioPartial.objects.all().order_by("-created_at")
     serializer_class = CallAudioPartialSerializer
-    filter_fields = ["call", "mime_type", "status"]
+    filter_fields = ["call_partial", "mime_type", "status"]
     parser_classes = (JSONParser, FormParser, MultiPartParser)
 
     def get_queryset(self):

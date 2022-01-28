@@ -80,7 +80,7 @@ class CallAudioFileStatusTypes(FileStatusTypes, models.TextChoices):
     # May add more audio specific statuses in the future
 
 
-class CallTranscriptionFileStatusTypes(FileStatusTypes, models.TextChoices):
+class CallTranscriptFileStatusTypes(FileStatusTypes, models.TextChoices):
     pass
     # May add more transcription specific statuses in the future
 
@@ -93,5 +93,5 @@ class SupportedAudioMimeTypes(models.TextChoices):
     AUDIO_WAV = "audio/WAV"
 
 
-class SupportedTranscriptionMimeTypes(models.TextChoices):
+class SupportedTranscriptMimeTypes(models.TextChoices):
     TEXT_PLAIN = "text/plain"

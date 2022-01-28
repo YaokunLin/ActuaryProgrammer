@@ -33,6 +33,22 @@ class CallAudioPartialSerializer(serializers.ModelSerializer):
 class CallTranscriptPartialSerializer(serializers.ModelSerializer):
     signed_url = serializers.CharField(required=False)
 
+    # Must call after validation step because models are now populated
+    def validate_call_partial_relationship(self, call_partial, call_partial_of_audio):
+        if call_partial_of_audio and call_partial.id != call_partial_of_audio.id:
+            raise serializers.ValidationError("call_audio_partial's call_partial and this object's call_partial must match. Not saving.")
+
+    def create(self, validated_data):
+        if validated_data.get("call_audio_partial"):
+            self.validate_call_partial_relationship(validated_data.get("call_partial"), validated_data.get("call_audio_partial").call_partial)
+
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        if validated_data.get("call_audio_partial"):
+            self.validate_call_partial_relationship(validated_data.get("call_partial"), validated_data.get("call_audio_partial").call_partial)
+        super().update(instance, validated_data)
+
     class Meta:
         model = CallTranscriptPartial
         fields = "__all__"
