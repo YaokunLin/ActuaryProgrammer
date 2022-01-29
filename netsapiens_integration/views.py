@@ -1,30 +1,37 @@
 import logging
 
 from django.conf import settings
-from rest_framework import status, viewsets
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from rest_framework.permissions import AllowAny, IsAdminUser
-from rest_framework.response import Response
-
 from google.api_core.exceptions import PermissionDenied
+from rest_framework import status, viewsets
+from rest_framework.decorators import (
+    api_view,
+    authentication_classes,
+    permission_classes
+)
+from rest_framework.permissions import (
+    AllowAny,
+    IsAdminUser,
+)
+from rest_framework.response import Response
+from core.models import PracticeTelecom
 
 from netsapiens_integration.helpers import get_callid_tuples_from_subscription_event
 from netsapiens_integration.publishers import publish_leg_b_ready_cdrs
+
 from .models import (
     NetsapiensAPICredentials,
+    NetsapiensCallSubscriptions,
     NetsapiensCallSubscriptionsEventExtract,
     NetsapiensCdr2Extract,
-    NetsapiensCallSubscriptions,
 )
 from .serializers import (
     AdminNetsapiensAPICredentialsSerializer,
     NetsapiensAPICredentialsReadSerializer,
     NetsapiensAPICredentialsWriteSerializer,
     NetsapiensCallSubscriptionsEventExtractSerializer,
-    NetsapiensCdr2ExtractSerializer,
     NetsapiensCallSubscriptionsSerializer,
+    NetsapiensCdr2ExtractSerializer,
 )
-
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -130,18 +137,17 @@ log = logging.getLogger(__name__)
 @api_view(["POST"])
 @authentication_classes([])
 @permission_classes([AllowAny])
-def netsapiens_call_subscription_event_receiver_view(request, voip_provider_id=None, call_subscription_id=None):
+def netsapiens_call_subscription_event_receiver_view(request, practice_telecom_id=None, call_subscription_id=None):
     log.info(
-        f"Netsapiens Call subscription: Headers: {request.headers} POST Data {request.data} VOIP provider id: {voip_provider_id} and VOIP NetsapiensCallSubscriptions id: {client_id}"
+        f"Netsapiens Call subscription: Headers: {request.headers} POST Data {request.data} Practice Telecom Id: {practice_telecom_id} and VOIP NetsapiensCallSubscriptions id: {client_id}"
     )
 
-    client = NetsapiensCallSubscriptions.objects.get(pk=call_subscription_id)
-    if client.voip_provider.id != voip_provider_id:
-        return Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": "Invalid VOIP Provider."})
+    # validate subscription is associated with the practice telecom
+    client : NetsapiensCallSubscriptions = NetsapiensCallSubscriptions.objects.get(pk=call_subscription_id)
+    if client.practice_telecom.id != practice_telecom_id:
+        return Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": "Invalid Practice Telecome Provider."})
 
     event_data = request.data
-    for cdr in event_data:
-        cdr["netsapiens_call_subscription"] = call_subscription_id
 
     callid_orig_by_term_pairings_list = get_callid_tuples_from_subscription_event(event_data)
     if settings.NETSAPIENS_INTEGRATION_CALL_MODEL_SUBSCRIPTION_IS_ENABLED:
@@ -160,8 +166,18 @@ def netsapiens_call_subscription_event_receiver_view(request, voip_provider_id=N
     subscription_event_serializer.save()
     log.info(f"Extract data for call ids: {callid_orig_by_term_pairings_list} from Call subscription saved to netsapiens etl cdrs extract.")
 
+    # Grab practice and VOIP Provider for downstream processing
+    practice_telecom : PracticeTelecom = PracticeTelecom.objects.get(pk=practice_telecom_id)
+    practice_id = practice_telecom.practice.id
+    voip_provider_id = practice_telecom.voip_provider.id
+
     try:
-        publish_leg_b_ready_cdrs(voip_provider_id=voip_provider_id, netsapiens_call_subscription_id=call_subscription_id, event_data=event_data)
+        publish_leg_b_ready_cdrs(
+            netsapiens_call_subscription_id=call_subscription_id,
+            practice_id=practice_id,
+            voip_provider_id=voip_provider_id,
+            event_data=event_data
+        )
     except PermissionDenied:
         message = "Must add role 'roles/pubsub.publisher'. Exiting."
         log.exception(message)
