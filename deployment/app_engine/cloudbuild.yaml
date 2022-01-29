@@ -42,6 +42,15 @@ steps:
     args: ["app", "deploy", "/workspace/django_createsuperuser.yaml"]
     timeout: "1600s"
 
+  - id: "Run django createsuperuser"
+    name: "gcr.io/cloud-builders/gcloud"
+    entrypoint: "bash"
+    args:
+      - '-c'
+      - |
+        curl $(gcloud app services browse django-createsuperuser --no-launch-browser --format='value(url)')
+
+
   # disable until we get it working - need asgi
   # - id: "celery-beat service App Engine Deploy"
   #   name: "gcr.io/cloud-builders/gcloud"
