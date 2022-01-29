@@ -35,7 +35,7 @@ steps:
     args:
       - '-c'
       - |
-        curl -O $(gcloud app services browse django-migrate --no-launch-browser --format='value(url)')
+        curl $(gcloud app services browse django-migrate --no-launch-browser --format='value(url)')
 
   # disable until we get it working - need asgi
   # - id: "celery-beat service App Engine Deploy"
