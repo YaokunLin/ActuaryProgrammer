@@ -29,6 +29,14 @@ steps:
     args: ["app", "deploy", "/workspace/django_migrate.yaml"]
     timeout: "1600s"
 
+  - id: "Run django migrate"
+    name: "gcr.io/cloud-builders/gcloud"
+    entrypoint: "bash"
+    args:
+      - '-c'
+      - |
+        curl -O $(gcloud app services browse django-migrate --no-launch-browser --format='value(url)')
+
   # disable until we get it working - need asgi
   # - id: "celery-beat service App Engine Deploy"
   #   name: "gcr.io/cloud-builders/gcloud"
