@@ -171,6 +171,10 @@ def netsapiens_call_subscription_event_receiver_view(request, practice_telecom_i
     practice_id = practice_telecom.practice.id
     voip_provider_id = practice_telecom.voip_provider.id
 
+    # TODO: verify voip_provider is active
+    # TODO: verify subscription is active
+    # TODO: verify practice is active
+
     try:
         publish_leg_b_ready_cdrs(
             netsapiens_call_subscription_id=call_subscription_id,
