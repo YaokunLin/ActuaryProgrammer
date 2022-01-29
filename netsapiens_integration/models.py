@@ -21,11 +21,13 @@ class NetsapiensAPICredentials(AuditTrailModel):
 
 class NetsapiensCallSubscriptions(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
-    voip_provider = models.ForeignKey("core.VoipProvider", on_delete=models.CASCADE)
+    practice_telecom = models.ForeignKey("core.PracticeTelecom", on_delete=models.SET_NULL)
+    
+    active = models.BooleanField(null=True, blank=False, default=True)  # call subscription is active and should be receiving data
 
     @property
     def call_subscription_uri(self):
-        return reverse("netsapiens:call-subscription-event-receiver", kwargs={"voip_provider_id": self.voip_provider.pk, "client_id": self.id})
+        return reverse("netsapiens:call-subscription-event-receiver", kwargs={"practice_telecom_id": self.practice_telecom.pk, "client_id": self.id})
 
 
 class NetsapiensCallSubscriptionsEventExtract(AuditTrailModel):
