@@ -21,7 +21,7 @@ class NetsapiensAPICredentials(AuditTrailModel):
 
 class NetsapiensCallSubscriptions(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
-    practice_telecom = models.ForeignKey("core.PracticeTelecom", null=True, on_delete=models.SET_NULL)
+    practice_telecom = models.ForeignKey("core.PracticeTelecom", null=True, on_delete=models.SET_NULL)  # we want to keep call subscriptions and their ids forever, don't delete
     
     active = models.BooleanField(null=True, blank=False, default=True)  # call subscription is active and should be receiving data
 
