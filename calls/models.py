@@ -1,30 +1,24 @@
 import datetime
 
+from core.abstract_models import AuditTrailModel
 from django.conf import settings
-from django.forms import DateTimeField
-from django_countries.fields import CountryField
 from django.db import models
 from django.db.models import Q
+from django.forms import DateTimeField
+from django_countries.fields import CountryField
 from django_extensions.db.fields import ShortUUIDField
 from phonenumber_field.modelfields import PhoneNumberField
 
-
-from core.abstract_models import AuditTrailModel
-from calls.field_choices import (
-    CallAudioFileStatusTypes,
-    CallTranscriptFileStatusTypes,
-    CallConnectionTypes,
-    CallDirectionTypes,
-    EngagementPersonaTypes,
-    NonAgentEngagementPersonaTypes,
-    ReferralSourceTypes,
-    SupportedAudioMimeTypes,
-    SupportedTranscriptMimeTypes,
-    TelecomCallerNameInfoSourceTypes,
-    TelecomCallerNameInfoTypes,
-    TelecomCarrierTypes,
-    TelecomPersonaTypes,
-)
+from calls.field_choices import (CallAudioFileStatusTypes, CallConnectionTypes,
+                                 CallDirectionTypes,
+                                 CallTranscriptFileStatusTypes,
+                                 EngagementPersonaTypes,
+                                 NonAgentEngagementPersonaTypes,
+                                 ReferralSourceTypes, SupportedAudioMimeTypes,
+                                 SupportedTranscriptMimeTypes,
+                                 TelecomCallerNameInfoSourceTypes,
+                                 TelecomCallerNameInfoTypes,
+                                 TelecomCarrierTypes, TelecomPersonaTypes)
 
 
 class Call(AuditTrailModel):
