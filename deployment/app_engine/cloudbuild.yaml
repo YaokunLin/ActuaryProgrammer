@@ -37,6 +37,11 @@ steps:
       - |
         curl $(gcloud app services browse django-migrate --no-launch-browser --format='value(url)')
 
+  - id: "django_createsuperuser service App Engine Deploy"
+    name: "gcr.io/cloud-builders/gcloud"
+    args: ["app", "deploy", "/workspace/django_createsuperuser.yaml"]
+    timeout: "1600s"
+
   # disable until we get it working - need asgi
   # - id: "celery-beat service App Engine Deploy"
   #   name: "gcr.io/cloud-builders/gcloud"
