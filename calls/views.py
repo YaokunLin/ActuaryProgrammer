@@ -10,6 +10,7 @@ from phonenumber_field.modelfields import to_python as to_phone_number
 from rest_framework import status, viewsets
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
+from rest_framework.serializers import ValidationError
 from rest_framework.views import APIView
 from twilio.base.exceptions import TwilioException
 
@@ -70,7 +71,7 @@ class CallTranscriptPartialViewset(viewsets.ModelViewSet):
         if len(files) != 1:
             error_message = f"Must give 1 file per request in MultiPart Form Data."
             log.exception(error_message)
-            return FileToUpload(errors=[{"files_length": error_message}])
+            raise ValidationError({"errors": [{"files_length": error_message}]})
 
         try:
             file = files[0]
@@ -78,12 +79,12 @@ class CallTranscriptPartialViewset(viewsets.ModelViewSet):
             mime_type = file[0]
         except Exception:
             error_message = "In Form Data, Key must be mime_type and Value must be a file."
-            return FileToUpload(errors=[{"form_data": error_message}])
+            raise ValidationError({"errors": [{"files_length": error_message}]})
 
         if mime_type not in SupportedTranscriptMimeTypes.values:
             error_message = f"Media type {mime_type} key form-data not in available SupportedTranscriptMimeTypes"
             log.exception(error_message)
-            return FileToUpload(errors=[{"mime_type": error_message}])
+            raise ValidationError({"errors": [{"files_length": error_message}]})
         return FileToUpload(mime_type, blob_to_upload)
 
     def partial_update(
@@ -142,7 +143,7 @@ class CallAudioPartialViewset(viewsets.ModelViewSet):
         if len(files) != 1:
             error_message = f"Must give 1 file per request in MultiPart Form Data."
             log.exception(error_message)
-            return FileToUpload(errors=[{"files_length": error_message}])
+            raise ValidationError({"errors": [{"files_length": error_message}]})
 
         try:
             file = files[0]
@@ -150,12 +151,12 @@ class CallAudioPartialViewset(viewsets.ModelViewSet):
             mime_type = file[0]
         except Exception:
             error_message = "In Form Data, Key must be mime_type and Value must be a file."
-            return FileToUpload(errors=[{"form_data": error_message}])
+            raise ValidationError({"errors": [{"files_length": error_message}]})
 
         if mime_type not in SupportedAudioMimeTypes.values:
             error_message = f"Media type {mime_type} key form-data not in available SupportedAudioMimeTypes"
             log.exception(error_message)
-            return FileToUpload(errors=[{"mime_type": error_message}])
+            raise ValidationError({"errors": [{"files_length": error_message}]})
         return FileToUpload(mime_type, blob_to_upload)
 
     def partial_update(
