@@ -61,7 +61,7 @@ class CallTranscriptPartialViewset(viewsets.ModelViewSet):
     parser_classes = (JSONParser, FormParser, MultiPartParser)
 
     def get_queryset(self):
-        return super().get_queryset().filter(call_partial=self.kwargs["call_partial_pk"])
+        return super().get_queryset().filter(call_partial=self.kwargs.get("call_partial_pk"))
 
     def update(self, request, pk=None):
         # TODO: Implement
@@ -133,7 +133,7 @@ class CallAudioPartialViewset(viewsets.ModelViewSet):
     parser_classes = (JSONParser, FormParser, MultiPartParser)
 
     def get_queryset(self):
-        return super().get_queryset().filter(call_partial=self.kwargs["call_partial_pk"])
+        return super().get_queryset().filter(call_partial=self.kwargs.get("call_partial_pk"))
 
     def update(self, request, pk=None):
         # TODO: Implement
@@ -196,7 +196,7 @@ class CallPartialViewset(viewsets.ModelViewSet):
     serializer_class = CallPartialSerializer
 
     def get_queryset(self):
-        return super().get_queryset().filter(call=self.kwargs["call_pk"])
+        return super().get_queryset().filter(call=self.kwargs.get("call_pk"))
 
 
 class CallLabelViewset(viewsets.ModelViewSet):
