@@ -37,8 +37,10 @@ def publish_leg_b_ready_cdrs(
             "voip_provider_id": voip_provider_id,
         }
 
-        # When you publish a message, the client returns a future.
+        # When you publish a message, the client returns a future.    
+        log.info(f"Publishing message to {cdrs_to_publish} with error handler to {topic_path_leg_b_finished}.")
         publish_future = publisher.publish(topic=topic_path_leg_b_finished, data=cdr_encode_data, **event_attributes)
+        log.info(f"Published message to {cdrs_to_publish} with error handler to {topic_path_leg_b_finished}.")
         # Non-blocking. Publish failures are handled in the callback function.
         publish_future.add_done_callback(pubsub_helpers.get_callback(publish_future, cdr_encode_data))
         publish_futures.append(publish_future)
