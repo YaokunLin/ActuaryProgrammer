@@ -1,7 +1,6 @@
 import logging
 
 from django.conf import settings
-from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from google.api_core.exceptions import PermissionDenied
 from rest_framework import status, viewsets
@@ -153,7 +152,7 @@ def netsapiens_call_subscription_event_receiver_view(request, practice_telecom_i
         log.info(
             f"NETSAPIENS_INTEGRATION_CALL_MODEL_SUBSCRIPTION_IS_ENABLED is false. Not saving event POST Data '{request.data}' practice_telecom_id: '{practice_telecom_id}' and call_subscription_id: '{call_subscription_id}'"
         )
-        return JsonResponse(status=status.HTTP_405_METHOD_NOT_ALLOWED, data={"message": message})
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED, data={"message": message})
     log.info(
         f"Call Subscription Event Processing is enabled. Processing to process event for: practice_telecom_id: '{practice_telecom_id}' and call_subscription_id: '{call_subscription_id}'"
     )
@@ -181,7 +180,7 @@ def netsapiens_call_subscription_event_receiver_view(request, practice_telecom_i
     if not practice:
         message = f"No valid practice found for practice_telecom_id = '{practice_telecom_id}'"
         log.exception(f"{message}. This should not be possible since this is a non-nullable relationship.")
-        return JsonResponse(status=status.HTTP_404_NOT_FOUND, data={"message": message})
+        return Response(status=status.HTTP_404_NOT_FOUND, data={"message": message})
 
     voip_provider = practice_telecom.voip_provider
     if not voip_provider:
@@ -189,7 +188,7 @@ def netsapiens_call_subscription_event_receiver_view(request, practice_telecom_i
             f"No valid voip_provider found for this practice '{practice_id}'. A voip_provider must be set up first in order to receive subscription events."
         )
         log.exception(f"{message}. Practice is not set up properly and needs a voip_provider. Somehow a subscription was set up and events are being received!")
-        return JsonResponse(status=status.HTTP_404_NOT_FOUND, data={"message": message})
+        return Response(status=status.HTTP_404_NOT_FOUND, data={"message": message})
     voip_provider_id = voip_provider.id
 
     # Validate subscription payload by converting to NetsapiensCallSubscriptionsEventExtract
@@ -202,7 +201,7 @@ def netsapiens_call_subscription_event_receiver_view(request, practice_telecom_i
         log.exception(
             f"Error from subscription_event_serializer validation from callids {callid_orig_by_term_pairings_list}: {subscription_event_serializer.errors}"
         )
-        return JsonResponse(status=status.HTTP_400_BAD_REQUEST, data={"errors": subscription_event_serializer.errors})
+        return Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": subscription_event_serializer.errors})
 
     subscription_event_serializer.save()
     log.info(
