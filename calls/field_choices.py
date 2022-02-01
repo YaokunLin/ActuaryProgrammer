@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from core.field_choices import FileStatusTypes
+
 
 class EngagementPersonaTypes(models.TextChoices):
     AGENT = "agent"
@@ -73,10 +75,14 @@ class AudioCodecType(models.TextChoices):
     VORBIS = "vorbis", _("MPEG-1 Audio Layer III")
 
 
-class CallAudioStatusTypes(models.TextChoices):
-    RETRIEVAL_FROM_PROVIDER_IN_PROGRESS = "retrieval_from_provider_in_progress"
-    UPLOADING = "uploading"
-    UPLOADED = "uploaded"
+class CallAudioFileStatusTypes(FileStatusTypes, models.TextChoices):
+    pass
+    # May add more audio specific statuses in the future
+
+
+class CallTranscriptFileStatusTypes(FileStatusTypes, models.TextChoices):
+    pass
+    # May add more transcription specific statuses in the future
 
 
 class SupportedAudioMimeTypes(models.TextChoices):
@@ -85,3 +91,8 @@ class SupportedAudioMimeTypes(models.TextChoices):
     AUDIO_PCMU = "audio/PCMU"  # PCM MU-LAW (mlaw)
     AUDIO_GSM = "audio/GSM"  # Microsoft GSM Audio (agsm)
     AUDIO_WAV = "audio/WAV"
+
+
+class SupportedTranscriptMimeTypes(models.TextChoices):
+    TEXT_PLAIN = "text/plain"
+    APPLICATION_JSON = "application/json"

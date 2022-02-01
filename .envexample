@@ -3,6 +3,7 @@ BANDWIDTH_API_USERNAME=api@peerlogic.com
 BANDWIDTH_APPLICATION_ID=c1d4708e-78d1-46fc-9b75-7770b4545a15
 BANDWIDTH_MESSAGING_URI=https://messaging.bandwidth.com/api/v2/users/5005357/messages
 CALL_AUDIO_BUCKET=peerlogic-api-dev-call-audio-your-name-here # always use your own bucket
+CALL_TRANSCRIPT_BUCKET=peerlogic-api-dev-call-transcript-your-name-here # always use your own bucket
 CELERY_BROKER_URL=
 CELERY_RESULT_BACKEND=
 DB_HOST=localhost

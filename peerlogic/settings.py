@@ -125,6 +125,7 @@ except (ValueError, TypeError) as error:
 # Google Cloud Storage
 CLOUD_STORAGE_CLIENT = storage.Client(project=PROJECT_ID)
 CALL_AUDIO_BUCKET = os.getenv("CALL_AUDIO_BUCKET")
+CALL_TRANSCRIPT_BUCKET = os.getenv("CALL_TRANSCRIPT_BUCKET")
 SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS_DEFAULT = 2
 try:
     env_var = os.getenv("SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS")

@@ -1,6 +1,15 @@
 from django.db import models
 
 
+class FileStatusTypes(object):
+    RETRIEVAL_FROM_PROVIDER_IN_PROGRESS = "retrieval_from_provider_in_progress"
+    UPLOADING = "uploading"
+    UPLOADED = "uploaded"
+
+    class Meta:
+        abstract = True
+
+
 class IndustryTypes(models.TextChoices):
     DENTISTRY_GENERAL = "dentistry_general"
     DENTISTRY_PEDIATRIC = "dentistry_pediatric"
