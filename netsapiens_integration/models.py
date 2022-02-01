@@ -27,7 +27,7 @@ class NetsapiensCallSubscriptions(AuditTrailModel):
 
     @property
     def call_subscription_uri(self):
-        return reverse("netsapiens:call-subscription-event-receiver", kwargs={"practice_telecom_id": self.practice_telecom.pk, "client_id": self.id})
+        return reverse("netsapiens:call-subscription-event-receiver", kwargs={"practice_telecom_id": self.practice_telecom.pk, "call_subscription_id": self.id})
 
 
 class NetsapiensCallSubscriptionsEventExtract(AuditTrailModel):
