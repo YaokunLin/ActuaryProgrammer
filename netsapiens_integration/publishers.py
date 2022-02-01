@@ -18,7 +18,7 @@ def publish_leg_b_ready_cdrs(
     voip_provider_id: str,
     event_data: List[Dict],
     publisher: pubsub_v1.PublisherClient = settings.PUBLISHER,
-    topic_path_leg_b_finished=settings.PUBSUB_TOPIC_PATH_NETSAPIENS_LEG_B_FINISHED
+    topic_path_leg_b_finished: str = settings.PUBSUB_TOPIC_PATH_NETSAPIENS_LEG_B_FINISHED,
 ):
 
     publish_futures = []
