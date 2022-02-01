@@ -148,7 +148,7 @@ def netsapiens_call_subscription_event_receiver_view(request, practice_telecom_i
         f"Determining if Call Subscription Event Processing is enabled before processing event for: practice_telecom_id: '{practice_telecom_id}' and call_subscription_id: '{call_subscription_id}'"
     )
     if settings.NETSAPIENS_INTEGRATION_CALL_MODEL_SUBSCRIPTION_IS_ENABLED:
-        message = f"Call Subscription Event processing is disabled on this sytem. If you believe this was in error, please contact peerlogic for assistance."
+        message = f"Call Subscription Event processing is disabled on this system. If you believe this was in error, please contact peerlogic for assistance."
         log.info(
             f"NETSAPIENS_INTEGRATION_CALL_MODEL_SUBSCRIPTION_IS_ENABLED is false. Not saving event POST Data '{request.data}' practice_telecom_id: '{practice_telecom_id}' and call_subscription_id: '{call_subscription_id}'"
         )
