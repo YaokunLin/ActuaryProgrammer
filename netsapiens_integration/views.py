@@ -1,4 +1,3 @@
-from http import HTTPStatus
 import logging
 
 from django.conf import settings
