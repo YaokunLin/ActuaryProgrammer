@@ -13,16 +13,16 @@ class NetsapiensAPICredentials(AuditTrailModel):
     api_url = models.CharField(max_length=2048, blank=True)
     client_id = models.CharField(max_length=64, blank=True)  # NsApi.oauth_clients.client_id
     client_secret = models.CharField(max_length=64, blank=True)  # NsApi.oauth_clients.client_secret
-    username = models.CharField(max_length=63, blank=True)  # extension@domain = SiPbxDomain.subscriber_config.subscriber_login 
-    password = models.CharField(max_length=255, blank=True)  # unknown, it's a guess, password hash may be 60 in length based upon SiPbxDomain.subscriber_config.pwd_hash
+    username = models.CharField(max_length=63, blank=True)  # extension@domain = SiPbxDomain.subscriber_config.subscriber_login
+    password = models.CharField(max_length=255, blank=True)  # unknown, it's a guess, password hash may be 60 based upon SiPbxDomain.subscriber_config.pwd_hash
 
     active = models.BooleanField(null=True, blank=False, default=False)  # whether these credentials are active for usage
 
 
 class NetsapiensCallSubscriptions(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
-    practice_telecom = models.ForeignKey("core.PracticeTelecom", null=True, on_delete=models.SET_NULL)  # we want to keep call subscriptions and their ids forever, don't delete
-    
+    practice_telecom = models.ForeignKey("core.PracticeTelecom", null=True, on_delete=models.SET_NULL)  # keep call subscriptions and their ids forever
+
     active = models.BooleanField(null=True, blank=False, default=True)  # call subscription is active and should be receiving data
 
     @property
