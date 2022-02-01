@@ -55,4 +55,4 @@ class NetsapiensCallSubscriptionsSerializer(serializers.ModelSerializer):
     class Meta:
         model = NetsapiensCallSubscriptions
         read_only_fields = ["id", "created_at", "modified_by", "modified_at", "call_subscription_uri"]
-        fields = ["id", "created_at", "modified_by", "modified_at", "voip_provider", "call_subscription_uri"]
+        fields = ["id", "created_at", "modified_by", "modified_at", "practice_telecom", "call_subscription_uri"]

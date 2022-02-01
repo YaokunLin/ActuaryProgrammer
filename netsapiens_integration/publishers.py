@@ -13,12 +13,14 @@ log = logging.getLogger(__name__)
 
 
 def publish_leg_b_ready_cdrs(
-    voip_provider_id: str,
     netsapiens_call_subscription_id: str,
+    practice_id: str,
+    voip_provider_id: str,
     event_data: List[Dict],
     publisher: pubsub_v1.PublisherClient = settings.PUBLISHER,
-    topic_path_leg_b_finished=settings.PUBSUB_TOPIC_PATH_NETSAPIENS_LEG_B_FINISHED
+    topic_path_leg_b_finished: str = settings.PUBSUB_TOPIC_PATH_NETSAPIENS_LEG_B_FINISHED,
 ):
+
     publish_futures = []
     cdrs_to_publish = []  # for logging
 
@@ -29,10 +31,16 @@ def publish_leg_b_ready_cdrs(
             continue
 
         cdr_encode_data = json.dumps(cdr, indent=2).encode("utf-8")
-        event_attributes = {"voip_provider_id": voip_provider_id, "netsapiens_call_subscription_id": netsapiens_call_subscription_id}
+        event_attributes = {
+            "netsapiens_call_subscription_id": netsapiens_call_subscription_id,
+            "practice_id": practice_id,
+            "voip_provider_id": voip_provider_id,
+        }
 
-        # When you publish a message, the client returns a future.
+        # When you publish a message, the client returns a future.    
+        log.info(f"Publishing message to {cdrs_to_publish} with error handler to {topic_path_leg_b_finished}.")
         publish_future = publisher.publish(topic=topic_path_leg_b_finished, data=cdr_encode_data, **event_attributes)
+        log.info(f"Published message to {cdrs_to_publish} with error handler to {topic_path_leg_b_finished}.")
         # Non-blocking. Publish failures are handled in the callback function.
         publish_future.add_done_callback(pubsub_helpers.get_callback(publish_future, cdr_encode_data))
         publish_futures.append(publish_future)

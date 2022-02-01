@@ -1,30 +1,34 @@
 import logging
 
 from django.conf import settings
+from django.shortcuts import get_object_or_404
+from google.api_core.exceptions import PermissionDenied
 from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.permissions import (
+    AllowAny,
+    IsAdminUser,
+)
 from rest_framework.response import Response
-
-from google.api_core.exceptions import PermissionDenied
+from core.models import PracticeTelecom
 
 from netsapiens_integration.helpers import get_callid_tuples_from_subscription_event
 from netsapiens_integration.publishers import publish_leg_b_ready_cdrs
+
 from .models import (
     NetsapiensAPICredentials,
+    NetsapiensCallSubscriptions,
     NetsapiensCallSubscriptionsEventExtract,
     NetsapiensCdr2Extract,
-    NetsapiensCallSubscriptions,
 )
 from .serializers import (
     AdminNetsapiensAPICredentialsSerializer,
     NetsapiensAPICredentialsReadSerializer,
     NetsapiensAPICredentialsWriteSerializer,
     NetsapiensCallSubscriptionsEventExtractSerializer,
-    NetsapiensCdr2ExtractSerializer,
     NetsapiensCallSubscriptionsSerializer,
+    NetsapiensCdr2ExtractSerializer,
 )
-
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -130,26 +134,68 @@ log = logging.getLogger(__name__)
 @api_view(["POST"])
 @authentication_classes([])
 @permission_classes([AllowAny])
-def netsapiens_call_subscription_event_receiver_view(request, voip_provider_id=None, call_subscription_id=None):
+def netsapiens_call_subscription_event_receiver_view(request, practice_telecom_id=None, call_subscription_id=None):
     log.info(
-        f"Netsapiens Call subscription: Headers: {request.headers} POST Data {request.data} VOIP provider id: {voip_provider_id} and VOIP NetsapiensCallSubscriptions id: {client_id}"
+        f"Netsapiens Call subscription: Headers: '{request.headers}' POST Data '{request.data}' practice_telecom_id: '{practice_telecom_id}' and call_subscription_id: '{call_subscription_id}'"
     )
 
-    client = NetsapiensCallSubscriptions.objects.get(pk=call_subscription_id)
-    if client.voip_provider.id != voip_provider_id:
-        return Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": "Invalid VOIP Provider."})
+    #
+    # Enabled
+    #
 
-    event_data = request.data
-    for cdr in event_data:
-        cdr["netsapiens_call_subscription"] = call_subscription_id
-
-    callid_orig_by_term_pairings_list = get_callid_tuples_from_subscription_event(event_data)
+    # Check if this is enabled first
+    log.info(
+        f"Determining if Call Subscription Event Processing is enabled before processing event for: practice_telecom_id: '{practice_telecom_id}' and call_subscription_id: '{call_subscription_id}'"
+    )
     if settings.NETSAPIENS_INTEGRATION_CALL_MODEL_SUBSCRIPTION_IS_ENABLED:
-        log.info(f"NETSAPIENS_INTEGRATION_CALL_MODEL_SUBSCRIPTION_IS_ENABLED is false. Not saving to database for call ids {callid_orig_by_term_pairings_list}")
-        return Response(request.data)
+        message = f"Call Subscription Event processing is disabled on this system. If you believe this was in error, please contact peerlogic for assistance."
+        log.info(
+            f"NETSAPIENS_INTEGRATION_CALL_MODEL_SUBSCRIPTION_IS_ENABLED is false. Not saving event POST Data '{request.data}' practice_telecom_id: '{practice_telecom_id}' and call_subscription_id: '{call_subscription_id}'"
+        )
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED, data={"message": message})
+    log.info(
+        f"Call Subscription Event Processing is enabled. Processing to process event for: practice_telecom_id: '{practice_telecom_id}' and call_subscription_id: '{call_subscription_id}'"
+    )
 
-    # Convert subscription payload to NetsapiensCallSubscriptionsEventExtract
-    subscription_event_serializer = NetsapiensCallSubscriptionsEventExtractSerializer(data=request.data, many=True)
+    #
+    # VALIDATION
+    #
+
+    log.info(
+        f"Validating practice telecom, practice, voip_provider, and call_subscription for: practice_telecom_id: '{practice_telecom_id}' and call_subscription_id: '{call_subscription_id}'"
+    )
+
+    # validate practice telecom exists and is active
+    practice_telecom: PracticeTelecom = get_object_or_404(
+        PracticeTelecom.objects.select_related("practice", "voip_provider"), pk=practice_telecom_id, practice__active=True
+    )
+
+    # validate an active subscription exists and is associated with the practice telecom
+    ns_call_subscription: NetsapiensCallSubscriptions = get_object_or_404(NetsapiensCallSubscriptions, pk=call_subscription_id, active=True)
+
+    # Grab Practice and VOIP Provider for downstream processing
+    practice = practice_telecom.practice
+    practice_id = practice_telecom.practice.id
+
+    if not practice:
+        message = f"No valid practice found for practice_telecom_id = '{practice_telecom_id}'"
+        log.exception(f"{message}. This should not be possible since this is a non-nullable relationship.")
+        return Response(status=status.HTTP_404_NOT_FOUND, data={"message": message})
+
+    voip_provider = practice_telecom.voip_provider
+    if not voip_provider:
+        message = (
+            f"No valid voip_provider found for this practice '{practice_id}'. A voip_provider must be set up first in order to receive subscription events."
+        )
+        log.exception(f"{message}. Practice is not set up properly and needs a voip_provider. Somehow a subscription was set up and events are being received!")
+        return Response(status=status.HTTP_404_NOT_FOUND, data={"message": message})
+    voip_provider_id = voip_provider.id
+
+    # Validate subscription payload by converting to NetsapiensCallSubscriptionsEventExtract
+    log.info(f"Validating subscription payload for : practice_telecom_id: '{practice_telecom_id}' and call_subscription_id: '{call_subscription_id}'")
+    event_data = request.data
+    callid_orig_by_term_pairings_list = get_callid_tuples_from_subscription_event(event_data)
+    subscription_event_serializer = NetsapiensCallSubscriptionsEventExtractSerializer(data=event_data, many=True)
     subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
     if not subscription_event_serializer_is_valid:
         log.exception(
@@ -158,10 +204,20 @@ def netsapiens_call_subscription_event_receiver_view(request, voip_provider_id=N
         return Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": subscription_event_serializer.errors})
 
     subscription_event_serializer.save()
-    log.info(f"Extract data for call ids: {callid_orig_by_term_pairings_list} from Call subscription saved to netsapiens etl cdrs extract.")
+    log.info(
+        f"Extracted data for call ids: {callid_orig_by_term_pairings_list} from: practice_telecom_id: '{practice_telecom_id}' and call_subscription_id: '{call_subscription_id}'"
+    )
+
+    #
+    # PROCESSING
+    #
 
     try:
-        publish_leg_b_ready_cdrs(voip_provider_id=voip_provider_id, netsapiens_call_subscription_id=call_subscription_id, event_data=event_data)
+        log.info(f"Publishing leg b ready events for: practice_telecom_id: '{practice_telecom_id}' and call_subscription_id: '{call_subscription_id}'")
+        publish_leg_b_ready_cdrs(
+            netsapiens_call_subscription_id=call_subscription_id, practice_id=practice_id, voip_provider_id=voip_provider_id, event_data=event_data
+        )
+        log.info(f"Published leg b ready events for: practice_telecom_id: '{practice_telecom_id}' and call_subscription_id: '{call_subscription_id}'")
     except PermissionDenied:
         message = "Must add role 'roles/pubsub.publisher'. Exiting."
         log.exception(message)
@@ -225,7 +281,9 @@ def netsapiens_call_origid_subscription_event_receiver_view(request):
         # NetsapiensCallOrigIdSubscriptionEventExtract creation
         log.info(f"Extract data for call ids: {callid_orig_by_term_pairings_list} from Call ORIG id subscription saved to netsapiens etl cdrs extract.")
     else:
-        log.info(f"NETSAPIENS_INTEGRATION_CALL_ORIGID_MODEL_SUBSCRIPTION_IS_ENABLED is false. Not saving to database for call ids {callid_orig_by_term_pairings_list}")
+        log.info(
+            f"NETSAPIENS_INTEGRATION_CALL_ORIGID_MODEL_SUBSCRIPTION_IS_ENABLED is false. Not saving to database for call ids {callid_orig_by_term_pairings_list}"
+        )
 
     return Response(request.data)
 
@@ -256,7 +314,7 @@ class NetsapiensCallSubscriptionsViewset(viewsets.ModelViewSet):
     queryset = NetsapiensCallSubscriptions.objects.all().order_by("-modified_at")
     serializer_class = NetsapiensCallSubscriptionsSerializer
 
-    filterset_fields = ["voip_provider"]
+    filterset_fields = ["practice_telecom"]
 
 
 class NetsapiensCallSubscriptionsEventExtractViewset(viewsets.ModelViewSet):
