@@ -100,8 +100,6 @@ class CallTranscriptPartialViewset(viewsets.ModelViewSet):
         files = request.data.items()
         files = list(files)
         file_to_upload = self.data_is_valid(files)
-        if file_to_upload.errors:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": file_to_upload.errors})
         log.info(f"Blob to upload is {file_to_upload.blob} with mimetype {file_to_upload.mime_type}.")
 
         # Set uploading status and mime_type on Object
@@ -165,8 +163,6 @@ class CallAudioPartialViewset(viewsets.ModelViewSet):
         files = request.data.items()
         files = list(files)
         file_to_upload = self.data_is_valid(files)
-        if file_to_upload.errors:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": file_to_upload.errors})
         log.info(f"Blob to upload is {file_to_upload.blob} with mimetype {file_to_upload.mime_type}.")
 
         # Set uploading status and mime_type on Object
