@@ -33,6 +33,7 @@ from .models import (
     CallAudioPartial,
     CallLabel,
     CallPartial,
+    CallTranscript,
     CallTranscriptPartial,
     TelecomCallerNameInfo,
 )
@@ -42,6 +43,7 @@ from .serializers import (
     CallPartialSerializer,
     CallSerializer,
     CallTranscriptPartialSerializer,
+    CallTranscriptSerializer,
     TelecomCallerNameInfoSerializer,
 )
 
@@ -52,6 +54,75 @@ log = logging.getLogger(__name__)
 class CallViewset(viewsets.ModelViewSet):
     queryset = Call.objects.all().order_by("-created_at")
     serializer_class = CallSerializer
+
+
+class CallTranscriptViewset(viewsets.ModelViewSet):
+    queryset = CallTranscript.objects.all().order_by("-created_at")
+    serializer_class = CallTranscriptSerializer
+    filter_fields = ["call", "mime_type", "status", "transcript_type", "speech_to_text_model_type"]
+    parser_classes = (JSONParser, FormParser, MultiPartParser)
+
+    def get_queryset(self):
+        return super().get_queryset().filter(call=self.kwargs.get("call_pk"))
+
+    def update(self, request, pk=None):
+        # TODO: Implement
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def data_is_valid(self, files: List) -> Union[FileToUpload, Dict]:
+        if len(files) != 1:
+            error_message = f"Must give 1 file per request in MultiPart Form Data."
+            log.exception(error_message)
+            raise ValidationError({"errors": [{"files_length": error_message}]})
+
+        try:
+            file = files[0]
+            blob_to_upload = file[1]
+            mime_type = file[0]
+        except Exception:
+            error_message = "In Form Data, Key must be mime_type and Value must be a file."
+            raise ValidationError({"errors": [{"files_length": error_message}]})
+
+        if mime_type not in SupportedTranscriptMimeTypes.values:
+            error_message = f"Media type {mime_type} key form-data not in available SupportedTranscriptMimeTypes"
+            log.exception(error_message)
+            raise ValidationError({"errors": [{"files_length": error_message}]})
+        return FileToUpload(mime_type, blob_to_upload)
+
+    def partial_update(
+        self,
+        request,
+        pk=None,
+        call_pk=None,
+        format=None,
+        storage_client=settings.CLOUD_STORAGE_CLIENT,
+        bucket=settings.CALL_TRANSCRIPT_BUCKET,
+    ):
+        files = request.data.items()
+        files = list(files)
+        file_to_upload = self.data_is_valid(files)
+        log.info(f"Blob to upload is {file_to_upload.blob} with mimetype {file_to_upload.mime_type}.")
+
+        # Set uploading status and mime_type on Object
+        call_transcript = CallTranscript.objects.get(pk=pk)
+        call_transcript.mime_type = file_to_upload.mime_type
+        call_transcript.status = CallTranscriptFileStatusTypes.UPLOADING
+        call_transcript.save()
+
+        # Upload to audio bucket
+        log.info(f"Saving {call_transcript.pk} to bucket {bucket}")
+        bucket = storage_client.get_bucket(bucket)
+        blob = bucket.blob(call_transcript.file_basename)
+        blob.upload_from_string(file_to_upload.blob.read())
+
+        log.info(f"Successfully saved {call_transcript.pk} to bucket {bucket}")
+
+        call_transcript.status = CallTranscriptFileStatusTypes.UPLOADED
+        call_transcript.save()
+
+        call_transcript_serializer = CallTranscriptSerializer(call_transcript)
+
+        return Response(status=status.HTTP_200_OK, data=call_transcript_serializer.data)
 
 
 class CallTranscriptPartialViewset(viewsets.ModelViewSet):
