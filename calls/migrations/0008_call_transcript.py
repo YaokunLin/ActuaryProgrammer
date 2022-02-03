@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('calls', '0006_create_call_partials_and_transcripts'),
+        ('calls', '0007_add_mimetypes'),
     ]
 
     operations = [
