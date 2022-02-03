@@ -101,7 +101,6 @@ class CallTranscriptViewset(viewsets.ModelViewSet):
         log.info(f"Blob to upload is {file_to_upload.blob} with mimetype {file_to_upload.mime_type}.")
 
         # Set uploading status and mime_type on Object
-
         log.info(f"Saving object with uploading status and mime type to the database.")
         call_transcript = CallTranscript.objects.get(pk=pk)
         with transaction.atomic():
