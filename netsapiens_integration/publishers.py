@@ -30,7 +30,7 @@ def publish_leg_b_ready_cdrs(
         if not (cdr.get("remove") == "yes" and cdr.get("term_leg_tag")):
             continue
 
-        cdr_encode_data = json.dumps(cdr, indent=2).encode("utf-8")
+        cdr_encode_data = json.dumps(cdr).encode("utf-8")
         event_attributes = {
             "netsapiens_call_subscription_id": netsapiens_call_subscription_id,
             "practice_id": practice_id,
