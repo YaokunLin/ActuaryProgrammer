@@ -1,17 +1,14 @@
-import json
 import logging
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Union
 
 from django.conf import settings
-from django.core.files.uploadedfile import InMemoryUploadedFile
-from django.db import DatabaseError
-from django.http import Http404, HttpResponseBadRequest, QueryDict
+from django.db import DatabaseError, transaction
+from django.http import Http404, HttpResponseBadRequest
 from phonenumber_field.modelfields import to_python as to_phone_number
 from rest_framework import status, viewsets
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
-from rest_framework.views import APIView
 from twilio.base.exceptions import TwilioException
 
 from core.file_upload import FileToUpload
@@ -104,21 +101,27 @@ class CallTranscriptViewset(viewsets.ModelViewSet):
         log.info(f"Blob to upload is {file_to_upload.blob} with mimetype {file_to_upload.mime_type}.")
 
         # Set uploading status and mime_type on Object
+
+        log.info(f"Saving object with uploading status and mime type to the database.")
         call_transcript = CallTranscript.objects.get(pk=pk)
-        call_transcript.mime_type = file_to_upload.mime_type
-        call_transcript.status = CallTranscriptFileStatusTypes.UPLOADING
-        call_transcript.save()
+        with transaction.atomic():
+            call_transcript.mime_type = file_to_upload.mime_type
+            call_transcript.status = CallTranscriptFileStatusTypes.UPLOADING
+            call_transcript.save()
+            log.info(f"Saved object with uploading status and mime type to the database.")
 
         # Upload to audio bucket
-        log.info(f"Saving {call_transcript.pk} to bucket {bucket}")
+        log.info(f"Saving {call_transcript.pk} file to bucket {bucket}")
         bucket = storage_client.get_bucket(bucket)
         blob = bucket.blob(call_transcript.file_basename)
         blob.upload_from_string(file_to_upload.blob.read())
-
         log.info(f"Successfully saved {call_transcript.pk} to bucket {bucket}")
 
-        call_transcript.status = CallTranscriptFileStatusTypes.UPLOADED
-        call_transcript.save()
+        log.info(f"Saving object with uploaded status to the database.")
+        with transaction.atomic():
+            call_transcript.status = CallTranscriptFileStatusTypes.UPLOADED
+            call_transcript.save()
+            log.info(f"Saved object with uploaded status to the database.")
 
         call_transcript_serializer = CallTranscriptSerializer(call_transcript)
 

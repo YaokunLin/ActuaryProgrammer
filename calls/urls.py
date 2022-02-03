@@ -3,11 +3,11 @@ from rest_framework_nested import routers
 
 from .views import (
     CallAudioPartialViewset,
-    CallPartialViewset,
-    CallViewset,
     CallLabelViewset,
-    CallTranscriptViewset,
+    CallPartialViewset,
     CallTranscriptPartialViewset,
+    CallTranscriptViewset,
+    CallViewset,
     TelecomCallerNameInfoViewSet,
 )
 
