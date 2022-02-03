@@ -2,7 +2,7 @@ from core.models import PracticeTelecom
 from django_countries.serializers import CountryFieldMixin
 from rest_framework import serializers
 
-from .models import Call, CallAudioPartial, CallLabel, CallPartial, CallTranscriptPartial, TelecomCallerNameInfo
+from .models import Call, CallAudioPartial, CallLabel, CallPartial, CallTranscript, CallTranscriptPartial, TelecomCallerNameInfo
 
 
 class CallSerializer(serializers.ModelSerializer):
@@ -11,14 +11,23 @@ class CallSerializer(serializers.ModelSerializer):
     class Meta:
         model = Call
         fields = "__all__"
-        read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
+
+
+class CallTranscriptSerializer(serializers.ModelSerializer):
+    signed_url = serializers.CharField(required=False)
+
+    class Meta:
+        model = CallTranscript
+        fields = "__all__"
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "signed_url"]
 
 
 class CallPartialSerializer(serializers.ModelSerializer):
     class Meta:
         model = CallPartial
         fields = "__all__"
-        read_only_fields = ["id", "created_at", "modified_by", "modified_at", "signed_url"]
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "signed_url"]
 
 
 class CallAudioPartialSerializer(serializers.ModelSerializer):
@@ -27,7 +36,7 @@ class CallAudioPartialSerializer(serializers.ModelSerializer):
     class Meta:
         model = CallAudioPartial
         fields = "__all__"
-        read_only_fields = ["id", "created_at", "modified_by", "modified_at", "signed_url"]
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "signed_url"]
 
 
 class CallTranscriptPartialSerializer(serializers.ModelSerializer):
@@ -52,14 +61,14 @@ class CallTranscriptPartialSerializer(serializers.ModelSerializer):
     class Meta:
         model = CallTranscriptPartial
         fields = "__all__"
-        read_only_fields = ["id", "created_at", "modified_by", "modified_at", "signed_url"]
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "signed_url"]
 
 
 class CallLabelSerializer(serializers.ModelSerializer):
     class Meta:
         model = CallLabel
         fields = "__all__"
-        read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
 class TelecomCallerNameInfoSerializer(CountryFieldMixin, serializers.ModelSerializer):

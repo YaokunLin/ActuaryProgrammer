@@ -96,3 +96,14 @@ class SupportedAudioMimeTypes(models.TextChoices):
 class SupportedTranscriptMimeTypes(models.TextChoices):
     TEXT_PLAIN = "text/plain"
     APPLICATION_JSON = "application/json"
+
+
+class TranscriptTypes(models.TextChoices):
+    FULL_TEXT = "full_text"
+    CHANNEL_1_TEXT = "channel_1_text"
+    CHANNEL_2_TEXT = "channel_2_text"
+
+
+class SpeechToTextModelTypes(models.TextChoices):
+    GOOGLE = "google"
+    FACEBOOK_AI = "facebook_ai"

@@ -3,10 +3,11 @@ from rest_framework_nested import routers
 
 from .views import (
     CallAudioPartialViewset,
-    CallPartialViewset,
-    CallViewset,
     CallLabelViewset,
+    CallPartialViewset,
     CallTranscriptPartialViewset,
+    CallTranscriptViewset,
+    CallViewset,
     TelecomCallerNameInfoViewSet,
 )
 
@@ -17,6 +18,7 @@ calls_app_root_router.register(r"labels", CallLabelViewset)
 
 call_router = routers.NestedSimpleRouter(calls_app_root_router, r"calls", lookup="call")
 call_router.register(r"partials", CallPartialViewset, basename="call-partials")
+call_router.register(r"transcripts", CallTranscriptViewset, basename="call-transcripts")
 
 call_partials_router = routers.NestedSimpleRouter(call_router, r"partials", lookup="call_partial")
 call_partials_router.register(r"audio", CallAudioPartialViewset, basename="call-partial-audio")
