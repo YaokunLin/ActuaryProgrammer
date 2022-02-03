@@ -171,7 +171,7 @@ def netsapiens_call_subscription_event_receiver_view(request, practice_telecom_i
     )
 
     # validate an active subscription exists and is associated with the practice telecom, not referenced later, we just need the check
-    ns_call_subscription: NetsapiensCallSubscriptions = get_object_or_404(NetsapiensCallSubscriptions, pk=call_subscription_id, active=True)
+    get_object_or_404(NetsapiensCallSubscriptions, pk=call_subscription_id, active=True)
 
     # Grab Practice and VOIP Provider for downstream processing
     practice = practice_telecom.practice
