@@ -29,8 +29,15 @@ def publish_leg_b_ready_events(
     for event in events:
         # One of the leg-b's is finished only when these requirements are true,
         # otherwise the leg-b is still on-going and hasn't been finished yet.
-        
-        publish_future = publish_leg_b_ready_event(netsapiens_call_subscription_id=netsapiens_call_subscription_id, practice_id=practice_id, voip_provider_id=voip_provider_id, event=event, publisher=publisher, topic_path_leg_b_finished=topic_path_leg_b_finished)
+
+        publish_future = publish_leg_b_ready_event(
+            netsapiens_call_subscription_id=netsapiens_call_subscription_id,
+            practice_id=practice_id,
+            voip_provider_id=voip_provider_id,
+            event=event,
+            publisher=publisher,
+            topic_path_leg_b_finished=topic_path_leg_b_finished,
+        )
         if not publish_future:
             continue
 
