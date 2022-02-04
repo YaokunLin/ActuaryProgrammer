@@ -1,6 +1,8 @@
 import logging
+from typing import List
 
 from django.conf import settings
+from django.core import serializers
 from django.shortcuts import get_object_or_404
 from google.api_core.exceptions import PermissionDenied
 from rest_framework import status, viewsets
@@ -10,8 +12,8 @@ from rest_framework.permissions import (
     IsAdminUser,
 )
 from rest_framework.response import Response
-from core.models import PracticeTelecom
 
+from core.models import PracticeTelecom
 from netsapiens_integration.helpers import get_callid_tuples_from_subscription_event
 from netsapiens_integration.publishers import publish_leg_b_ready_cdrs
 
@@ -209,7 +211,14 @@ def netsapiens_call_subscription_event_receiver_view(request, practice_telecom_i
         )
         return Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": subscription_event_serializer.errors})
 
-    subscription_event_serializer.save()
+    # save events
+    saved_event_data: List[NetsapiensCallSubscriptionsEventExtract] = subscription_event_serializer.save()
+
+    # convert events into something that's emitable as a dictionary
+    saved_event_data = subscription_event_serializer.to_representation(saved_event_data)
+    for event in saved_event_data:
+        event["netsapiens_call_subscription_event_extract_id"] = event.pop("id")
+
     log.info(
         f"Extracted data for call ids: {callid_orig_by_term_pairings_list} from: practice_telecom_id: '{practice_telecom_id}' and call_subscription_id: '{call_subscription_id}'"
     )
@@ -221,7 +230,7 @@ def netsapiens_call_subscription_event_receiver_view(request, practice_telecom_i
     try:
         log.info(f"Publishing leg b ready events for: practice_telecom_id: '{practice_telecom_id}' and call_subscription_id: '{call_subscription_id}'")
         publish_leg_b_ready_cdrs(
-            netsapiens_call_subscription_id=call_subscription_id, practice_id=practice_id, voip_provider_id=voip_provider_id, event_data=event_data
+            netsapiens_call_subscription_id=call_subscription_id, practice_id=practice_id, voip_provider_id=voip_provider_id, event_data=saved_event_data
         )
         log.info(f"Published leg b ready events for: practice_telecom_id: '{practice_telecom_id}' and call_subscription_id: '{call_subscription_id}'")
     except PermissionDenied:
