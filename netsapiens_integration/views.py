@@ -2,7 +2,6 @@ import logging
 from typing import List
 
 from django.conf import settings
-from django.core import serializers
 from django.shortcuts import get_object_or_404
 from google.api_core.exceptions import PermissionDenied
 from rest_framework import status, viewsets
@@ -15,7 +14,7 @@ from rest_framework.response import Response
 
 from core.models import PracticeTelecom
 from netsapiens_integration.helpers import get_callid_tuples_from_subscription_event
-from netsapiens_integration.publishers import publish_leg_b_ready_cdrs
+from netsapiens_integration.publishers import publish_leg_b_ready_events
 
 from .models import (
     NetsapiensAPICredentials,
@@ -195,15 +194,15 @@ def netsapiens_call_subscription_event_receiver_view(request, practice_telecom_i
 
     # Validate subscription payload by converting to NetsapiensCallSubscriptionsEventExtract
     log.info(f"Validating subscription payload for : practice_telecom_id: '{practice_telecom_id}' and call_subscription_id: '{call_subscription_id}'")
-    event_data = request.data
+    events = request.data
 
     # add the call-subscription-id for now since we don't want these orphaned
     # TODO: find a better way to not pollute the raw events with our ids and to not duplicate this contract in the data payload and event attributes below
-    for event in event_data:
+    for event in events:
         event["netsapiens_call_subscription_id"] = call_subscription_id
 
-    callid_orig_by_term_pairings_list = get_callid_tuples_from_subscription_event(event_data)
-    subscription_event_serializer = NetsapiensCallSubscriptionsEventExtractSerializer(data=event_data, many=True)
+    callid_orig_by_term_pairings_list = get_callid_tuples_from_subscription_event(events)
+    subscription_event_serializer = NetsapiensCallSubscriptionsEventExtractSerializer(data=events, many=True)
     subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
     if not subscription_event_serializer_is_valid:
         log.exception(
@@ -212,12 +211,10 @@ def netsapiens_call_subscription_event_receiver_view(request, practice_telecom_i
         return Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": subscription_event_serializer.errors})
 
     # save events
-    saved_event_data: List[NetsapiensCallSubscriptionsEventExtract] = subscription_event_serializer.save()
+    saved_events: List[NetsapiensCallSubscriptionsEventExtract] = subscription_event_serializer.save()
 
     # convert events into something that's emitable as a dictionary
-    saved_event_data = subscription_event_serializer.to_representation(saved_event_data)
-    for event in saved_event_data:
-        event["netsapiens_call_subscription_event_extract_id"] = event.pop("id")
+    saved_events = subscription_event_serializer.to_representation(saved_events)
 
     log.info(
         f"Extracted data for call ids: {callid_orig_by_term_pairings_list} from: practice_telecom_id: '{practice_telecom_id}' and call_subscription_id: '{call_subscription_id}'"
@@ -229,8 +226,8 @@ def netsapiens_call_subscription_event_receiver_view(request, practice_telecom_i
 
     try:
         log.info(f"Publishing leg b ready events for: practice_telecom_id: '{practice_telecom_id}' and call_subscription_id: '{call_subscription_id}'")
-        publish_leg_b_ready_cdrs(
-            netsapiens_call_subscription_id=call_subscription_id, practice_id=practice_id, voip_provider_id=voip_provider_id, event_data=saved_event_data
+        publish_leg_b_ready_events(
+            netsapiens_call_subscription_id=call_subscription_id, practice_id=practice_id, voip_provider_id=voip_provider_id, events=saved_events
         )
         log.info(f"Published leg b ready events for: practice_telecom_id: '{practice_telecom_id}' and call_subscription_id: '{call_subscription_id}'")
     except PermissionDenied:
@@ -242,7 +239,7 @@ def netsapiens_call_subscription_event_receiver_view(request, practice_telecom_i
     # Experimenting with NOT waiting for all the publish futures to resolve before responding.
     # futures.wait(publish_futures, return_when=futures.ALL_COMPLETED)
 
-    return Response(status=status.HTTP_202_ACCEPTED, data=event_data)
+    return Response(status=status.HTTP_202_ACCEPTED, data=saved_events)
 
 
 # Headers:

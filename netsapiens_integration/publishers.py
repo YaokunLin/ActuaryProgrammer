@@ -14,41 +14,56 @@ from netsapiens_integration.models import NetsapiensCallSubscriptionsEventExtrac
 log = logging.getLogger(__name__)
 
 
-def publish_leg_b_ready_cdrs(
+def publish_leg_b_ready_events(
     netsapiens_call_subscription_id: str,
     practice_id: str,
     voip_provider_id: str,
-    event_data: List[Dict],
+    events: List[Dict],
     publisher: pubsub_v1.PublisherClient = settings.PUBLISHER,
     topic_path_leg_b_finished: str = settings.PUBSUB_TOPIC_PATH_NETSAPIENS_LEG_B_FINISHED,
 ) -> List:
 
     publish_futures = []
-    cdrs_to_publish = []  # for logging
+    cdrs_published = []  # for logging
 
-    for cdr in event_data:
-        log.info(cdr)
-
+    for event in events:
         # One of the leg-b's is finished only when these requirements are true,
         # otherwise the leg-b is still on-going and hasn't been finished yet.
-        if not (cdr.get("remove") == "yes" and cdr.get("term_leg_tag")):
+        
+        publish_future = publish_leg_b_ready_event(netsapiens_call_subscription_id=netsapiens_call_subscription_id, practice_id=practice_id, voip_provider_id=voip_provider_id, event=event, publisher=publisher, topic_path_leg_b_finished=topic_path_leg_b_finished)
+        if not publish_future:
             continue
 
-        cdr_encode_data = json.dumps(cdr).encode("utf-8")
-        event_attributes = {
-            "netsapiens_call_subscription_id": netsapiens_call_subscription_id,
-            "practice_id": practice_id,
-            "voip_provider_id": voip_provider_id,
-        }
-
-        # When you publish a message, the client returns a future.
-        log.info(f"Publishing message to {cdrs_to_publish} with error handler to {topic_path_leg_b_finished}.")
-        publish_future = publisher.publish(topic=topic_path_leg_b_finished, data=cdr_encode_data, **event_attributes)
-        log.info(f"Published message to {cdrs_to_publish} with error handler to {topic_path_leg_b_finished}.")
-        # Non-blocking. Publish failures are handled in the callback function.
-        publish_future.add_done_callback(pubsub_helpers.get_callback(publish_future, cdr_encode_data))
         publish_futures.append(publish_future)
-        cdrs_to_publish.append(cdr)
+        cdrs_published.append(event)
 
-    log.info(f"Published messages {cdrs_to_publish} with error handler to {topic_path_leg_b_finished}.")
+    log.info(f"Published messages {cdrs_published} with error handler to {topic_path_leg_b_finished}. Only fully finished leg b CDRs")
     return publish_futures
+
+
+def publish_leg_b_ready_event(
+    netsapiens_call_subscription_id: str,
+    practice_id: str,
+    voip_provider_id: str,
+    event: Dict,
+    publisher: pubsub_v1.PublisherClient = settings.PUBLISHER,
+    topic_path_leg_b_finished: str = settings.PUBSUB_TOPIC_PATH_NETSAPIENS_LEG_B_FINISHED,
+):
+    if not (event.get("remove") == "yes" and event.get("term_leg_tag")):
+        return None
+
+    event_encoded_data = json.dumps(event).encode("utf-8")
+    event_attributes = {
+        "netsapiens_call_subscription_id": netsapiens_call_subscription_id,
+        "practice_id": practice_id,
+        "voip_provider_id": voip_provider_id,
+    }
+
+    # When you publish a message, the client returns a future.
+    log.info(f"Publishing message {event} with error handler to {topic_path_leg_b_finished}.")
+    publish_future = publisher.publish(topic=topic_path_leg_b_finished, data=event_encoded_data, **event_attributes)
+    log.info(f"Published message {event} with error handler to {topic_path_leg_b_finished}.")
+    # Non-blocking. Publish failures are handled in the callback function.
+    publish_future.add_done_callback(pubsub_helpers.get_callback(publish_future, event_encoded_data))
+
+    return publish_future
