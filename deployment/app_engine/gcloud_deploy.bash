@@ -203,6 +203,12 @@ gcloud pubsub topics create dev-netsapiens-leg_b_finished
 echo "${textgreen}Creating dev-netsapiens-get_call_audio topic${textreset}"
 gcloud pubsub topics create dev-netsapiens-get_call_audio
 
+echo "${textgreen}Creating dev-audio_partial_ready topic${textreset}"
+gcloud pubsub topics create dev-audio_partial_ready
+
+echo "${textgreen}Creating dev-transcript_partial_ready topic${textreset}"
+gcloud pubsub topics create dev-transcript_partial_ready
+
 
 # TODO: Add substitutions
 

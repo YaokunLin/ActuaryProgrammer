@@ -4,12 +4,14 @@ from typing import Dict, List, Union
 from django.conf import settings
 from django.db import DatabaseError, transaction
 from django.http import Http404, HttpResponseBadRequest
+from google.api_core.exceptions import PermissionDenied
 from phonenumber_field.modelfields import to_python as to_phone_number
 from rest_framework import status, viewsets
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from twilio.base.exceptions import TwilioException
+from calls.publishers import publish_call_audio_partial_ready, publish_call_transcript_partial_ready
 
 from core.file_upload import FileToUpload
 
@@ -168,7 +170,7 @@ class CallTranscriptPartialViewset(viewsets.ModelViewSet):
         call_partial_pk=None,
         format=None,
         storage_client=settings.CLOUD_STORAGE_CLIENT,
-        bucket=settings.CALL_TRANSCRIPT_BUCKET,
+        bucket=settings.CALL_TRANSCRIPT_PARTIAL_BUCKET,
     ):
         files = request.data.items()
         files = list(files)
@@ -176,23 +178,43 @@ class CallTranscriptPartialViewset(viewsets.ModelViewSet):
         log.info(f"Blob to upload is {file_to_upload.blob} with mimetype {file_to_upload.mime_type}.")
 
         # Set uploading status and mime_type on Object
+        log.info(f"Saving object with uploading status and mime type to the database.")
         call_transcript_partial = CallTranscriptPartial.objects.get(pk=pk)
-        call_transcript_partial.mime_type = file_to_upload.mime_type
-        call_transcript_partial.status = CallTranscriptFileStatusTypes.UPLOADING
-        call_transcript_partial.save()
+        with transaction.atomic():
+            call_transcript_partial.mime_type = file_to_upload.mime_type
+            call_transcript_partial.status = CallTranscriptFileStatusTypes.UPLOADING
+            call_transcript_partial.save()
+            log.info(f"Saved object with uploading status and mime type to the database.")
 
         # Upload to audio bucket
         log.info(f"Saving {call_transcript_partial.pk} to bucket {bucket}")
         bucket = storage_client.get_bucket(bucket)
-        blob = bucket.blob(call_transcript_partial.pk)
+        log.info(f"call_transcript_partial.file_basename = {call_transcript_partial.file_basename}")
+        blob = bucket.blob(call_transcript_partial.file_basename)
         blob.upload_from_string(file_to_upload.blob.read())
-
+        log.info(f"signed_url {call_transcript_partial.signed_url}")
         log.info(f"Successfully saved {call_transcript_partial.pk} to bucket {bucket}")
 
-        call_transcript_partial.status = CallTranscriptFileStatusTypes.UPLOADED
-        call_transcript_partial.save()
+        log.info(f"Saving object with uploaded status to the database.")
+        with transaction.atomic():
+            call_transcript_partial.status = CallTranscriptFileStatusTypes.UPLOADED
+            call_transcript_partial.save()
+            log.info(f"Saved object with uploaded status to the database.")
 
         call_transcript_partial_serializer = CallTranscriptPartialSerializer(call_transcript_partial)
+
+        #
+        # PROCESSING
+        #
+
+        try:
+            log.info(f"Publishing call transcript ready events for: call_pk: '{call_pk}'")
+            publish_call_transcript_partial_ready(call_id=call_pk, transcript_type=call_transcript_partial.transcript_type)
+            log.info(f"Published call transcript ready events for: call_pk: '{call_pk}'")
+        except PermissionDenied:
+            message = "Must add role 'roles/pubsub.publisher'. Exiting."
+            log.exception(message)
+            return Response(status=status.HTTP_403_FORBIDDEN, data={"error": message})
 
         return Response(status=status.HTTP_200_OK, data=call_transcript_partial_serializer.data)
 
@@ -231,7 +253,14 @@ class CallAudioPartialViewset(viewsets.ModelViewSet):
         return FileToUpload(mime_type, blob_to_upload)
 
     def partial_update(
-        self, request, pk=None, call_pk=None, call_partial_pk=None, format=None, storage_client=settings.CLOUD_STORAGE_CLIENT, bucket=settings.CALL_AUDIO_BUCKET
+        self,
+        request,
+        pk=None,
+        call_pk=None,
+        call_partial_pk=None,
+        format=None,
+        storage_client=settings.CLOUD_STORAGE_CLIENT,
+        bucket=settings.CALL_AUDIO_PARTIAL_BUCKET,
     ):
         files = request.data.items()
         files = list(files)
@@ -239,23 +268,41 @@ class CallAudioPartialViewset(viewsets.ModelViewSet):
         log.info(f"Blob to upload is {file_to_upload.blob} with mimetype {file_to_upload.mime_type}.")
 
         # Set uploading status and mime_type on Object
+        log.info(f"Saving object with uploading status and mime type to the database.")
         call_audio_partial = CallAudioPartial.objects.get(pk=pk)
-        call_audio_partial.mime_type = file_to_upload.mime_type
-        call_audio_partial.status = CallAudioFileStatusTypes.UPLOADING
-        call_audio_partial.save()
+        with transaction.atomic():
+            call_audio_partial.mime_type = file_to_upload.mime_type
+            call_audio_partial.status = CallAudioFileStatusTypes.UPLOADING
+            call_audio_partial.save()
+            log.info(f"Saved object with uploading status and mime type to the database.")
 
         # Upload to audio bucket
         log.info(f"Saving {call_audio_partial.pk} to bucket {bucket}")
         bucket = storage_client.get_bucket(bucket)
         blob = bucket.blob(call_audio_partial.pk)
         blob.upload_from_string(file_to_upload.blob.read())
-
         log.info(f"Successfully saved {call_audio_partial.pk} to bucket {bucket}")
 
-        call_audio_partial.status = CallAudioFileStatusTypes.UPLOADED
-        call_audio_partial.save()
+        log.info(f"Saving object with uploading status and mime type to the database.")
+        with transaction.atomic():
+            call_audio_partial.status = CallAudioFileStatusTypes.UPLOADED
+            call_audio_partial.save()
+            log.info(f"Saved object with uploading status and mime type to the database.")
 
         call_audio_partial_serializer = CallAudioPartialSerializer(call_audio_partial)
+
+        #
+        # PROCESSING
+        #
+
+        try:
+            log.info(f"Publishing call audio ready events for: call_audio_partial_id: '{call_audio_partial.id}'")
+            publish_call_audio_partial_ready(call_id=call_pk, partial_id=call_partial_pk, audio_partial_id=call_audio_partial.id)
+            log.info(f"Published call audio ready events for: call_audio_partial_id: '{call_audio_partial.id}'")
+        except PermissionDenied:
+            message = "Must add role 'roles/pubsub.publisher'. Exiting."
+            log.exception(message)
+            return Response(status=status.HTTP_403_FORBIDDEN, data={"error": message})
 
         return Response(status=status.HTTP_200_OK, data=call_audio_partial_serializer.data)
 
