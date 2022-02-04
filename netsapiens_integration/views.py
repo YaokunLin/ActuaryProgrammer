@@ -198,7 +198,7 @@ def netsapiens_call_subscription_event_receiver_view(request, practice_telecom_i
     # add the call-subscription-id for now since we don't want these orphaned
     # TODO: find a better way to not pollute the raw events with our ids and to not duplicate this contract in the data payload and event attributes below
     for event in event_data:
-        event["netsapiens_call_subscription"] = call_subscription_id
+        event["netsapiens_call_subscription_id"] = call_subscription_id
 
     callid_orig_by_term_pairings_list = get_callid_tuples_from_subscription_event(event_data)
     subscription_event_serializer = NetsapiensCallSubscriptionsEventExtractSerializer(data=event_data, many=True)
