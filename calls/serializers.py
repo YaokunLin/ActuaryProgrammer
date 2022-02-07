@@ -6,8 +6,6 @@ from .models import Call, CallAudioPartial, CallLabel, CallPartial, CallTranscri
 
 
 class CallSerializer(serializers.ModelSerializer):
-    practice_telecom = serializers.SlugRelatedField(queryset=PracticeTelecom.objects.all(), slug_field="domain")
-
     class Meta:
         model = Call
         fields = "__all__"
