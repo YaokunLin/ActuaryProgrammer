@@ -1,8 +1,13 @@
-from core.models import PracticeTelecom
+import logging
+
 from django_countries.serializers import CountryFieldMixin
 from rest_framework import serializers
 
 from .models import Call, CallAudioPartial, CallLabel, CallPartial, CallTranscript, CallTranscriptPartial, TelecomCallerNameInfo
+
+
+# Get an instance of a logger
+log = logging.getLogger(__name__)
 
 
 class CallSerializer(serializers.ModelSerializer):
