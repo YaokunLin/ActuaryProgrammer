@@ -10,13 +10,13 @@ class Migration(migrations.Migration):
         Call = apps.get_model("calls", "Call")
         Practice = apps.get_model("core", "Practice")
         peerlogic_practice = Practice.objects.get_or_create(name="Peerlogic")
-        for c in Call.objects.all():
-            practice_telecom = c.practice_telecom
+        for call in Call.objects.all():
+            practice_telecom = call.practice_telecom
             if practice_telecom is not None:
-                c.practice = practice_telecom.practice
+                call.practice = practice_telecom.practice
             else:
-                c.practice = peerlogic_practice
-            c.save()
+                call.practice = peerlogic_practice
+            call.save()
 
     dependencies = [
         ("calls", "0009_calls_associated_with_mandatory_practice_step_1_add_column"),
