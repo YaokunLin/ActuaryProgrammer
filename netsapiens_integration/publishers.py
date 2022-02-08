@@ -74,3 +74,22 @@ def publish_leg_b_ready_event(
     publish_future.add_done_callback(pubsub_helpers.get_callback(publish_future, event_encoded_data))
 
     return publish_future
+
+
+def publish_netsapiens_cdr_saved(
+    practice_id: str,
+    event: Dict,
+    publisher: pubsub_v1.PublisherClient = settings.PUBLISHER,
+    topic_path_netsapiens_cdr_saved: str = settings.PUBSUB_TOPIC_PATH_NETSAPIENS_CDR_SAVED,
+):
+    event_encoded_data = json.dumps(event).encode("utf-8")
+
+    event_attributes = {"practice_id": practice_id}
+    # When you publish a message, the client returns a future.
+    log.info(f"Publishing message {event} with error handler to {topic_path_netsapiens_cdr_saved}.")
+    publish_future = publisher.publish(topic=topic_path_netsapiens_cdr_saved, data=event_encoded_data, **event_attributes)
+    log.info(f"Published message {event} with error handler to {topic_path_netsapiens_cdr_saved}.")
+    # Non-blocking. Publish failures are handled in the callback function.
+    publish_future.add_done_callback(pubsub_helpers.get_callback(publish_future, event_encoded_data))
+
+    return publish_future
