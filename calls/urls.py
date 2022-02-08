@@ -8,6 +8,7 @@ from .views import (
     CallTranscriptPartialViewset,
     CallTranscriptViewset,
     CallViewset,
+    GetCallTranscriptPartial,
     GetCallTranscriptPartials,
     TelecomCallerNameInfoViewSet,
 )
@@ -32,6 +33,7 @@ calls_app_root_router.register(r"telecom_caller_name_info", TelecomCallerNameInf
 
 
 urlpatterns = [
+    path(r"transcript-partials/<pk>/", GetCallTranscriptPartial.as_view(), name="transcript-partial"),
     path(r"transcript-partials/", GetCallTranscriptPartials.as_view(), name="transcript-partials"),
     path(r"", include(calls_app_root_router.urls)),
     path(r"", include(call_router.urls)),

@@ -75,7 +75,7 @@ class CallTranscript(AuditTrailModel):
 
     @property
     def signed_url(self):
-        self._signed_url()
+        return self._signed_url()
 
     def _signed_url(
         self,
@@ -106,7 +106,7 @@ class CallAudioPartial(AuditTrailModel):
 
     @property
     def signed_url(self):
-        self._signed_url()
+        return self._signed_url()
 
     def _signed_url(
         self,
@@ -144,7 +144,7 @@ class CallTranscriptPartial(AuditTrailModel):
 
     @property
     def signed_url(self):
-        self._signed_url()
+        return self._signed_url()
 
     def _signed_url(
         self,
