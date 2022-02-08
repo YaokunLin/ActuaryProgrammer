@@ -1,3 +1,6 @@
+import logging
+from typing import Dict
+
 from rest_framework import serializers
 
 from core.serializers import UnixEpochDateField
@@ -7,7 +10,10 @@ from .models import (
     NetsapiensCallSubscriptionsEventExtract,
     NetsapiensCdr2Extract,
 )
+from .publishers import publish_netsapiens_cdr_saved_event
 
+
+log = logging.getLogger(__name__)
 
 class NetsapiensCallSubscriptionsEventExtractSerializer(serializers.ModelSerializer):
     class Meta:
@@ -38,6 +44,13 @@ class NetsapiensCdr2ExtractSerializer(serializers.ModelSerializer):
         model = NetsapiensCdr2Extract
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
         fields = "__all__"
+
+
+    def create(self, validated_data: Dict):
+        netsapiens_call_subscription = validated_data.get("netsapiens_call_subscription")  # should never be None, change this line if we make it optional
+        practice_id = netsapiens_call_subscription.practice_telecom.practice.id
+        publish_netsapiens_cdr_saved_event(practice_id=practice_id, event=validated_data)
+        return NetsapiensCdr2Extract.objects.create(**validated_data)
 
 
 class NetsapiensAPICredentialsReadSerializer(serializers.ModelSerializer):

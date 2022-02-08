@@ -36,12 +36,12 @@ class Call(AuditTrailModel):
     connect_duration_seconds = models.DurationField(null=True)
     progress_time_seconds = models.DurationField(null=True)
     call_direction = models.CharField(choices=CallDirectionTypes.choices, max_length=50, db_index=True, blank=True)
-    practice_telecom = models.ForeignKey(
-        "core.PracticeTelecom",
-        on_delete=models.SET_NULL,
-        verbose_name="The practice telecom id the call pertains to",
+    practice = models.ForeignKey(
+        "core.Practice",
+        on_delete=models.CASCADE,
+        verbose_name="The practice that made or received the call",
         related_name="calls",
-        null=True,
+        null=False,
     )
     caller_id = models.ForeignKey("core.UserTelecom", on_delete=models.SET_NULL, null=True, related_name="calls_made")
     callee_id = models.ForeignKey("core.UserTelecom", on_delete=models.SET_NULL, null=True, related_name="calls_recieved")

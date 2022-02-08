@@ -1,8 +1,13 @@
-from concurrent import futures
+from datetime import (
+    date,
+    datetime,
+    timedelta,
+)
 import json
 import logging
 from typing import Dict, List
 
+from django.db import models
 from django.conf import settings
 from google.cloud import pubsub_v1
 
@@ -12,6 +17,19 @@ from netsapiens_integration.models import NetsapiensCallSubscriptionsEventExtrac
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
+
+
+def json_serializer(obj):
+    """JSON serializer for objects not serializable by default json code"""
+
+    if isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    if isinstance(obj, timedelta):
+        return str(obj)
+    if isinstance(obj, models.Model):
+        return obj.id
+
+    raise TypeError("Type %s not serializable" % type(obj))
 
 
 def publish_leg_b_ready_events(
@@ -70,6 +88,25 @@ def publish_leg_b_ready_event(
     log.info(f"Publishing message {event} with error handler to {topic_path_leg_b_finished}.")
     publish_future = publisher.publish(topic=topic_path_leg_b_finished, data=event_encoded_data, **event_attributes)
     log.info(f"Published message {event} with error handler to {topic_path_leg_b_finished}.")
+    # Non-blocking. Publish failures are handled in the callback function.
+    publish_future.add_done_callback(pubsub_helpers.get_callback(publish_future, event_encoded_data))
+
+    return publish_future
+
+
+def publish_netsapiens_cdr_saved_event(
+    practice_id: str,
+    event: Dict,
+    publisher: pubsub_v1.PublisherClient = settings.PUBLISHER,
+    topic_path_netsapiens_cdr_saved: str = settings.PUBSUB_TOPIC_PATH_NETSAPIENS_CDR_SAVED,
+):
+    event_encoded_data = json.dumps(event, default=json_serializer).encode("utf-8")
+
+    event_attributes = {"practice_id": practice_id}
+    # When you publish a message, the client returns a future.
+    log.info(f"Publishing message {event} with error handler to {topic_path_netsapiens_cdr_saved}.")
+    publish_future = publisher.publish(topic=topic_path_netsapiens_cdr_saved, data=event_encoded_data, **event_attributes)
+    log.info(f"Published message {event} with error handler to {topic_path_netsapiens_cdr_saved}.")
     # Non-blocking. Publish failures are handled in the callback function.
     publish_future.add_done_callback(pubsub_helpers.get_callback(publish_future, event_encoded_data))
 
