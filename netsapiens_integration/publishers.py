@@ -1,8 +1,13 @@
-from concurrent import futures
+from datetime import (
+    date,
+    datetime,
+    timedelta,
+)
 import json
 import logging
 from typing import Dict, List
 
+from django.db import models
 from django.conf import settings
 from google.cloud import pubsub_v1
 
@@ -12,6 +17,19 @@ from netsapiens_integration.models import NetsapiensCallSubscriptionsEventExtrac
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
+
+
+def json_serializer(obj):
+    """JSON serializer for objects not serializable by default json code"""
+
+    if isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    if isinstance(obj, timedelta):
+        return str(obj)
+    if isinstance(obj, models.Model):
+        return obj.id
+
+    raise TypeError ("Type %s not serializable" % type(obj))
 
 
 def publish_leg_b_ready_events(
@@ -82,7 +100,7 @@ def publish_netsapiens_cdr_saved(
     publisher: pubsub_v1.PublisherClient = settings.PUBLISHER,
     topic_path_netsapiens_cdr_saved: str = settings.PUBSUB_TOPIC_PATH_NETSAPIENS_CDR_SAVED,
 ):
-    event_encoded_data = json.dumps(event).encode("utf-8")
+    event_encoded_data = json.dumps(event, default=json_serializer).encode("utf-8")
 
     event_attributes = {"practice_id": practice_id}
     # When you publish a message, the client returns a future.
