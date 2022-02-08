@@ -1,13 +1,12 @@
-import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
 from core.abstract_models import AuditTrailModel
 from django.conf import settings
 from django.db import models
-from django.db.models import Q
-from django.forms import DateTimeField
 from django_countries.fields import CountryField
 from django_extensions.db.fields import ShortUUIDField
+from gcloud.storage import Client, Bucket
 from phonenumber_field.modelfields import PhoneNumberField
 
 from calls.field_choices import (
@@ -70,29 +69,33 @@ class CallTranscript(AuditTrailModel):
         choices=CallTranscriptFileStatusTypes.choices, max_length=80, default=CallTranscriptFileStatusTypes.RETRIEVAL_FROM_PROVIDER_IN_PROGRESS
     )
 
+    @property
     def file_basename(self) -> str:
         return f"{self.id}_{self.transcript_type}.txt"
 
     @property
-    def signed_url(
+    def signed_url(self):
+        self._signed_url()
+
+    def _signed_url(
         self,
-        client: str = settings.CLOUD_STORAGE_CLIENT,
-        bucket: str = settings.CALL_TRANSCRIPT_BUCKET,
-        expiration: datetime.timedelta = settings.SIGNED_STORAGE_URL_EXPIRATION_DELTA,
+        client: Client = settings.CLOUD_STORAGE_CLIENT,
+        bucket_name: str = settings.CALL_TRANSCRIPT_BUCKET_NAME,
+        expiration: timedelta = settings.SIGNED_STORAGE_URL_EXPIRATION_DELTA,
     ) -> Optional[str]:
-        bucket = client.get_bucket(bucket)
+        bucket: Bucket = client.get_bucket(bucket_name)
         try:
             blob = bucket.get_blob(self.file_basename)
+            return blob.generate_signed_url(expiration=expiration)
         except:
             return None
-        return blob.generate_signed_url(expiration=expiration)
 
 
 class CallPartial(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     call = models.ForeignKey(Call, on_delete=models.CASCADE)
-    time_interaction_started = DateTimeField()
-    time_interaction_ended = DateTimeField()
+    time_interaction_started = models.DateTimeField()
+    time_interaction_ended = models.DateTimeField()
 
 
 class CallAudioPartial(AuditTrailModel):
@@ -100,6 +103,23 @@ class CallAudioPartial(AuditTrailModel):
     call_partial = models.ForeignKey(CallPartial, on_delete=models.CASCADE)
     mime_type = models.CharField(choices=SupportedAudioMimeTypes.choices, max_length=180)
     status = models.CharField(choices=CallAudioFileStatusTypes.choices, max_length=80, default=CallAudioFileStatusTypes.RETRIEVAL_FROM_PROVIDER_IN_PROGRESS)
+
+    @property
+    def signed_url(self):
+        self._signed_url()
+
+    def _signed_url(
+        self,
+        client: Client = settings.CLOUD_STORAGE_CLIENT,
+        bucket_name: str = settings.CALL_AUDIO_PARTIAL_BUCKET_NAME,
+        expiration: timedelta = settings.SIGNED_STORAGE_URL_EXPIRATION_DELTA,
+    ) -> Optional[str]:
+        bucket: Bucket = client.get_bucket(bucket_name)
+        try:
+            blob = bucket.get_blob(self.id)
+            return blob.generate_signed_url(expiration=expiration)
+        except:
+            return None
 
 
 class CallTranscriptPartial(AuditTrailModel):
@@ -119,18 +139,25 @@ class CallTranscriptPartial(AuditTrailModel):
         super().save(force_insert, force_update, using, update_fields)
 
     @property
-    def signed_url(
+    def file_basename(self) -> str:
+        return f"{self.id}_{self.transcript_type}.txt"
+
+    @property
+    def signed_url(self):
+        self._signed_url()
+
+    def _signed_url(
         self,
-        client: str = settings.CLOUD_STORAGE_CLIENT,
-        bucket: str = settings.CALL_TRANSCRIPT_PARTIAL_BUCKET,
-        expiration: datetime.timedelta = settings.SIGNED_STORAGE_URL_EXPIRATION_DELTA,
+        client: Client = settings.CLOUD_STORAGE_CLIENT,
+        bucket_name: str = settings.CALL_TRANSCRIPT_PARTIAL_BUCKET_NAME,
+        expiration: timedelta = settings.SIGNED_STORAGE_URL_EXPIRATION_DELTA,
     ) -> Optional[str]:
-        bucket = client.get_bucket(bucket)
+        bucket: Bucket = client.get_bucket(bucket_name)
         try:
-            blob = bucket.get_blob(self.id)
+            blob = bucket.get_blob(self.file_basename)
+            return blob.generate_signed_url(expiration=expiration)
         except:
             return None
-        return blob.generate_signed_url(expiration=expiration)
 
 
 class AgentEngagedWith(AuditTrailModel):
@@ -164,7 +191,7 @@ class TelecomCallerNameInfo(AuditTrailModel):
 
     def is_caller_name_info_stale(self) -> bool:
         time_zone = self.modified_at.tzinfo  # use database standard timezone
-        today = datetime.datetime.now(time_zone)  # today by the database's standard
-        expiration_time = self.modified_at + datetime.timedelta(seconds=settings.TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS)  # calculate expiration time
+        today = datetime.now(time_zone)  # today by the database's standard
+        expiration_time = self.modified_at + timedelta(seconds=settings.TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS)  # calculate expiration time
 
         return today > expiration_time

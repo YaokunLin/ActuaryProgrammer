@@ -170,9 +170,12 @@ def netsapiens_call_subscription_event_receiver_view(request, practice_telecom_i
     practice_telecom: PracticeTelecom = get_object_or_404(
         PracticeTelecom.objects.select_related("practice", "voip_provider"), pk=practice_telecom_id, practice__active=True
     )
+    log.info(f"Validated practice telecom with practice_telecom_id: '{practice_telecom_id}'")
 
+    log.info(f"Validating call_subscription for: call_subscription_id: '{call_subscription_id}'")
     # validate an active subscription exists and is associated with the practice telecom, not referenced later, we just need the check
     get_object_or_404(NetsapiensCallSubscriptions, pk=call_subscription_id, active=True)
+    log.info(f"Validated call_subscription for: call_subscription_id: '{call_subscription_id}'")
 
     # Grab Practice and VOIP Provider for downstream processing
     practice = practice_telecom.practice
