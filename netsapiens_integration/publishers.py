@@ -29,7 +29,7 @@ def json_serializer(obj):
     if isinstance(obj, models.Model):
         return obj.id
 
-    raise TypeError ("Type %s not serializable" % type(obj))
+    raise TypeError("Type %s not serializable" % type(obj))
 
 
 def publish_leg_b_ready_events(
