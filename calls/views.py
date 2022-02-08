@@ -52,8 +52,6 @@ class CallViewset(viewsets.ModelViewSet):
     queryset = Call.objects.all().order_by("-created_at")
     serializer_class = CallSerializer
 
-    
-
 
 class CallTranscriptViewset(viewsets.ModelViewSet):
     queryset = CallTranscript.objects.all().order_by("-created_at")

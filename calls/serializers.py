@@ -1,3 +1,5 @@
+import logging
+
 from core.models import PracticeTelecom
 from django_countries.serializers import CountryFieldMixin
 from rest_framework import serializers
@@ -5,11 +7,29 @@ from rest_framework import serializers
 from .models import Call, CallAudioPartial, CallLabel, CallPartial, CallTranscript, CallTranscriptPartial, TelecomCallerNameInfo
 
 
+# Get an instance of a logger
+log = logging.getLogger(__name__)
+
+
 class CallSerializer(serializers.ModelSerializer):
     class Meta:
         model = Call
         fields = "__all__"
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
+
+    def create(self, validated_data):
+        log.info(f"Creating call in serializer {validated_data}")
+        # email = validated_data.get("email", None)
+        # validated.pop("email")
+
+        # validate_data.
+        # Now you have a clean valid email string
+        # You might want to call an external API or modify another table
+        # (eg. keep track of number of accounts registered.) or even
+        # make changes to the email format.
+
+        # Once you are done, create the instance with the validated data
+        return Call.objects.create(**validated_data)
 
 
 class CallTranscriptSerializer(serializers.ModelSerializer):
