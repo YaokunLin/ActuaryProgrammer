@@ -10,7 +10,7 @@ from .models import (
     NetsapiensCallSubscriptionsEventExtract,
     NetsapiensCdr2Extract,
 )
-from .publishers import publish_netsapiens_cdr_saved
+from .publishers import publish_netsapiens_cdr_saved_event
 
 
 log = logging.getLogger(__name__)
@@ -53,7 +53,7 @@ class NetsapiensCdr2ExtractSerializer(serializers.ModelSerializer):
         # cdr2_extract_data = validated_data.copy()
         # cdr2_extract_data.pop("")
 
-        publish_netsapiens_cdr_saved(practice_id=practice_id, event=validated_data)
+        publish_netsapiens_cdr_saved_event(practice_id=practice_id, event=validated_data)
         return NetsapiensCdr2Extract.objects.create(**validated_data)
 
 

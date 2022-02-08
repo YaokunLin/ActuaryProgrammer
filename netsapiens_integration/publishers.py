@@ -94,7 +94,7 @@ def publish_leg_b_ready_event(
     return publish_future
 
 
-def publish_netsapiens_cdr_saved(
+def publish_netsapiens_cdr_saved_event(
     practice_id: str,
     event: Dict,
     publisher: pubsub_v1.PublisherClient = settings.PUBLISHER,
