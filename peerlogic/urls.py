@@ -31,7 +31,7 @@ integration_url_patterns = [
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
+    path("api-docs/", include("rest_framework.urls", namespace="rest_framework")),
     path("api/", include(calls_urlpatterns)),
     path("api/", include(core_urlpatterns)),
     path("api/", include(etl_urlpatterns)),
