@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='call',
             name='practice',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='calls', to='core.practice', verbose_name='The practice the made or received the call'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='calls', to='core.practice', verbose_name='The practice that made or received the call'),
         ),
     ]

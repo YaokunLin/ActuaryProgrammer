@@ -40,7 +40,7 @@ class Call(AuditTrailModel):
     practice = models.ForeignKey(
         "core.Practice",
         on_delete=models.CASCADE,
-        verbose_name="The practice the made or received the call",
+        verbose_name="The practice that made or received the call",
         related_name="calls",
         null=False,
     )
