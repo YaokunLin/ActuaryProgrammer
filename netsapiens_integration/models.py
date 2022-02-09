@@ -137,95 +137,95 @@ class NetsapiensCdr2Extract(AuditTrailModel):
     by_sub = models.CharField(max_length=63, blank=True, null=True)  # e.g. "4001"
     term_sub = models.CharField(max_length=63, blank=True, null=True)  # e.g. "1100"
     term_to_uri = models.CharField(max_length=63, blank=True, null=True)  # e.g. "sip:1100@pleasantdental-peoria"
-    time_start = models.DateTimeField(null=True)  # e.g. "1642816606"
+    time_start = models.DateTimeField(null=True)  # e.g. BATCH / OVERALL call start time "1642816606"
     time_answer = models.DateTimeField(null=True)  # e.g. "1642816610"
     time_release = models.DateTimeField(null=True)  # e.g. "1642816660"
-    duration = models.DurationField(null=True)  # e.g. "54"
-    time_talking = models.DurationField(null=True)  # e.g. "54"
+    duration = models.DurationField(null=True)  # e.g. "54" BATCH / OVERALL, should increase with every subsequent partial
+    time_talking = models.DurationField(null=True)  # e.g. "54" BATCH / OVERALL, should increase with every subsequent partial
     hide = models.IntegerField(max_length=5, null=True)  # e.g. "0", based on CdrDomain.201904_d
     tag = models.CharField(max_length=45, blank=True, null=True)  # based on CdrDomain.201904_d
-    # Left over CDR R values
-    # REDUNDANT: "id": "1642816606d99fbc563c6f77ff6ab363a644d87c5b"
-    hostname = models.CharField(max_length=32, blank=True, null=True)  # e.g. "core1-phx.peerlogic.com"
-    mac = models.CharField(max_length=18, blank=True, null=True)  # e.g. "24:6E:96:10:C2:B8"
-    cdr_index = models.IntegerField(max_length=11, null=True)  # e.g. "1"
+    # CDR R values
+    cdrr_id = models.CharField(max_length=42, blank=True, null=True)  # overlaps with "id" REDUNDANT: "id": "1642816606d99fbc563c6f77ff6ab363a644d87c5b"
+    cdrr_hostname = models.CharField(max_length=32, blank=True, null=True)  # e.g. "core1-phx.peerlogic.com"
+    cdrr_mac = models.CharField(max_length=18, blank=True, null=True)  # e.g. "24:6E:96:10:C2:B8"
+    cdrr_cdr_index = models.IntegerField(max_length=11, null=True)  # e.g. "1"
     orig_callid = models.CharField(max_length=127, blank=True, null=True, db_index=True)  # e.g. "17613391_133144556@67.231.3.4"
-    orig_ip = models.CharField(max_length=63, blank=True, null=True)  # e.g. "67.231.3.4"
-    orig_match = models.CharField(max_length=127, blank=True, null=True)  # e.g. "sip*@67.231.3.4"
-    # REDUNDANT: "orig_sub": null
-    orig_domain = models.CharField(max_length=63, blank=True, null=True)
-    orig_group = models.CharField(max_length=63, blank=True, null=True)
-    # REDUNDANT: "orig_from_uri": "sip:4807984575@67.231.3.4"
-    # REDUNDANT: "orig_from_name": "PAULA MALLEY"
-    orig_from_user = models.CharField(max_length=63, blank=True, null=True)  # e.g. "4807984575"
-    orig_from_host = models.CharField(max_length=63, blank=True, null=True)  # e.g. "67.231.3.4"
-    # REDUNDANT: "orig_req_uri": "sip:6232952005@core1-phx.peerlogic.com"
-    # REDUNDANT: "orig_req_user": "6232952005"
-    orig_req_host = models.CharField(max_length=63, blank=True, null=True)  # e.g. "core1-phx.peerlogic.com"
-    orig_to_uri = models.CharField(max_length=63, blank=True, null=True)  # e.g. "sip:6232952005@core1-phx.peerlogic.com"
-    # REDUNDANT: "orig_to_user": "6232952005"
-    orig_to_host = models.CharField(max_length=63, blank=True, null=True)  # e.g. "core1-phx.peerlogic.com"
-    by_action = models.CharField(max_length=31, blank=True, null=True)  # e.g. "QueueSDispatch"
-    # REDUNDANT: "by_sub": "4001"
-    by_domain = models.CharField(max_length=63, blank=True, null=True)  # e.g. "pleasantdental-peoria"
-    by_group = models.CharField(max_length=63, blank=True, null=True)  # e.g. "Front Office"
-    by_uri = models.CharField(max_length=63, blank=True, null=True)
-    by_callid = models.CharField(max_length=127, blank=True, null=True, db_index=True)  # e.g. "20220122015646001363-8d8a5d555a2bdaa84182cb8f8d613b03"
-    term_callid = models.CharField(max_length=127, blank=True, null=True, db_index=True)  # e.g. "20220122015647001366-8d8a5d555a2bdaa84182cb8f8d613b03"
-    term_ip = models.CharField(max_length=63, blank=True, null=True)  # e.g. "98.174.249.67"
-    term_match = models.CharField(max_length=127, blank=True, null=True)  # e.g. "sip:1100@pleasantdental-peoria"
-    # REDUNDANT: "term_sub": "1100"
-    term_domain = models.CharField(max_length=63, blank=True, null=True)  # e.g. "pleasantdental-peoria"
-    # REDUNDANT: "term_to_uri": "sip:1100@pleasantdental-peoria"
-    term_group = models.CharField(max_length=63, blank=True, null=True)  # e.g. "Front Office"
-    # REDUNDANT: "time_start": "1642816607"
-    time_ringing = models.DateTimeField(null=True)  # e.g. "1642816607"
-    # REDUNDANT: "time_answer": "1642816610"
-    # REDUNDANT: "time_release": "1642816660"
-    # REDUNDANT: "time_talking": "50"
-    time_holding = models.DurationField(null=True)  # e.g. "0"
-    duration = models.DurationField(null=True)  # e.g. "50"
-    time_insert = models.DateTimeField(null=True)  # e.g.
-    time_disp = models.DateTimeField(null=True)  # e.g.
-    release_code = models.CharField(max_length=15, blank=True, null=True)  # e.g. "end"
-    release_text = models.CharField(max_length=63, blank=True, null=True, db_index=True)  # e.g. "Orig: Bye"
-    codec = models.CharField(max_length=15, blank=True, null=True)  # e.g. "PCMU"
-    rly_prt_0 = models.CharField(max_length=15, blank=True, null=True)  # e.g. "26120"
-    rly_prt_a = models.CharField(max_length=31, blank=True, null=True)  # e.g. "98.174.249.67:11796"
-    rly_prt_b = models.CharField(max_length=31, blank=True, null=True)  # e.g. "67.231.0.123:15772"
-    rly_cnt_a = models.CharField(max_length=15, blank=True, null=True)  # e.g. "424668"
-    rly_cnt_b = models.CharField(max_length=15, blank=True, null=True)  # e.g. "425700"
-    image_codec = models.CharField(max_length=15, blank=True, null=True)
-    image_prt_0 = models.CharField(max_length=31, blank=True, null=True)
-    image_prt_a = models.CharField(max_length=31, blank=True, null=True)
-    image_prt_b = models.CharField(max_length=31, blank=True, null=True)
-    image_cnt_a = models.CharField(max_length=15, blank=True, null=True)
-    image_cnt_b = models.CharField(max_length=15, blank=True, null=True)
-    video_codec = models.CharField(max_length=15, blank=True, null=True)
-    video_prt_0 = models.CharField(max_length=15, blank=True, null=True)
-    video_prt_a = models.CharField(max_length=31, blank=True, null=True)
-    video_prt_b = models.CharField(max_length=31, blank=True, null=True)
-    video_cnt_a = models.CharField(max_length=15, blank=True, null=True)
-    video_cnt_b = models.CharField(max_length=15, blank=True, null=True)
-    disp_type = models.CharField(max_length=32, blank=True, null=True)
-    disposition = models.CharField(max_length=15, blank=True, null=True)
-    reason = models.CharField(max_length=64, blank=True, null=True)
-    notes = models.TextField(blank=True, null=True)
-    pac = models.CharField(max_length=31, blank=True, null=True)
-    orig_logi_uri = models.CharField(max_length=63, blank=True, null=True)  # e.g. "sip:4807984575@67.231.3.4"
-    term_logi_uri = models.CharField(max_length=63, blank=True, null=True)  # e.g. "sip:16232952005@pleasantdental-peoria"
-    batch_tim_beg = models.IntegerField(max_length=16, null=True)  # e.g. "1642816606"
-    batch_tim_ans = models.IntegerField(max_length=16, null=True)  # e.g. "1642816606"
-    batch_hold = models.IntegerField(max_length=15, null=True)  # e.g. "0"
-    batch_dura = models.IntegerField(max_length=15, null=True)  # e.g. "54"
-    orig_id = models.CharField(max_length=63, blank=True, null=True)  # e.g. "4807984575"
-    term_id = models.CharField(max_length=63, blank=True, null=True)  # e.g. "6232952005"
-    by_id = models.CharField(max_length=63, blank=True, null=True)  # e.g. "6232952005"
-    route_to = models.CharField(max_length=255, blank=True, null=True)  # e.g. "sip:*@*"
-    route_class = models.CharField(max_length=15, blank=True, null=True)  # e.g. "0"
-    orig_territory = models.CharField(max_length=45, blank=True, null=True)
-    orig_site = models.CharField(max_length=45, blank=True, null=True)
-    by_site = models.CharField(max_length=45, blank=True, null=True)
-    by_territory = models.CharField(max_length=45, blank=True, null=True)  # e.g. "Peerlogic"
-    term_territory = models.CharField(max_length=45, blank=True, null=True)  # e.g. "Peerlogic"
-    term_site = models.CharField(max_length=45, blank=True, null=True)
+    cdrr_orig_ip = models.CharField(max_length=63, blank=True, null=True)  # e.g. "67.231.3.4"
+    cdrr_orig_match = models.CharField(max_length=127, blank=True, null=True)  # e.g. "sip*@67.231.3.4"
+    cdrr_orig_sub = models.CharField(max_length=42, blank=True, null=True)  # REDUNDANT: "orig_sub": null
+    cdrr_orig_domain = models.CharField(max_length=63, blank=True, null=True)
+    cdrr_orig_group = models.CharField(max_length=63, blank=True, null=True)
+    cdrr_orig_from_uri = models.CharField(max_length=63, blank=True, null=True)  # REDUNDANT: "orig_from_uri": "sip:4807984575@67.231.3.4"
+    cdrr_orig_from_name = models.CharField(max_length=63, blank=True, null=True)  # REDUNDANT: "orig_from_name": "PAULA MALLEY"
+    cdrr_orig_from_user = models.CharField(max_length=63, blank=True, null=True)  # e.g. "4807984575"
+    cdrr_orig_from_host = models.CharField(max_length=63, blank=True, null=True)  # e.g. "67.231.3.4"
+    cdrr_orig_req_uri = models.CharField(max_length=63, blank=True, null=True)  # REDUNDANT: "orig_req_uri": "sip:6232952005@core1-phx.peerlogic.com"
+    cdrr_orig_req_user = models.CharField(max_length=63, blank=True, null=True)  # REDUNDANT: "orig_req_user": "6232952005"
+    cdrr_orig_req_host = models.CharField(max_length=63, blank=True, null=True)  # e.g. "core1-phx.peerlogic.com"
+    cdrr_orig_to_uri = models.CharField(max_length=63, blank=True, null=True)  # e.g. "sip:6232952005@core1-phx.peerlogic.com"
+    cdrr_orig_to_user = models.CharField(max_length=63, blank=True, null=True)  # REDUNDANT: "orig_to_user": "6232952005"
+    cdrr_orig_to_host = models.CharField(max_length=63, blank=True, null=True)  # e.g. "core1-phx.peerlogic.com"
+    cdrr_by_action = models.CharField(max_length=31, blank=True, null=True)  # e.g. "QueueSDispatch"
+    cdrr_by_sub = models.CharField(max_length=63, blank=True, null=True)  # REDUNDANT: "by_sub": "4001"
+    cdrr_by_domain = models.CharField(max_length=63, blank=True, null=True)  # e.g. "pleasantdental-peoria"
+    cdrr_by_group = models.CharField(max_length=63, blank=True, null=True)  # e.g. "Front Office"
+    cdrr_by_uri = models.CharField(max_length=63, blank=True, null=True)
+    cdrr_by_callid = models.CharField(max_length=127, blank=True, null=True, db_index=True)  # e.g. "20220122015646001363-8d8a5d555a2bdaa84182cb8f8d613b03"
+    cdrr_term_callid = models.CharField(max_length=127, blank=True, null=True, db_index=True)  # e.g. "20220122015647001366-8d8a5d555a2bdaa84182cb8f8d613b03"
+    cdrr_term_ip = models.CharField(max_length=63, blank=True, null=True)  # e.g. "98.174.249.67"
+    cdrr_term_match = models.CharField(max_length=127, blank=True, null=True)  # e.g. "sip:1100@pleasantdental-peoria"
+    cdrr_term_sub = models.CharField(max_length=63, blank=True, null=True)  # REDUNDANT: "term_sub": "1100"
+    cdrr_term_domain = models.CharField(max_length=63, blank=True, null=True)  # e.g. "pleasantdental-peoria"
+    cdrr_term_to_uri = models.CharField(max_length=63, blank=True, null=True)  # REDUNDANT: "term_to_uri": "sip:1100@pleasantdental-peoria"
+    cdrr_term_group = models.CharField(max_length=63, blank=True, null=True)  # e.g. "Front Office"
+    cdrr_time_start = models.DateTimeField(null=True)  # "time_start": "1642816607" of this segment / partial
+    cdrr_time_ringing = models.DateTimeField(null=True)  # e.g. "1642816607"
+    cdrr_time_answer = models.DateTimeField(null=True)  # REDUNDANT: "time_answer": "1642816610"
+    cdrr_time_release = models.DateTimeField(null=True)  # REDUNDANT: "time_release": "1642816660"
+    cdrr_time_talking = models.DurationField(null=True)  # "time_talking": "50" for this segment / partial
+    cdrr_time_holding = models.DurationField(null=True)  # e.g. "0"
+    cdrr_duration = models.DurationField(null=True)  # e.g. "50" for this segment / partial
+    cdrr_time_insert = models.DateTimeField(null=True)  # e.g.
+    cdrr_time_disp = models.DateTimeField(null=True)  # e.g.
+    cdrr_release_code = models.CharField(max_length=15, blank=True, null=True)  # e.g. "end"
+    cdrr_release_text = models.CharField(max_length=63, blank=True, null=True, db_index=True)  # e.g. "Orig: Bye"
+    cdrr_codec = models.CharField(max_length=15, blank=True, null=True)  # e.g. "PCMU"
+    cdrr_rly_prt_0 = models.CharField(max_length=15, blank=True, null=True)  # e.g. "26120"
+    cdrr_rly_prt_a = models.CharField(max_length=31, blank=True, null=True)  # e.g. "98.174.249.67:11796"
+    cdrr_rly_prt_b = models.CharField(max_length=31, blank=True, null=True)  # e.g. "67.231.0.123:15772"
+    cdrr_rly_cnt_a = models.CharField(max_length=15, blank=True, null=True)  # e.g. "424668"
+    cdrr_rly_cnt_b = models.CharField(max_length=15, blank=True, null=True)  # e.g. "425700"
+    cdrr_image_codec = models.CharField(max_length=15, blank=True, null=True)
+    cdrr_image_prt_0 = models.CharField(max_length=31, blank=True, null=True)
+    cdrr_image_prt_a = models.CharField(max_length=31, blank=True, null=True)
+    cdrr_image_prt_b = models.CharField(max_length=31, blank=True, null=True)
+    cdrr_image_cnt_a = models.CharField(max_length=15, blank=True, null=True)
+    cdrr_image_cnt_b = models.CharField(max_length=15, blank=True, null=True)
+    cdrr_video_codec = models.CharField(max_length=15, blank=True, null=True)
+    cdrr_video_prt_0 = models.CharField(max_length=15, blank=True, null=True)
+    cdrr_video_prt_a = models.CharField(max_length=31, blank=True, null=True)
+    cdrr_video_prt_b = models.CharField(max_length=31, blank=True, null=True)
+    cdrr_video_cnt_a = models.CharField(max_length=15, blank=True, null=True)
+    cdrr_video_cnt_b = models.CharField(max_length=15, blank=True, null=True)
+    cdrr_disp_type = models.CharField(max_length=32, blank=True, null=True)
+    cdrr_disposition = models.CharField(max_length=15, blank=True, null=True)
+    cdrr_reason = models.CharField(max_length=64, blank=True, null=True)
+    cdrr_notes = models.TextField(blank=True, null=True)
+    cdrr_pac = models.CharField(max_length=31, blank=True, null=True)
+    cdrr_orig_logi_uri = models.CharField(max_length=63, blank=True, null=True)  # e.g. "sip:4807984575@67.231.3.4"
+    cdrr_term_logi_uri = models.CharField(max_length=63, blank=True, null=True)  # e.g. "sip:16232952005@pleasantdental-peoria"
+    cdrr_batch_tim_beg = models.IntegerField(max_length=16, null=True)  # e.g. "1642816606"  The same across all cdr partials for a call, matches time_start
+    cdrr_batch_tim_ans = models.IntegerField(max_length=16, null=True)  # e.g. "1642816606"  The same across all cdr partials for a call, matches time_start?
+    cdrr_batch_hold = models.IntegerField(max_length=15, null=True)  # e.g. "0"
+    cdrr_batch_dura = models.IntegerField(max_length=15, null=True)  # e.g. "54"  Matches the duration at root
+    cdrr_orig_id = models.CharField(max_length=63, blank=True, null=True)  # e.g. "4807984575"
+    cdrr_term_id = models.CharField(max_length=63, blank=True, null=True)  # e.g. "6232952005"
+    cdrr_by_id = models.CharField(max_length=63, blank=True, null=True)  # e.g. "6232952005"
+    cdrr_route_to = models.CharField(max_length=255, blank=True, null=True)  # e.g. "sip:*@*"
+    cdrr_route_class = models.CharField(max_length=15, blank=True, null=True)  # e.g. "0"
+    cdrr_orig_territory = models.CharField(max_length=45, blank=True, null=True)
+    cdrr_orig_site = models.CharField(max_length=45, blank=True, null=True)
+    cdrr_by_site = models.CharField(max_length=45, blank=True, null=True)
+    cdrr_by_territory = models.CharField(max_length=45, blank=True, null=True)  # e.g. "Peerlogic"
+    cdrr_term_territory = models.CharField(max_length=45, blank=True, null=True)  # e.g. "Peerlogic"
+    cdrr_term_site = models.CharField(max_length=45, blank=True, null=True)

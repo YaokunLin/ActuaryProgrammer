@@ -15,6 +15,7 @@ from .publishers import publish_netsapiens_cdr_saved_event
 
 log = logging.getLogger(__name__)
 
+
 class NetsapiensCallSubscriptionsEventExtractSerializer(serializers.ModelSerializer):
     class Meta:
         model = NetsapiensCallSubscriptionsEventExtract
@@ -38,13 +39,16 @@ class NetsapiensCdr2ExtractSerializer(serializers.ModelSerializer):
     time_start = UnixEpochDateField()
     time_answer = UnixEpochDateField()
     time_release = UnixEpochDateField()
-    time_ringing = UnixEpochDateField()
+
+    cdrr_time_start = UnixEpochDateField()
+    cdrr_time_answer = UnixEpochDateField()
+    cdrr_time_release = UnixEpochDateField()
+    cdrr_time_ringing = UnixEpochDateField()
 
     class Meta:
         model = NetsapiensCdr2Extract
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
         fields = "__all__"
-
 
     def create(self, validated_data: Dict):
         netsapiens_call_subscription = validated_data.get("netsapiens_call_subscription")  # should never be None, change this line if we make it optional
