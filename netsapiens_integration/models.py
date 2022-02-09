@@ -149,7 +149,7 @@ class NetsapiensCdr2Extract(AuditTrailModel):
     cdrr_hostname = models.CharField(max_length=32, blank=True, null=True)  # e.g. "core1-phx.peerlogic.com"
     cdrr_mac = models.CharField(max_length=18, blank=True, null=True)  # e.g. "24:6E:96:10:C2:B8"
     cdrr_cdr_index = models.IntegerField(max_length=11, null=True)  # e.g. "1"
-    orig_callid = models.CharField(max_length=127, blank=True, null=True, db_index=True)  # e.g. "17613391_133144556@67.231.3.4"
+    cdrr_orig_callid = models.CharField(max_length=127, blank=True, null=True, db_index=True)  # e.g. "17613391_133144556@67.231.3.4"
     cdrr_orig_ip = models.CharField(max_length=63, blank=True, null=True)  # e.g. "67.231.3.4"
     cdrr_orig_match = models.CharField(max_length=127, blank=True, null=True)  # e.g. "sip*@67.231.3.4"
     cdrr_orig_sub = models.CharField(max_length=42, blank=True, null=True)  # REDUNDANT: "orig_sub": null
