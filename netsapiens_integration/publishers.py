@@ -104,9 +104,9 @@ def publish_netsapiens_cdr_saved_event(
 
     event_attributes = {"practice_id": practice_id}
     # When you publish a message, the client returns a future.
-    log.info(f"Publishing message {event} with error handler to {topic_path_netsapiens_cdr_saved}.")
+    log.info(f"Publishing message {event_encoded_data} with error handler to {topic_path_netsapiens_cdr_saved}.")
     publish_future = publisher.publish(topic=topic_path_netsapiens_cdr_saved, data=event_encoded_data, **event_attributes)
-    log.info(f"Published message {event} with error handler to {topic_path_netsapiens_cdr_saved}.")
+    log.info(f"Published message {event_encoded_data} with error handler to {topic_path_netsapiens_cdr_saved}.")
     # Non-blocking. Publish failures are handled in the callback function.
     publish_future.add_done_callback(pubsub_helpers.get_callback(publish_future, event_encoded_data))
 
