@@ -7,7 +7,7 @@ from django.http import Http404, HttpResponseBadRequest
 from google.api_core.exceptions import PermissionDenied
 from phonenumber_field.modelfields import to_python as to_phone_number
 from rest_framework import status, viewsets
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
@@ -56,8 +56,13 @@ class CallViewset(viewsets.ModelViewSet):
     serializer_class = CallSerializer
 
 
+class GetCallTranscriptPartial(RetrieveAPIView):
+    queryset = CallTranscriptPartial.objects.all().select_related("call_partial").order_by("call_partial__time_interaction_started", "modified_at")
+    serializer_class = CallTranscriptPartialSerializer
+
+
 class GetCallTranscriptPartials(ListAPIView):
-    queryset = CallTranscriptPartial.objects.all().order_by("-created_at")
+    queryset = CallTranscriptPartial.objects.all().select_related("call_partial").order_by("call_partial__time_interaction_started", "modified_at")
     serializer_class = CallTranscriptPartialSerializer
     filter_fields = ["call_partial__call", "mime_type", "status", "transcript_type", "speech_to_text_model_type"]
 

@@ -32,10 +32,10 @@ integration_url_patterns = [
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api-docs/", include("rest_framework.urls", namespace="rest_framework")),
+    path("api/integrations/", include(integration_url_patterns)),
     path("api/", include(calls_urlpatterns)),
     path("api/", include(core_urlpatterns)),
     path("api/", include(etl_urlpatterns)),
     path("api/", include(inbox_urlpatterns)),
-    path("api/integrations/", include(integration_url_patterns)),
     path("api/", include(reminders_urlpatterns)),
 ]
