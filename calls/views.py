@@ -64,7 +64,7 @@ class GetCallTranscriptPartial(RetrieveAPIView):
 class GetCallTranscriptPartials(ListAPIView):
     queryset = CallTranscriptPartial.objects.all().select_related("call_partial").order_by("call_partial__time_interaction_started", "modified_at")
     serializer_class = CallTranscriptPartialSerializer
-    filter_fields = ["call_partial__call", "mime_type", "status", "transcript_type", "speech_to_text_model_type"]
+    filter_fields = ["call_partial", "call_partial__call", "mime_type", "status", "transcript_type", "speech_to_text_model_type"]
 
 
 class CallTranscriptViewset(viewsets.ModelViewSet):
