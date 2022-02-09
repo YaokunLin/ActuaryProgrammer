@@ -85,9 +85,9 @@ def publish_leg_b_ready_event(
     }
 
     # When you publish a message, the client returns a future.
-    log.info(f"Publishing message {event} with error handler to {topic_path_leg_b_finished}.")
+    log.info(f"Publishing message {event_encoded_data} with error handler to {topic_path_leg_b_finished}.")
     publish_future = publisher.publish(topic=topic_path_leg_b_finished, data=event_encoded_data, **event_attributes)
-    log.info(f"Published message {event} with error handler to {topic_path_leg_b_finished}.")
+    log.info(f"Published message {event_encoded_data} with error handler to {topic_path_leg_b_finished}.")
     # Non-blocking. Publish failures are handled in the callback function.
     publish_future.add_done_callback(pubsub_helpers.get_callback(publish_future, event_encoded_data))
 
