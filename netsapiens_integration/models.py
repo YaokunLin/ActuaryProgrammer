@@ -120,7 +120,8 @@ class NetsapiensCdr2Extract(AuditTrailModel):
     netsapiens_call_subscription_event_extract = models.ForeignKey(
         NetsapiensCallSubscriptionsEventExtract, null=True, on_delete=models.SET_NULL
     )  # most cases, this is what prompted CDR2 acquisitions
-    peerlogic_call_id = models.CharField(blank=True, default="", max_length=22, db_index=True)  # maps to calls/models.py Call model's id
+    peerlogic_call_id = models.CharField(blank=True, default="", max_length=22, db_index=True)  # maps to calls/models.py Call model's id (non-fk to keep these segregated)
+    peerlogic_call_partial_id = models.CharField(blank=True, default="", max_length=22, db_index=True)  # maps to calls/models.py CallPartial model's id (non-fk to keep these segregated)
     # These max_lengths are best guesses based on Core1-phx's CdrDomain.201904_r table, unless otherwise specified
     # To be the truest extract we can make without using JSONField, making blank=True for CharFields and null=True for all others
     domain = models.CharField(max_length=63, blank=True, null=True)  # e.g. "pleasantdental-peoria"

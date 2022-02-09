@@ -7,7 +7,7 @@ import django.utils.timezone
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('calls', '0008_call_transcript'),
+        ('calls', '0011_calls_associated_with_mandatory_practice_step_3_murder_the_old_column'),
     ]
 
     operations = [
