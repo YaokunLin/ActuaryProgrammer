@@ -42,6 +42,7 @@ from .serializers import (
     CallLabelSerializer,
     CallPartialSerializer,
     CallSerializer,
+    CallTranscriptPartialReadOnlySerializer,
     CallTranscriptPartialSerializer,
     CallTranscriptSerializer,
     TelecomCallerNameInfoSerializer,
@@ -62,13 +63,13 @@ class GetCallTranscriptPartial(RetrieveAPIView):
 
 
 class GetCallTranscriptPartials(ListAPIView):
-    queryset = CallTranscriptPartial.objects.all().select_related("call_partial").order_by("call_partial__time_interaction_started", "modified_at")
-    serializer_class = CallTranscriptPartialSerializer
+    queryset = CallTranscriptPartial.objects.all().select_related("call_partial").order_by("call_partial__time_interaction_started", "-modified_at")
+    serializer_class = CallTranscriptPartialReadOnlySerializer
     filter_fields = ["call_partial", "call_partial__call", "mime_type", "status", "transcript_type", "speech_to_text_model_type"]
 
 
 class CallTranscriptViewset(viewsets.ModelViewSet):
-    queryset = CallTranscript.objects.all().order_by("-created_at")
+    queryset = CallTranscript.objects.all().order_by("-modified_at")
     serializer_class = CallTranscriptSerializer
     filter_fields = ["call", "mime_type", "status", "transcript_type", "speech_to_text_model_type"]
     parser_classes = (JSONParser, FormParser, MultiPartParser)

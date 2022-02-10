@@ -26,6 +26,13 @@ class CallTranscriptSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "signed_url"]
 
 
+class InlineCallPartialSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CallPartial
+        fields = ["id", "time_interaction_started", "time_interaction_ended"]
+        read_only_fields = ["id", "time_interaction_started", "time_interaction_ended"]
+
+
 class CallPartialSerializer(serializers.ModelSerializer):
     class Meta:
         model = CallPartial
@@ -38,6 +45,16 @@ class CallAudioPartialSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CallAudioPartial
+        fields = "__all__"
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "signed_url"]
+
+
+class CallTranscriptPartialReadOnlySerializer(serializers.ModelSerializer):
+    call_partial = InlineCallPartialSerializer(required=False)
+    signed_url = serializers.CharField(required=False)
+
+    class Meta:
+        model = CallTranscriptPartial
         fields = "__all__"
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "signed_url"]
 
