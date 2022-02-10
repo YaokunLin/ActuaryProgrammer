@@ -12,7 +12,7 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from twilio.base.exceptions import TwilioException
-from calls.publishers import publish_call_audio_partial_ready, publish_call_transcript_partial_ready
+from calls.publishers import publish_call_audio_partial_ready
 
 from core.file_upload import FileToUpload
 
@@ -215,19 +215,6 @@ class CallTranscriptPartialViewset(viewsets.ModelViewSet):
             log.info(f"Saved object with uploaded status to the database.")
 
         call_transcript_partial_serializer = CallTranscriptPartialSerializer(call_transcript_partial)
-
-        #
-        # PROCESSING
-        #
-
-        try:
-            log.info(f"Publishing call transcript ready events for: call_pk: '{call_pk}'")
-            publish_call_transcript_partial_ready(call_id=call_pk, transcript_type=call_transcript_partial.transcript_type)
-            log.info(f"Published call transcript ready events for: call_pk: '{call_pk}'")
-        except PermissionDenied:
-            message = "Must add role 'roles/pubsub.publisher'. Exiting."
-            log.exception(message)
-            return Response(status=status.HTTP_403_FORBIDDEN, data={"error": message})
 
         return Response(status=status.HTTP_200_OK, data=call_transcript_partial_serializer.data)
 
