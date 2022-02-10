@@ -343,4 +343,4 @@ class NetsapiensCdr2ExtractViewset(viewsets.ModelViewSet):
     queryset = NetsapiensCdr2Extract.objects.all()
     serializer_class = NetsapiensCdr2ExtractSerializer
 
-    filterset_fields = ["orig_callid", "by_callid", "term_callid"]
+    filterset_fields = ["cdrr_orig_callid", "cdrr_by_callid", "cdrr_term_callid", "peerlogic_call_id", "peerlogic_call_partial_id"]
