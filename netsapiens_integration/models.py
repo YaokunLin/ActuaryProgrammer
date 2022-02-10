@@ -138,8 +138,8 @@ class NetsapiensCdr2Extract(AuditTrailModel):
     term_sub = models.CharField(max_length=63, blank=True, null=True)  # e.g. "1100"
     term_to_uri = models.CharField(max_length=63, blank=True, null=True)  # e.g. "sip:1100@pleasantdental-peoria"
     time_start = models.DateTimeField(null=True)  # e.g. BATCH / OVERALL call start time "1642816606"
-    time_answer = models.DateTimeField(null=True)  # e.g. "1642816610"
-    time_release = models.DateTimeField(null=True)  # e.g. "1642816660"
+    time_answer = models.DateTimeField(null=True)  # e.g. segment / partial "1642816610"
+    time_release = models.DateTimeField(null=True)  # e.g. BATCH / OVERALL, call end time "1642816660"
     duration = models.DurationField(null=True)  # e.g. "54" BATCH / OVERALL, should increase with every subsequent partial
     time_talking = models.DurationField(null=True)  # e.g. "54" BATCH / OVERALL, should increase with every subsequent partial
     hide = models.IntegerField(max_length=5, null=True)  # e.g. "0", based on CdrDomain.201904_d
