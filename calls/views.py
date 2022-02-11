@@ -142,6 +142,12 @@ class CallTranscriptViewset(viewsets.ModelViewSet):
         #
         # PROCESSING
         #
+        if not call_transcript.publish_event_on_patch:
+            log.info(
+                f"Not publishing to topic for call_transcript_id: '{call_transcript.pk}'; call_transcript.publish_event_on_patch='{call_transcript.publish_event_on_patch}' set to False"
+            )
+            return Response(status=status.HTTP_200_OK, data=call_transcript_serializer.data)
+
         try:
             log.info(f"Publishing call transcript ready events for: call_transcript_id: '{call_transcript.pk}'")
             publish_call_transcript_ready(call_id=call_pk, call_transcript_id=call_transcript.pk)
