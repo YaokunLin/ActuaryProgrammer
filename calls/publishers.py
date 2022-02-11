@@ -24,7 +24,7 @@ def publish_call_audio_partial_ready(
 ):
     event_data = {"call_id": call_id, "partial_id": partial_id, "audio_partial_id": audio_partial_id}
 
-    call_audio_partial_encode_data = json.dumps(event_data, indent=2).encode("utf-8")
+    call_audio_partial_encode_data = json.dumps(event_data).encode("utf-8")
     event_attributes = {"call_id": call_id}
 
     # When you publish a message, the client returns a future.
@@ -45,7 +45,7 @@ def publish_call_transcript_ready(
 ):
     event_data = {"call_id": call_id, "call_transcript_id": call_transcript_id}
 
-    call_transcript_encode_data = json.dumps(event_data, indent=2).encode("utf-8")
+    call_transcript_encode_data = json.dumps(event_data).encode("utf-8")
     event_attributes = {"call_id": call_id}
 
     # When you publish a message, the client returns a future.
