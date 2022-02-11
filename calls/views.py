@@ -12,7 +12,7 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from twilio.base.exceptions import TwilioException
-from calls.publishers import publish_call_audio_partial_ready
+from calls.publishers import publish_call_audio_partial_ready, publish_call_transcript_ready
 
 from core.file_upload import FileToUpload
 
@@ -138,6 +138,24 @@ class CallTranscriptViewset(viewsets.ModelViewSet):
             log.info(f"Saved object with uploaded status to the database.")
 
         call_transcript_serializer = CallTranscriptSerializer(call_transcript)
+
+        #
+        # PROCESSING
+        #
+        if not call_transcript.publish_event_on_patch:
+            log.info(
+                f"Not publishing to topic for call_transcript_id: '{call_transcript.pk}'; call_transcript.publish_event_on_patch='{call_transcript.publish_event_on_patch}' set to False"
+            )
+            return Response(status=status.HTTP_200_OK, data=call_transcript_serializer.data)
+
+        try:
+            log.info(f"Publishing call transcript ready events for: call_transcript_id: '{call_transcript.pk}'")
+            publish_call_transcript_ready(call_id=call_pk, call_transcript_id=call_transcript.pk)
+            log.info(f"Published call transcript ready events for: call_transcript_id: '{call_transcript.pk}'")
+        except PermissionDenied:
+            message = "Must add role 'roles/pubsub.publisher'. Exiting."
+            log.exception(message)
+            return Response(status=status.HTTP_403_FORBIDDEN, data={"error": message})
 
         return Response(status=status.HTTP_200_OK, data=call_transcript_serializer.data)
 
@@ -296,9 +314,9 @@ class CallAudioPartialViewset(viewsets.ModelViewSet):
         #
 
         try:
-            log.info(f"Publishing call audio ready events for: call_audio_partial_id: '{call_audio_partial.id}'")
+            log.info(f"Publishing call audio partial ready events for: call_audio_partial_id: '{call_audio_partial.id}'")
             publish_call_audio_partial_ready(call_id=call_pk, partial_id=call_partial_pk, audio_partial_id=call_audio_partial.id)
-            log.info(f"Published call audio ready events for: call_audio_partial_id: '{call_audio_partial.id}'")
+            log.info(f"Published call audio partial ready events for: call_audio_partial_id: '{call_audio_partial.id}'")
         except PermissionDenied:
             message = "Must add role 'roles/pubsub.publisher'. Exiting."
             log.exception(message)

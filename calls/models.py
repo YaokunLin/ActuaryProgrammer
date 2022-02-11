@@ -62,6 +62,7 @@ class Call(AuditTrailModel):
 class CallTranscript(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     call = models.ForeignKey(Call, on_delete=models.CASCADE)
+    publish_event_on_patch = models.BooleanField(default=False)
     mime_type = models.CharField(choices=SupportedTranscriptMimeTypes.choices, max_length=180, default=SupportedTranscriptMimeTypes.TEXT_PLAIN)
     transcript_type = models.CharField(choices=TranscriptTypes.choices, max_length=80, default=TranscriptTypes.FULL_TEXT)
     speech_to_text_model_type = models.CharField(choices=SpeechToTextModelTypes.choices, max_length=80, default=SpeechToTextModelTypes.GOOGLE)
