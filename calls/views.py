@@ -142,7 +142,7 @@ class CallAudioViewset(viewsets.ModelViewSet):
         log.info(f"Saving {call_audio.pk} file to bucket {bucket}")
         bucket = storage_client.get_bucket(bucket)
         blob = bucket.blob(call_audio.file_basename)
-        blob.upload_from_string(file_to_upload.blob.read())
+        blob.upload_from_string(file_to_upload.blob.read(), content_type=call_audio_partial.mime_type)
         log.info(f"Successfully saved {call_audio.pk} to bucket {bucket}")
 
         log.info(f"Saving object with uploaded status to the database.")
@@ -386,7 +386,7 @@ class CallAudioPartialViewset(viewsets.ModelViewSet):
         log.info(f"Saving {call_audio_partial.pk} to bucket {bucket}")
         bucket = storage_client.get_bucket(bucket)
         blob = bucket.blob(call_audio_partial.pk)
-        blob.upload_from_string(file_to_upload.blob.read())
+        blob.upload_from_string(file_to_upload.blob.read(), content_type=call_audio_partial.mime_type)
         log.info(f"Successfully saved {call_audio_partial.pk} to bucket {bucket}")
 
         log.info(f"Saving object with uploading status and mime type to the database.")
