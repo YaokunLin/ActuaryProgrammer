@@ -59,6 +59,29 @@ class Call(AuditTrailModel):
     metadata_file_uri = models.CharField(max_length=255, blank=True)  # Planning to deprecate
 
 
+class CallAudio(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    mime_type = models.CharField(choices=SupportedAudioMimeTypes.choices, max_length=180)
+    status = models.CharField(choices=CallAudioFileStatusTypes.choices, max_length=80, default=CallAudioFileStatusTypes.RETRIEVAL_FROM_PROVIDER_IN_PROGRESS)
+
+    @property
+    def signed_url(self):
+        return self._signed_url()
+
+    def _signed_url(
+        self,
+        client: Client = settings.CLOUD_STORAGE_CLIENT,
+        bucket_name: str = settings.CALL_AUDIO_PARTIAL_BUCKET_NAME,
+        expiration: timedelta = settings.SIGNED_STORAGE_URL_EXPIRATION_DELTA,
+    ) -> Optional[str]:
+        bucket: Bucket = client.get_bucket(bucket_name)
+        try:
+            blob = bucket.get_blob(self.id)
+            return blob.generate_signed_url(expiration=expiration)
+        except:
+            return None
+
+
 class CallTranscript(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     call = models.ForeignKey(Call, on_delete=models.CASCADE)

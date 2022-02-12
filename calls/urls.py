@@ -3,11 +3,14 @@ from rest_framework_nested import routers
 
 from .views import (
     CallAudioPartialViewset,
+    CallAudioViewset,
     CallLabelViewset,
     CallPartialViewset,
     CallTranscriptPartialViewset,
     CallTranscriptViewset,
     CallViewset,
+    GetCallAudioPartial,
+    GetCallAudioPartials,
     GetCallTranscriptPartial,
     GetCallTranscriptPartials,
     TelecomCallerNameInfoViewSet,
@@ -19,6 +22,7 @@ calls_app_root_router.register(r"calls", CallViewset)
 calls_app_root_router.register(r"labels", CallLabelViewset)
 
 call_router = routers.NestedSimpleRouter(calls_app_root_router, r"calls", lookup="call")
+call_router.register(r"audio", CallAudioViewset, basename="call-audio")
 call_router.register(r"partials", CallPartialViewset, basename="call-partials")
 call_router.register(r"transcripts", CallTranscriptViewset, basename="call-transcripts")
 
@@ -33,6 +37,8 @@ calls_app_root_router.register(r"telecom_caller_name_info", TelecomCallerNameInf
 
 
 urlpatterns = [
+    path(r"audio-partials/<pk>/", GetCallAudioPartial.as_view(), name="audio-partial"),
+    path(r"audio-partials/", GetCallAudioPartials.as_view(), name="audio-partials"),
     path(r"transcript-partials/<pk>/", GetCallTranscriptPartial.as_view(), name="transcript-partial"),
     path(r"transcript-partials/", GetCallTranscriptPartials.as_view(), name="transcript-partials"),
     path(r"", include(calls_app_root_router.urls)),
