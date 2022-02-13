@@ -3,7 +3,7 @@ import logging
 from django_countries.serializers import CountryFieldMixin
 from rest_framework import serializers
 
-from .models import Call, CallAudioPartial, CallLabel, CallPartial, CallTranscript, CallTranscriptPartial, TelecomCallerNameInfo
+from .models import Call, CallAudio, CallAudioPartial, CallLabel, CallPartial, CallTranscript, CallTranscriptPartial, TelecomCallerNameInfo
 
 
 # Get an instance of a logger
@@ -26,6 +26,15 @@ class CallTranscriptSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "signed_url"]
 
 
+class CallAudioSerializer(serializers.ModelSerializer):
+    signed_url = serializers.CharField(required=False)
+
+    class Meta:
+        model = CallAudio
+        fields = "__all__"
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "signed_url"]
+
+
 class InlineCallPartialSerializer(serializers.ModelSerializer):
     class Meta:
         model = CallPartial
@@ -41,6 +50,16 @@ class CallPartialSerializer(serializers.ModelSerializer):
 
 
 class CallAudioPartialSerializer(serializers.ModelSerializer):
+    signed_url = serializers.CharField(required=False)
+
+    class Meta:
+        model = CallAudioPartial
+        fields = "__all__"
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "signed_url"]
+
+
+class CallAudioPartialReadOnlySerializer(serializers.ModelSerializer):
+    call_partial = InlineCallPartialSerializer(required=False)
     signed_url = serializers.CharField(required=False)
 
     class Meta:
