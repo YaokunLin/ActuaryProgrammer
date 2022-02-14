@@ -61,6 +61,7 @@ class Call(AuditTrailModel):
 
 class CallAudio(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
+    call = models.ForeignKey(Call, on_delete=models.CASCADE)
     mime_type = models.CharField(choices=SupportedAudioMimeTypes.choices, max_length=180)
     status = models.CharField(choices=CallAudioFileStatusTypes.choices, max_length=80, default=CallAudioFileStatusTypes.RETRIEVAL_FROM_PROVIDER_IN_PROGRESS)
 
@@ -71,7 +72,7 @@ class CallAudio(AuditTrailModel):
     def _signed_url(
         self,
         client: Client = settings.CLOUD_STORAGE_CLIENT,
-        bucket_name: str = settings.CALL_AUDIO_PARTIAL_BUCKET_NAME,
+        bucket_name: str = settings.CALL_AUDIO_BUCKET_NAME,
         expiration: timedelta = settings.SIGNED_STORAGE_URL_EXPIRATION_DELTA,
     ) -> Optional[str]:
         bucket: Bucket = client.get_bucket(bucket_name)
