@@ -109,7 +109,7 @@ class CallAudioViewset(viewsets.ModelViewSet):
             error_message = "In Form Data, Key must be mime_type and Value must be a file."
             raise ValidationError({"errors": [{"files_length": error_message}]})
 
-        if mime_type not in SupportedTranscriptMimeTypes.values:
+        if mime_type not in SupportedAudioMimeTypes.values:
             error_message = f"Media type {mime_type} key form-data not in available SupportedTranscriptMimeTypes"
             log.exception(error_message)
             raise ValidationError({"errors": [{"files_length": error_message}]})
@@ -141,7 +141,7 @@ class CallAudioViewset(viewsets.ModelViewSet):
         # Upload to audio bucket
         log.info(f"Saving {call_audio.pk} file to bucket {bucket}")
         bucket = storage_client.get_bucket(bucket)
-        blob = bucket.blob(call_audio.file_basename)
+        blob = bucket.blob(call_audio.pk)
         blob.upload_from_string(file_to_upload.blob.read(), content_type=call_audio.mime_type)
         log.info(f"Successfully saved {call_audio.pk} to bucket {bucket}")
 
