@@ -51,10 +51,17 @@ class NetsapiensCdr2ExtractSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def create(self, validated_data: Dict):
-        netsapiens_call_subscription = validated_data.get("netsapiens_call_subscription")  # should never be None, change this line if we make it optional
-        practice_id = netsapiens_call_subscription.practice_telecom.practice.id
-        publish_netsapiens_cdr_saved_event(practice_id=practice_id, event=validated_data)
-        return NetsapiensCdr2Extract.objects.create(**validated_data)
+        # perform the create
+        created = NetsapiensCdr2ExtractSerializer.Meta.model(**validated_data)
+        created.save()
+
+        # extract values for the event and publish representation
+        practice_id = (
+            created.netsapiens_call_subscription.practice_telecom.practice.id
+        )  # "netsapiens_call_subscription" should never be None, change this line if we make it optional
+        publish_netsapiens_cdr_saved_event(practice_id=practice_id, event=self.to_representation(created))
+
+        return created
 
 
 class NetsapiensAPICredentialsReadSerializer(serializers.ModelSerializer):
