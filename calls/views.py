@@ -416,6 +416,7 @@ class CallAudioPartialViewset(viewsets.ModelViewSet):
 class CallPartialViewset(viewsets.ModelViewSet):
     queryset = CallPartial.objects.all().order_by("-created_at")
     serializer_class = CallPartialSerializer
+    filter_fields = ["call", "time_interaction_started", "time_interaction_ended"]
 
     def get_queryset(self):
         return super().get_queryset().filter(call=self.kwargs.get("call_pk"))

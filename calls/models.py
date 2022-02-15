@@ -122,6 +122,11 @@ class CallPartial(AuditTrailModel):
     time_interaction_started = models.DateTimeField()
     time_interaction_ended = models.DateTimeField()
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["call", "time_interaction_started", "time_interaction_ended"], name="unique time constraints for every call")
+        ]
+
 
 class CallAudioPartial(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
