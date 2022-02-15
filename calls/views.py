@@ -12,7 +12,7 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from twilio.base.exceptions import TwilioException
-from calls.publishers import publish_call_audio_partial_ready, publish_call_transcript_ready
+from calls.publishers import publish_call_audio_partial_ready, publish_call_audio_saved, publish_call_transcript_ready
 
 from core.file_upload import FileToUpload
 
@@ -152,6 +152,18 @@ class CallAudioViewset(viewsets.ModelViewSet):
             log.info(f"Saved object with uploaded status to the database.")
 
         call_audio_serializer = CallAudioSerializer(call_audio)
+
+        #
+        # PROCESSING
+        #
+        try:
+            log.info(f"Publishing call audio saved events for: call_audio_id: '{call_audio.pk}'")
+            publish_call_audio_saved(call_id=call_pk, call_audio_id=call_audio.pk)
+            log.info(f"Published call audio saved events for: call_audio_id: '{call_audio.pk}'")
+        except PermissionDenied:
+            message = "Must add role 'roles/pubsub.publisher'. Exiting."
+            log.exception(message)
+            return Response(status=status.HTTP_403_FORBIDDEN, data={"error": message})
 
         return Response(status=status.HTTP_200_OK, data=call_audio_serializer.data)
 
