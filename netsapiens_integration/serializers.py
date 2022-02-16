@@ -10,7 +10,10 @@ from .models import (
     NetsapiensCallSubscriptionsEventExtract,
     NetsapiensCdr2Extract,
 )
-from .publishers import publish_netsapiens_cdr_saved_event
+from .publishers import (
+    publish_netsapiens_cdr_saved_event,
+    publish_netsapiens_cdr_linked_to_call_partial_event,
+)
 
 
 log = logging.getLogger(__name__)
@@ -52,16 +55,28 @@ class NetsapiensCdr2ExtractSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data: Dict):
         # perform the create
-        created = NetsapiensCdr2ExtractSerializer.Meta.model(**validated_data)
-        created.save()
+        instance = super().create(validated_data=validated_data)
 
         # extract values for the event and publish representation
         practice_id = (
-            created.netsapiens_call_subscription.practice_telecom.practice.id
+            instance.netsapiens_call_subscription.practice_telecom.practice.id
         )  # "netsapiens_call_subscription" should never be None, change this line if we make it optional
-        publish_netsapiens_cdr_saved_event(practice_id=practice_id, event=self.to_representation(created))
+        publish_netsapiens_cdr_saved_event(practice_id=practice_id, event=self.to_representation(instance))
 
-        return created
+        return instance
+
+    def update(self, instance, validated_data):
+        instance = super().update(instance, validated_data)
+        if self._is_call_linked_update(instance):
+            practice_id = (
+                instance.netsapiens_call_subscription.practice_telecom.practice.id
+            )  # "netsapiens_call_subscription" should never be None, change this line if we make it optional
+            publish_netsapiens_cdr_linked_to_call_partial_event(practice_id=practice_id, event=self.to_representation(instance))
+
+        return instance
+
+    def _is_call_linked_update(self, instance: NetsapiensCdr2Extract) -> bool:
+        return instance.peerlogic_call_id and instance.peerlogic_call_partial_id
 
 
 class NetsapiensAPICredentialsReadSerializer(serializers.ModelSerializer):
