@@ -36,14 +36,14 @@ class NetsapiensCallSubscriptionsEventExtractSerializer(serializers.ModelSeriali
 
 
 class NetsapiensCdr2ExtractSerializer(serializers.ModelSerializer):
-    time_start = UnixEpochDateField()
-    time_answer = UnixEpochDateField()
-    time_release = UnixEpochDateField()
+    time_start = UnixEpochDateField(required=False)
+    time_answer = UnixEpochDateField(required=False)
+    time_release = UnixEpochDateField(required=False)
 
-    cdrr_time_start = UnixEpochDateField()
-    cdrr_time_answer = UnixEpochDateField()
-    cdrr_time_release = UnixEpochDateField()
-    cdrr_time_ringing = UnixEpochDateField()
+    cdrr_time_start = UnixEpochDateField(required=False)
+    cdrr_time_answer = UnixEpochDateField(required=False)
+    cdrr_time_release = UnixEpochDateField(required=False)
+    cdrr_time_ringing = UnixEpochDateField(required=False)
 
     class Meta:
         model = NetsapiensCdr2Extract
