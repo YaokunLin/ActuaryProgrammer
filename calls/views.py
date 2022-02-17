@@ -12,7 +12,7 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from twilio.base.exceptions import TwilioException
-from calls.publishers import publish_call_audio_partial_ready, publish_call_audio_saved, publish_call_transcript_ready
+from calls.publishers import publish_call_audio_partial_saved, publish_call_audio_saved, publish_call_transcript_ready
 
 from core.file_upload import FileToUpload
 
@@ -415,7 +415,7 @@ class CallAudioPartialViewset(viewsets.ModelViewSet):
 
         try:
             log.info(f"Publishing call audio partial ready events for: call_audio_partial_id: '{call_audio_partial.id}'")
-            publish_call_audio_partial_ready(call_id=call_pk, partial_id=call_partial_pk, audio_partial_id=call_audio_partial.id)
+            publish_call_audio_partial_saved(call_id=call_pk, partial_id=call_partial_pk, audio_partial_id=call_audio_partial.id)
             log.info(f"Published call audio partial ready events for: call_audio_partial_id: '{call_audio_partial.id}'")
         except PermissionDenied:
             message = "Must add role 'roles/pubsub.publisher'. Exiting."
