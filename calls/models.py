@@ -56,7 +56,6 @@ class Call(AuditTrailModel):
     referral_source = models.CharField(choices=ReferralSourceTypes.choices, max_length=50, blank=True)
     caller_type = models.CharField(choices=EngagementPersonaTypes.choices, max_length=50, blank=True)
     callee_type = models.CharField(choices=EngagementPersonaTypes.choices, max_length=50, blank=True)
-    metadata_file_uri = models.CharField(max_length=255, blank=True)  # Planning to deprecate
 
 
 class CallAudio(AuditTrailModel):
