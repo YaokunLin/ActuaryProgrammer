@@ -10,7 +10,10 @@ from .models import (
     NetsapiensCallSubscriptionsEventExtract,
     NetsapiensCdr2Extract,
 )
-from .publishers import publish_netsapiens_cdr_saved_event
+from .publishers import (
+    publish_netsapiens_cdr_saved_event,
+    publish_netsapiens_cdr_linked_to_call_partial_event,
+)
 
 
 log = logging.getLogger(__name__)
@@ -36,14 +39,14 @@ class NetsapiensCallSubscriptionsEventExtractSerializer(serializers.ModelSeriali
 
 
 class NetsapiensCdr2ExtractSerializer(serializers.ModelSerializer):
-    time_start = UnixEpochDateField()
-    time_answer = UnixEpochDateField()
-    time_release = UnixEpochDateField()
+    time_start = UnixEpochDateField(required=False)
+    time_answer = UnixEpochDateField(required=False)
+    time_release = UnixEpochDateField(required=False)
 
-    cdrr_time_start = UnixEpochDateField()
-    cdrr_time_answer = UnixEpochDateField()
-    cdrr_time_release = UnixEpochDateField()
-    cdrr_time_ringing = UnixEpochDateField()
+    cdrr_time_start = UnixEpochDateField(required=False)
+    cdrr_time_answer = UnixEpochDateField(required=False)
+    cdrr_time_release = UnixEpochDateField(required=False)
+    cdrr_time_ringing = UnixEpochDateField(required=False)
 
     class Meta:
         model = NetsapiensCdr2Extract
@@ -51,10 +54,29 @@ class NetsapiensCdr2ExtractSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def create(self, validated_data: Dict):
-        netsapiens_call_subscription = validated_data.get("netsapiens_call_subscription")  # should never be None, change this line if we make it optional
-        practice_id = netsapiens_call_subscription.practice_telecom.practice.id
-        publish_netsapiens_cdr_saved_event(practice_id=practice_id, event=validated_data)
-        return NetsapiensCdr2Extract.objects.create(**validated_data)
+        # perform the create
+        instance = super().create(validated_data=validated_data)
+
+        # extract values for the event and publish representation
+        practice_id = (
+            instance.netsapiens_call_subscription.practice_telecom.practice.id
+        )  # "netsapiens_call_subscription" should never be None, change this line if we make it optional
+        publish_netsapiens_cdr_saved_event(practice_id=practice_id, event=self.to_representation(instance))
+
+        return instance
+
+    def update(self, instance, validated_data):
+        instance = super().update(instance, validated_data)
+        if self._is_call_linked_update(instance):
+            practice_id = (
+                instance.netsapiens_call_subscription.practice_telecom.practice.id
+            )  # "netsapiens_call_subscription" should never be None, change this line if we make it optional
+            publish_netsapiens_cdr_linked_to_call_partial_event(practice_id=practice_id, event=self.to_representation(instance))
+
+        return instance
+
+    def _is_call_linked_update(self, instance: NetsapiensCdr2Extract) -> bool:
+        return instance.peerlogic_call_id and instance.peerlogic_call_partial_id
 
 
 class NetsapiensAPICredentialsReadSerializer(serializers.ModelSerializer):
