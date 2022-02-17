@@ -199,6 +199,11 @@ fi
 echo "${textgreen}Creating dev-netsapiens-leg_b_finished topic${textreset}"
 gcloud pubsub topics create dev-netsapiens-leg_b_finished
 
+echo "${textgreen}Creating dev-netsapiens-cdr_saved topic${textreset}"
+gcloud pubsub topics create dev-netsapiens-cdr_saved
+
+echo "${textgreen}Creating dev-netsapiens-cdr_linked_to_call_partial topic${textreset}"
+gcloud pubsub topics create dev-netsapiens-cdr_linked_to_call_partial
 
 echo "${textgreen}Creating dev-netsapiens-get_call_audio topic${textreset}"
 gcloud pubsub topics create dev-netsapiens-get_call_audio
@@ -211,6 +216,7 @@ gcloud pubsub topics create dev-audio_partial_ready
 
 echo "${textgreen}Creating dev-transcript_partial_ready topic${textreset}"
 gcloud pubsub topics create dev-transcript_partial_ready
+
 
 
 # TODO: Add substitutions
