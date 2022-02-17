@@ -105,6 +105,15 @@ def publish_netsapiens_cdr_linked_to_call_partial_event(
 
     description_human_readable = """Event indicates the following are true: 1. peerlogic call exist (call was created, call was updated) # 2. peerlogic call partial exists (partial was created, partial was updated) # 3. cdr2 has been linked to call and call partial # 4. netsapiens audio is available to download"""
     event_attributes = {"practice_id": practice_id, "description_human_readable": description_human_readable}
+    
+    # modify the event to fulfill downstream contract
+    event = {
+        "peerlogic_call_id": event["peerlogic_call_id"],
+        "peerlogic_call_partial_id": event["peerlogic_call_partial_id"],
+        "netsapiens_orig_callid": event["cdrr_orig_callid"], 
+        "netsapiens_term_callid": event["cdrr_term_callid"],
+    }
+
     return publish_event(event_attributes=event_attributes, event=event, topic_path=topic_path_netsapiens_cdr_linked_to_call_partial, publisher=publisher)
 
 
