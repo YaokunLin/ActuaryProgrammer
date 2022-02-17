@@ -11,7 +11,6 @@ from django.conf import settings
 from django.db import models
 from google.cloud import pubsub_v1
 
-from calls.models import CallPartial
 from core import pubsub_helpers
 
 
