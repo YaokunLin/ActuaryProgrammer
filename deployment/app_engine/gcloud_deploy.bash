@@ -203,6 +203,9 @@ gcloud pubsub topics create dev-netsapiens-leg_b_finished
 echo "${textgreen}Creating dev-netsapiens-get_call_audio topic${textreset}"
 gcloud pubsub topics create dev-netsapiens-get_call_audio
 
+echo "${textgreen}Creating dev-call_audio_saved topic${textreset}"
+gcloud pubsub topics create dev-call_audio_saved
+
 echo "${textgreen}Creating dev-audio_partial_ready topic${textreset}"
 gcloud pubsub topics create dev-audio_partial_ready
 
