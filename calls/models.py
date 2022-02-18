@@ -27,10 +27,12 @@ from calls.field_choices import (
     TelecomPersonaTypes,
     TranscriptTypes,
 )
+from core.cloud_storage_helpers import get_signed_url
 from core.models import PracticeTelecom
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
+
 
 class Call(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
@@ -73,6 +75,7 @@ class Call(AuditTrailModel):
 
 
 class CallAudio(AuditTrailModel):
+    BUCKET_NAME: str = settings.BUCKET_NAME_CALL_AUDIO
     id = ShortUUIDField(primary_key=True, editable=False)
     call = models.ForeignKey(Call, on_delete=models.CASCADE)
     mime_type = models.CharField(choices=SupportedAudioMimeTypes.choices, max_length=180)
@@ -80,23 +83,11 @@ class CallAudio(AuditTrailModel):
 
     @property
     def signed_url(self) -> Optional[str]:
-        return self._signed_url()
-
-    def _signed_url(
-        self,
-        client: Client = settings.CLOUD_STORAGE_CLIENT,
-        bucket_name: str = settings.BUCKET_NAME_CALL_AUDIO,
-        expiration: timedelta = settings.SIGNED_STORAGE_URL_EXPIRATION_DELTA,
-    ) -> Optional[str]:
-        bucket: Bucket = client.get_bucket(bucket_name)
-        try:
-            blob = bucket.get_blob(self.id)
-            return blob.generate_signed_url(expiration=expiration)
-        except:
-            return None
+        return get_signed_url(filename=self.id, bucket_name=self.BUCKET_NAME)
 
 
 class CallTranscript(AuditTrailModel):
+    BUCKET_NAME: str = settings.BUCKET_NAME_CALL_TRANSCRIPT
     id = ShortUUIDField(primary_key=True, editable=False)
     call = models.ForeignKey(Call, on_delete=models.CASCADE)
     publish_event_on_patch = models.BooleanField(default=False)
@@ -113,20 +104,7 @@ class CallTranscript(AuditTrailModel):
 
     @property
     def signed_url(self) -> Optional[str]:
-        return self._signed_url()
-
-    def _signed_url(
-        self,
-        client: Client = settings.CLOUD_STORAGE_CLIENT,
-        bucket_name: str = settings.BUCKET_NAME_CALL_TRANSCRIPT,
-        expiration: timedelta = settings.SIGNED_STORAGE_URL_EXPIRATION_DELTA,
-    ) -> Optional[str]:
-        bucket: Bucket = client.get_bucket(bucket_name)
-        try:
-            blob = bucket.get_blob(self.file_basename)
-            return blob.generate_signed_url(expiration=expiration)
-        except:
-            return None
+        return get_signed_url(filename=self.file_basename, bucket_name=self.BUCKET_NAME)
 
 
 class CallPartial(AuditTrailModel):
@@ -144,6 +122,7 @@ class CallPartial(AuditTrailModel):
 
 
 class CallAudioPartial(AuditTrailModel):
+    BUCKET_NAME: str = settings.BUCKET_NAME_CALL_AUDIO_PARTIAL
     id = ShortUUIDField(primary_key=True, editable=False)
     call_partial = models.ForeignKey(CallPartial, on_delete=models.CASCADE)
     mime_type = models.CharField(choices=SupportedAudioMimeTypes.choices, max_length=180)
@@ -151,23 +130,11 @@ class CallAudioPartial(AuditTrailModel):
 
     @property
     def signed_url(self) -> Optional[str]:
-        return self._signed_url()
-
-    def _signed_url(
-        self,
-        client: Client = settings.CLOUD_STORAGE_CLIENT,
-        bucket_name: str = settings.BUCKET_NAME_CALL_AUDIO_PARTIAL,
-        expiration: timedelta = settings.SIGNED_STORAGE_URL_EXPIRATION_DELTA,
-    ) -> Optional[str]:
-        bucket: Bucket = client.get_bucket(bucket_name)
-        try:
-            blob = bucket.get_blob(self.id)
-            return blob.generate_signed_url(expiration=expiration)
-        except:
-            return None
+        return get_signed_url(filename=self.id, bucket_name=self.BUCKET_NAME)
 
 
 class CallTranscriptPartial(AuditTrailModel):
+    BUCKET_NAME: str = settings.BUCKET_NAME_CALL_TRANSCRIPT_PARTIAL
     id = ShortUUIDField(primary_key=True, editable=False)
     call_partial = models.ForeignKey(CallPartial, on_delete=models.CASCADE)
     call_audio_partial = models.ForeignKey(CallAudioPartial, on_delete=models.SET_NULL, null=True)
@@ -189,20 +156,7 @@ class CallTranscriptPartial(AuditTrailModel):
 
     @property
     def signed_url(self) -> Optional[str]:
-        return self._signed_url()
-
-    def _signed_url(
-        self,
-        client: Client = settings.CLOUD_STORAGE_CLIENT,
-        bucket_name: str = settings.BUCKET_NAME_CALL_TRANSCRIPT_PARTIAL,
-        expiration: timedelta = settings.SIGNED_STORAGE_URL_EXPIRATION_DELTA,
-    ) -> Optional[str]:
-        bucket: Bucket = client.get_bucket(bucket_name)
-        try:
-            blob = bucket.get_blob(self.file_basename)
-            return blob.generate_signed_url(expiration=expiration)
-        except:
-            return None
+        return get_signed_url(filename=self.file_basename, bucket_name=self.BUCKET_NAME)
 
 
 class AgentEngagedWith(AuditTrailModel):

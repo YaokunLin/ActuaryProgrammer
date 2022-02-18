@@ -46,13 +46,14 @@ LOGGING = {
 
 PROJECT_ID = os.getenv("PROJECT_ID", "peerlogic-api-dev")
 GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT", None)  # WE'RE IN GCP
+IN_GCP = GOOGLE_CLOUD_PROJECT != None
 # TODO: get region from vm metadata: https://cloud.google.com/compute/docs/metadata/default-metadata-values
 # https://cloud.google.com/appengine/docs/flexible/python/runtime#environment_variables
 REGION = os.environ.get("REGION", "us-west4")
 PROJECT_NUMBER = os.getenv("PROJECT_NUMBER", "148263976475")
 ENV_CONFIG_SECRET_NAME = os.environ.get("ENV_CONFIG_SECRET_NAME", "peerlogic-api-env")
 
-if GOOGLE_CLOUD_PROJECT:
+if IN_GCP:
     # Pull secrets from Secret Manager
     PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT")
 
