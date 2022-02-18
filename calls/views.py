@@ -8,6 +8,7 @@ from django.http import Http404, HttpResponseBadRequest
 from google.api_core.exceptions import PermissionDenied
 from phonenumber_field.modelfields import to_python as to_phone_number
 from rest_framework import status, viewsets
+from rest_framework.decorators import action
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
@@ -346,6 +347,18 @@ class CallAudioPartialViewset(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return super().get_queryset().filter(call_partial=self.kwargs.get("call_partial_pk"))
+
+    @action(detail=True, methods=["post"])
+    def publish_call_audio_partial_saved(self, request, call_pk=None, call_partial_pk=None, pk=None):
+        try:
+            log.info(f"Publishing call audio partial ready events for: call_audio_partial_id: '{pk}'")
+            publish_call_audio_partial_saved(call_id=call_pk, partial_id=call_partial_pk, audio_partial_id=pk)
+            log.info(f"Published call audio partial ready events for: call_audio_partial_id: '{pk}'")
+            return Response(status=status.HTTP_200_OK, data={"status": "published"})
+        except PermissionDenied:
+            message = "Must add role 'roles/pubsub.publisher'. Exiting."
+            log.exception(message)
+            return Response(status=status.HTTP_403_FORBIDDEN, data={"error": message})
 
     def update(self, request, pk=None):
         # TODO: Implement
