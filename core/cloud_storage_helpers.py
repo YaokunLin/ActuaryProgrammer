@@ -25,7 +25,7 @@ def get_signed_url(
         signing_credentials = None
         auth_request = requests.Request()
         signing_credentials = compute_engine.IDTokenCredentials(auth_request, "")
-        compute_signed_kwargs = {"version": "v4", "credentials": signing_credentials, "expiration": expiration, "method": "GET"}
+        compute_signed_kwargs = {"credentials": signing_credentials, "expiration": expiration, "method": "GET"}
 
     try:
         bucket: Bucket = client.get_bucket(bucket_name)
@@ -35,5 +35,5 @@ def get_signed_url(
             raise NoSuchBlobException(f"No such blob with filename {filename}")
         return blob.generate_signed_url(**payload)
     except Exception as e:
-        log.exception(f"Problem with generating signed_url for filename='{filename}', bucket_name='{bucket_name}: {e}")
+        log.warn(f"Problem with generating signed_url for filename='{filename}', bucket_name='{bucket_name}: {e}")
         return None
