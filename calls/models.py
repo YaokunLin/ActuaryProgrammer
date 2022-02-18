@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -26,7 +27,10 @@ from calls.field_choices import (
     TelecomPersonaTypes,
     TranscriptTypes,
 )
+from core.models import PracticeTelecom
 
+# Get an instance of a logger
+log = logging.getLogger(__name__)
 
 class Call(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
@@ -57,6 +61,16 @@ class Call(AuditTrailModel):
     caller_type = models.CharField(choices=EngagementPersonaTypes.choices, max_length=50, blank=True)
     callee_type = models.CharField(choices=EngagementPersonaTypes.choices, max_length=50, blank=True)
 
+    # TODO: Remove domain everywhere and use practice_id
+    # Dependencies:
+    #   - peerlogic-ml-stream-pipeline
+    #   - peerlogic-ml-rest-api
+    #   - analytics-dashboard
+    @property
+    def domain(self) -> str:
+        practice_telecom = PracticeTelecom.objects.get(practice=self.practice)
+        return practice_telecom.domain
+
 
 class CallAudio(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
@@ -65,7 +79,7 @@ class CallAudio(AuditTrailModel):
     status = models.CharField(choices=CallAudioFileStatusTypes.choices, max_length=80, default=CallAudioFileStatusTypes.RETRIEVAL_FROM_PROVIDER_IN_PROGRESS)
 
     @property
-    def signed_url(self):
+    def signed_url(self) -> Optional[str]:
         return self._signed_url()
 
     def _signed_url(
@@ -98,7 +112,7 @@ class CallTranscript(AuditTrailModel):
         return f"{self.id}_{self.transcript_type}.txt"
 
     @property
-    def signed_url(self):
+    def signed_url(self) -> Optional[str]:
         return self._signed_url()
 
     def _signed_url(
@@ -118,6 +132,8 @@ class CallTranscript(AuditTrailModel):
 class CallPartial(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     call = models.ForeignKey(Call, on_delete=models.CASCADE)
+    # TODO: sip_callee_extension?
+    # TODO: sip_calleR_extension?
     time_interaction_started = models.DateTimeField()
     time_interaction_ended = models.DateTimeField()
 
@@ -134,7 +150,7 @@ class CallAudioPartial(AuditTrailModel):
     status = models.CharField(choices=CallAudioFileStatusTypes.choices, max_length=80, default=CallAudioFileStatusTypes.RETRIEVAL_FROM_PROVIDER_IN_PROGRESS)
 
     @property
-    def signed_url(self):
+    def signed_url(self) -> Optional[str]:
         return self._signed_url()
 
     def _signed_url(
@@ -172,7 +188,7 @@ class CallTranscriptPartial(AuditTrailModel):
         return f"{self.id}_{self.transcript_type}.txt"
 
     @property
-    def signed_url(self):
+    def signed_url(self) -> Optional[str]:
         return self._signed_url()
 
     def _signed_url(
