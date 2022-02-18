@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from django.conf import settings
 from google.auth import compute_engine
@@ -8,6 +8,7 @@ from gcloud.storage import Client, Bucket
 
 
 log = logging.getLogger(__name__)
+
 
 class NoSuchBlobException(BaseException):
     pass
@@ -32,8 +33,10 @@ def get_signed_url(
         payload.update(compute_signed_kwargs)
         blob = bucket.get_blob(filename)
         if not blob:
-            raise NoSuchBlobException(f"No such blob with filename {filename}")
+            log.info(f"No such blob with filename {filename}")
+            # TODO: understand why the following results in 500 even though we're in a try-except block...
+            # raise NoSuchBlobException(f"No such blob with filename {filename}")
         return blob.generate_signed_url(**payload)
     except Exception as e:
-        log.warn(f"Problem with generating signed_url for filename='{filename}', bucket_name='{bucket_name}: {e}")
+        log.info(f"Problem with generating signed_url for filename='{filename}', bucket_name='{bucket_name}: {e}")
         return None
