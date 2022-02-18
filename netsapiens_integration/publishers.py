@@ -98,7 +98,7 @@ def publish_netsapiens_cdr_saved_event(
 
 def publish_netsapiens_cdr_linked_to_call_partial_event(
     practice_id: str,
-    voip_provicer_id: str,
+    voip_provider_id: str,
     event: Dict,
     topic_path_netsapiens_cdr_linked_to_call_partial: str = settings.PUBSUB_TOPIC_PATH_NETSAPIENS_CDR_LINKED_TO_CALL_PARTIAL,
     publisher: pubsub_v1.PublisherClient = settings.PUBLISHER,
@@ -107,7 +107,7 @@ def publish_netsapiens_cdr_linked_to_call_partial_event(
     description_human_readable = """Event indicates the following are true: 1. peerlogic call exist (call was created, call was updated) # 2. peerlogic call partial exists (partial was created, partial was updated) # 3. cdr2 has been linked to call and call partial # 4. netsapiens audio is available to download"""
     event_attributes = {
         "practice_id": practice_id,
-        "voip_provider_id": voip_provicer_id,
+        "voip_provider_id": voip_provider_id,
         "description_human_readable": description_human_readable,
     }
 
