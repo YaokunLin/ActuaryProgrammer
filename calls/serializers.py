@@ -11,10 +11,11 @@ log = logging.getLogger(__name__)
 
 
 class CallSerializer(serializers.ModelSerializer):
+    domain = serializers.CharField(required=False)
     class Meta:
         model = Call
         fields = "__all__"
-        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "domain"]
 
 
 class CallTranscriptSerializer(serializers.ModelSerializer):
