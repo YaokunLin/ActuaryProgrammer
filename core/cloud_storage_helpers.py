@@ -30,5 +30,5 @@ def get_signed_url(
         blob = bucket.get_blob(filename)
         return blob.generate_signed_url(**payload)
     except Exception as e:
-        log.exception(e)
+        log.exception(f"Problem with generating signed_url for filename='{filename}', bucket_name='{bucket_name}: {e}")
         return None
