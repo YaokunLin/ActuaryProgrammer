@@ -45,6 +45,10 @@ Fill in the necessary creds and values in `.env`.
 
 See 1Password for a starter file: [peerlogic-api LOCAL  starter .env file](https://start.1password.com/open/i?a=P3RU52IFYBEH3GKEDF2UBYENBQ&v=wlmpasbyyncmhpjji3lfc7ra4a&i=sxjcghmtefeqvdystb2l6q7k5y&h=my.1password.com)
 
+```
+brew install ffmpeg
+```
+
 ### Docker commands:
 
 Initialize Postgres and create the peerlogic database, without tables:
