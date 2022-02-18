@@ -9,6 +9,9 @@ from gcloud.storage import Client, Bucket
 
 log = logging.getLogger(__name__)
 
+class NoSuchBlobException(BaseException):
+    pass
+
 
 def get_signed_url(
     filename: str,
@@ -28,6 +31,8 @@ def get_signed_url(
         bucket: Bucket = client.get_bucket(bucket_name)
         payload.update(compute_signed_kwargs)
         blob = bucket.get_blob(filename)
+        if not blob:
+            raise NoSuchBlobException(f"No such blob with filename {filename}")
         return blob.generate_signed_url(**payload)
     except Exception as e:
         log.exception(f"Problem with generating signed_url for filename='{filename}', bucket_name='{bucket_name}: {e}")
