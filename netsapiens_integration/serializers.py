@@ -3,6 +3,7 @@ from typing import Dict
 
 from rest_framework import serializers
 
+from core.models import PracticeTelecom
 from core.serializers import UnixEpochDateField
 from .models import (
     NetsapiensAPICredentials,
@@ -68,10 +69,13 @@ class NetsapiensCdr2ExtractSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         instance = super().update(instance, validated_data)
         if self._is_call_linked_update(instance):
-            practice_id = (
-                instance.netsapiens_call_subscription.practice_telecom.practice.id
-            )  # "netsapiens_call_subscription" should never be None, change this line if we make it optional
-            publish_netsapiens_cdr_linked_to_call_partial_event(practice_id=practice_id, event=self.to_representation(instance))
+            # "netsapiens_call_subscription" should never be None, change this line if we make it optional
+            practice_telecom: PracticeTelecom = instance.netsapiens_call_subscription.practice_telecom
+            practice_id = practice_telecom.practice.id
+            voip_provider_id = practice_telecom.voip_provider.id
+            publish_netsapiens_cdr_linked_to_call_partial_event(
+                practice_id=practice_id, voip_provider_id=voip_provider_id, event=self.to_representation(instance)
+            )
 
         return instance
 
