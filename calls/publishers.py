@@ -62,7 +62,7 @@ def publish_call_transcript_ready(
     call_id: str,
     call_transcript_id: str,
     publisher: pubsub_v1.PublisherClient = settings.PUBLISHER,
-    topic_path_call_transcript_ready: str = settings.PUBSUB_TOPIC_PATH_CALL_TRANSCRIPT_READY,
+    topic_path_call_transcript_ready: str = settings.PUBSUB_TOPIC_PATH_CALL_TRANSCRIPT_SAVED,
 ):
     event_data = {"call_id": call_id, "call_transcript_id": call_transcript_id}
 
