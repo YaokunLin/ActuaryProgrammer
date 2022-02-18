@@ -71,7 +71,7 @@ class CallAudio(AuditTrailModel):
     def _signed_url(
         self,
         client: Client = settings.CLOUD_STORAGE_CLIENT,
-        bucket_name: str = settings.CALL_AUDIO_BUCKET_NAME,
+        bucket_name: str = settings.BUCKET_NAME_CALL_AUDIO,
         expiration: timedelta = settings.SIGNED_STORAGE_URL_EXPIRATION_DELTA,
     ) -> Optional[str]:
         bucket: Bucket = client.get_bucket(bucket_name)
@@ -104,7 +104,7 @@ class CallTranscript(AuditTrailModel):
     def _signed_url(
         self,
         client: Client = settings.CLOUD_STORAGE_CLIENT,
-        bucket_name: str = settings.CALL_TRANSCRIPT_BUCKET_NAME,
+        bucket_name: str = settings.BUCKET_NAME_CALL_TRANSCRIPT,
         expiration: timedelta = settings.SIGNED_STORAGE_URL_EXPIRATION_DELTA,
     ) -> Optional[str]:
         bucket: Bucket = client.get_bucket(bucket_name)
@@ -140,7 +140,7 @@ class CallAudioPartial(AuditTrailModel):
     def _signed_url(
         self,
         client: Client = settings.CLOUD_STORAGE_CLIENT,
-        bucket_name: str = settings.CALL_AUDIO_PARTIAL_BUCKET_NAME,
+        bucket_name: str = settings.BUCKET_NAME_CALL_AUDIO_PARTIAL,
         expiration: timedelta = settings.SIGNED_STORAGE_URL_EXPIRATION_DELTA,
     ) -> Optional[str]:
         bucket: Bucket = client.get_bucket(bucket_name)
@@ -178,7 +178,7 @@ class CallTranscriptPartial(AuditTrailModel):
     def _signed_url(
         self,
         client: Client = settings.CLOUD_STORAGE_CLIENT,
-        bucket_name: str = settings.CALL_TRANSCRIPT_PARTIAL_BUCKET_NAME,
+        bucket_name: str = settings.BUCKET_NAME_CALL_TRANSCRIPT_PARTIAL,
         expiration: timedelta = settings.SIGNED_STORAGE_URL_EXPIRATION_DELTA,
     ) -> Optional[str]:
         bucket: Bucket = client.get_bucket(bucket_name)

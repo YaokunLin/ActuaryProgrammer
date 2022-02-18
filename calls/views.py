@@ -123,7 +123,7 @@ class CallAudioViewset(viewsets.ModelViewSet):
         call_pk=None,
         format=None,
         storage_client=settings.CLOUD_STORAGE_CLIENT,
-        bucket=settings.CALL_AUDIO_BUCKET_NAME,
+        bucket=settings.BUCKET_NAME_CALL_AUDIO,
     ):
         files = request.data.items()
         files = list(files)
@@ -209,7 +209,7 @@ class CallTranscriptViewset(viewsets.ModelViewSet):
         call_pk=None,
         format=None,
         storage_client=settings.CLOUD_STORAGE_CLIENT,
-        bucket=settings.CALL_TRANSCRIPT_BUCKET_NAME,
+        bucket=settings.BUCKET_NAME_CALL_TRANSCRIPT,
     ):
         files = request.data.items()
         files = list(files)
@@ -302,7 +302,7 @@ class CallTranscriptPartialViewset(viewsets.ModelViewSet):
         call_partial_pk=None,
         format=None,
         storage_client=settings.CLOUD_STORAGE_CLIENT,
-        bucket=settings.CALL_TRANSCRIPT_PARTIAL_BUCKET_NAME,
+        bucket=settings.BUCKET_NAME_CALL_TRANSCRIPT_PARTIAL,
     ):
         files = request.data.items()
         files = list(files)
@@ -379,7 +379,7 @@ class CallAudioPartialViewset(viewsets.ModelViewSet):
         call_partial_pk=None,
         format=None,
         storage_client=settings.CLOUD_STORAGE_CLIENT,
-        bucket=settings.CALL_AUDIO_PARTIAL_BUCKET_NAME,
+        bucket=settings.BUCKET_NAME_CALL_AUDIO_PARTIAL,
     ):
         files = request.data.items()
         files = list(files)
