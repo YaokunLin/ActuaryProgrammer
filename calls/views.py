@@ -13,7 +13,7 @@ from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from twilio.base.exceptions import TwilioException
-from calls.publishers import publish_call_audio_partial_saved, publish_call_audio_saved, publish_call_transcript_ready
+from calls.publishers import publish_call_audio_partial_saved, publish_call_audio_saved, publish_call_transcript_saved
 
 from core.file_upload import FileToUpload
 
@@ -251,7 +251,7 @@ class CallTranscriptViewset(viewsets.ModelViewSet):
 
         try:
             log.info(f"Publishing call transcript ready events for: call_transcript_id: '{call_transcript.pk}'")
-            publish_call_transcript_ready(call_id=call_pk, call_transcript_id=call_transcript.pk)
+            publish_call_transcript_saved(call_id=call_pk, call_transcript_id=call_transcript.pk)
             log.info(f"Published call transcript ready events for: call_transcript_id: '{call_transcript.pk}'")
         except PermissionDenied:
             message = "Must add role 'roles/pubsub.publisher'. Exiting."
