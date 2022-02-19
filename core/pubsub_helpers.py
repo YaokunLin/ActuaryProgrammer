@@ -8,6 +8,7 @@ from django.conf import settings
 from django.db import models
 from google.cloud import pubsub_v1
 
+
 # Get an instance of a logger
 log = logging.getLogger(__name__)
 
@@ -46,9 +47,9 @@ def publish_event(
     event_encoded_data = json.dumps(event, default=json_serializer).encode("utf-8")
 
     # When you publish a message, the client returns a future.
-    log.info(f"Publishing message {event_encoded_data} with error handler to {topic_path}.")
+    log.info(f"Publishing message bytes {event_encoded_data} with error handler to {topic_path}.")
     publish_future = publisher.publish(topic=topic_path, data=event_encoded_data, **event_attributes)
-    log.info(f"Published message {event_encoded_data} with error handler to {topic_path}.")
+    log.info(f"Published message bytes {event_encoded_data} with error handler to {topic_path}.")
 
     # Non-blocking. Publish failures are handled in the callback function.
-    publish_future.add_done_callback(get_callback(publish_future, event_encoded_data))
+    return publish_future.add_done_callback(get_callback(publish_future, event_encoded_data))

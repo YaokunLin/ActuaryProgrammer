@@ -6,6 +6,7 @@ set -x #echo on
 
 PROJECT_ID=$(gcloud config list --format='value(core.project)')
 PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
+ENVIRONMENT=$(printf "%s\n" "${PROJECT_ID##*-}")
 CLOUDBUILD_SERVICE_ACCOUNT="${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com"
 APP_ENGINE_SERVICE_ACCOUNT="${PROJECT_ID}@appspot.gserviceaccount.com"
 LOCAL_DEVELOPMENT_SERVICE_ACCOUNT="local-development@${PROJECT_ID}.iam.gserviceaccount.com"
@@ -14,8 +15,8 @@ CLOUD_SQL_SERVICE_ACCOUNT_NAME=${CLOUD_SQL_SERVICE_ACCOUNT_ID}@${PROJECT_ID}.iam
 VAULT_ID="wlmpasbyyncmhpjji3lfc7ra4a"
 REGION=$(gcloud config list --format='value(compute.region)')
 ZONE=$(gcloud config list --format='value(compute.zone)')
-SUBNET="peerlogic-dev-us-west1-subnet-private"
-HOST_PROJECT_ID="peerlogic-vpc-host-dev"
+SUBNET="peerlogic-${ENVIRONMENT}-us-west1-subnet-private"
+HOST_PROJECT_ID="peerlogic-vpc-host-${ENVIRONMENT}"
 
 textred=$(tput setaf 1) # Red
 textgreen=$(tput setaf 2) # Green
@@ -144,7 +145,7 @@ REDIS_IP=${REDIS_IP_RANGE%/*}
 
 export REDIS_URL="redis://${REDIS_IP}:${REDIS_PORT}/0"
 
-# example connector name: peerlogic-api-dev-redis-to-shared-vpc-connector
+# example connector name: peerlogic-api-${ENVIRONMENT}-redis-to-shared-vpc-connector
 
 
 # TODO: connect redis
@@ -161,7 +162,7 @@ export REDIS_URL="redis://${REDIS_IP}:${REDIS_PORT}/0"
 # --region $REGION
 
 
-if  [[ "$PROJECT_ID" ==  *"dev" ]]; then
+if  [[ $ENVIRONMENT ==  "dev" ]]; then
       echo "${textgreen}Creating cloud build trigger using development branch${textreset}"
       gcloud beta builds triggers create github \
       --name=app-engine \
@@ -171,7 +172,7 @@ if  [[ "$PROJECT_ID" ==  *"dev" ]]; then
       --build-config="deployment/app_engine/cloudbuild.yaml"
 fi
 
-if [[ "$PROJECT_ID" ==  *"stage" ]]; then
+if [[ $ENVIRONMENT ==  "stage" ]]; then
       echo "${textgreen}Creating cloud build trigger using hotfix/ branch prefix${textreset}"
       gcloud beta builds triggers create github \
       --name=hotfixes \
@@ -189,7 +190,7 @@ if [[ "$PROJECT_ID" ==  *"stage" ]]; then
       --build-config="deployment/app_engine/cloudbuild.yaml"
 fi
 
-if [[ "$PROJECT_ID" ==  *"prod" ]]; then
+if [[ $ENVIRONMENT == "prod" ]]; then
       echo "${textgreen}Creating cloud build trigger using main branch${textreset}"
       gcloud beta builds triggers create github \
       --name=app-engine \
@@ -202,25 +203,23 @@ fi
 
 # NS Audio pipeline
 
-# TODO: make these all use stage- prefix
+echo "${textgreen}Creating ${ENVIRONMENT}-call_audio_partial_saved topic${textreset}"
+gcloud pubsub topics create "${ENVIRONMENT}-call_audio_partial_saved"
 
-echo "${textgreen}Creating dev-call_audio_partial_saved topic${textreset}"
-gcloud pubsub topics create dev-call_audio_partial_saved
+echo "${textgreen}Creating ${ENVIRONMENT}-call_transcript_saved topic${textreset}"
+gcloud pubsub topics create "${ENVIRONMENT}-call_transcript_saved"
 
-echo "${textgreen}Creating dev-call_transcript_saved topic${textreset}"
-gcloud pubsub topics create dev-call_transcript_saved
+echo "${textgreen}Creating ${ENVIRONMENT}-call_audio_saved topic${textreset}"
+gcloud pubsub topics create "${ENVIRONMENT}-call_audio_saved"
 
-echo "${textgreen}Creating dev-call_audio_saved topic${textreset}"
-gcloud pubsub topics create dev-call_audio_saved
+echo "${textgreen}Creating ${ENVIRONMENT}-netsapiens-leg_b_finished topic${textreset}"
+gcloud pubsub topics create "${ENVIRONMENT}-netsapiens-leg_b_finished"
 
-echo "${textgreen}Creating dev-netsapiens-leg_b_finished topic${textreset}"
-gcloud pubsub topics create dev-netsapiens-leg_b_finished
+echo "${textgreen}Creating ${ENVIRONMENT}-netsapiens-cdr_saved topic${textreset}"
+gcloud pubsub topics create "${ENVIRONMENT}-netsapiens-cdr_saved"
 
-echo "${textgreen}Creating dev-netsapiens-cdr_saved topic${textreset}"
-gcloud pubsub topics create dev-netsapiens-cdr_saved
-
-echo "${textgreen}Creating dev-netsapiens-cdr_linked_to_call_partial topic${textreset}"
-gcloud pubsub topics create dev-netsapiens-cdr_linked_to_call_partial
+echo "${textgreen}Creating ${ENVIRONMENT}-netsapiens-cdr_linked_to_call_partial topic${textreset}"
+gcloud pubsub topics create "${ENVIRONMENT}-netsapiens-cdr_linked_to_call_partial"
 
 
 

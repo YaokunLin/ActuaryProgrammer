@@ -97,6 +97,19 @@ class CallAudioViewset(viewsets.ModelViewSet):
         # TODO: Implement
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
+    @action(detail=True, methods=["post"])
+    def publish_call_audio_saved(self, request, call_pk=None, pk=None):
+
+        log.info(f"Publishing call audio saved event for: call_audio_id: '{pk}'")
+        publish_future = publish_call_audio_saved(call_id=call_pk, call_audio_id=pk)
+        log.info(f"Published call audio saved event for: call_audio_id: '{pk}'")
+
+        # TODO: figure out how to detect errors from error handler and respond with 403
+        # ideally without slow-downs
+        # most common error is the following when first getting started
+        # PermissionDenied - Must add role 'roles/pubsub.publisher'
+        return Response(status=status.HTTP_200_OK, data={"status": "published"})
+
     def data_is_valid(self, files: List) -> Union[FileToUpload, Dict]:
         if len(files) != 1:
             error_message = f"Must give 1 file per request in MultiPart Form Data."
