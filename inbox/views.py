@@ -23,7 +23,7 @@ from .serializers import SMSMessageSerializer
 log = logging.getLogger(__name__)
 
 
-class SMSMessageList(generics.ListCreateAPIView):
+class SMSMessageList(generics.ListAPIView):
     queryset = SMSMessage.objects.all().order_by("-modified_at")
     serializer_class = SMSMessageSerializer
 
