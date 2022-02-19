@@ -1,14 +1,10 @@
-from concurrent import futures
 import json
 import logging
-from typing import Dict, List
 
 from django.conf import settings
 from google.cloud import pubsub_v1
 
 from core import pubsub_helpers
-from calls.field_choices import TranscriptTypes
-from calls.models import Call, CallAudioPartial, CallPartial, CallTranscriptPartial
 
 
 # Get an instance of a logger

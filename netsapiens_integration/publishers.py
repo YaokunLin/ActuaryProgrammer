@@ -1,34 +1,14 @@
-from datetime import (
-    date,
-    datetime,
-    timedelta,
-)
-import json
 import logging
 from typing import Dict, List
 
 from django.conf import settings
-from django.db import models
 from google.cloud import pubsub_v1
 
-from core import pubsub_helpers
+from core.pubsub_helpers import publish_event
 
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
-
-
-def json_serializer(obj):
-    """JSON serializer for objects not serializable by default json code"""
-
-    if isinstance(obj, (datetime, date)):
-        return obj.isoformat()
-    if isinstance(obj, timedelta):
-        return str(obj)
-    if isinstance(obj, models.Model):
-        return obj.id
-
-    raise TypeError(f"Type {type(obj)} not serializable")
 
 
 def publish_leg_b_ready_events(
@@ -120,21 +100,3 @@ def publish_netsapiens_cdr_linked_to_call_partial_event(
     }
 
     return publish_event(event_attributes=event_attributes, event=event, topic_path=topic_path_netsapiens_cdr_linked_to_call_partial, publisher=publisher)
-
-
-def publish_event(
-    event_attributes: Dict,
-    event: Dict,
-    topic_path: str,
-    publisher: pubsub_v1.PublisherClient = settings.PUBLISHER,
-) -> pubsub_v1.publisher.futures.Future:
-
-    event_encoded_data = json.dumps(event, default=json_serializer).encode("utf-8")
-
-    # When you publish a message, the client returns a future.
-    log.info(f"Publishing message {event_encoded_data} with error handler to {topic_path}.")
-    publish_future = publisher.publish(topic=topic_path, data=event_encoded_data, **event_attributes)
-    log.info(f"Published message {event_encoded_data} with error handler to {topic_path}.")
-
-    # Non-blocking. Publish failures are handled in the callback function.
-    publish_future.add_done_callback(pubsub_helpers.get_callback(publish_future, event_encoded_data))
