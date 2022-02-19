@@ -1,11 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import (
-    AbstractUser,
-    Permission,
-    _user_get_permissions,
-    _user_has_perm,
-    _user_has_module_perms
-)
+from django.contrib.auth.models import AbstractUser, Permission, _user_get_permissions, _user_has_perm, _user_has_module_perms
 from django.utils.translation import gettext_lazy as _
 from django_extensions.db.fields import ShortUUIDField
 from phonenumber_field.modelfields import PhoneNumberField
@@ -116,7 +110,9 @@ class Practice(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     name = models.CharField(_("name"), max_length=150, unique=True)
     industry = models.CharField(choices=IndustryTypes.choices, default=IndustryTypes.DENTISTRY_GENERAL, max_length=250)
-    active = models.BooleanField(null=True, blank=False, default=False)  # practices are active or inactive based upon whether we've approved their submission and whether they're paid up
+    active = models.BooleanField(
+        null=True, blank=False, default=False
+    )  # practices are active or inactive based upon whether we've approved their submission and whether they're paid up
 
     objects = PracticeManager()
 
@@ -156,6 +152,7 @@ class VoipProvider(AuditTrailModel):
     integration_type = models.CharField(max_length=150, choices=VoipProviderIntegrationTypes.choices, default=VoipProviderIntegrationTypes.NETSAPIENS)
 
     active = models.BooleanField(null=True, blank=False, default=False)  # whether this integrator is active and we can receive events from them
+
 
 class PracticeTelecom(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)

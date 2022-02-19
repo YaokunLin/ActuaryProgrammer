@@ -12,6 +12,7 @@ log = logging.getLogger(__name__)
 
 class CallSerializer(serializers.ModelSerializer):
     domain = serializers.CharField(required=False)
+
     class Meta:
         model = Call
         fields = "__all__"
