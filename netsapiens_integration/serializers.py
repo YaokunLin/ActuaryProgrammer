@@ -40,7 +40,7 @@ class NetsapiensCallSubscriptionsEventExtractSerializer(serializers.ModelSeriali
 
 
 class NetsapiensCdr2ExtractSerializer(serializers.ModelSerializer):
-    publish = serializers.BooleanField(required=False, default=True)
+    publish = serializers.BooleanField(required=False, default=True, allow_null=True)
     time_start = UnixEpochDateField(required=False)
     time_answer = UnixEpochDateField(required=False)
     time_release = UnixEpochDateField(required=False)
@@ -56,7 +56,7 @@ class NetsapiensCdr2ExtractSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def create(self, validated_data: Dict):
-        publish = validated_data.pop("publish", None)
+        publish = validated_data.pop("publish", True)
 
         # perform the create
         instance = super().create(validated_data=validated_data)
@@ -71,7 +71,7 @@ class NetsapiensCdr2ExtractSerializer(serializers.ModelSerializer):
         return instance
 
     def update(self, instance, validated_data):
-        publish = validated_data.pop("publish", None)
+        publish = validated_data.pop("publish", True)
         instance = super().update(instance, validated_data)
         if self._is_call_linked_update(instance) and publish:
             # "netsapiens_call_subscription" should never be None, change this line if we make it optional
