@@ -153,6 +153,7 @@ CORS_ORIGIN_WHITELIST = ("http://localhost:3000", "app://.")
 AUTH_USER_MODEL = "core.User"
 
 # Pub/Sub
+PUBLISHER_IS_ENABLED = os.getenv("PUBLISHER_IS_ENABLED", "False").lower() in ("true", "1", "t")
 PUBLISHER = pubsub_v1.PublisherClient()
 PROJECT_ID_ML_PROCESS = os.getenv("PROJECT_ID_ML_PROCESS", "peerlogic-analytics-dev")
 PEERLOGIC_STREAM_KEY = os.getenv("PEERLOGIC_STREAM_KEY")

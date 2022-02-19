@@ -53,15 +53,21 @@ brew install ffmpeg
 
 Initialize Postgres and create the peerlogic database, without tables:
 
-`docker-compose up postgres` 
+```
+docker-compose up postgres
+```
 
 Apply the structure of the tables to the database.
 
-`docker-compose up migrate`
+```
+docker-compose up migrate
+```
 
 Add the super user with username of `admin` and password of `password`.
 
-`docker-compose run api python3 manage.py createsuperuser`
+```
+docker-compose run api python3 manage.py createsuperuser
+```
 
 
 
