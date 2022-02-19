@@ -18,6 +18,7 @@
 # [START gaestd_py_django_app_yaml]
 runtime: python37
 service: default
+instance_class: F2
 
 handlers:
 # This configures Google App Engine to serve the files in the app's static
