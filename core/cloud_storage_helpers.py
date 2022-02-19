@@ -15,28 +15,29 @@ class NoSuchBlobException(BaseException):
 
 
 def get_signed_url(
-    filename: str,
-    bucket_name: str,
-    client: Client = settings.CLOUD_STORAGE_CLIENT,
+    filename,
+    bucket_name,
+    storage_client: Client = settings.CLOUD_STORAGE_CLIENT,
     expiration: timedelta = settings.SIGNED_STORAGE_URL_EXPIRATION_DELTA,
-):
-    payload = {"expiration": expiration}
-    compute_signed_kwargs = {}
-    if settings.IN_GCP:
-        signing_credentials = None
+) -> str:
+    """Generates a v4 signed URL for downloading a blob."""
+
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(filename)
+
+    signing_credentials = None
+
+    if settings.IN_GCP:  # running in GCP Platform
         auth_request = requests.Request()
         signing_credentials = compute_engine.IDTokenCredentials(auth_request, "")
-        compute_signed_kwargs = {"credentials": signing_credentials, "expiration": expiration, "method": "GET"}
 
-    try:
-        bucket: Bucket = client.get_bucket(bucket_name)
-        payload.update(compute_signed_kwargs)
-        blob = bucket.get_blob(filename)
-        if not blob:
-            log.info(f"No such blob with filename {filename}")
-            # TODO: understand why the following results in 500 even though we're in a try-except block...
-            # raise NoSuchBlobException(f"No such blob with filename {filename}")
-        return blob.generate_signed_url(**payload)
-    except Exception as e:
-        log.info(f"Problem with generating signed_url for filename='{filename}', bucket_name='{bucket_name}: {e}")
-        return None
+    url = blob.generate_signed_url(
+        version="v4",
+        credentials=signing_credentials,
+        # This URL is valid for 30 minutes
+        expiration=expiration,
+        # Allow GET requests using this URL.
+        method="GET",
+    )
+    log.info("Generated GET signed URL: {url}")
+    return url
