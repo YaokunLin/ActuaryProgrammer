@@ -1,21 +1,17 @@
 import logging
+from typing import List
 
 from django.conf import settings
 from django.http import Http404
-
-
-from rest_framework import generics
-from rest_framework import viewsets
-from rest_framework.views import APIView
+from rest_framework import generics, status
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework.views import APIView
 
 from .bandwidth.serializers import (
     BandwidthResponseToSMSMessageSerializer,
     CreateSMSMessageAndConvertToBandwidthRequestSerializer,
-    MessageDeliveredEventSerializer,
-    MessageFailedEventSerializer,
-)
+    MessageDeliveredEventSerializer, MessageFailedEventSerializer)
 from .models import SMSMessage
 from .serializers import SMSMessageSerializer
 
@@ -33,6 +29,8 @@ class SMSMessagesDeliveredCallbackView(APIView):
     Callback from Bandwidth letting us know the message was delivered
     https://dev.bandwidth.com/docs/messaging/webhooks/#message-delivered
     """
+    permission_classes: List = [AllowAny]
+    authentication_classes: List = []
 
     def post(self, request, format=None):
         bandwidth_ids = [item["message"]["id"] for item in request.data]
@@ -69,6 +67,8 @@ class SMSMessagesFailedCallbackView(APIView):
     Callback from Bandwidth letting us know the message failed to be delivered
     https://dev.bandwidth.com/docs/messaging/webhooks/#message-failed
     """
+    permission_classes: List = [AllowAny]
+    authentication_classes: List = []
 
     def post(self, request, format=None):
         bandwidth_ids = [item["message"]["id"] for item in request.data]
