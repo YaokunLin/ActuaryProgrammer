@@ -54,11 +54,11 @@ def publish_call_audio_partial_saved(
     return publish_future
 
 
-def publish_call_transcript_ready(
+def publish_call_transcript_saved(
     call_id: str,
     call_transcript_id: str,
     publisher: pubsub_v1.PublisherClient = settings.PUBLISHER,
-    topic_path_call_transcript_ready: str = settings.PUBSUB_TOPIC_PATH_CALL_TRANSCRIPT_READY,
+    topic_path_call_transcript_saved: str = settings.PUBSUB_TOPIC_PATH_CALL_TRANSCRIPT_SAVED,
 ):
     event_data = {"call_id": call_id, "call_transcript_id": call_transcript_id}
 
@@ -66,9 +66,9 @@ def publish_call_transcript_ready(
     event_attributes = {"call_id": call_id}
 
     # When you publish a message, the client returns a future.
-    log.info(f"Publishing message {event_data} with error handler to {topic_path_call_transcript_ready}.")
-    publish_future = publisher.publish(topic=topic_path_call_transcript_ready, data=call_transcript_encode_data, **event_attributes)
-    log.info(f"Published message {event_data} with error handler to {topic_path_call_transcript_ready}.")
+    log.info(f"Publishing message {event_data} with error handler to {topic_path_call_transcript_saved}.")
+    publish_future = publisher.publish(topic=topic_path_call_transcript_saved, data=call_transcript_encode_data, **event_attributes)
+    log.info(f"Published message {event_data} with error handler to {topic_path_call_transcript_saved}.")
     # Non-blocking. Publish failures are handled in the callback function.
     publish_future.add_done_callback(pubsub_helpers.get_callback(publish_future, call_transcript_encode_data))
 
