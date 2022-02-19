@@ -16,6 +16,7 @@ def publish_call_audio_saved(
     topic_path_call_audio_saved: str = settings.PUBSUB_TOPIC_PATH_CALL_AUDIO_SAVED,
 ):
     event_data = {"call_id": call_id, "call_audio_id": call_audio_id}
+    event_data.update(settings.ML_PROCESS_ARGUMENTS)
     event_attributes = {"call_id": call_id}
     return publish_event(event_attributes=event_attributes, event=event_data, topic_path=topic_path_call_audio_saved)
 

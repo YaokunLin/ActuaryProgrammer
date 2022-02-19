@@ -155,6 +155,19 @@ AUTH_USER_MODEL = "core.User"
 # Pub/Sub
 PUBLISHER = pubsub_v1.PublisherClient()
 PROJECT_ID_ML_PROCESS = os.getenv("PROJECT_ID_ML_PROCESS", "peerlogic-analytics-dev")
+PEERLOGIC_STREAM_KEY = os.getenv("PEERLOGIC_STREAM_KEY")
+ML_PROCESS_ARGUMENTS = {
+    "streaming_key": PEERLOGIC_STREAM_KEY,
+    "output_bigquery_path": "Audio_Process.call",
+    "history_table_path": "Audio_Process.processing_results_history",
+    "sentiment_prediction_ep": "5039105770562519040",
+    "intent_prediction_ep": "3899695064837783552",
+    "caller_type_prediction_ep": "6637250319581446144",
+    "outcome_prediction_ep": "8511381083265171456",
+    "sentiment_line_by_line_ep": "6683975165715415040",
+    "outcome_reason_prediction_ep": "9205709482066182144",
+    "run_transcription": "true",
+}
 
 PUBSUB_TOPIC_ID_CALL_AUDIO_PARTIAL_SAVED = os.getenv("PUBSUB_TOPIC_ID_CALL_AUDIO_PARTIAL_SAVED", "dev-call_audio_partial_saved")
 PUBSUB_TOPIC_ID_CALL_AUDIO_SAVED = os.getenv("PUBSUB_TOPIC_ID_CALL_AUDIO_SAVED", "dev-call_audio_saved")
@@ -172,7 +185,6 @@ PUBSUB_TOPIC_PATH_NETSAPIENS_CDR_LINKED_TO_CALL_PARTIAL = PUBLISHER.topic_path(P
 PUBSUB_TOPIC_PATH_CALL_AUDIO_PARTIAL_SAVED = PUBLISHER.topic_path(PROJECT_ID, PUBSUB_TOPIC_ID_CALL_AUDIO_PARTIAL_SAVED)
 PUBSUB_TOPIC_PATH_CALL_AUDIO_SAVED = PUBLISHER.topic_path(PROJECT_ID_ML_PROCESS, PUBSUB_TOPIC_ID_CALL_AUDIO_SAVED)
 PUBSUB_TOPIC_PATH_CALL_TRANSCRIPT_SAVED = PUBLISHER.topic_path(PROJECT_ID, PUBSUB_TOPIC_ID_CALL_TRANSCRIPT_SAVED)
-
 
 PUBLISH_FUTURE_TIMEOUT_IN_SECONDS_DEFAULT = 60
 try:
