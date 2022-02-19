@@ -47,14 +47,15 @@ gcloud components update
 
 
 echo "${textgreen}Enabling services ${textreset}"
-gcloud services enable appengine.googleapis.com
-gcloud services enable sql-component.googleapis.com
-gcloud services enable sqladmin.googleapis.com
-gcloud services enable redis.googleapis.com
-gcloud services enable cloudbuild.googleapis.com
-gcloud services enable secretmanager.googleapis.com
-gcloud services enable vpcaccess.googleapis.com
-gcloud services enable pubsub.googleapis.com
+gcloud services enable \
+      appengine.googleapis.com \
+      sql-component.googleapis.com \
+      sqladmin.googleapis.com \
+      redis.googleapis.com \
+      cloudbuild.googleapis.com \
+      secretmanager.googleapis.com \
+      vpcaccess.googleapis.com \
+      pubsub.googleapis.com
 
 echo "${textgreen}Creating App Engine project ${textreset}"
 gcloud app create
@@ -119,11 +120,18 @@ echo "${textgreen}Adding Local Development roles${textreset}"
 gcloud projects add-iam-policy-binding $PROJECT_ID \
     --member=serviceAccount:${LOCAL_DEVELOPMENT_SERVICE_ACCOUNT} \
     --role="roles/pubsub.publisher"
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:${LOCAL_DEVELOPMENT_SERVICE_ACCOUNT}" \
+    --role="roles/iam.serviceAccountTokenCreator"
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:${APP_ENGINE_SERVICE_ACCOUNT}" \
+    --role="roles/storage.objectAdmin"
 
 echo "${textgreen}Adding App engine roles${textreset}"
-gcloud secrets add-iam-policy-binding peerlogic-api-env \
+gcloud projects add-iam-policy-binding $PROJECT_ID \
     --member="serviceAccount:${APP_ENGINE_SERVICE_ACCOUNT}" \
-    --role="roles/secretmanager.secretAccessor"
+    --role="roles/iam.serviceAccountTokenCreator"
+
 
 echo "${textgreen}Creating redis instance${textreset}"
 gcloud redis instances create peerlogic-api --size=2 --region=us-west4
