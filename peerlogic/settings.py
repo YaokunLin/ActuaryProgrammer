@@ -19,9 +19,11 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 from dotenv import load_dotenv
-from gcloud import storage
-from google.cloud import pubsub_v1
-from google.cloud import secretmanager
+from google.cloud import (
+    pubsub_v1,
+    secretmanager,
+    storage,
+)
 
 
 # Get an instance of a logger
