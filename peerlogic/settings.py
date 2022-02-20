@@ -127,7 +127,7 @@ except (ValueError, TypeError) as error:
 
 # Google Cloud Storage
 
-CLOUD_STORAGE_IS_ENABLED = os.getenv("PUBLISHER_IS_ENABLED", "False").lower() in ("true", "1", "t")
+CLOUD_STORAGE_IS_ENABLED = os.getenv("CLOUD_STORAGE_IS_ENABLED", "False").lower() in ("true", "1", "t")
 BUCKET_NAME_CALL_AUDIO = os.getenv("BUCKET_NAME_CALL_AUDIO")
 BUCKET_NAME_CALL_AUDIO_PARTIAL = os.getenv("BUCKET_NAME_CALL_AUDIO_PARTIAL")
 BUCKET_NAME_CALL_TRANSCRIPT = os.getenv("BUCKET_NAME_CALL_TRANSCRIPT")
