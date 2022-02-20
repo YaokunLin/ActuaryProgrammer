@@ -21,7 +21,7 @@ class SMSMessage(AuditTrailModel):
     from_number = PhoneNumberField()
     text = models.CharField(max_length=2048)
     message_status = models.CharField(choices=MESSAGE_STATUSES, blank=True, max_length=255)
-    sent_date_time = models.DateTimeField(auto_now=True)
+    sent_date_time = models.DateTimeField(null=True)
     delivered_date_time = models.DateTimeField(null=True)
     errored_date_time = models.DateTimeField(null=True)
     error_message = models.CharField(max_length=180, blank=True)

@@ -11,7 +11,9 @@ from rest_framework.views import APIView
 from .bandwidth.serializers import (
     BandwidthResponseToSMSMessageSerializer,
     CreateSMSMessageAndConvertToBandwidthRequestSerializer,
-    MessageDeliveredEventSerializer, MessageFailedEventSerializer)
+    MessageDeliveredEventSerializer,
+    MessageFailedEventSerializer,
+)
 from .models import SMSMessage
 from .serializers import SMSMessageSerializer
 
@@ -29,6 +31,7 @@ class SMSMessagesDeliveredCallbackView(APIView):
     Callback from Bandwidth letting us know the message was delivered
     https://dev.bandwidth.com/docs/messaging/webhooks/#message-delivered
     """
+
     permission_classes: List = [AllowAny]
     authentication_classes: List = []
 
@@ -47,16 +50,18 @@ class SMSMessagesDeliveredCallbackView(APIView):
         # This will mean your message has been handed off to the Bandwidth's MMSC network,
         # but has not been confirmed at the downstream carrier.
         # https://dev.bandwidth.com/messaging/callbacks/msgDelivered.html
-        message_delivered_event_serializer = MessageDeliveredEventSerializer(sms_message, data=request.data[0])
+        if sms_message:
+            message_delivered_event_serializer = MessageDeliveredEventSerializer(sms_message, data=request.data[0])
+        else:
+            message_delivered_event_serializer = MessageDeliveredEventSerializer(data=request.data[0])
         message_delivered_event_serializer_is_valid = message_delivered_event_serializer.is_valid()
         if not message_delivered_event_serializer_is_valid:
             return Response(message_delivered_event_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         # Update the record in the database
-        message_delivered_event_serializer.save()
+        sms_message = message_delivered_event_serializer.save()
 
         # Response serializer is a normal sms_message serializer
-        sms_message.refresh_from_db()
         serializer = SMSMessageSerializer(sms_message)
 
         return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
@@ -67,6 +72,7 @@ class SMSMessagesFailedCallbackView(APIView):
     Callback from Bandwidth letting us know the message failed to be delivered
     https://dev.bandwidth.com/docs/messaging/webhooks/#message-failed
     """
+
     permission_classes: List = [AllowAny]
     authentication_classes: List = []
 

@@ -6,6 +6,7 @@ from rest_framework import serializers
 from drf_compound_fields.fields import ListField
 
 from phonenumber_field.serializerfields import PhoneNumberField
+from inbox.field_choices import MESSAGE_STATUSES_DELIVERED
 
 from inbox.models import SMSMessage
 
@@ -32,6 +33,10 @@ class MessageDeliveredEventSerializer(serializers.Serializer):
     delivered_date_time = serializers.DateTimeField()
     description = serializers.CharField(max_length=255)
     destination_number = PhoneNumberField(source="to")
+    source_number = PhoneNumberField(
+        source="to",
+        required=False,
+    )
     # add error code to ErroredEventSerializer
     # error_code = serializers.IntegerField(source="errorCode")
     message = MessageSerializer()
@@ -41,6 +46,8 @@ class MessageDeliveredEventSerializer(serializers.Serializer):
     # made available as serializer.validated_data
     # internal value runs first
     def to_internal_value(self, data):
+        # TODO: put in the bandwidth description in the datamodel
+        data.pop("description")
         data["message_status"] = data.pop("type")
         data["delivered_date_time"] = data.pop("time")
         data["destination_number"] = data.pop("to")
@@ -78,8 +85,26 @@ class MessageDeliveredEventSerializer(serializers.Serializer):
 
         return representation
 
+    def create(self, validated_data):
+        message = validated_data.pop("message")
+        validated_data["bandwidth_id"] = message.get("id")
+        validated_data["owner"] = message.get("owner")
+        validated_data["source_number"] = message.get("source_number", "")
+        # destimation_number is in outer
+        validated_data["to_numbers"] = message.get("to")
+        validated_data["from_number"] = message.get("from")
+        validated_data["text"] = message.get("text")
+        validated_data["message_status"] = MESSAGE_STATUSES_DELIVERED
+        # delivered_date_time is in outer json
+        validated_data["direction"] = message.get("direction")
+        validated_data["media"] = message.get("media")
+        validated_data["segment_count"] = message.get("segmentCount")
+        # TODO: Migration - sent_date_time nullable
+        validated_data["sent_date_time"] = message.get("time")
+        return SMSMessage.objects.create(**validated_data)
+
     def update(self, instance, validated_data):
-        instance.message_status = validated_data.get("message_status")
+        instance.message_status = MESSAGE_STATUSES_DELIVERED
         instance.delivered_date_time = validated_data.get("delivered_date_time")
         instance.destination_number = validated_data.get("destination_number")
         instance.direction = validated_data.get("direction", instance.direction)
