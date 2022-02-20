@@ -1,14 +1,16 @@
+import logging
 from typing import Dict
 from django.conf import settings
-from django.db.models.fields import CharField, DateTimeField
-from django.http.request import RawPostDataException
+from django.db.models.fields import CharField
 from rest_framework import serializers
 from drf_compound_fields.fields import ListField
 
 from phonenumber_field.serializerfields import PhoneNumberField
-from inbox.field_choices import MESSAGE_STATUSES_DELIVERED
+from inbox.field_choices import MessageStatuses
 
 from inbox.models import SMSMessage
+
+log = logging.getLogger(__name__)
 
 
 class MessageSerializer(serializers.Serializer):
@@ -26,19 +28,46 @@ class MessageSerializer(serializers.Serializer):
     segmentCount = serializers.IntegerField(min_value=1)
 
 
+class MessageDeliveredEventListSerializer(serializers.ListSerializer):
+    """
+    Serializers with many=True do not support multiple update by default, only multiple create.
+    For updates it is unclear how to deal with insertions and deletions.
+    If you need to support multiple update, use a `ListSerializer` class and override `.update()`
+    so you can specify the behavior exactly.
+    """
+
+    def update(self, instances, validated_data):
+
+        sms_message_mapping = {sms_message.bandwidth_id: sms_message for sms_message in instances}
+        data_mapping = {item["message"]["id"]: item for item in validated_data}
+
+        # Perform creations and updates.
+        updated_sms_messages = []
+        for sms_message_bandwidth_id, data in data_mapping.items():
+            sms_message = sms_message_mapping.get(sms_message_bandwidth_id, None)
+            if sms_message is None:
+                log.info(f"Creating sms message for Bandwidth id {sms_message_bandwidth_id}")
+                updated_sms_message = self.child.create(data)
+                log.info(f"Created sms message with SMSMessage id {updated_sms_message.id} Bandwidth id {sms_message_bandwidth_id}")
+            else:
+                log.info(f"Updating sms message for SMSMessage id {sms_message.id} Bandwidth id {sms_message_bandwidth_id}")
+                updated_sms_message = self.child.update(sms_message, data)
+                log.info(f"Updated sms message with SMSMessage id {updated_sms_message.id} Bandwidth id {sms_message_bandwidth_id}")
+            updated_sms_messages.append(updated_sms_message)
+        return updated_sms_messages
+
+
 class MessageDeliveredEventSerializer(serializers.Serializer):
-    """https://dev.bandwidth.com/docs/messaging/webhooks/#message-delivered"""
+    """
+    For both inbound and outbound
+    https://dev.bandwidth.com/docs/messaging/webhooks/#inbound-message-webhooks
+    https://dev.bandwidth.com/docs/messaging/webhooks/#message-delivered
+    """
 
     message_status = serializers.CharField(max_length=255)
     delivered_date_time = serializers.DateTimeField()
     description = serializers.CharField(max_length=255)
-    destination_number = PhoneNumberField(source="to")
-    source_number = PhoneNumberField(
-        source="to",
-        required=False,
-    )
-    # add error code to ErroredEventSerializer
-    # error_code = serializers.IntegerField(source="errorCode")
+    to = PhoneNumberField()
     message = MessageSerializer()
 
     # Takes the unvalidated incoming data as input and
@@ -50,7 +79,6 @@ class MessageDeliveredEventSerializer(serializers.Serializer):
         data.pop("description")
         data["message_status"] = data.pop("type")
         data["delivered_date_time"] = data.pop("time")
-        data["destination_number"] = data.pop("to")
 
         return data
 
@@ -86,32 +114,49 @@ class MessageDeliveredEventSerializer(serializers.Serializer):
         return representation
 
     def create(self, validated_data):
+        validated_data["destination_number"] = validated_data.pop("to")
         message = validated_data.pop("message")
         validated_data["bandwidth_id"] = message.get("id")
         validated_data["owner"] = message.get("owner")
-        validated_data["source_number"] = message.get("source_number", "")
-        # destimation_number is in outer
         validated_data["to_numbers"] = message.get("to")
         validated_data["from_number"] = message.get("from")
         validated_data["text"] = message.get("text")
-        validated_data["message_status"] = MESSAGE_STATUSES_DELIVERED
+        message_status = message.get("message_status")
+        if message_status == "message-received":
+            validated_data["message_status"] = MessageStatuses.RECEIVED
+        elif message_status == "message-delivered":
+            validated_data["message_status"] = MessageStatuses.DELIVERED
         # delivered_date_time is in outer json
         validated_data["direction"] = message.get("direction")
         validated_data["media"] = message.get("media")
         validated_data["segment_count"] = message.get("segmentCount")
-        # TODO: Migration - sent_date_time nullable
         validated_data["sent_date_time"] = message.get("time")
         return SMSMessage.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
-        instance.message_status = MESSAGE_STATUSES_DELIVERED
-        instance.delivered_date_time = validated_data.get("delivered_date_time")
-        instance.destination_number = validated_data.get("destination_number")
-        instance.direction = validated_data.get("direction", instance.direction)
-        instance.segment_count = validated_data.get("segment_count", instance.segment_count)
-        instance.owner = validated_data.get("owner", instance.owner)
+        instance.destination_number = validated_data.pop("to")
+        message = validated_data.pop("message")
+        instance.bandwidth_id = message.get("id")
+        instance.owner = message.get("owner")
+        instance.to_numbers = message.get("to")
+        instance.from_number = message.get("from")
+        instance.text = message.get("text")
+        message_status = message.get("message_status")
+        if message_status == "message-received":
+            instance.message_status = MessageStatuses.RECEIVED
+        elif message_status == "message-delivered":
+            instance.message_status = MessageStatuses.DELIVERED
+        # delivered_date_time is in outer json
+        instance.direction = message.get("direction")
+        instance.media = message.get("media")
+        instance.segment_count = message.get("segmentCount")
+        instance.sent_date_time = message.get("time")
+
         instance.save()
         return instance
+
+    class Meta:
+        list_serializer_class = MessageDeliveredEventListSerializer
 
 
 class CreateSMSMessageAndConvertToBandwidthRequestSerializer(serializers.Serializer):
@@ -137,7 +182,6 @@ class MessageFailedEventSerializer(serializers.Serializer):
     message_status = serializers.CharField(max_length=255)
     delivered_date_time = serializers.DateTimeField()
     description = serializers.CharField(max_length=255)
-    destination_number = PhoneNumberField(source="to")
     error_code = serializers.IntegerField(source="errorCode")
     message = MessageSerializer()
 
@@ -148,7 +192,6 @@ class MessageFailedEventSerializer(serializers.Serializer):
     def to_internal_value(self, data):
         data["message_status"] = data.pop("type")
         data["errored_date_time"] = data.pop("time")
-        data["destination_number"] = data.pop("to")
         data["error_code"] = data.pop("errorCode")
         data["error_message"] = data.pop("description")
 
@@ -199,7 +242,6 @@ class MessageFailedEventSerializer(serializers.Serializer):
         instance.errored_date_time = validated_data.get("errored_date_time")
         instance.error_code = validated_data.get("error_code")
         instance.error_message = validated_data.get("error_message")
-        instance.destination_number = validated_data.get("destination_number")
         instance.direction = validated_data.get("direction", instance.direction)
         instance.segment_count = validated_data.get("segment_count", instance.segment_count)
         instance.owner = validated_data.get("owner", instance.owner)

@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 from .bandwidth.serializers import (
     BandwidthResponseToSMSMessageSerializer,
     CreateSMSMessageAndConvertToBandwidthRequestSerializer,
+    MessageDeliveredEventListSerializer,
     MessageDeliveredEventSerializer,
     MessageFailedEventSerializer,
 )
@@ -39,7 +40,7 @@ class SMSMessagesDeliveredCallbackView(APIView):
         bandwidth_ids = [item["message"]["id"] for item in request.data]
 
         # Get the existing database records
-        sms_message = SMSMessage.objects.filter(bandwidth_id__in=bandwidth_ids).first()
+        sms_messages = SMSMessage.objects.filter(bandwidth_id__in=bandwidth_ids)
 
         # Check inputs
         # IMPORTANT NOTE ABOUT MMS AND GROUP MESSAGES!
@@ -50,19 +51,20 @@ class SMSMessagesDeliveredCallbackView(APIView):
         # This will mean your message has been handed off to the Bandwidth's MMSC network,
         # but has not been confirmed at the downstream carrier.
         # https://dev.bandwidth.com/messaging/callbacks/msgDelivered.html
-        if sms_message:
-            message_delivered_event_serializer = MessageDeliveredEventSerializer(sms_message, data=request.data[0])
+
+        if sms_messages:
+            message_delivered_event_serializer = MessageDeliveredEventSerializer(sms_messages, data=request.data, many=True)
         else:
-            message_delivered_event_serializer = MessageDeliveredEventSerializer(data=request.data[0])
+            message_delivered_event_serializer = MessageDeliveredEventSerializer(data=request.data, many=True)
         message_delivered_event_serializer_is_valid = message_delivered_event_serializer.is_valid()
         if not message_delivered_event_serializer_is_valid:
             return Response(message_delivered_event_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         # Update the record in the database
-        sms_message = message_delivered_event_serializer.save()
+        sms_messages = message_delivered_event_serializer.save()
 
         # Response serializer is a normal sms_message serializer
-        serializer = SMSMessageSerializer(sms_message)
+        serializer = SMSMessageSerializer(sms_messages, many=True)
 
         return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 
