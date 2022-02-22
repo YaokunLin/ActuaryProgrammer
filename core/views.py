@@ -1,21 +1,22 @@
 import logging
-from typing import Dict
 
 from django.conf import settings
+from django.db import transaction
 from django.http import (
+    HttpRequest,
     HttpResponseBadRequest,
 )
-from django.db import transaction
 from django.utils import timezone
+from pydantic import BaseModel
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.setup_user_and_practice import create_agent, create_user_telecom, save_user_activity_and_token, setup_practice, setup_user
-
+from core.setup_user_and_practice import create_agent, create_user_telecom, save_user_activity_and_token, setup_practice, setup_user, update_user_on_refresh
 from .models import Client, Patient, Practice, PracticeTelecom, VoipProvider
 from .serializers import ClientSerializer, PatientSerializer, PracticeSerializer, PracticeTelecomSerializer, VoipProviderSerializer
+
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -25,70 +26,158 @@ class LoginView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
 
-    NETSAPIENS_AUTH_TOKEN_REQUIRED_KEYS = [
-        "username",
-        "user",
-        "territory",
-        "domain",
-        "site",
-        "group",
-        "uid",
-        "scope",
-        "user_email",
-        "displayName",
-        "access_token",
-        "expires_in",
-        "token_type",
-        "refresh_token",
-        "client_id",
-        "apiversion",
-    ]
+    class NetsapiensAuthToken(BaseModel):
+        # Expected format as of 2022-02-22
+        access_token: str  # alphanumberic
+        apiversion: str  # e.g. "Version: 41.2.3"
+        client_id: str  # peerlogic-api-ENVIRONMENT
+        displayName: str  # USER NAME
+        domain: str  # e.g. "Peerlogic"
+        expires_in: int  # e.g. "3600"
+        refresh_token: str  # alphanumberic
+        scope: str  # e.g. "Super User"
+        territory: str  # "Peerlogic"
+        token_type: str  # "Bearer"
+        uid: str  # e.g. "1234@Peerlogic"
+        user: int  # e.g. "1234"
+        user_email: str  # e.g. "r-and-d@peerlogic.com"
+        username: str  # e.g. "1234@Peerlogic"
+
+    class NetsapiensRefreshToken(BaseModel):
+        access_token: str  # alphanumberic
+        apiversion: str  # e.g. "Version: 41.2.3"
+        client_id: str  # peerlogic-api-ENVIRONMENT
+        domain: str  # e.g. "Peerlogic"
+        expires: int  # time when this token expires in seconds since epoch e.g. "1645728699"
+        expires_in: int  # e.g. "3600"
+        rate_limit: str  # e.g. "0", yes this is a string and not a number
+        refresh_token: str  # alphanumberic
+        scope: str  # e.g. "Super User"
+        territory: str  # "Peerlogic"
+        token_type: str  # "Bearer"
+        uid: str  # e.g. "1234@Peerlogic"
 
     def post(self, request, format=None):
+        default_action = self._login_to_netsapiens
+        grant_handler_map = {
+            "password": default_action,
+            "refresh_token": self._refresh_token_with_netsapiens,
+        }
+
+        netsapiens_access_token_response = None
+
         try:
-            username = request.data.get("username")
-            password = request.data.get("password")
-            log.info(f"User is attempting login. username: '{username}'")
-
-            if not (username and password):
-                log.info(f"Bad Request detected for login. Missing one or more required fields.")
-                return HttpResponseBadRequest("Missing one or more required fields: 'username' and 'password'")
-
-            data = {
-                "grant_type": "password",
-                "format": "json",
-                "client_id": settings.NETSAPIENS_CLIENT_ID,
-                "client_secret": settings.NETSAPIENS_CLIENT_SECRET,
-                "username": username,
-                "password": password,
-            }
-
-            netsapiens_access_token_response = settings.NETSAPIENS_SYSTEM_CLIENT.request("POST", settings.NETSAPIENS_ACCESS_TOKEN_URL, data=data)
-            netsapiens_access_token_response.raise_for_status()
+            grant_type = request.data.get("grant_type")
+            handler = grant_handler_map.get(grant_type, default_action)
+            netsapiens_access_token_response = handler(request)
             netsapiens_user = netsapiens_access_token_response.json()
-            self._validate_access_token_response(netsapiens_user)
+
+            return Response(status=200, data=netsapiens_user)
         except Exception as e:
             log.exception(e)
-            return Response(status=netsapiens_access_token_response.status_code, data={"error": e})
+            return Response(status=403, data={"error": "Forbidden"})
 
+    def _login_to_netsapiens(
+        self,
+        request: HttpRequest,
+        client_id: str = settings.NETSAPIENS_CLIENT_ID,
+        client_secret: str = settings.NETSAPIENS_CLIENT_SECRET,
+        netsapiens_client: str = settings.NETSAPIENS_SYSTEM_CLIENT,
+    ) -> Response:
+
+        username = request.data.get("username")
+        password = request.data.get("password")
+
+        log.info(f"User is attempting login. username='{username}'.")
+
+        # validate
+        if not (username and password):
+            log.info(f"Bad Request detected for login. Missing one or more required fields.")
+            return HttpResponseBadRequest("Missing one or more required fields: 'username' and 'password'")
+
+        data = {
+            "grant_type": "password",
+            "format": "json",
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "username": username,
+            "password": password,
+        }
+
+        netsapiens_access_token_response = netsapiens_client.request("POST", settings.NETSAPIENS_ACCESS_TOKEN_URL, data=data)
+        netsapiens_access_token_response.raise_for_status()
+        response_json = netsapiens_access_token_response.json()
+
+        netsapiens_auth_token = LoginView.NetsapiensAuthToken.parse_obj(response_json)
+        self._setup_user_and_save_activity(netsapiens_auth_token)
+
+        return netsapiens_access_token_response
+
+    def _refresh_token_with_netsapiens(
+        self,
+        request: HttpRequest,
+        client_id: str = settings.NETSAPIENS_CLIENT_ID,
+        client_secret: str = settings.NETSAPIENS_CLIENT_SECRET,
+        netsapiens_client: str = settings.NETSAPIENS_SYSTEM_CLIENT,
+    ) -> Response:
+
+        refresh_token = request.data.get("refresh_token")
+
+        log.info(f"User is attempting to refresh their access token.")
+
+        data = {
+            "grant_type": "refresh_token",
+            "format": "json",
+            "refresh_token": refresh_token,
+            "client_id": client_id,
+            "client_secret": client_secret,
+        }
+
+        # netsapiens uses a GET with query parameters
+        # NOTE: this is done both ways in the field but the appropriate way may be for POSTs with body params
+        netsapiens_access_token_response = netsapiens_client.request("GET", settings.NETSAPIENS_ACCESS_TOKEN_URL, params=data)
+        netsapiens_access_token_response.raise_for_status()
+        netsapiens_response_json = netsapiens_access_token_response.json()
+        netsapiens_refresh_token = LoginView.NetsapiensRefreshToken.parse_obj(netsapiens_response_json)
+
+        self._update_user_and_save_activity(refresh_token=refresh_token, netsapiens_refresh_token=netsapiens_refresh_token)
+
+        return netsapiens_access_token_response
+
+    def _update_user_and_save_activity(self, refresh_token: str, netsapiens_refresh_token: NetsapiensRefreshToken) -> None:
         now = timezone.now()
 
         with transaction.atomic():
-            user, user_created = setup_user(now, netsapiens_user)
+            update_user_on_refresh(
+                previous_refresh_token=refresh_token,
+                new_refresh_token=netsapiens_refresh_token.refresh_token,
+                login_time=now,
+                expires_in_seconds=netsapiens_refresh_token.expires_in,
+            )
 
-            save_user_activity_and_token(now, netsapiens_user, user)
+    def _setup_user_and_save_activity(self, netsapiens_auth_token: NetsapiensAuthToken) -> None:
+        now = timezone.now()
+
+        with transaction.atomic():
+            user, user_created = setup_user(
+                username=netsapiens_auth_token.username,
+                name=netsapiens_auth_token.displayName,
+                email=netsapiens_auth_token.user_email,
+                domain=netsapiens_auth_token.domain,
+                login_time=now,
+            )
+            save_user_activity_and_token(
+                access_token=netsapiens_auth_token.access_token,
+                refresh_token=netsapiens_auth_token.refresh_token,
+                login_time=now,
+                expires_in_seconds=netsapiens_auth_token.expires_in,
+                user=user,
+            )
 
             if user_created:
                 create_user_telecom(user)
-                practice, _ = setup_practice(netsapiens_user["domain"])
+                practice, _ = setup_practice(netsapiens_auth_token.domain)
                 create_agent(user, practice)
-
-        return Response(status=200, data=netsapiens_user)
-
-    def _validate_access_token_response(self, response_json: Dict):
-        if not all(key in self.NETSAPIENS_AUTH_TOKEN_REQUIRED_KEYS for key in response_json):
-            log.exception("Wrong netsapiens payload to get or create a user")
-            raise ValueError("Wrong netsapiens payload to get or create a user")
 
 
 class ClientViewset(viewsets.ModelViewSet):

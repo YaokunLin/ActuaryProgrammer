@@ -7,8 +7,8 @@ django-countries==7.2.1
 django-extensions==3.0.5
 django-filter==2.3.0
 django-phonenumber-field[phonenumbers]==5.2.0
-djangorestframework>=3.11.1
 django-userforeignkey==0.3.0
+djangorestframework>=3.11.1
 drf_compound_fields==2.0.0
 drf-nested-routers==0.93.4
 gcloud==0.18.3
@@ -16,11 +16,12 @@ google-cloud-pubsub==2.9.0
 google-cloud-secret-manager==2.8.0
 google-cloud-storage==2.1.0
 gunicorn==20.0.4
+pydantic==1.9.0
+python-dotenv==0.15.0
+psycopg2-binary==2.8.6
 redis==3.5.3
 requests==2.25.0
 shortuuid==1.0.1
-psycopg2-binary==2.8.6
-python-dotenv==0.15.0
 twilio==7.3.2
 wheel==0.35.1
 xmltodict==0.12.0
