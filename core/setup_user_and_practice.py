@@ -1,9 +1,17 @@
+from datetime import datetime
+import logging
 from typing import Dict, Tuple
 
 from django.conf import settings
+from django.core.exceptions import MultipleObjectsReturned
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
 from .models import Agent, Practice, PracticeTelecom, User, UserTelecom
+
+
+# Get an instance of a logger
+log = logging.getLogger(__name__)
 
 
 def setup_practice(domain: str) -> Tuple[Practice, bool]:
@@ -41,6 +49,24 @@ def setup_user(login_time: timezone, netsapiens_user: Dict[str, str]) -> Tuple[U
         user,
         created,
     )
+
+
+def update_user_on_refresh(previous_refresh_token: str, new_refresh_token: str, login_time: timezone, expires_in_seconds: int) -> User:
+    try:
+        #
+        user = get_object_or_404(User, refresh_token=previous_refresh_token)
+        user.refresh_token = new_refresh_token
+        user.last_login = login_time
+        user.token_expiry = login_time + timezone.timedelta(seconds=expires_in_seconds)
+        user.save()
+    except MultipleObjectsReturned as mor:
+        msg = "Error occurred identifying user by refresh token. Please contact the system administrator."
+        log.critical(
+            f"Multiple users were returned for the given refresh_token='{new_refresh_token}'! This should NEVER occur. INVESTIGATE IMMEDIATELY. {str(mor)}"
+        )
+        raise ValueError(msg)
+
+    return user
 
 
 def save_user_activity_and_token(login_time: timezone, netsapiens_user: Dict[str, str], user: User) -> User:

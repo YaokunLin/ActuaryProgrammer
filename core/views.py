@@ -14,7 +14,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from core.setup_user_and_practice import create_agent, create_user_telecom, save_user_activity_and_token, setup_practice, setup_user
+from core.setup_user_and_practice import create_agent, create_user_telecom, save_user_activity_and_token, setup_practice, setup_user, update_user_on_refresh
 from .models import Client, Patient, Practice, PracticeTelecom, VoipProvider
 from .serializers import ClientSerializer, PatientSerializer, PracticeSerializer, PracticeTelecomSerializer, VoipProviderSerializer
 
@@ -69,12 +69,11 @@ class LoginView(APIView):
 
         try:
             grant_type = request.data.get("grant_type")
-            netsapiens_access_token_response = grant_handler_map.get(grant_type, default_action)(request)
+            handler = grant_handler_map.get(grant_type, default_action)
+            netsapiens_access_token_response = handler(request)
             netsapiens_user = netsapiens_access_token_response.json()
-            self._setup_user_and_save_activity(netsapiens_user)
 
             return Response(status=200, data=netsapiens_user)
-
         except Exception as e:
             log.exception(e)
             return Response(status=netsapiens_access_token_response.status_code, data={"error": e})
@@ -111,6 +110,8 @@ class LoginView(APIView):
         response_json = netsapiens_access_token_response.json()
         LoginView.NetsapiensAuthToken.parse_obj(response_json)
 
+        self._setup_user_and_save_activity(response_json)
+
         return netsapiens_access_token_response
 
     def _refresh_token_with_netsapiens(
@@ -137,10 +138,23 @@ class LoginView(APIView):
         # NOTE: this is done both ways in the field but the appropriate way may be for POSTs with body params
         netsapiens_access_token_response = netsapiens_client.request("GET", settings.NETSAPIENS_ACCESS_TOKEN_URL, params=data)
         netsapiens_access_token_response.raise_for_status()
-        response_json = netsapiens_access_token_response.json()
-        LoginView.NetsapiensRefreshToken.parse_obj(response_json)
+        netsapiens_response_json = netsapiens_access_token_response.json()
+        netsapiens_refresh_token = LoginView.NetsapiensRefreshToken.parse_obj(netsapiens_response_json)
+
+        self._update_user_and_save_activity(refresh_token=refresh_token, netsapiens_refresh_token=netsapiens_refresh_token)
 
         return netsapiens_access_token_response
+
+    def _update_user_and_save_activity(self, refresh_token: str, netsapiens_refresh_token: NetsapiensRefreshToken) -> None:
+        now = timezone.now()
+
+        with transaction.atomic():
+            update_user_on_refresh(
+                previous_refresh_token=refresh_token,
+                new_refresh_token=netsapiens_refresh_token.refresh_token,
+                login_time=now,
+                expires_in_seconds=netsapiens_refresh_token.expires_in,
+            )
 
     def _setup_user_and_save_activity(self, netsapiens_user: Dict) -> None:
         now = timezone.now()
