@@ -4,8 +4,8 @@ from typing import Dict
 from django.conf import settings
 from django.db import transaction
 from django.http import (
-    HttpResponseBadRequest,
     HttpRequest,
+    HttpResponseBadRequest,
 )
 from django.utils import timezone
 from pydantic import BaseModel
