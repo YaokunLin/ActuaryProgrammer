@@ -2,20 +2,21 @@ import logging
 from typing import Dict
 
 from django.conf import settings
+from django.db import transaction
 from django.http import (
     HttpResponseBadRequest,
 )
-from django.db import transaction
 from django.utils import timezone
+from pydantic import BaseModel
 from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.setup_user_and_practice import create_agent, create_user_telecom, save_user_activity_and_token, setup_practice, setup_user
-
 from .models import Client, Patient, Practice, PracticeTelecom, VoipProvider
 from .serializers import ClientSerializer, PatientSerializer, PracticeSerializer, PracticeTelecomSerializer, VoipProviderSerializer
+
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -25,24 +26,42 @@ class LoginView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
 
-    NETSAPIENS_AUTH_TOKEN_REQUIRED_KEYS = [
-        "username",
-        "user",
-        "territory",
-        "domain",
-        "site",
-        "group",
-        "uid",
-        "scope",
-        "user_email",
-        "displayName",
-        "access_token",
-        "expires_in",
-        "token_type",
-        "refresh_token",
-        "client_id",
-        "apiversion",
-    ]
+    class NetsapiensAuthToken(BaseModel):
+        # Expected format as of 2021-12-10
+        # {
+        #     "access_token": "thisisanalphanumericbearertoken",  # REQUIRED VALUE
+        #     "apiversion": "Version: 41.2.3",
+        #     "client_id": "peerlogic-ml-rest-api-ENV",
+        #     "displayName": "USER NAME",
+        #     "domain": "Peerlogic",
+        #     "expires_in": 3600,
+        #     "refresh_token": "thisisanalphanumericrefreshtoken",
+        #     "scope": "Super User",
+        #     "territory": "Peerlogic",
+        #     "token_type": "Bearer",
+        #     "uid": "1234@Peerlogic",
+        #     "user": "1234",
+        #     "user_email": "systemuser@peerlogic.com",
+        #     "username": "1234@Peerlogic"
+        # }
+
+        access_token: str
+        apiversion: str
+        client_id: str
+
+        displayName: str
+        domain: str
+
+        expires_in: int
+
+        refresh_token: str
+        scope: str
+        territory: str
+        token_type: str
+        uid: str
+        user: int
+        user_email: str
+        username: str
 
     def post(self, request, format=None):
         netsapiens_access_token_response = None
@@ -77,8 +96,14 @@ class LoginView(APIView):
             log.exception(e)
             return Response(status=netsapiens_access_token_response.status_code, data={"error": e})
 
-
-    def _login_to_netsapiens(self, username: str,  password: str, client_id: str = settings.NETSAPIENS_CLIENT_ID, client_secret: str = settings.NETSAPIENS_CLIENT_SECRET, netsapiens_client: str = settings.NETSAPIENS_SYSTEM_CLIENT) -> Response:
+    def _login_to_netsapiens(
+        self,
+        username: str,
+        password: str,
+        client_id: str = settings.NETSAPIENS_CLIENT_ID,
+        client_secret: str = settings.NETSAPIENS_CLIENT_SECRET,
+        netsapiens_client: str = settings.NETSAPIENS_SYSTEM_CLIENT,
+    ) -> Response:
         data = {
             "grant_type": "password",
             "format": "json",
@@ -99,9 +124,12 @@ class LoginView(APIView):
         pass
 
     def _validate_access_token_response(self, response_json: Dict):
-        if not all(key in self.NETSAPIENS_AUTH_TOKEN_REQUIRED_KEYS for key in response_json):
-            log.exception("Wrong netsapiens payload to get or create a user")
-            raise ValueError("Wrong netsapiens payload to get or create a user")
+        try:
+            LoginView.NetsapiensAuthToken.parse_obj(response_json)
+        except:
+            msg = "Problem occurred authenticating with OAuth provider. Payload is invalid"
+            log.exception(msg)
+            raise ValueError(msg)
 
 
 class ClientViewset(viewsets.ModelViewSet):
