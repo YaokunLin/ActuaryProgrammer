@@ -1,5 +1,4 @@
 import logging
-from typing import Dict
 
 from django.conf import settings
 from django.db import transaction
@@ -76,7 +75,7 @@ class LoginView(APIView):
             return Response(status=200, data=netsapiens_user)
         except Exception as e:
             log.exception(e)
-            return Response(status=netsapiens_access_token_response.status_code, data={"error": e})
+            return Response(status=403, data={"error": "Forbidden"})
 
     def _login_to_netsapiens(
         self,
@@ -108,9 +107,9 @@ class LoginView(APIView):
         netsapiens_access_token_response = netsapiens_client.request("POST", settings.NETSAPIENS_ACCESS_TOKEN_URL, data=data)
         netsapiens_access_token_response.raise_for_status()
         response_json = netsapiens_access_token_response.json()
-        LoginView.NetsapiensAuthToken.parse_obj(response_json)
 
-        self._setup_user_and_save_activity(response_json)
+        netsapiens_auth_token = LoginView.NetsapiensAuthToken.parse_obj(response_json)
+        self._setup_user_and_save_activity(netsapiens_auth_token)
 
         return netsapiens_access_token_response
 
@@ -156,17 +155,28 @@ class LoginView(APIView):
                 expires_in_seconds=netsapiens_refresh_token.expires_in,
             )
 
-    def _setup_user_and_save_activity(self, netsapiens_user: Dict) -> None:
+    def _setup_user_and_save_activity(self, netsapiens_auth_token: NetsapiensAuthToken) -> None:
         now = timezone.now()
 
         with transaction.atomic():
-            user, user_created = setup_user(now, netsapiens_user)
-
-            save_user_activity_and_token(now, netsapiens_user, user)
+            user, user_created = setup_user(
+                username=netsapiens_auth_token.username,
+                name=netsapiens_auth_token.displayName,
+                email=netsapiens_auth_token.user_email,
+                domain=netsapiens_auth_token.domain,
+                login_time=now,
+            )
+            save_user_activity_and_token(
+                access_token=netsapiens_auth_token.access_token,
+                refresh_token=netsapiens_auth_token.refresh_token,
+                login_time=now,
+                expires_in_seconds=netsapiens_auth_token.expires_in,
+                user=user,
+            )
 
             if user_created:
                 create_user_telecom(user)
-                practice, _ = setup_practice(netsapiens_user["domain"])
+                practice, _ = setup_practice(netsapiens_auth_token.domain)
                 create_agent(user, practice)
 
 

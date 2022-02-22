@@ -30,11 +30,8 @@ def create_practice_telecom(domain: str, practice: Practice):
     return (practice_telecom, created)
 
 
-def setup_user(login_time: timezone, netsapiens_user: Dict[str, str]) -> Tuple[User, bool]:
-    username = netsapiens_user["username"]
-    name = netsapiens_user["displayName"]
-    email = netsapiens_user["user_email"]
-    is_staff = netsapiens_user["domain"] == settings.IS_STAFF_TELECOM_DOMAN
+def setup_user(username: str, name: str, email: str, domain: str, login_time: timezone) -> Tuple[User, bool]:
+    is_staff = domain == settings.IS_STAFF_TELECOM_DOMAN
 
     user, created = User.objects.get_or_create(
         username=username,
@@ -53,7 +50,6 @@ def setup_user(login_time: timezone, netsapiens_user: Dict[str, str]) -> Tuple[U
 
 def update_user_on_refresh(previous_refresh_token: str, new_refresh_token: str, login_time: timezone, expires_in_seconds: int) -> User:
     try:
-        #
         user = get_object_or_404(User, refresh_token=previous_refresh_token)
         user.refresh_token = new_refresh_token
         user.last_login = login_time
@@ -69,10 +65,8 @@ def update_user_on_refresh(previous_refresh_token: str, new_refresh_token: str, 
     return user
 
 
-def save_user_activity_and_token(login_time: timezone, netsapiens_user: Dict[str, str], user: User) -> User:
-    access_token = netsapiens_user["access_token"]
-    refresh_token = netsapiens_user["refresh_token"]
-    token_expiry = login_time + timezone.timedelta(seconds=netsapiens_user["expires_in"])
+def save_user_activity_and_token(access_token: str, refresh_token: str, expires_in_seconds: int, login_time: timezone, user: User) -> User:
+    token_expiry = login_time + timezone.timedelta(seconds=expires_in_seconds)
 
     # user activity
     user.is_active = True
