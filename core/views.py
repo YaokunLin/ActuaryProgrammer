@@ -69,7 +69,9 @@ class LoginView(APIView):
         try:
             username = request.data.get("username")
             password = request.data.get("password")
-            log.info(f"User is attempting login. username: '{username}'")
+            grant_type = request.data.get("grant_type", "password")
+
+            log.info(f"User is attempting login. username='{username}'. grant_type='{grant_type}'")
 
             if not (username and password):
                 log.info(f"Bad Request detected for login. Missing one or more required fields.")
@@ -77,18 +79,7 @@ class LoginView(APIView):
 
             netsapiens_access_token_response = self._login_to_netsapiens(username, password)
             netsapiens_user = netsapiens_access_token_response.json()
-
-            now = timezone.now()
-
-            with transaction.atomic():
-                user, user_created = setup_user(now, netsapiens_user)
-
-                save_user_activity_and_token(now, netsapiens_user, user)
-
-                if user_created:
-                    create_user_telecom(user)
-                    practice, _ = setup_practice(netsapiens_user["domain"])
-                    create_agent(user, practice)
+            self._setup_user_and_save_activity(netsapiens_user)
 
             return Response(status=200, data=netsapiens_user)
 
@@ -104,6 +95,7 @@ class LoginView(APIView):
         client_secret: str = settings.NETSAPIENS_CLIENT_SECRET,
         netsapiens_client: str = settings.NETSAPIENS_SYSTEM_CLIENT,
     ) -> Response:
+
         data = {
             "grant_type": "password",
             "format": "json",
@@ -115,21 +107,26 @@ class LoginView(APIView):
 
         netsapiens_access_token_response = netsapiens_client.request("POST", settings.NETSAPIENS_ACCESS_TOKEN_URL, data=data)
         netsapiens_access_token_response.raise_for_status()
-        netsapiens_user = netsapiens_access_token_response.json()
-        self._validate_access_token_response(netsapiens_user)
+        response_json = netsapiens_access_token_response.json()
+        LoginView.NetsapiensAuthToken.parse_obj(response_json)
 
         return netsapiens_access_token_response
 
+    def _setup_user_and_save_activity(self, netsapiens_user: Dict) -> None:
+        now = timezone.now()
+
+        with transaction.atomic():
+            user, user_created = setup_user(now, netsapiens_user)
+
+            save_user_activity_and_token(now, netsapiens_user, user)
+
+            if user_created:
+                create_user_telecom(user)
+                practice, _ = setup_practice(netsapiens_user["domain"])
+                create_agent(user, practice)
+
     def _refresh(self) -> Response:
         pass
-
-    def _validate_access_token_response(self, response_json: Dict):
-        try:
-            LoginView.NetsapiensAuthToken.parse_obj(response_json)
-        except:
-            msg = "Problem occurred authenticating with OAuth provider. Payload is invalid"
-            log.exception(msg)
-            raise ValueError(msg)
 
 
 class ClientViewset(viewsets.ModelViewSet):
