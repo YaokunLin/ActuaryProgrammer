@@ -1,5 +1,6 @@
 import logging
 from typing import Dict
+from urllib.request import Request
 
 from django.conf import settings
 from django.db import transaction
@@ -27,57 +28,48 @@ class LoginView(APIView):
     permission_classes = [AllowAny]
 
     class NetsapiensAuthToken(BaseModel):
-        # Expected format as of 2021-12-10
-        # {
-        #     "access_token": "thisisanalphanumericbearertoken",  # REQUIRED VALUE
-        #     "apiversion": "Version: 41.2.3",
-        #     "client_id": "peerlogic-ml-rest-api-ENV",
-        #     "displayName": "USER NAME",
-        #     "domain": "Peerlogic",
-        #     "expires_in": 3600,
-        #     "refresh_token": "thisisanalphanumericrefreshtoken",
-        #     "scope": "Super User",
-        #     "territory": "Peerlogic",
-        #     "token_type": "Bearer",
-        #     "uid": "1234@Peerlogic",
-        #     "user": "1234",
-        #     "user_email": "systemuser@peerlogic.com",
-        #     "username": "1234@Peerlogic"
-        # }
+        # Expected format as of 2022-02-22
+        access_token: str  # alphanumberic
+        apiversion: str  # e.g. "Version: 41.2.3"
+        client_id: str  # peerlogic-api-ENVIRONMENT
+        displayName: str  # USER NAME
+        domain: str  # e.g. "Peerlogic"
+        expires_in: int  # e.g. "3600"
+        refresh_token: str  # alphanumberic
+        scope: str  # e.g. "Super User"
+        territory: str  # "Peerlogic"
+        token_type: str  # "Bearer"
+        uid: str  # e.g. "1234@Peerlogic"
+        user: int  # e.g. "1234"
+        user_email: str  # e.g. "r-and-d@peerlogic.com"
+        username: str  # e.g. "1234@Peerlogic"
 
-        access_token: str
-        apiversion: str
-        client_id: str
-
-        displayName: str
-        domain: str
-
-        expires_in: int
-
-        refresh_token: str
-        scope: str
-        territory: str
-        token_type: str
-        uid: str
-        user: int
-        user_email: str
-        username: str
+    class NetsapiensRefreshToken(BaseModel):
+        access_token: str  # alphanumberic
+        apiversion: str  # e.g. "Version: 41.2.3"
+        client_id: str  # peerlogic-api-ENVIRONMENT
+        domain: str  # e.g. "Peerlogic"
+        expires: int  # time when this token expires in seconds since epoch e.g. "1645728699"
+        expires_in: int  # e.g. "3600"
+        rate_limit: str  # e.g. "0", yes this is a string and not a number
+        refresh_token: str  # alphanumberic
+        scope: str  # e.g. "Super User"
+        territory: str  # "Peerlogic"
+        token_type: str  # "Bearer"
+        uid: str  # e.g. "1234@Peerlogic"
 
     def post(self, request, format=None):
+        default_action = self._login_to_netsapiens
+        grant_handler_map = {
+            "password": default_action,
+            "refresh_token": self._refresh_token_with_netsapiens,
+        }
+
         netsapiens_access_token_response = None
 
         try:
-            username = request.data.get("username")
-            password = request.data.get("password")
-            grant_type = request.data.get("grant_type", "password")
-
-            log.info(f"User is attempting login. username='{username}'. grant_type='{grant_type}'")
-
-            if not (username and password):
-                log.info(f"Bad Request detected for login. Missing one or more required fields.")
-                return HttpResponseBadRequest("Missing one or more required fields: 'username' and 'password'")
-
-            netsapiens_access_token_response = self._login_to_netsapiens(username, password)
+            grant_type = request.data.get("grant_type")
+            netsapiens_access_token_response = grant_handler_map.get(grant_type, default_action)(request)
             netsapiens_user = netsapiens_access_token_response.json()
             self._setup_user_and_save_activity(netsapiens_user)
 
@@ -89,12 +81,21 @@ class LoginView(APIView):
 
     def _login_to_netsapiens(
         self,
-        username: str,
-        password: str,
+        request: Request,
         client_id: str = settings.NETSAPIENS_CLIENT_ID,
         client_secret: str = settings.NETSAPIENS_CLIENT_SECRET,
         netsapiens_client: str = settings.NETSAPIENS_SYSTEM_CLIENT,
     ) -> Response:
+
+        username = request.data.get("username")
+        password = request.data.get("password")
+
+        log.info(f"User is attempting login. username='{username}'.")
+
+        # validate
+        if not (username and password):
+            log.info(f"Bad Request detected for login. Missing one or more required fields.")
+            return HttpResponseBadRequest("Missing one or more required fields: 'username' and 'password'")
 
         data = {
             "grant_type": "password",
@@ -112,6 +113,35 @@ class LoginView(APIView):
 
         return netsapiens_access_token_response
 
+    def _refresh_token_with_netsapiens(
+        self,
+        request: Request,
+        client_id: str = settings.NETSAPIENS_CLIENT_ID,
+        client_secret: str = settings.NETSAPIENS_CLIENT_SECRET,
+        netsapiens_client: str = settings.NETSAPIENS_SYSTEM_CLIENT,
+    ) -> Response:
+
+        refresh_token = request.data.get("refresh_token")
+
+        log.info(f"User is attempting to refresh their access token.")
+
+        data = {
+            "grant_type": "refresh_token",
+            "format": "json",
+            "refresh_token": refresh_token,
+            "client_id": client_id,
+            "client_secret": client_secret,
+        }
+
+        # netsapiens uses a GET with query parameters
+        # NOTE: this is done both ways in the field but the appropriate way may be for POSTs with body params
+        netsapiens_access_token_response = netsapiens_client.request("GET", settings.NETSAPIENS_ACCESS_TOKEN_URL, params=data)
+        netsapiens_access_token_response.raise_for_status()
+        response_json = netsapiens_access_token_response.json()
+        LoginView.NetsapiensRefreshToken.parse_obj(response_json)
+
+        return netsapiens_access_token_response
+
     def _setup_user_and_save_activity(self, netsapiens_user: Dict) -> None:
         now = timezone.now()
 
@@ -124,9 +154,6 @@ class LoginView(APIView):
                 create_user_telecom(user)
                 practice, _ = setup_practice(netsapiens_user["domain"])
                 create_agent(user, practice)
-
-    def _refresh(self) -> Response:
-        pass
 
 
 class ClientViewset(viewsets.ModelViewSet):
