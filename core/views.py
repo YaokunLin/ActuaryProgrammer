@@ -1,11 +1,11 @@
 import logging
 from typing import Dict
-from urllib.request import Request
 
 from django.conf import settings
 from django.db import transaction
 from django.http import (
     HttpResponseBadRequest,
+    HttpRequest,
 )
 from django.utils import timezone
 from pydantic import BaseModel
@@ -81,7 +81,7 @@ class LoginView(APIView):
 
     def _login_to_netsapiens(
         self,
-        request: Request,
+        request: HttpRequest,
         client_id: str = settings.NETSAPIENS_CLIENT_ID,
         client_secret: str = settings.NETSAPIENS_CLIENT_SECRET,
         netsapiens_client: str = settings.NETSAPIENS_SYSTEM_CLIENT,
@@ -115,7 +115,7 @@ class LoginView(APIView):
 
     def _refresh_token_with_netsapiens(
         self,
-        request: Request,
+        request: HttpRequest,
         client_id: str = settings.NETSAPIENS_CLIENT_ID,
         client_secret: str = settings.NETSAPIENS_CLIENT_SECRET,
         netsapiens_client: str = settings.NETSAPIENS_SYSTEM_CLIENT,
