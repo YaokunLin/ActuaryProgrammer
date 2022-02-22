@@ -45,6 +45,8 @@ class LoginView(APIView):
     ]
 
     def post(self, request, format=None):
+        netsapiens_access_token_response = None
+
         try:
             username = request.data.get("username")
             password = request.data.get("password")
@@ -54,36 +56,47 @@ class LoginView(APIView):
                 log.info(f"Bad Request detected for login. Missing one or more required fields.")
                 return HttpResponseBadRequest("Missing one or more required fields: 'username' and 'password'")
 
-            data = {
-                "grant_type": "password",
-                "format": "json",
-                "client_id": settings.NETSAPIENS_CLIENT_ID,
-                "client_secret": settings.NETSAPIENS_CLIENT_SECRET,
-                "username": username,
-                "password": password,
-            }
-
-            netsapiens_access_token_response = settings.NETSAPIENS_SYSTEM_CLIENT.request("POST", settings.NETSAPIENS_ACCESS_TOKEN_URL, data=data)
-            netsapiens_access_token_response.raise_for_status()
+            netsapiens_access_token_response = self._login_to_netsapiens(username, password)
             netsapiens_user = netsapiens_access_token_response.json()
-            self._validate_access_token_response(netsapiens_user)
+
+            now = timezone.now()
+
+            with transaction.atomic():
+                user, user_created = setup_user(now, netsapiens_user)
+
+                save_user_activity_and_token(now, netsapiens_user, user)
+
+                if user_created:
+                    create_user_telecom(user)
+                    practice, _ = setup_practice(netsapiens_user["domain"])
+                    create_agent(user, practice)
+
+            return Response(status=200, data=netsapiens_user)
+
         except Exception as e:
             log.exception(e)
             return Response(status=netsapiens_access_token_response.status_code, data={"error": e})
 
-        now = timezone.now()
 
-        with transaction.atomic():
-            user, user_created = setup_user(now, netsapiens_user)
+    def _login_to_netsapiens(self, username: str,  password: str, client_id: str = settings.NETSAPIENS_CLIENT_ID, client_secret: str = settings.NETSAPIENS_CLIENT_SECRET, netsapiens_client: str = settings.NETSAPIENS_SYSTEM_CLIENT) -> Response:
+        data = {
+            "grant_type": "password",
+            "format": "json",
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "username": username,
+            "password": password,
+        }
 
-            save_user_activity_and_token(now, netsapiens_user, user)
+        netsapiens_access_token_response = netsapiens_client.request("POST", settings.NETSAPIENS_ACCESS_TOKEN_URL, data=data)
+        netsapiens_access_token_response.raise_for_status()
+        netsapiens_user = netsapiens_access_token_response.json()
+        self._validate_access_token_response(netsapiens_user)
 
-            if user_created:
-                create_user_telecom(user)
-                practice, _ = setup_practice(netsapiens_user["domain"])
-                create_agent(user, practice)
+        return netsapiens_access_token_response
 
-        return Response(status=200, data=netsapiens_user)
+    def _refresh(self) -> Response:
+        pass
 
     def _validate_access_token_response(self, response_json: Dict):
         if not all(key in self.NETSAPIENS_AUTH_TOKEN_REQUIRED_KEYS for key in response_json):
