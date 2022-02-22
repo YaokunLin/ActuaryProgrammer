@@ -31,7 +31,7 @@ def create_practice_telecom(domain: str, practice: Practice):
 
 
 def setup_user(username: str, name: str, email: str, domain: str, login_time: timezone) -> Tuple[User, bool]:
-    is_staff = domain == settings.IS_STAFF_TELECOM_DOMAN
+    is_staff = domain == settings.IS_STAFF_TELECOM_DOMAIN
 
     user, created = User.objects.get_or_create(
         username=username,
