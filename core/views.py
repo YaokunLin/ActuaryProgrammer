@@ -93,7 +93,6 @@ class LoginView(APIView):
         # validate
         if not (username and password):
             log.info(f"Bad Request detected for login. Missing one or more required fields.")
-
             return HttpResponseBadRequest("Missing one or more required fields: 'username' and 'password'")
 
         data = {
