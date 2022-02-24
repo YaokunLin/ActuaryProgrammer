@@ -93,6 +93,7 @@ def publish_netsapiens_cdr_linked_to_call_partial_event(
 
     # modify the event to fulfill downstream contract
     event = {
+        "cdr2_extract_id": event["id"],
         "peerlogic_call_id": event["peerlogic_call_id"],
         "peerlogic_call_partial_id": event["peerlogic_call_partial_id"],
         "netsapiens_orig_callid": event["cdrr_orig_callid"],
