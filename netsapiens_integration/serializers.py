@@ -70,16 +70,17 @@ class NetsapiensCdr2ExtractSerializer(serializers.ModelSerializer):
 
         return instance
 
-    def update(self, instance, validated_data):
+    def update(self, instance: NetsapiensCdr2Extract, validated_data: Dict) -> NetsapiensCdr2Extract:
         publish = validated_data.pop("publish", True)
-        instance = super().update(instance, validated_data)
+        instance: NetsapiensCdr2Extract = super().update(instance, validated_data)
         if self._is_call_linked_update(instance) and publish:
             # "netsapiens_call_subscription" should never be None, change this line if we make it optional
+            cdr2_extract_id = instance.id
             practice_telecom: PracticeTelecom = instance.netsapiens_call_subscription.practice_telecom
             practice_id = practice_telecom.practice.id
             voip_provider_id = practice_telecom.voip_provider.id
             publish_netsapiens_cdr_linked_to_call_partial_event(
-                practice_id=practice_id, voip_provider_id=voip_provider_id, event=self.to_representation(instance)
+                cdr2_extract_id=cdr2_extract_id, practice_id=practice_id, voip_provider_id=voip_provider_id, event=self.to_representation(instance)
             )
 
         return instance
