@@ -373,10 +373,6 @@ class CallAudioPartialViewset(viewsets.ModelViewSet):
             log.exception(message)
             return Response(status=status.HTTP_403_FORBIDDEN, data={"error": message})
 
-    def update(self, request, pk=None):
-        # TODO: Implement
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
     def data_is_valid(self, files: List) -> Union[FileToUpload, Dict]:
         if len(files) != 1:
             error_message = f"Must give 1 file per request in MultiPart Form Data."
@@ -397,7 +393,8 @@ class CallAudioPartialViewset(viewsets.ModelViewSet):
             raise ValidationError({"errors": [{"files_length": error_message}]})
         return FileToUpload(mime_type, blob_to_upload)
 
-    def partial_update(
+    @action(detail=True, methods=["patch"])
+    def upload_file(
         self,
         request,
         pk=None,
@@ -406,7 +403,7 @@ class CallAudioPartialViewset(viewsets.ModelViewSet):
         format=None,
         storage_client=settings.CLOUD_STORAGE_CLIENT,
         bucket=settings.BUCKET_NAME_CALL_AUDIO_PARTIAL,
-    ):
+    ) -> Response:
         files = request.data.items()
         files = list(files)
         file_to_upload = self.data_is_valid(files)
