@@ -204,22 +204,28 @@ fi
 # NS Audio pipeline
 
 echo "${textgreen}Creating ${ENVIRONMENT}-call_audio_partial_saved topic${textreset}"
-gcloud pubsub topics create "${ENVIRONMENT}-call_audio_partial_saved"
+gcloud pubsub topics create "${ENVIRONMENT}-call_audio_partial_saved" \
+      --message-retention-duration=14d
 
 echo "${textgreen}Creating ${ENVIRONMENT}-call_transcript_saved topic${textreset}"
-gcloud pubsub topics create "${ENVIRONMENT}-call_transcript_saved"
+gcloud pubsub topics create "${ENVIRONMENT}-call_transcript_saved" \
+      --message-retention-duration=14d
 
 echo "${textgreen}Creating ${ENVIRONMENT}-call_audio_saved topic${textreset}"
-gcloud pubsub topics create "${ENVIRONMENT}-call_audio_saved"
+gcloud pubsub topics create "${ENVIRONMENT}-call_audio_saved" \
+      --message-retention-duration=14d
 
 echo "${textgreen}Creating ${ENVIRONMENT}-netsapiens-leg_b_finished topic${textreset}"
-gcloud pubsub topics create "${ENVIRONMENT}-netsapiens-leg_b_finished"
+gcloud pubsub topics create "${ENVIRONMENT}-netsapiens-leg_b_finished" \
+      --message-retention-duration=14d
 
 echo "${textgreen}Creating ${ENVIRONMENT}-netsapiens-cdr_saved topic${textreset}"
-gcloud pubsub topics create "${ENVIRONMENT}-netsapiens-cdr_saved"
+gcloud pubsub topics create "${ENVIRONMENT}-netsapiens-cdr_saved" \
+      --message-retention-duration=14d
 
 echo "${textgreen}Creating ${ENVIRONMENT}-netsapiens-cdr_linked_to_call_partial topic${textreset}"
-gcloud pubsub topics create "${ENVIRONMENT}-netsapiens-cdr_linked_to_call_partial"
+gcloud pubsub topics create "${ENVIRONMENT}-netsapiens-cdr_linked_to_call_partial" \
+      --message-retention-duration=14d
 
 
 
