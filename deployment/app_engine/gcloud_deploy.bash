@@ -207,9 +207,9 @@ echo "${textgreen}Creating ${ENVIRONMENT}-call_audio_partial_saved topic${textre
 gcloud pubsub topics create "${ENVIRONMENT}-call_audio_partial_saved" \
       --message-retention-duration=14d
 
-echo "${textgreen}Creating ${ENVIRONMENT}-call_transcript_saved topic${textreset}"
-gcloud pubsub topics create "${ENVIRONMENT}-call_transcript_saved" \
-      --message-retention-duration=14d
+# echo "${textgreen}Creating ${ENVIRONMENT}-call_transcript_saved topic${textreset}"
+# gcloud pubsub topics create "${ENVIRONMENT}-call_transcript_saved" \
+#       --message-retention-duration=14d
 
 echo "${textgreen}Creating ${ENVIRONMENT}-call_audio_saved topic${textreset}"
 gcloud pubsub topics create "${ENVIRONMENT}-call_audio_saved" \

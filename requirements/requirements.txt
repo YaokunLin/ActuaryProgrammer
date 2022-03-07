@@ -20,7 +20,7 @@ pydantic==1.9.0
 python-dotenv==0.15.0
 psycopg2-binary==2.8.6
 redis==3.5.3
-requests==2.25.0
+requests==2.25.1
 shortuuid==1.0.1
 twilio==7.3.2
 wheel==0.35.1

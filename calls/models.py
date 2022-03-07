@@ -124,7 +124,7 @@ class CallPartial(AuditTrailModel):
 class CallAudioPartial(AuditTrailModel):
     BUCKET_NAME: str = settings.BUCKET_NAME_CALL_AUDIO_PARTIAL
     id = ShortUUIDField(primary_key=True, editable=False)
-    call_partial = models.ForeignKey(CallPartial, on_delete=models.CASCADE)
+    call_partial = models.ForeignKey(CallPartial, on_delete=models.CASCADE, related_name="call_audio_partials")
     mime_type = models.CharField(choices=SupportedAudioMimeTypes.choices, max_length=180)
     status = models.CharField(choices=CallAudioFileStatusTypes.choices, max_length=80, default=CallAudioFileStatusTypes.RETRIEVAL_FROM_PROVIDER_IN_PROGRESS)
 
