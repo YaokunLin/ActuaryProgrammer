@@ -364,9 +364,9 @@ class CallAudioPartialViewset(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def publish_call_audio_partial_saved(self, request, call_pk=None, call_partial_pk=None, pk=None):
         try:
-            log.info(f"Publishing call audio partial ready events for: call_audio_partial_id: '{pk}'")
+            log.info(f"Republishing call audio partial ready events for: call_audio_partial_id: '{pk}'")
             publish_call_audio_partial_saved(call_id=call_pk, partial_id=call_partial_pk, audio_partial_id=pk)
-            log.info(f"Published call audio partial ready events for: call_audio_partial_id: '{pk}'")
+            log.info(f"Republished call audio partial ready events for: call_audio_partial_id: '{pk}'")
             return Response(status=status.HTTP_200_OK, data={"status": "published"})
         except PermissionDenied:
             message = "Must add role 'roles/pubsub.publisher'. Exiting."
@@ -410,13 +410,13 @@ class CallAudioPartialViewset(viewsets.ModelViewSet):
         log.info(f"Blob to upload is {file_to_upload.blob} with mimetype {file_to_upload.mime_type}.")
 
         # Set uploading status and mime_type on Object
-        log.info(f"Saving object with uploading status and mime type to the database.")
+        log.info(f"Saving object with uploading status and mime type to the database. call_audio_partial='{pk}'")
         call_audio_partial = CallAudioPartial.objects.get(pk=pk)
         with transaction.atomic():
             call_audio_partial.mime_type = file_to_upload.mime_type
             call_audio_partial.status = CallAudioFileStatusTypes.UPLOADING
             call_audio_partial.save()
-            log.info(f"Saved object with uploading status and mime type to the database.")
+            log.info(f"Saved object with uploading status and mime type to the database. call_audio_partial='{call_audio_partial.id}'")
 
         # Upload to audio bucket
         log.info(f"Saving {call_audio_partial.pk} to bucket {bucket}")
@@ -425,11 +425,11 @@ class CallAudioPartialViewset(viewsets.ModelViewSet):
         blob.upload_from_string(file_to_upload.blob.read(), content_type=call_audio_partial.mime_type)
         log.info(f"Successfully saved {call_audio_partial.pk} to bucket {bucket}")
 
-        log.info(f"Saving object with uploading status and mime type to the database.")
+        log.info(f"Saving object with uploaded status UPLOADED. call_audio_partial='{call_audio_partial.id}'")
         with transaction.atomic():
             call_audio_partial.status = CallAudioFileStatusTypes.UPLOADED
             call_audio_partial.save()
-            log.info(f"Saved object with uploading status and mime type to the database.")
+            log.info(f"Saved object with uploading status UPLOADED. call_audio_partial='{call_audio_partial.id}'")
 
         call_audio_partial_serializer = CallAudioPartialSerializer(call_audio_partial)
 
