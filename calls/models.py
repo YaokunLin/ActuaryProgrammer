@@ -111,7 +111,7 @@ class CallPartial(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     call = models.ForeignKey(Call, on_delete=models.CASCADE)
     # TODO: sip_callee_extension?
-    # TODO: sip_calleR_extension?
+    # TODO: sip_caller_extension?
     time_interaction_started = models.DateTimeField()
     time_interaction_ended = models.DateTimeField()
 
