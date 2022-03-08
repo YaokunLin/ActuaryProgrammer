@@ -39,5 +39,5 @@ def get_signed_url(
         # Allow GET requests using this URL.
         method="GET",
     )
-    log.info("Generated GET signed URL: {url}")
+    log.info(f"Generated GET signed URL: {url}")
     return url
