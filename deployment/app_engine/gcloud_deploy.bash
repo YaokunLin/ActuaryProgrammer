@@ -134,6 +134,12 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
     --role="roles/iam.serviceAccountTokenCreator"
 
 
+echo "${textgreen}Creating cloud storage buckets${textreset}"
+gsutil mb "gs://${PROJECT_ID}-call-audio"
+gsutil mb "gs://${PROJECT_ID}-call-audio-partial"
+gsutil mb "gs://${PROJECT_ID}-call-transcript"
+gsutil mb "gs://${PROJECT_ID}-call-transcript-partial"
+
 echo "${textgreen}Creating redis instance${textreset}"
 gcloud redis instances create peerlogic-api --size=2 --region=us-west4
 
