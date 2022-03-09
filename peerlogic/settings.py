@@ -78,6 +78,8 @@ ALLOWED_HOSTS = ["127.0.0.1", "localhost", os.getenv("DJANGO_ALLOWED_HOSTS", "*"
 if GKE_APPLICATION == "True":
     ALLOWED_HOSTS.append(os.getenv("KUBERNETES_SERVICE_HOST"))
 
+PEERLOGIC_VOIP_PROVIDER_ID = os.getenv("PEERLOGIC_VOIP_PROVIDER_ID", "drFoXEnEwrN28Gowp3CoRN")
+PEERLOGIC_PRACTICE_ID = os.getenv("PEERLOGIC_PRACTICE_ID", "bpQY6L8zE96SVqCUXTPYq3")
 IS_STAFF_TELECOM_DOMAIN = os.getenv("IS_STAFF_TELECOM_DOMAIN", "Peerlogic")
 
 # Bandwidth
@@ -294,11 +296,6 @@ DATABASES = {
         "PORT": "5432",
     }
 }
-
-# If the flag as been set, configure to use proxy
-if os.getenv("USE_CLOUD_SQL_AUTH_PROXY", None) == "True":
-    DATABASES["default"]["HOST"] = "127.0.0.1"
-    DATABASES["default"]["PORT"] = 5432
 # [END dbconfig]
 
 # Use a in-memory sqlite3 database when testing in CI systems
