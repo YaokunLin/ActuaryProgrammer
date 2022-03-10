@@ -17,6 +17,7 @@ services:
       command: python3 manage.py runserver 0.0.0.0:8000
       volumes:
           - .:/app
+          - .credentials:/root/credentials
       ports:
           - 8000:8000
       depends_on:
@@ -37,6 +38,7 @@ services:
       command: python3 manage.py migrate
       volumes:
           - .:/app
+          - .credentials:/root/credentials
       depends_on:
           - postgres
       env_file:
@@ -54,6 +56,7 @@ services:
       command: ["celery", "-A", "peerlogic", "worker", "-l", "INFO"]
       volumes:
           - .:/app
+          - .credentials:/root/credentials
       depends_on:
           - postgres
       env_file:
@@ -73,6 +76,7 @@ services:
       command: ["celery", "-A", "peerlogic", "beat", "-l", "INFO", "-S", "django_celery_beat.schedulers:DatabaseScheduler"]
       volumes:
           - .:/app
+          - .credentials:/root/credentials
       depends_on:
           - postgres
       env_file:

@@ -1,0 +1,10 @@
+#
+#
+#
+
+# [START django_createsuperuser]
+runtime: python37
+service: django-createsuperuser
+entrypoint: "python3 manage.py createsuperuser --noinput"
+
+# [END django_createsuperuser]

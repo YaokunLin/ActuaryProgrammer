@@ -1,15 +1,13 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, Permission, _user_get_permissions, _user_has_perm, _user_has_module_perms
-
 from django.utils.translation import gettext_lazy as _
-
 from django_extensions.db.fields import ShortUUIDField
-
 from phonenumber_field.modelfields import PhoneNumberField
 
 from core.abstract_models import AuditTrailModel
-from core.field_choices import IndustryTypes
+from core.field_choices import IndustryTypes, VoipProviderIntegrationTypes
 from core.managers import PracticeManager, UserManager
+
 
 # This is to mimick Django's permissions mixin
 # Don't change this mixin unless you know what you're doing :)
@@ -112,6 +110,9 @@ class Practice(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     name = models.CharField(_("name"), max_length=150, unique=True)
     industry = models.CharField(choices=IndustryTypes.choices, default=IndustryTypes.DENTISTRY_GENERAL, max_length=250)
+    active = models.BooleanField(
+        null=True, blank=False, default=False
+    )  # practices are active or inactive based upon whether we've approved their submission and whether they're paid up
 
     objects = PracticeManager()
 
@@ -145,9 +146,18 @@ class Client(AuditTrailModel):
     rest_base_url = models.CharField(max_length=300)  # Can be Dentrix, another EMR, or some other system
 
 
+class VoipProvider(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    company_name = models.CharField(max_length=160)  # e.g. OIT Services
+    integration_type = models.CharField(max_length=150, choices=VoipProviderIntegrationTypes.choices, default=VoipProviderIntegrationTypes.NETSAPIENS)
+
+    active = models.BooleanField(null=True, blank=False, default=False)  # whether this integrator is active and we can receive events from them
+
+
 class PracticeTelecom(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
-    practice = models.OneToOneField(Practice, on_delete=models.CASCADE)
+    voip_provider = models.ForeignKey(VoipProvider, on_delete=models.SET_NULL, null=True)
+    practice = models.OneToOneField(Practice, on_delete=models.CASCADE, related_name="practice_telecom")
     domain = models.CharField(max_length=80, db_index=True)
     phone_sms = PhoneNumberField(blank=True)
     phone_callback = PhoneNumberField(blank=True)

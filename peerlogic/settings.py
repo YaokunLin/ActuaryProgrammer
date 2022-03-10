@@ -10,13 +10,24 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
-import io
-import os
 
+from datetime import timedelta
+import io
+import logging
+import os
 import requests
-from dotenv import load_dotenv
-from google.cloud import secretmanager
 from requests.auth import HTTPBasicAuth
+
+from dotenv import load_dotenv
+from google.cloud import (
+    pubsub_v1,
+    secretmanager,
+    storage,
+)
+
+
+# Get an instance of a logger
+log = logging.getLogger(__name__)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -37,9 +48,14 @@ LOGGING = {
 
 PROJECT_ID = os.getenv("PROJECT_ID", "peerlogic-api-dev")
 GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT", None)  # WE'RE IN GCP
+IN_GCP = GOOGLE_CLOUD_PROJECT != None
+# TODO: get region from vm metadata: https://cloud.google.com/compute/docs/metadata/default-metadata-values
+# https://cloud.google.com/appengine/docs/flexible/python/runtime#environment_variables
+REGION = os.environ.get("REGION", "us-west4")
+PROJECT_NUMBER = os.getenv("PROJECT_NUMBER", "148263976475")
 ENV_CONFIG_SECRET_NAME = os.environ.get("ENV_CONFIG_SECRET_NAME", "peerlogic-api-env")
 
-if GOOGLE_CLOUD_PROJECT:
+if IN_GCP:
     # Pull secrets from Secret Manager
     PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT")
 
@@ -62,7 +78,10 @@ ALLOWED_HOSTS = ["127.0.0.1", "localhost", os.getenv("DJANGO_ALLOWED_HOSTS", "*"
 if GKE_APPLICATION == "True":
     ALLOWED_HOSTS.append(os.getenv("KUBERNETES_SERVICE_HOST"))
 
-IS_STAFF_TELECOM_DOMAN = os.getenv("IS_STAFF_TELECOM_DOMAN", "Peerlogic")
+PEERLOGIC_VOIP_PROVIDER_ID = os.getenv("PEERLOGIC_VOIP_PROVIDER_ID", "drFoXEnEwrN28Gowp3CoRN")
+PEERLOGIC_PRACTICE_ID = os.getenv("PEERLOGIC_PRACTICE_ID", "bpQY6L8zE96SVqCUXTPYq3")
+PEERLOGIC_PRACTICE_TELECOM_ID = os.getenv("PEERLOGIC_PRACTICE_TELECOM_ID")  # TODO: find default for dev
+IS_STAFF_TELECOM_DOMAIN = os.getenv("IS_STAFF_TELECOM_DOMAIN", "Peerlogic")
 
 # Bandwidth
 BANDWIDTH_APPLICATION_ID = os.getenv("BANDWIDTH_APPLICATION_ID")
@@ -81,6 +100,14 @@ NETSAPIENS_INTROSPECT_TOKEN_URL = os.getenv("NETSAPIENS_INTROSPECT_TOKEN_URL")
 NETSAPIENS_API_USERNAME = os.getenv("NETSAPIENS_API_USERNAME")
 NETSAPIENS_API_PASSWORD = os.getenv("NETSAPIENS_API_PASSWORD")
 NETSAPIENS_SYSTEM_CLIENT = requests.Session()
+NETSAPIENS_INTEGRATION_CALL_MODEL_SUBSCRIPTION_IS_ENABLED = os.getenv("NETSAPIENS_INTEGRATION_CALL_MODEL_SUBSCRIPTION_IS_ENABLED", "False").lower() in (
+    "true",
+    "1",
+    "t",
+)
+NETSAPIENS_INTEGRATION_CALL_ORIGID_MODEL_SUBSCRIPTION_IS_ENABLED = os.getenv(
+    "NETSAPIENS_INTEGRATION_CALL_ORIGID_MODEL_SUBSCRIPTION_IS_ENABLED", "False"
+).lower() in ("true", "1", "t")
 
 # Business Phone Number Detection
 # See FCC: https://www.fcc.gov/consumers/guides/what-toll-free-number-and-how-does-it-work
@@ -93,10 +120,37 @@ TWILIO_IS_ENABLED = os.getenv("TWILIO_IS_ENABLED", "False").lower() in ("true", 
 
 TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS_DEFAULT = 60 * 60 * 24 * 365  # seconds in a year
 try:
-    TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS = int(os.getenv("TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS"))
+    env_var = os.getenv("TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS")
+    TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS = int(env_var)
 except (ValueError, TypeError) as error:
-    # TODO log this recoverable configuration error
+    if env_var != None:
+        log.exception(error)
+    log.info(f"Setting TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS to the default of {TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS_DEFAULT}")
     TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS = TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS_DEFAULT
+
+# Google Cloud Storage
+
+CLOUD_STORAGE_IS_ENABLED = os.getenv("CLOUD_STORAGE_IS_ENABLED", "False").lower() in ("true", "1", "t")
+BUCKET_NAME_CALL_AUDIO = os.getenv("BUCKET_NAME_CALL_AUDIO")
+BUCKET_NAME_CALL_AUDIO_PARTIAL = os.getenv("BUCKET_NAME_CALL_AUDIO_PARTIAL")
+BUCKET_NAME_CALL_TRANSCRIPT = os.getenv("BUCKET_NAME_CALL_TRANSCRIPT")
+BUCKET_NAME_CALL_TRANSCRIPT_PARTIAL = os.getenv("BUCKET_NAME_CALL_TRANSCRIPT_PARTIAL")
+SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS_DEFAULT = 2
+try:
+    env_var = os.getenv("SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS")
+    SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS = int(env_var)
+except (ValueError, TypeError) as error:
+    if env_var != None:
+        log.exception(error)
+    log.info(f"Setting SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS to the default of {SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS_DEFAULT}")
+    SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS = SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS_DEFAULT
+
+
+SIGNED_STORAGE_URL_EXPIRATION_DELTA = timedelta(hours=SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS)
+if CLOUD_STORAGE_IS_ENABLED:
+    CLOUD_STORAGE_CLIENT = storage.Client(project=PROJECT_ID)
+else:
+    CLOUD_STORAGE_CLIENT = None
 
 # CORS
 CORS_ORIGIN_ALLOW_ALL = DEBUG
@@ -104,6 +158,82 @@ CORS_ORIGIN_WHITELIST = ("http://localhost:3000", "app://.")
 
 # DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "core.User"
+
+# Pub/Sub
+PUBLISHER_IS_ENABLED = os.getenv("PUBLISHER_IS_ENABLED", "False").lower() in ("true", "1", "t")
+
+PEERLOGIC_STREAM_KEY = os.getenv("PEERLOGIC_STREAM_KEY")
+PREDICTION_ENDPOINT_CALLER_TYPE = os.getenv("PREDICTION_ENDPOINT_CALLER_TYPE", "6637250319581446144")
+PREDICTION_ENDPOINT_INTENT = os.getenv("PREDICTION_ENDPOINT_INTENT", "3899695064837783552")
+PREDICTION_ENDPOINT_OUTCOME = os.getenv("PREDICTION_ENDPOINT_OUTCOME", "8511381083265171456")
+PREDICTION_ENDPOINT_OUTCOME_REASON = os.getenv("PREDICTION_ENDPOINT_OUTCOME_REASON", "9205709482066182144")
+PREDICTION_ENDPOINT_SENTIMENT = os.getenv("PREDICTION_ENDPOINT_SENTIMENT", "5039105770562519040")
+PREDICTION_ENDPOINT_SENTIMENT_LINE_BY_LINE = os.getenv("PREDICTION_ENDPOINT_SENTIMENT_LINE_BY_LINE", "6683975165715415040")
+ML_PROCESS_ARGUMENTS = {
+    "output_bigquery_path": "Audio_Process.call",
+    "history_table_path": "Audio_Process.processing_results_history",
+    "streaming_key": PEERLOGIC_STREAM_KEY,
+    "caller_type_prediction_ep": PREDICTION_ENDPOINT_CALLER_TYPE,
+    "intent_prediction_ep": PREDICTION_ENDPOINT_INTENT,
+    "outcome_prediction_ep": PREDICTION_ENDPOINT_OUTCOME,
+    "outcome_reason_prediction_ep": PREDICTION_ENDPOINT_OUTCOME_REASON,
+    "sentiment_prediction_ep": PREDICTION_ENDPOINT_SENTIMENT,
+    "sentiment_line_by_line_ep": PREDICTION_ENDPOINT_SENTIMENT_LINE_BY_LINE,
+    "run_transcription": "true",
+}
+
+PUBSUB_TOPIC_ID_CALL_AUDIO_PARTIAL_SAVED = os.getenv("PUBSUB_TOPIC_ID_CALL_AUDIO_PARTIAL_SAVED", "dev-call_audio_partial_saved")
+PUBSUB_TOPIC_ID_CALL_AUDIO_PARTIAL_SAVED_PROJECT_ID = os.getenv("PUBSUB_TOPIC_ID_CALL_AUDIO_PARTIAL_SAVED_PROJECT_ID", PROJECT_ID)
+
+PUBSUB_TOPIC_ID_CALL_AUDIO_SAVED = os.getenv("PUBSUB_TOPIC_ID_CALL_AUDIO_SAVED", "dev-call_audio_saved")
+PUBSUB_TOPIC_ID_CALL_AUDIO_SAVED_PROJECT_ID = os.getenv("PUBSUB_TOPIC_ID_CALL_AUDIO_SAVED_PROJECT_ID", PROJECT_ID)
+
+PUBSUB_TOPIC_ID_CALL_TRANSCRIPT_SAVED = os.getenv("PUBSUB_TOPIC_ID_CALL_TRANSCRIPT_SAVED", "dev-call_transcript_saved")
+PUBSUB_TOPIC_ID_CALL_TRANSCRIPT_SAVED_PROJECT_ID = os.getenv("PUBSUB_TOPIC_ID_CALL_TRANSCRIPT_SAVED_PROJECT_ID", PROJECT_ID)
+
+PUBSUB_TOPIC_ID_NETSAPIENS_LEG_B_FINISHED = os.getenv("PUBSUB_TOPIC_ID_NETSAPIENS_LEG_B_FINISHED", "dev-netsapiens-leg_b_finished")
+PUBSUB_TOPIC_ID_NETSAPIENS_LEG_B_FINISHED_PROJECT_ID = os.getenv("PUBSUB_TOPIC_ID_NETSAPIENS_LEG_B_FINISHED_PROJECT_ID", PROJECT_ID)
+
+PUBSUB_TOPIC_ID_NETSAPIENS_CDR_SAVED = os.getenv("PUBSUB_TOPIC_ID_NETSAPIENS_CDR_SAVED", "dev-netsapiens-cdr_saved")
+PUBSUB_TOPIC_ID_NETSAPIENS_CDR_SAVED_PROJECT_ID = os.getenv("PUBSUB_TOPIC_ID_NETSAPIENS_CDR_SAVED_PROJECT_ID", PROJECT_ID)
+
+PUBSUB_TOPIC_ID_NETSAPIENS_CDR_LINKED_TO_CALL_PARTIAL = os.getenv(
+    "PUBSUB_TOPIC_ID_NETSAPIENS_CDR_LINKED_TO_CALL_PARTIAL", "dev-netsapiens-cdr_linked_to_call_partial"
+)
+PUBSUB_TOPIC_ID_NETSAPIENS_CDR_LINKED_TO_CALL_PARTIAL_PROJECT_ID = os.getenv("PUBSUB_TOPIC_ID_NETSAPIENS_CDR_LINKED_TO_CALL_PARTIAL_PROJECT_ID", PROJECT_ID)
+
+PUBLISH_FUTURE_TIMEOUT_IN_SECONDS_DEFAULT = 60
+try:
+    env_var = os.getenv("PUBLISH_FUTURE_TIMEOUT_IN_SECONDS")
+    PUBLISH_FUTURE_TIMEOUT_IN_SECONDS = int(env_var)
+except (ValueError, TypeError) as error:
+    if env_var != None:
+        log.exception(error)
+    log.info(f"Setting PUBLISH_FUTURE_TIMEOUT_IN_SECONDS to the default of {PUBLISH_FUTURE_TIMEOUT_IN_SECONDS_DEFAULT}")
+    PUBLISH_FUTURE_TIMEOUT_IN_SECONDS = PUBLISH_FUTURE_TIMEOUT_IN_SECONDS_DEFAULT
+if PUBLISHER_IS_ENABLED:
+    PUBLISHER = pubsub_v1.PublisherClient()
+    PUBSUB_TOPIC_PATH_NETSAPIENS_LEG_B_FINISHED = PUBLISHER.topic_path(
+        PUBSUB_TOPIC_ID_NETSAPIENS_LEG_B_FINISHED_PROJECT_ID, PUBSUB_TOPIC_ID_NETSAPIENS_LEG_B_FINISHED
+    )
+    PUBSUB_TOPIC_PATH_NETSAPIENS_CDR_SAVED = PUBLISHER.topic_path(PUBSUB_TOPIC_ID_NETSAPIENS_CDR_SAVED_PROJECT_ID, PUBSUB_TOPIC_ID_NETSAPIENS_CDR_SAVED)
+    PUBSUB_TOPIC_PATH_NETSAPIENS_CDR_LINKED_TO_CALL_PARTIAL = PUBLISHER.topic_path(
+        PUBSUB_TOPIC_ID_NETSAPIENS_CDR_LINKED_TO_CALL_PARTIAL_PROJECT_ID, PUBSUB_TOPIC_ID_NETSAPIENS_CDR_LINKED_TO_CALL_PARTIAL
+    )
+    PUBSUB_TOPIC_PATH_CALL_AUDIO_PARTIAL_SAVED = PUBLISHER.topic_path(
+        PUBSUB_TOPIC_ID_CALL_AUDIO_PARTIAL_SAVED_PROJECT_ID, PUBSUB_TOPIC_ID_CALL_AUDIO_PARTIAL_SAVED
+    )
+    PUBSUB_TOPIC_PATH_CALL_AUDIO_SAVED = PUBLISHER.topic_path(PUBSUB_TOPIC_ID_CALL_AUDIO_SAVED_PROJECT_ID, PUBSUB_TOPIC_ID_CALL_AUDIO_SAVED)
+    PUBSUB_TOPIC_PATH_CALL_TRANSCRIPT_SAVED = PUBLISHER.topic_path(PUBSUB_TOPIC_ID_CALL_TRANSCRIPT_SAVED_PROJECT_ID, PUBSUB_TOPIC_ID_CALL_TRANSCRIPT_SAVED)
+
+else:
+    PUBLISHER = None
+    PUBSUB_TOPIC_PATH_NETSAPIENS_LEG_B_FINISHED = None
+    PUBSUB_TOPIC_PATH_NETSAPIENS_CDR_SAVED = None
+    PUBSUB_TOPIC_PATH_NETSAPIENS_CDR_LINKED_TO_CALL_PARTIAL = None
+    PUBSUB_TOPIC_PATH_CALL_AUDIO_PARTIAL_SAVED = None
+    PUBSUB_TOPIC_PATH_CALL_AUDIO_SAVED = None
+    PUBSUB_TOPIC_PATH_CALL_TRANSCRIPT_SAVED = None
 
 
 # Application definition
@@ -127,6 +257,7 @@ INSTALLED_APPS = [
     "etl",
     "inbox",
     "reminders",
+    "netsapiens_integration",
 ]
 
 MIDDLEWARE = [
@@ -188,11 +319,6 @@ DATABASES = {
         "PORT": "5432",
     }
 }
-
-# If the flag as been set, configure to use proxy
-if os.getenv("USE_CLOUD_SQL_AUTH_PROXY", None) == "True":
-    DATABASES["default"]["HOST"] = "127.0.0.1"
-    DATABASES["default"]["PORT"] = 5432
 # [END dbconfig]
 
 # Use a in-memory sqlite3 database when testing in CI systems

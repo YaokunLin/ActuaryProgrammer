@@ -1,4 +1,7 @@
 from django.db import models
+from django.utils.translation import gettext_lazy as _
+
+from core.field_choices import FileStatusTypes
 
 
 class EngagementPersonaTypes(models.TextChoices):
@@ -57,3 +60,50 @@ class TelecomCarrierTypes(models.TextChoices):
     LANDLINE = "landline"  # aka "fixed" or "wireline" - designation provided by the carrier
     MOBILE = "mobile"  # aka "non-fixed" or "wireless" - designation provided by the carrier
     VOIP = "voip"  # - classification on the carrier
+
+
+class AudioCodecType(models.TextChoices):
+    # https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Audio_codecs
+    AAC = "aac", _("Advanced Audio Coding")
+    ALAC = "alac", _("Apple Lossless Audio Codec")
+    AMR = "amr", _("Adaptive Multi-Rate")
+    FLAC = "flac", _("Free Lossless Audio Codec")
+    G711 = "g711", _("PCMU, G711u or G711MU for G711 μ-law, and PCMA or G711A for G711 A-law")  # https://en.wikipedia.org/wiki/G.711
+    G722 = "g722", _("7 kHz Audio Coding Within 64 kbps (for telephony/VoIP)")
+    MP3 = "mp3", _("MPEG-1 Audio Layer III")
+    OPUS = "opus", _("Opus")
+    VORBIS = "vorbis", _("MPEG-1 Audio Layer III")
+
+
+class CallAudioFileStatusTypes(FileStatusTypes, models.TextChoices):
+    pass
+    # May add more audio specific statuses in the future
+
+
+class CallTranscriptFileStatusTypes(FileStatusTypes, models.TextChoices):
+    pass
+    # May add more transcription specific statuses in the future
+
+
+class SupportedAudioMimeTypes(models.TextChoices):
+    # https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
+    # https://www.iana.org/assignments/media-types/media-types.xhtml#audio
+    AUDIO_PCMU = "audio/PCMU"  # PCM MU-LAW (mlaw)
+    AUDIO_GSM = "audio/GSM"  # Microsoft GSM Audio (agsm)
+    AUDIO_WAV = "audio/WAV"
+
+
+class SupportedTranscriptMimeTypes(models.TextChoices):
+    TEXT_PLAIN = "text/plain"
+    APPLICATION_JSON = "application/json"
+
+
+class TranscriptTypes(models.TextChoices):
+    FULL_TEXT = "full_text"
+    CHANNEL_1_TEXT = "channel_1_text"
+    CHANNEL_2_TEXT = "channel_2_text"
+
+
+class SpeechToTextModelTypes(models.TextChoices):
+    GOOGLE = "google"
+    FACEBOOK_AI = "facebook_ai"

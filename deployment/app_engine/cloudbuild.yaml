@@ -29,14 +29,37 @@ steps:
     args: ["app", "deploy", "/workspace/django_migrate.yaml"]
     timeout: "1600s"
 
-  - id: "celery-beat service App Engine Deploy"
+  - id: "Run django migrate"
     name: "gcr.io/cloud-builders/gcloud"
-    args: ["app", "deploy", "/workspace/celery_beat.yaml"]
+    entrypoint: "bash"
+    args:
+      - '-c'
+      - |
+        curl $(gcloud app services browse django-migrate --no-launch-browser --format='value(url)')
+
+  - id: "django_createsuperuser service App Engine Deploy"
+    name: "gcr.io/cloud-builders/gcloud"
+    args: ["app", "deploy", "/workspace/django_createsuperuser.yaml"]
     timeout: "1600s"
 
-  - id: "celery-worker service App Engine Deploy"
+  - id: "Run django createsuperuser"
     name: "gcr.io/cloud-builders/gcloud"
-    args: ["app", "deploy", "/workspace/celery_worker.yaml"]
-    timeout: "1600s"
+    entrypoint: "bash"
+    args:
+      - '-c'
+      - |
+        curl $(gcloud app services browse django-createsuperuser --no-launch-browser --format='value(url)')
+
+
+  # disable until we get it working - need asgi
+  # - id: "celery-beat service App Engine Deploy"
+  #   name: "gcr.io/cloud-builders/gcloud"
+  #   args: ["app", "deploy", "/workspace/celery_beat.yaml"]
+  #   timeout: "1600s"
+
+  # - id: "celery-worker service App Engine Deploy"
+  #   name: "gcr.io/cloud-builders/gcloud"
+  #   args: ["app", "deploy", "/workspace/celery_worker.yaml"]
+  #   timeout: "1600s"
 
 

@@ -6,13 +6,17 @@ set -x #echo on
 
 PROJECT_ID=$(gcloud config list --format='value(core.project)')
 PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
+ENVIRONMENT=$(printf "%s\n" "${PROJECT_ID##*-}")
 CLOUDBUILD_SERVICE_ACCOUNT="${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com"
 APP_ENGINE_SERVICE_ACCOUNT="${PROJECT_ID}@appspot.gserviceaccount.com"
+LOCAL_DEVELOPMENT_SERVICE_ACCOUNT="local-development@${PROJECT_ID}.iam.gserviceaccount.com"
+CLOUD_SQL_SERVICE_ACCOUNT_ID=${PROJECT_ID}-cloud-sql
+CLOUD_SQL_SERVICE_ACCOUNT_NAME=${CLOUD_SQL_SERVICE_ACCOUNT_ID}@${PROJECT_ID}.iam.gserviceaccount.com
 VAULT_ID="wlmpasbyyncmhpjji3lfc7ra4a"
 REGION=$(gcloud config list --format='value(compute.region)')
 ZONE=$(gcloud config list --format='value(compute.zone)')
-SUBNET="peerlogic-dev-us-west1-subnet-private"
-HOST_PROJECT_ID="peerlogic-vpc-host-dev"
+SUBNET="peerlogic-${ENVIRONMENT}-us-west1-subnet-private"
+HOST_PROJECT_ID="peerlogic-vpc-host-${ENVIRONMENT}"
 
 textred=$(tput setaf 1) # Red
 textgreen=$(tput setaf 2) # Green
@@ -38,26 +42,21 @@ then
   source $ENV_FILE
 fi
 
-echo "${textblue}Reading environment and project ID${textreset}"
-export ENVIRONMENT
-export PROJECT_ID
 
-
-
-CLOUD_SQL_SERVICE_ACCOUNT_ID=${PROJECT_ID}-cloud-sql
-CLOUD_SQL_SERVICE_ACCOUNT_NAME=${CLOUD_SQL_SERVICE_ACCOUNT_ID}@${PROJECT_ID}.iam.gserviceaccount.com
 
 gcloud components update
 
 
 echo "${textgreen}Enabling services ${textreset}"
-gcloud services enable appengine.googleapis.com
-gcloud services enable sql-component.googleapis.com
-gcloud services enable sqladmin.googleapis.com
-gcloud services enable redis.googleapis.com
-gcloud services enable cloudbuild.googleapis.com
-gcloud services enable secretmanager.googleapis.com
-gcloud services enable vpcaccess.googleapis.com
+gcloud services enable \
+      appengine.googleapis.com \
+      sql-component.googleapis.com \
+      sqladmin.googleapis.com \
+      redis.googleapis.com \
+      cloudbuild.googleapis.com \
+      secretmanager.googleapis.com \
+      vpcaccess.googleapis.com \
+      pubsub.googleapis.com
 
 echo "${textgreen}Creating App Engine project ${textreset}"
 gcloud app create
@@ -118,11 +117,28 @@ gcloud projects add-iam-policy-binding $PROJECT_ID \
       --member="serviceAccount:${CLOUDBUILD_SERVICE_ACCOUNT}" \
       --role="roles/appengine.deployer"
 
+echo "${textgreen}Adding Local Development roles${textreset}"
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member=serviceAccount:${LOCAL_DEVELOPMENT_SERVICE_ACCOUNT} \
+    --role="roles/pubsub.publisher"
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:${LOCAL_DEVELOPMENT_SERVICE_ACCOUNT}" \
+    --role="roles/iam.serviceAccountTokenCreator"
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:${APP_ENGINE_SERVICE_ACCOUNT}" \
+    --role="roles/storage.objectAdmin"
 
 echo "${textgreen}Adding App engine roles${textreset}"
-gcloud secrets add-iam-policy-binding peerlogic-api-env \
+gcloud projects add-iam-policy-binding $PROJECT_ID \
     --member="serviceAccount:${APP_ENGINE_SERVICE_ACCOUNT}" \
-    --role="roles/secretmanager.secretAccessor"
+    --role="roles/iam.serviceAccountTokenCreator"
+
+
+echo "${textgreen}Creating cloud storage buckets${textreset}"
+gsutil mb "gs://${PROJECT_ID}-call-audio"
+gsutil mb "gs://${PROJECT_ID}-call-audio-partial"
+gsutil mb "gs://${PROJECT_ID}-call-transcript"
+gsutil mb "gs://${PROJECT_ID}-call-transcript-partial"
 
 echo "${textgreen}Creating redis instance${textreset}"
 gcloud redis instances create peerlogic-api --size=2 --region=us-west4
@@ -135,7 +151,7 @@ REDIS_IP=${REDIS_IP_RANGE%/*}
 
 export REDIS_URL="redis://${REDIS_IP}:${REDIS_PORT}/0"
 
-# example connector name: peerlogic-api-dev-redis-to-shared-vpc-connector
+# example connector name: peerlogic-api-${ENVIRONMENT}-redis-to-shared-vpc-connector
 
 
 # TODO: connect redis
@@ -152,7 +168,7 @@ export REDIS_URL="redis://${REDIS_IP}:${REDIS_PORT}/0"
 # --region $REGION
 
 
-if  [[ "$PROJECT_ID" ==  *"dev" ]]; then
+if  [[ $ENVIRONMENT ==  "dev" ]]; then
       echo "${textgreen}Creating cloud build trigger using development branch${textreset}"
       gcloud beta builds triggers create github \
       --name=app-engine \
@@ -162,7 +178,7 @@ if  [[ "$PROJECT_ID" ==  *"dev" ]]; then
       --build-config="deployment/app_engine/cloudbuild.yaml"
 fi
 
-if [[ "$PROJECT_ID" ==  *"stage" ]]; then
+if [[ $ENVIRONMENT ==  "stage" ]]; then
       echo "${textgreen}Creating cloud build trigger using hotfix/ branch prefix${textreset}"
       gcloud beta builds triggers create github \
       --name=hotfixes \
@@ -180,7 +196,7 @@ if [[ "$PROJECT_ID" ==  *"stage" ]]; then
       --build-config="deployment/app_engine/cloudbuild.yaml"
 fi
 
-if [[ "$PROJECT_ID" ==  *"prod" ]]; then
+if [[ $ENVIRONMENT == "prod" ]]; then
       echo "${textgreen}Creating cloud build trigger using main branch${textreset}"
       gcloud beta builds triggers create github \
       --name=app-engine \
@@ -191,12 +207,38 @@ if [[ "$PROJECT_ID" ==  *"prod" ]]; then
 fi
 
 
+# NS Audio pipeline
+
+echo "${textgreen}Creating ${ENVIRONMENT}-call_audio_partial_saved topic${textreset}"
+gcloud pubsub topics create "${ENVIRONMENT}-call_audio_partial_saved" \
+      --message-retention-duration=14d
+
+# echo "${textgreen}Creating ${ENVIRONMENT}-call_transcript_saved topic${textreset}"
+# gcloud pubsub topics create "${ENVIRONMENT}-call_transcript_saved" \
+#       --message-retention-duration=14d
+
+echo "${textgreen}Creating ${ENVIRONMENT}-call_audio_saved topic${textreset}"
+gcloud pubsub topics create "${ENVIRONMENT}-call_audio_saved" \
+      --message-retention-duration=14d
+
+echo "${textgreen}Creating ${ENVIRONMENT}-netsapiens-leg_b_finished topic${textreset}"
+gcloud pubsub topics create "${ENVIRONMENT}-netsapiens-leg_b_finished" \
+      --message-retention-duration=14d
+
+echo "${textgreen}Creating ${ENVIRONMENT}-netsapiens-cdr_saved topic${textreset}"
+gcloud pubsub topics create "${ENVIRONMENT}-netsapiens-cdr_saved" \
+      --message-retention-duration=14d
+
+echo "${textgreen}Creating ${ENVIRONMENT}-netsapiens-cdr_linked_to_call_partial topic${textreset}"
+gcloud pubsub topics create "${ENVIRONMENT}-netsapiens-cdr_linked_to_call_partial" \
+      --message-retention-duration=14d
 
 
-# TODO: Add substitutions
+echo "${textgreen}Creating ${ENVIRONMENT}-process_analytics topic${textreset}"
+gcloud pubsub topics create "${ENVIRONMENT}-process_analytics" \
+      --message-retention-duration=14d
 
 # TODO: custom domain mapping
-
 
 echo "${textpurple} TO FINISH:"
 echo "1. Place a  ${PROJECT_ID}.env into deployment/ directory,"
