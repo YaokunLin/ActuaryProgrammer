@@ -163,16 +163,22 @@ AUTH_USER_MODEL = "core.User"
 PUBLISHER_IS_ENABLED = os.getenv("PUBLISHER_IS_ENABLED", "False").lower() in ("true", "1", "t")
 
 PEERLOGIC_STREAM_KEY = os.getenv("PEERLOGIC_STREAM_KEY")
+PREDICTION_ENDPOINT_CALLER_TYPE = os.getenv("PREDICTION_ENDPOINT_CALLER_TYPE", "6637250319581446144")
+PREDICTION_ENDPOINT_INTENT = os.getenv("PREDICTION_ENDPOINT_INTENT", "3899695064837783552")
+PREDICTION_ENDPOINT_OUTCOME = os.getenv("PREDICTION_ENDPOINT_OUTCOME", "8511381083265171456")
+PREDICTION_ENDPOINT_OUTCOME_REASON = os.getenv("PREDICTION_ENDPOINT_OUTCOME_REASON", "9205709482066182144")
+PREDICTION_ENDPOINT_SENTIMENT = os.getenv("PREDICTION_ENDPOINT_SENTIMENT", "5039105770562519040")
+PREDICTION_ENDPOINT_SENTIMENT_LINE_BY_LINE = os.getenv("PREDICTION_ENDPOINT_SENTIMENT_LINE_BY_LINE", "6683975165715415040")
 ML_PROCESS_ARGUMENTS = {
-    "streaming_key": PEERLOGIC_STREAM_KEY,
     "output_bigquery_path": "Audio_Process.call",
     "history_table_path": "Audio_Process.processing_results_history",
-    "sentiment_prediction_ep": "5039105770562519040",
-    "intent_prediction_ep": "3899695064837783552",
-    "caller_type_prediction_ep": "6637250319581446144",
-    "outcome_prediction_ep": "8511381083265171456",
-    "sentiment_line_by_line_ep": "6683975165715415040",
-    "outcome_reason_prediction_ep": "9205709482066182144",
+    "streaming_key": PEERLOGIC_STREAM_KEY,
+    "caller_type_prediction_ep": PREDICTION_ENDPOINT_CALLER_TYPE,
+    "intent_prediction_ep": PREDICTION_ENDPOINT_INTENT,
+    "outcome_prediction_ep": PREDICTION_ENDPOINT_OUTCOME,
+    "outcome_reason_prediction_ep": PREDICTION_ENDPOINT_OUTCOME_REASON,
+    "sentiment_prediction_ep": PREDICTION_ENDPOINT_SENTIMENT,
+    "sentiment_line_by_line_ep": PREDICTION_ENDPOINT_SENTIMENT_LINE_BY_LINE,
     "run_transcription": "true",
 }
 
