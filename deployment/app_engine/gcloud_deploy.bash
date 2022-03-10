@@ -238,16 +238,7 @@ echo "${textgreen}Creating ${ENVIRONMENT}-process_analytics topic${textreset}"
 gcloud pubsub topics create "${ENVIRONMENT}-process_analytics" \
       --message-retention-duration=14d
 
-echo "${textgreen}Adding Publisher roles to ML processing project${textreset}"
-gcloud projects add-iam-policy-binding $PROJECT_ID_ML_PROCESS \
-    --member="serviceAccount:${APP_ENGINE_SERVICE_ACCOUNT}" \
-    --role="roles/pubsub.publisher"
-gcloud projects add-iam-policy-binding $PROJECT_ID_ML_PROCESS \
-    --member="serviceAccount:${LOCAL_DEVELOPMENT_SERVICE_ACCOUNT}" \
-    --role="roles/pubsub.publisher"
-
 # TODO: custom domain mapping
-
 
 echo "${textpurple} TO FINISH:"
 echo "1. Place a  ${PROJECT_ID}.env into deployment/ directory,"
