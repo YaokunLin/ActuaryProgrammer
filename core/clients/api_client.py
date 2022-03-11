@@ -71,9 +71,7 @@ def extract_and_transform(translator: Callable) -> Callable:
         def wrapper(*args, **kwargs):
             result = function(*args, **kwargs)
             return translator(result)
-
         return wrapper
-
     return decorator
 
 
@@ -87,4 +85,4 @@ def raise_for_bad_auth_and_other_statuses(response: requests.Response) -> reques
         raise APIClientAuthorizationError()
 
     response.raise_for_status()
-    return response  # shouldn't be possible
+    return response  # shouldn't be possible, since raise_for_status should catch every other status code
