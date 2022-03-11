@@ -34,7 +34,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"Created practice with pk='{practice.pk}'"))
 
             self.stdout.write(f"Creating practice telecom with domain='{options['practice_voip_domain']}'")
-            practice_telecom = PracticeTelecom.objects.create(domain=options["practice_voip_domain"], practice=practice)
+            practice_telecom = PracticeTelecom.objects.create(voip_provider=voip_provider, domain=options["practice_voip_domain"], practice=practice)
             self.stdout.write(self.style.SUCCESS(f"Created practice telecom with pk='{practice_telecom.pk}'"))
 
             self.stdout.write(f"Creating netsapiens_call_subscription with practice_telecom='{practice_telecom.pk}'")
@@ -48,7 +48,7 @@ class Command(BaseCommand):
 
             # Call ns-api to create event Subscription - from core1 side
             post_url = f"{options['peerlogic_root_api_url']}{netsapiens_call_subscription.call_subscription_uri}"
-            event_subscription_response = netsapiens_api_client.create_event_subscription(options["practice_name"], post_url=post_url)
+            event_subscription_response = netsapiens_api_client.create_event_subscription(options["practice_voip_domain"], post_url=post_url)
             # attempt to get response content as json, get the first
             try:
                 event_subscription = event_subscription_response.json()[0]
