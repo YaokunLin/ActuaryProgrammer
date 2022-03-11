@@ -48,7 +48,7 @@ class Command(BaseCommand):
 
             # Call ns-api to create event Subscription - from core1 side
             post_url = f"{options['peerlogic_root_api_url']}{netsapiens_call_subscription.call_subscription_uri}"
-            event_subscription_response = netsapiens_api_client.create_event_subscription(options["practice_voip_domain"], post_url=post_url)
+            event_subscription_response = netsapiens_api_client.create_event_subscription(domain=options["practice_voip_domain"], post_url=post_url)
             # attempt to get response content as json, get the first
             try:
                 event_subscription = event_subscription_response.json()[0]
