@@ -32,10 +32,10 @@ Apply the structure of the tables to the database.
 docker-compose up migrate
 ```
 
-Add the super user with username of `admin` and password of `password`.
+Add the super user with username of `admin` and password of `password`, set by .env file.
 
 ```
-docker-compose run api python3 manage.py createsuperuser
+docker-compose run api python3 manage.py createsuperuser --noinput
 ```
 
 After initial build and api and postgres are running, start it all up:
