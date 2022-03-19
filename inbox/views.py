@@ -11,8 +11,8 @@ from rest_framework.views import APIView
 from .bandwidth.serializers import (
     BandwidthResponseToSMSMessageSerializer,
     CreateSMSMessageAndConvertToBandwidthRequestSerializer,
-    MessageDeliveredEventListSerializer,
-    MessageDeliveredEventSerializer,
+    MessageCallbackEventListSerializer,
+    MessageCallbackEventSerializer,
     MessageFailedEventSerializer,
 )
 from .models import SMSMessage
@@ -53,9 +53,9 @@ class SMSMessagesDeliveredCallbackView(APIView):
         # https://dev.bandwidth.com/messaging/callbacks/msgDelivered.html
 
         if sms_messages:
-            message_delivered_event_serializer = MessageDeliveredEventSerializer(sms_messages, data=request.data, many=True)
+            message_delivered_event_serializer = MessageCallbackEventSerializer(sms_messages, data=request.data, many=True)
         else:
-            message_delivered_event_serializer = MessageDeliveredEventSerializer(data=request.data, many=True)
+            message_delivered_event_serializer = MessageCallbackEventSerializer(data=request.data, many=True)
         message_delivered_event_serializer_is_valid = message_delivered_event_serializer.is_valid()
         if not message_delivered_event_serializer_is_valid:
             return Response(message_delivered_event_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
