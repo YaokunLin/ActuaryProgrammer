@@ -17,17 +17,17 @@ from netsapiens_integration.helpers import get_callid_tuples_from_subscription_e
 from netsapiens_integration.publishers import publish_leg_b_ready_events
 
 from .models import (
-    NetsapiensAPICredentials,
-    NetsapiensCallSubscriptions,
-    NetsapiensCallSubscriptionsEventExtract,
+    NetsapiensAPICredential,
+    NetsapiensCallSubscription,
+    NetsapiensCallSubscriptionEventExtract,
     NetsapiensCdr2Extract,
 )
 from .serializers import (
-    AdminNetsapiensAPICredentialsSerializer,
-    NetsapiensAPICredentialsReadSerializer,
-    NetsapiensAPICredentialsWriteSerializer,
-    NetsapiensCallSubscriptionsEventExtractSerializer,
-    NetsapiensCallSubscriptionsSerializer,
+    AdminNetsapiensAPICredentialSerializer,
+    NetsapiensAPICredentialReadSerializer,
+    NetsapiensAPICredentialWriteSerializer,
+    NetsapiensCallSubscriptionEventExtractSerializer,
+    NetsapiensCallSubscriptionSerializer,
     NetsapiensCdr2ExtractSerializer,
 )
 
@@ -174,7 +174,7 @@ def netsapiens_call_subscription_event_receiver_view(request, practice_telecom_i
 
     log.info(f"Validating call_subscription for: call_subscription_id: '{call_subscription_id}'")
     # validate an active subscription exists and is associated with the practice telecom, not referenced later, we just need the check
-    get_object_or_404(NetsapiensCallSubscriptions, pk=call_subscription_id, active=True)
+    get_object_or_404(NetsapiensCallSubscription, pk=call_subscription_id, active=True)
     log.info(f"Validated call_subscription for: call_subscription_id: '{call_subscription_id}'")
 
     # Grab Practice and VOIP Provider for downstream processing
@@ -195,7 +195,7 @@ def netsapiens_call_subscription_event_receiver_view(request, practice_telecom_i
         return Response(status=status.HTTP_404_NOT_FOUND, data={"message": message})
     voip_provider_id = voip_provider.id
 
-    # Validate subscription payload by converting to NetsapiensCallSubscriptionsEventExtract
+    # Validate subscription payload by converting to NetsapiensCallSubscriptionEventExtract
     log.info(f"Validating subscription payload for : practice_telecom_id: '{practice_telecom_id}' and call_subscription_id: '{call_subscription_id}'")
     events = request.data
 
@@ -205,7 +205,7 @@ def netsapiens_call_subscription_event_receiver_view(request, practice_telecom_i
         event["netsapiens_call_subscription_id"] = call_subscription_id
 
     callid_orig_by_term_pairings_list = get_callid_tuples_from_subscription_event(events)
-    subscription_event_serializer = NetsapiensCallSubscriptionsEventExtractSerializer(data=events, many=True)
+    subscription_event_serializer = NetsapiensCallSubscriptionEventExtractSerializer(data=events, many=True)
     subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
     if not subscription_event_serializer_is_valid:
         log.exception(
@@ -214,7 +214,7 @@ def netsapiens_call_subscription_event_receiver_view(request, practice_telecom_i
         return Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": subscription_event_serializer.errors})
 
     # save events
-    saved_events: List[NetsapiensCallSubscriptionsEventExtract] = subscription_event_serializer.save()
+    saved_events: List[NetsapiensCallSubscriptionEventExtract] = subscription_event_serializer.save()
 
     # convert events into something that's emitable as a dictionary
     saved_events = subscription_event_serializer.to_representation(saved_events)
@@ -303,12 +303,12 @@ def netsapiens_call_origid_subscription_event_receiver_view(request):
     return Response(request.data)
 
 
-class NetsapiensAPICredentialsViewset(viewsets.ModelViewSet):
-    queryset = NetsapiensAPICredentials.objects.all().order_by("voip_provider", "active", "-created_at")
+class NetsapiensAPICredentialViewset(viewsets.ModelViewSet):
+    queryset = NetsapiensAPICredential.objects.all().order_by("voip_provider", "active", "-created_at")
     filterset_fields = ["voip_provider", "active"]
 
-    serializer_class_read = NetsapiensAPICredentialsReadSerializer
-    serializer_class_write = NetsapiensAPICredentialsWriteSerializer
+    serializer_class_read = NetsapiensAPICredentialReadSerializer
+    serializer_class_write = NetsapiensAPICredentialWriteSerializer
 
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
@@ -317,24 +317,24 @@ class NetsapiensAPICredentialsViewset(viewsets.ModelViewSet):
         return self.serializer_class_read
 
 
-class AdminNetsapiensAPICredentialsViewset(viewsets.ModelViewSet):
-    queryset = NetsapiensAPICredentials.objects.all().order_by("voip_provider", "active", "-created_at")
-    serializer_class = AdminNetsapiensAPICredentialsSerializer
+class AdminNetsapiensAPICredentialViewset(viewsets.ModelViewSet):
+    queryset = NetsapiensAPICredential.objects.all().order_by("voip_provider", "active", "-created_at")
+    serializer_class = AdminNetsapiensAPICredentialSerializer
     permission_classes = [IsAdminUser]
 
     filterset_fields = ["voip_provider", "active"]
 
 
-class NetsapiensCallSubscriptionsViewset(viewsets.ModelViewSet):
-    queryset = NetsapiensCallSubscriptions.objects.all().order_by("-modified_at")
-    serializer_class = NetsapiensCallSubscriptionsSerializer
+class NetsapiensCallSubscriptionViewset(viewsets.ModelViewSet):
+    queryset = NetsapiensCallSubscription.objects.all().order_by("-modified_at")
+    serializer_class = NetsapiensCallSubscriptionSerializer
 
     filterset_fields = ["practice_telecom"]
 
 
-class NetsapiensCallSubscriptionsEventExtractViewset(viewsets.ModelViewSet):
-    queryset = NetsapiensCallSubscriptionsEventExtract.objects.all()
-    serializer_class = NetsapiensCallSubscriptionsEventExtractSerializer
+class NetsapiensCallSubscriptionEventExtractViewset(viewsets.ModelViewSet):
+    queryset = NetsapiensCallSubscriptionEventExtract.objects.all()
+    serializer_class = NetsapiensCallSubscriptionEventExtractSerializer
 
     filterset_fields = ["orig_callid", "by_callid", "term_callid"]
 

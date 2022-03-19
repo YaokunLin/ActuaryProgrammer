@@ -1,11 +1,11 @@
 from django.contrib import admin
 
 from netsapiens_integration.models import (
-    NetsapiensAPICredentials,
-    NetsapiensCallSubscriptions,
-    NetsapiensCallSubscriptionsEventExtract,
+    NetsapiensAPICredential,
+    NetsapiensCallSubscription,
+    NetsapiensCallSubscriptionEventExtract,
 )
 
-admin.site.register(NetsapiensAPICredentials)
-admin.site.register(NetsapiensCallSubscriptions)
-admin.site.register(NetsapiensCallSubscriptionsEventExtract)
+admin.site.register(NetsapiensAPICredential)
+admin.site.register(NetsapiensCallSubscription)
+admin.site.register(NetsapiensCallSubscriptionEventExtract)

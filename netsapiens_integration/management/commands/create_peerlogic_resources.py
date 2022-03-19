@@ -5,7 +5,7 @@ from django.db import connection
 import requests
 
 from core.models import Practice, PracticeTelecom, VoipProvider
-from netsapiens_integration.models import NetsapiensCallSubscriptions
+from netsapiens_integration.models import NetsapiensCallSubscription
 
 
 def insert_voip_provider_with_pk():
@@ -87,7 +87,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"Created practice with {settings.PEERLOGIC_PRACTICE_TELECOM_ID}"))
 
         self.stdout.write(f"Getting or creating netsapiens_call_subscription with practice_telecom='{practice_telecom.pk}'")
-        netsapiens_call_subscription, netsapiens_call_subscription_created = NetsapiensCallSubscriptions.objects.get_or_create(
+        netsapiens_call_subscription, netsapiens_call_subscription_created = NetsapiensCallSubscription.objects.get_or_create(
             practice_telecom=practice_telecom,
             defaults={"active": True},
         )

@@ -6,9 +6,9 @@ from rest_framework import serializers
 from core.models import PracticeTelecom
 from core.serializers import UnixEpochDateField
 from .models import (
-    NetsapiensAPICredentials,
-    NetsapiensCallSubscriptions,
-    NetsapiensCallSubscriptionsEventExtract,
+    NetsapiensAPICredential,
+    NetsapiensCallSubscription,
+    NetsapiensCallSubscriptionEventExtract,
     NetsapiensCdr2Extract,
 )
 from .publishers import (
@@ -20,9 +20,9 @@ from .publishers import (
 log = logging.getLogger(__name__)
 
 
-class NetsapiensCallSubscriptionsEventExtractSerializer(serializers.ModelSerializer):
+class NetsapiensCallSubscriptionEventExtractSerializer(serializers.ModelSerializer):
     class Meta:
-        model = NetsapiensCallSubscriptionsEventExtract
+        model = NetsapiensCallSubscriptionEventExtract
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
         fields = "__all__"
 
@@ -88,16 +88,16 @@ class NetsapiensCdr2ExtractSerializer(serializers.ModelSerializer):
         return instance.peerlogic_call_id and instance.peerlogic_call_partial_id
 
 
-class NetsapiensAPICredentialsReadSerializer(serializers.ModelSerializer):
+class NetsapiensAPICredentialReadSerializer(serializers.ModelSerializer):
     class Meta:
-        model = NetsapiensAPICredentials
+        model = NetsapiensAPICredential
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "active"]
         fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "voip_provider", "api_url", "client_id", "username", "active"]
 
 
-class NetsapiensAPICredentialsWriteSerializer(serializers.ModelSerializer):
+class NetsapiensAPICredentialWriteSerializer(serializers.ModelSerializer):
     class Meta:
-        model = NetsapiensAPICredentials
+        model = NetsapiensAPICredential
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "active"]
         fields = [
             "id",
@@ -115,9 +115,9 @@ class NetsapiensAPICredentialsWriteSerializer(serializers.ModelSerializer):
         ]
 
 
-class AdminNetsapiensAPICredentialsSerializer(serializers.ModelSerializer):
+class AdminNetsapiensAPICredentialSerializer(serializers.ModelSerializer):
     class Meta:
-        model = NetsapiensAPICredentials
+        model = NetsapiensAPICredential
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
         fields = [
             "id",
@@ -135,10 +135,10 @@ class AdminNetsapiensAPICredentialsSerializer(serializers.ModelSerializer):
         ]
 
 
-class NetsapiensCallSubscriptionsSerializer(serializers.ModelSerializer):
+class NetsapiensCallSubscriptionSerializer(serializers.ModelSerializer):
     call_subscription_uri = serializers.CharField(required=False)
 
     class Meta:
-        model = NetsapiensCallSubscriptions
+        model = NetsapiensCallSubscription
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "call_subscription_uri"]
         fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "source_id", "practice_telecom", "call_subscription_uri"]
