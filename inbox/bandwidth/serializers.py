@@ -3,10 +3,12 @@ from typing import Dict
 from django.conf import settings
 from django.db.models.fields import CharField
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+
 from drf_compound_fields.fields import ListField
 
 from phonenumber_field.serializerfields import PhoneNumberField
-from inbox.field_choices import MessageStatuses
+from inbox.field_choices import bandwidth_value_to_peerlogic_message_status_map, PeerlogicMessageStatuses
 
 from inbox.models import SMSMessage
 
@@ -28,7 +30,7 @@ class MessageSerializer(serializers.Serializer):
     segmentCount = serializers.IntegerField(min_value=1)
 
 
-class MessageDeliveredEventListSerializer(serializers.ListSerializer):
+class MessageCallbackEventListSerializer(serializers.ListSerializer):
     """
     Serializers with many=True do not support multiple update by default, only multiple create.
     For updates it is unclear how to deal with insertions and deletions.
@@ -57,7 +59,7 @@ class MessageDeliveredEventListSerializer(serializers.ListSerializer):
         return updated_sms_messages
 
 
-class MessageDeliveredEventSerializer(serializers.Serializer):
+class MessageCallbackEventSerializer(serializers.Serializer):
     """
     For both inbound and outbound
     https://dev.bandwidth.com/docs/messaging/webhooks/#inbound-message-webhooks
@@ -105,7 +107,6 @@ class MessageDeliveredEventSerializer(serializers.Serializer):
         representation["message"]["time"] = representation["time"]
         representation["message"]["to"] = instance.to_numbers
         representation["message"]["from"] = str(instance.from_number)
-        representation["message"]["text"] = instance.text
         representation["message"]["applicationId"] = instance.application_id
         representation["message"]["owner"] = str(instance.owner)
         representation["message"]["direction"] = instance.direction
@@ -121,42 +122,40 @@ class MessageDeliveredEventSerializer(serializers.Serializer):
         validated_data["to_numbers"] = message.get("to")
         validated_data["from_number"] = message.get("from")
         validated_data["text"] = message.get("text")
-        message_status = message.get("message_status")
-        if message_status == "message-received":
-            validated_data["message_status"] = MessageStatuses.RECEIVED
-        elif message_status == "message-delivered":
-            validated_data["message_status"] = MessageStatuses.DELIVERED
+        message_status = validated_data.pop("message_status")
+        validated_data["message_status"] = bandwidth_value_to_peerlogic_message_status_map.get(message_status)
+        if not validated_data.get("message_status"):
+            raise ValidationError("No valid message_status received from Bandwidth!")
         # delivered_date_time is in outer json
         validated_data["direction"] = message.get("direction")
         validated_data["media"] = message.get("media")
         validated_data["segment_count"] = message.get("segmentCount")
-        validated_data["sent_date_time"] = message.get("time")
         return SMSMessage.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
         instance.destination_number = validated_data.pop("to")
+        message_status = validated_data.get("message_status")
+        instance.message_status = bandwidth_value_to_peerlogic_message_status_map.get(message_status)
+        if not instance.message_status:
+            raise ValidationError("No valid message_status received from Bandwidth!")
+        if instance.message_status in [PeerlogicMessageStatuses.BANDWIDTH_MESSAGE_DELIVERED.value, PeerlogicMessageStatuses.BANDWIDTH_MESSAGE_RECEIVED.value]:
+            print(validated_data.get("delivered_date_time"))
+            instance.delivered_date_time = validated_data.get("delivered_date_time")
         message = validated_data.pop("message")
         instance.bandwidth_id = message.get("id")
         instance.owner = message.get("owner")
         instance.to_numbers = message.get("to")
         instance.from_number = message.get("from")
-        instance.text = message.get("text")
-        message_status = message.get("message_status")
-        if message_status == "message-received":
-            instance.message_status = MessageStatuses.RECEIVED
-        elif message_status == "message-delivered":
-            instance.message_status = MessageStatuses.DELIVERED
-        # delivered_date_time is in outer json
+
         instance.direction = message.get("direction")
         instance.media = message.get("media")
         instance.segment_count = message.get("segmentCount")
-        instance.sent_date_time = message.get("time")
 
         instance.save()
         return instance
 
     class Meta:
-        list_serializer_class = MessageDeliveredEventListSerializer
+        list_serializer_class = MessageCallbackEventListSerializer
 
 
 class CreateSMSMessageAndConvertToBandwidthRequestSerializer(serializers.Serializer):
@@ -271,4 +270,5 @@ class BandwidthResponseToSMSMessageSerializer(serializers.Serializer):
         return data
 
     def create(self, validated_data):
+        validated_data["message_status"] = PeerlogicMessageStatuses.MESSAGE_SENT_TO_BANDWIDTH
         return SMSMessage.objects.create(**validated_data)
