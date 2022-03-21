@@ -125,7 +125,7 @@ class MessageCallbackEventSerializer(serializers.Serializer):
         message_status = validated_data.pop("message_status")
         validated_data["message_status"] = bandwidth_value_to_peerlogic_message_status_map.get(message_status)
         if not validated_data.get("message_status"):
-            raise ValidationError("No valid message status received from Bandwidth!")
+            raise ValidationError("No valid message_status received from Bandwidth!")
         # delivered_date_time is in outer json
         validated_data["direction"] = message.get("direction")
         validated_data["media"] = message.get("media")
@@ -137,7 +137,7 @@ class MessageCallbackEventSerializer(serializers.Serializer):
         message_status = validated_data.get("message_status")
         instance.message_status = bandwidth_value_to_peerlogic_message_status_map.get(message_status)
         if not instance.message_status:
-            raise ValidationError("No valid message status received from Bandwidth!")
+            raise ValidationError("No valid message_status received from Bandwidth!")
         if instance.message_status in [PeerlogicMessageStatuses.BANDWIDTH_MESSAGE_DELIVERED.value, PeerlogicMessageStatuses.BANDWIDTH_MESSAGE_RECEIVED.value]:
             print(validated_data.get("delivered_date_time"))
             instance.delivered_date_time = validated_data.get("delivered_date_time")

@@ -20,8 +20,7 @@ class PeerlogicMessageStatuses(BandwidthMessageStatuses, models.TextChoices):
     BANDWIDTH_MESSAGE_SENDING = "bandwidth_message_sending"
     MESSAGE_SENT_TO_BANDWIDTH = "message_sent_to_bandwidth"
     MESSAGE_INIT = "message_init"
-    # MESSAGE_UNDELIVERED = "message-undelivered"
-    # MESSAGE_QUEUED = "queued"
+    # TODO: MESSAGE_UNDELIVERED
 
 
 bandwidth_value_to_peerlogic_message_status_map = {
