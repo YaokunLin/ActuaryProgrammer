@@ -7,8 +7,8 @@ from core.models import PracticeTelecom
 from core.serializers import UnixEpochDateField
 from .models import (
     NetsapiensAPICredentials,
-    NetsapiensCallSubscriptions,
-    NetsapiensCallSubscriptionsEventExtract,
+    NetsapiensCallSubscription,
+    NetsapiensCallSubscriptionEventExtract,
     NetsapiensCdr2Extract,
 )
 from .publishers import (
@@ -20,9 +20,9 @@ from .publishers import (
 log = logging.getLogger(__name__)
 
 
-class NetsapiensCallSubscriptionsEventExtractSerializer(serializers.ModelSerializer):
+class NetsapiensCallSubscriptionEventExtractSerializer(serializers.ModelSerializer):
     class Meta:
-        model = NetsapiensCallSubscriptionsEventExtract
+        model = NetsapiensCallSubscriptionEventExtract
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
         fields = "__all__"
 
@@ -135,10 +135,10 @@ class AdminNetsapiensAPICredentialsSerializer(serializers.ModelSerializer):
         ]
 
 
-class NetsapiensCallSubscriptionsSerializer(serializers.ModelSerializer):
+class NetsapiensCallSubscriptionSerializer(serializers.ModelSerializer):
     call_subscription_uri = serializers.CharField(required=False)
 
     class Meta:
-        model = NetsapiensCallSubscriptions
+        model = NetsapiensCallSubscription
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "call_subscription_uri"]
         fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "source_id", "practice_telecom", "call_subscription_uri"]

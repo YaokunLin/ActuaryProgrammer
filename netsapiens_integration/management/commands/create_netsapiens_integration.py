@@ -7,7 +7,7 @@ import requests
 
 from core.clients.netsapiens_client import NetsapiensAPIClient
 from core.models import Practice, PracticeTelecom, VoipProvider
-from netsapiens_integration.models import NetsapiensAPICredentials, NetsapiensCallSubscriptions
+from netsapiens_integration.models import NetsapiensAPICredentials, NetsapiensCallSubscription
 
 
 class Command(BaseCommand):
@@ -38,7 +38,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"Created practice telecom with pk='{practice_telecom.pk}'"))
 
             self.stdout.write(f"Creating netsapiens_call_subscription with practice_telecom='{practice_telecom.pk}'")
-            netsapiens_call_subscription = NetsapiensCallSubscriptions.objects.create(practice_telecom=practice_telecom, active=True)
+            netsapiens_call_subscription = NetsapiensCallSubscription.objects.create(practice_telecom=practice_telecom, active=True)
             self.stdout.write(self.style.SUCCESS(f"Created netsapiens_call_subscription with pk='{netsapiens_call_subscription.pk}'"))
 
             netsapiens_api_client = NetsapiensAPIClient(root_api_url=ns_creds.api_url)

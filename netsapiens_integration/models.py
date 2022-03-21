@@ -18,8 +18,11 @@ class NetsapiensAPICredentials(AuditTrailModel):
 
     active = models.BooleanField(null=True, blank=False, default=False)  # whether these credentials are active for usage
 
+    class Meta:
+        verbose_name_plural = "NetsapiensAPICredentials"
 
-class NetsapiensCallSubscriptions(AuditTrailModel):
+
+class NetsapiensCallSubscription(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     source_id = models.CharField(
         max_length=32, blank=True, default="", help_text=("Subscription ID for Netsapiens on the Voip Provider's side. The source of the data / events")
@@ -33,9 +36,9 @@ class NetsapiensCallSubscriptions(AuditTrailModel):
         return reverse("netsapiens:call-subscription-event-receiver", kwargs={"practice_telecom_id": self.practice_telecom.pk, "call_subscription_id": self.id})
 
 
-class NetsapiensCallSubscriptionsEventExtract(AuditTrailModel):
+class NetsapiensCallSubscriptionEventExtract(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
-    netsapiens_call_subscription = models.ForeignKey(NetsapiensCallSubscriptions, null=False, on_delete=models.RESTRICT)
+    netsapiens_call_subscription = models.ForeignKey(NetsapiensCallSubscription, null=False, on_delete=models.RESTRICT)
     # These max_lengths are best guesses based on Core1-phx's CdrDomain.201904_r table, unless otherwise specified
     # To be the truest extract we can make without using JSONField, making blank=True for CharFields and null=True for all others
     orig_callid = models.CharField(max_length=127, blank=True, null=True)  # 0_1063160652@192.168.168.127
@@ -117,10 +120,10 @@ class NetsapiensCallSubscriptionsEventExtract(AuditTrailModel):
 class NetsapiensCdr2Extract(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     netsapiens_call_subscription = models.ForeignKey(
-        NetsapiensCallSubscriptions, null=False, on_delete=models.RESTRICT
+        NetsapiensCallSubscription, null=False, on_delete=models.RESTRICT
     )  # update the Serializer.create method if this ever becomes optional
     netsapiens_call_subscription_event_extract = models.ForeignKey(
-        NetsapiensCallSubscriptionsEventExtract, null=True, on_delete=models.SET_NULL
+        NetsapiensCallSubscriptionEventExtract, null=True, on_delete=models.SET_NULL
     )  # most cases, this is what prompted CDR2 acquisitions
     peerlogic_call_id = models.CharField(
         blank=True, default="", max_length=22, db_index=True
