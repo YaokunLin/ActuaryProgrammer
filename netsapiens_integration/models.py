@@ -6,7 +6,7 @@ from django_extensions.db.fields import ShortUUIDField
 from core.abstract_models import AuditTrailModel
 
 
-class NetsapiensAPICredential(AuditTrailModel):
+class NetsapiensAPICredentials(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     voip_provider = models.ForeignKey("core.VoipProvider", on_delete=models.CASCADE)
 
@@ -17,6 +17,9 @@ class NetsapiensAPICredential(AuditTrailModel):
     password = models.CharField(max_length=255, blank=True)  # unknown, it's a guess, password hash may be 60 based upon SiPbxDomain.subscriber_config.pwd_hash
 
     active = models.BooleanField(null=True, blank=False, default=False)  # whether these credentials are active for usage
+
+    class Meta:
+        verbose_name_plural = "NetsapiensAPICredentials"
 
 
 class NetsapiensCallSubscription(AuditTrailModel):

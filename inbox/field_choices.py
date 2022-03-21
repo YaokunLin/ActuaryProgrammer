@@ -13,6 +13,7 @@ class BandwidthMessageStatuses(models.TextChoices):
     MESSAGE_RECEIVED = "message-received"
     MESSAGE_SENDING = "message-sending"
 
+
 class PeerlogicMessageStatuses(BandwidthMessageStatuses, models.TextChoices):
     BANDWIDTH_MESSAGE_DELIVERED = "bandwidth_message_delivered"
     BANDWIDTH_MESSAGE_FAILED = "bandwidth_message_failed"
@@ -27,5 +28,5 @@ bandwidth_value_to_peerlogic_message_status_map = {
     BandwidthMessageStatuses.MESSAGE_DELIVERED.value: PeerlogicMessageStatuses.BANDWIDTH_MESSAGE_DELIVERED.value,
     BandwidthMessageStatuses.MESSAGE_FAILED.value: PeerlogicMessageStatuses.BANDWIDTH_MESSAGE_FAILED.value,
     BandwidthMessageStatuses.MESSAGE_RECEIVED.value: PeerlogicMessageStatuses.BANDWIDTH_MESSAGE_RECEIVED.value,
-    BandwidthMessageStatuses.MESSAGE_SENDING.value: PeerlogicMessageStatuses.BANDWIDTH_MESSAGE_SENDING.value
+    BandwidthMessageStatuses.MESSAGE_SENDING.value: PeerlogicMessageStatuses.BANDWIDTH_MESSAGE_SENDING.value,
 }

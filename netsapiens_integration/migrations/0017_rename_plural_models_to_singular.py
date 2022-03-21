@@ -9,6 +9,5 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RenameModel("NetsapiensCallSubscriptions", "NetsapiensCallSubscription"),
-        migrations.RenameModel("NetsapiensCallSubscriptionsEventExtract", "NetsapiensCallSubscriptionEventExtract"),
-        migrations.RenameModel("NetsapiensAPICredentials", "NetsapiensAPICredential"),
+        migrations.RenameModel("NetsapiensCallSubscriptionsEventExtract", "NetsapiensCallSubscriptionEventExtract")
     ]

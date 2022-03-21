@@ -17,15 +17,15 @@ from netsapiens_integration.helpers import get_callid_tuples_from_subscription_e
 from netsapiens_integration.publishers import publish_leg_b_ready_events
 
 from .models import (
-    NetsapiensAPICredential,
+    NetsapiensAPICredentials,
     NetsapiensCallSubscription,
     NetsapiensCallSubscriptionEventExtract,
     NetsapiensCdr2Extract,
 )
 from .serializers import (
-    AdminNetsapiensAPICredentialSerializer,
-    NetsapiensAPICredentialReadSerializer,
-    NetsapiensAPICredentialWriteSerializer,
+    AdminNetsapiensAPICredentialsSerializer,
+    NetsapiensAPICredentialsReadSerializer,
+    NetsapiensAPICredentialsWriteSerializer,
     NetsapiensCallSubscriptionEventExtractSerializer,
     NetsapiensCallSubscriptionSerializer,
     NetsapiensCdr2ExtractSerializer,
@@ -303,12 +303,12 @@ def netsapiens_call_origid_subscription_event_receiver_view(request):
     return Response(request.data)
 
 
-class NetsapiensAPICredentialViewset(viewsets.ModelViewSet):
-    queryset = NetsapiensAPICredential.objects.all().order_by("voip_provider", "active", "-created_at")
+class NetsapiensAPICredentialsViewset(viewsets.ModelViewSet):
+    queryset = NetsapiensAPICredentials.objects.all().order_by("voip_provider", "active", "-created_at")
     filterset_fields = ["voip_provider", "active"]
 
-    serializer_class_read = NetsapiensAPICredentialReadSerializer
-    serializer_class_write = NetsapiensAPICredentialWriteSerializer
+    serializer_class_read = NetsapiensAPICredentialsReadSerializer
+    serializer_class_write = NetsapiensAPICredentialsWriteSerializer
 
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
@@ -317,9 +317,9 @@ class NetsapiensAPICredentialViewset(viewsets.ModelViewSet):
         return self.serializer_class_read
 
 
-class AdminNetsapiensAPICredentialViewset(viewsets.ModelViewSet):
-    queryset = NetsapiensAPICredential.objects.all().order_by("voip_provider", "active", "-created_at")
-    serializer_class = AdminNetsapiensAPICredentialSerializer
+class AdminNetsapiensAPICredentialsViewset(viewsets.ModelViewSet):
+    queryset = NetsapiensAPICredentials.objects.all().order_by("voip_provider", "active", "-created_at")
+    serializer_class = AdminNetsapiensAPICredentialsSerializer
     permission_classes = [IsAdminUser]
 
     filterset_fields = ["voip_provider", "active"]

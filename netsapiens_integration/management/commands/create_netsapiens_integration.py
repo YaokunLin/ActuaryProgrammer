@@ -7,7 +7,7 @@ import requests
 
 from core.clients.netsapiens_client import NetsapiensAPIClient
 from core.models import Practice, PracticeTelecom, VoipProvider
-from netsapiens_integration.models import NetsapiensAPICredential, NetsapiensCallSubscription
+from netsapiens_integration.models import NetsapiensAPICredentials, NetsapiensCallSubscription
 
 
 class Command(BaseCommand):
@@ -25,7 +25,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"Got voip provider with pk='{voip_provider.pk}'"))
 
         self.stdout.write(f"Getting netsapiens credentials with PEERLOGIC_NETSAPIENS_API_CREDENTIALS_ID='{settings.PEERLOGIC_NETSAPIENS_API_CREDENTIALS_ID}'")
-        ns_creds = NetsapiensAPICredential.objects.get(pk=settings.PEERLOGIC_NETSAPIENS_API_CREDENTIALS_ID)
+        ns_creds = NetsapiensAPICredentials.objects.get(pk=settings.PEERLOGIC_NETSAPIENS_API_CREDENTIALS_ID)
         self.stdout.write(self.style.SUCCESS(f"Got netsapiens credentials with pk='{ns_creds.pk}'"))
 
         with transaction.atomic():
