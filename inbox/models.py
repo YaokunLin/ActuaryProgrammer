@@ -5,7 +5,7 @@ from django_extensions.db.fields import ShortUUIDField
 from phonenumber_field.modelfields import PhoneNumberField
 
 from core.abstract_models import AuditTrailModel
-from .field_choices import MessagePriorities, MessageStatuses
+from .field_choices import MessagePriorities, PeerlogicMessageStatuses
 
 
 class SMSMessage(AuditTrailModel):
@@ -20,7 +20,7 @@ class SMSMessage(AuditTrailModel):
     to_numbers = models.JSONField()
     from_number = PhoneNumberField()
     text = models.CharField(max_length=2048)
-    message_status = models.CharField(choices=MessageStatuses.choices, blank=True, max_length=255)
+    message_status = models.CharField(choices=PeerlogicMessageStatuses.choices, blank=True, max_length=255)
     sent_date_time = models.DateTimeField(null=True)
     delivered_date_time = models.DateTimeField(null=True)
     errored_date_time = models.DateTimeField(null=True)

@@ -1,39 +1,8 @@
 # Peerlogic API
 
+## Dependencies
 
-## GCloud Setup
-
-Log into Google Kubernetes Engine (GKE):
-
-```bash
-gcloud container clusters get-credentials peerlogic-dev-1 --zone "us-west3-c"
-gcloud auth configure-docker
-```
-
-Log into Google Kubernetes Engine (GKE):
-
-```bash
-gcloud container clusters get-credentials peerlogic-dev-1 --zone "us-west3-c"
-gcloud auth configure-docker
-```
-# 1Password sign-in
-
-Set up your CLI tool: https://support.1password.com/command-line-getting-started/
-
-Sign in: 
-
-https://support.1password.com/command-line/#sign-in-or-out
-
-```bash
-op signin [<sign_in_address>](https://peerlogic.1password.com/signin) <email_address> <secret_key>
-```
-eval $(op signin my)
-
-<!-- For MAC:
-
-```bash
-echo "1PASSWORD_SHORTHAND=<youroutputtedtokenhere>" >> ~/.bashrc
-``` -->
+\# TODO
 
 ## Docker
 
@@ -41,13 +10,13 @@ Make sure to run these commands from the root of the project.
 
 ### Initial setup
 
-Fill in the necessary creds and values in `.env`.
+Solvestack Meetup folks - use SOLVESTACK_README.md instead for this section.
+
+Create a new file in the root of the peerlogic-api directory called `.env`.
+
+Paste the contents of this 1Password secret into the `.env` file
 
 See 1Password for a starter file: [peerlogic-api LOCAL  starter .env file](https://start.1password.com/open/i?a=P3RU52IFYBEH3GKEDF2UBYENBQ&v=wlmpasbyyncmhpjji3lfc7ra4a&i=sxjcghmtefeqvdystb2l6q7k5y&h=my.1password.com)
-
-```
-brew install ffmpeg
-```
 
 ### Docker commands:
 
@@ -63,13 +32,11 @@ Apply the structure of the tables to the database.
 docker-compose up migrate
 ```
 
-Add the super user with username of `admin` and password of `password`.
+Add the super user with username of `admin` and password of `password`, set by .env file.
 
 ```
-docker-compose run api python3 manage.py createsuperuser
+docker-compose run api python3 manage.py createsuperuser --noinput
 ```
-
-
 
 After initial build and api and postgres are running, start it all up:
 
@@ -130,3 +97,21 @@ There is a Postman Collection that can be used to validate setup and test change
 CI/CD is set up for deploying to development with App Engine.
 
 See `deployment/app_engine/DEPLOYMENT.md` for deploying to another environment with App Engine.
+# 1Password sign-in
+
+Set up your CLI tool: https://support.1password.com/command-line-getting-started/
+
+Sign in: 
+
+https://support.1password.com/command-line/#sign-in-or-out
+
+```bash
+op signin [<sign_in_address>](https://peerlogic.1password.com/signin) <email_address> <secret_key>
+```
+eval $(op signin my)
+
+<!-- For MAC:
+
+```bash
+echo "1PASSWORD_SHORTHAND=<youroutputtedtokenhere>" >> ~/.bashrc
+``` -->
