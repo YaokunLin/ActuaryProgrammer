@@ -164,9 +164,10 @@ AUTH_USER_MODEL = "core.User"
 PUBLISHER_IS_ENABLED = os.getenv("PUBLISHER_IS_ENABLED", "False").lower() in ("true", "1", "t")
 
 PEERLOGIC_STREAM_KEY = os.getenv("PEERLOGIC_STREAM_KEY")
+ML_PROCESS_SHOULD_RUN_TRANSCRIPTION = os.getenv("ML_PROCESS_SHOULD_RUN_TRANSCRIPTION", "False")
 ML_PROCESS_ARGUMENTS = {
     "streaming_key": PEERLOGIC_STREAM_KEY,
-    "run_transcription": "true",
+    "run_transcription": ML_PROCESS_SHOULD_RUN_TRANSCRIPTION,
 }
 
 PUBSUB_TOPIC_ID_CALL_AUDIO_PARTIAL_SAVED = os.getenv("PUBSUB_TOPIC_ID_CALL_AUDIO_PARTIAL_SAVED", "dev-call_audio_partial_saved")
