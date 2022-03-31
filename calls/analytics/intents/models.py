@@ -16,7 +16,8 @@ class CallPurpose(AuditTrailModel):
         "Call", on_delete=models.CASCADE, verbose_name="Purpose of the call", related_name="call_purposes"
     )
     call_purpose_type = models.CharField(choices=CallPurposeTypes.choices, max_length=50, db_index=True, blank=True)
-    # TODO: call_purpose_model_run
+    raw_call_purpose_model_run_id = models.CharField(max_length=22)
+    # TODO: Foreign key of call_purpose_model_run to results history when available
 
 
 class CallOutcome(AuditTrailModel):
@@ -25,7 +26,8 @@ class CallOutcome(AuditTrailModel):
     call_purpose = models.ForeignKey(
         CallPurpose, on_delete=models.SET_NULL, verbose_name="The source purpose for this outcome", related_name="outcome_results", null=True
     )
-    # TODO: call_outcome_model_run
+    raw_call_outcome_model_run_id = models.CharField(max_length=22)
+    # TODO: Foreign key of call_outcome_model_run to results history when available
 
 class CallOutcomeReason(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
@@ -33,4 +35,5 @@ class CallOutcomeReason(AuditTrailModel):
         CallOutcome, on_delete=models.SET_NULL, verbose_name="The source outcome", related_name="outcome_reason_results", null=True
     )
     call_outcome_reason_type = models.CharField(choices=CallOutcomeReasonTypes.choices, max_length=75, db_index=True, blank=True)
-    # TODO: call_outcome_reason_model_run
+    raw_call_outcome_reason_model_run_id = models.CharField(max_length=22)
+    # TODO: Foreign key of call_outcome_reason_model_run to results history when available
