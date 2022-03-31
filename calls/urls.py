@@ -31,6 +31,8 @@ call_router.register(r"audio", CallAudioViewset, basename="call-audio")
 call_router.register(r"partials", CallPartialViewset, basename="call-partials")
 call_router.register(r"transcripts", CallTranscriptViewset, basename="call-transcripts")
 call_router.register(r"purposes", CallPurposeViewset, basename="call-purposes")
+call_router.register(r"outcomes", CallOutcomeViewset, basename="call-outcomes")
+call_router.register(r"outcome-reasons", CallOutcomeReasonViewset, basename="call-outcome-reasons")
 
 call_partials_router = routers.NestedSimpleRouter(call_router, r"partials", lookup="call_partial")
 call_partials_router.register(r"audio", CallAudioPartialViewset, basename="call-partial-audio")

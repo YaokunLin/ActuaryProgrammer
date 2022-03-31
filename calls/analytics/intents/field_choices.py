@@ -17,7 +17,7 @@ class CallOutcomeTypes(models.TextChoices):
 
 class CallOutcomeReasonTypes(models.TextChoices):
     # TODO: Fix incorrect spelling in BQ and ml-stream-pipeline: not_enough_information_possesed_by_patient_or_agent
-    NOT_ENOUGH_INFORMATION_POSSESSED_BY_PATIENT_OR_AGENT = "not_enough_information_possessed_by_patient_or_agent"
+    NOT_ENOUGH_INFORMATION_POSSESED_BY_PATIENT_OR_AGENT = "not_enough_information_possesed_by_patient_or_agent"
     PROCEDURE_NOT_OFFERED = "procedure_not_offered"
     CALLER_INDIFFERENCE = "caller_indifference"
     INSURANCE = "insurance"
