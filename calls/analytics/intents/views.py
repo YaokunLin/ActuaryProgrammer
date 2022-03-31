@@ -13,10 +13,10 @@ class CallPurposeViewset(viewsets.ModelViewSet):
 class CallOutcomeViewset(viewsets.ModelViewSet):
     queryset = CallOutcome.objects.all().order_by("-modified_at")
     serializer_class = CallOutcomeSerializer
-    filter_fields = ["call_outcome_type", "call_purpose"]
+    filter_fields = ["call_outcome_type", "call_purpose", "call_purpose__call"]
 
 
 class CallOutcomeReasonViewset(viewsets.ModelViewSet):
     queryset = CallOutcomeReason.objects.all().order_by("-modified_at")
     serializer_class = CallOutcomeReasonSerializer
-    filter_fields = ["call_outcome_reason_type", "call_outcome"]
+    filter_fields = ["call_outcome_reason_type", "call_outcome", "call_outcome__call_purpose", "call_outcome__call_purpose__call"]
