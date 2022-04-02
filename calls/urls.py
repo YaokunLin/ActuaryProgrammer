@@ -1,10 +1,10 @@
 from django.urls import include, path
 from rest_framework_nested import routers
 
-from calls.analytics.intents.views import (
-    CallOutcomeViewset,
-    CallOutcomeReasonViewset,
-    CallPurposeViewset
+from calls.analytics.intents.views import CallOutcomeViewset, CallOutcomeReasonViewset, CallPurposeViewset
+from calls.analytics.transcripts.views import (
+    CallTranscriptFragmentViewset,
+    CallTranscriptFragmentSentimentViewset,
 )
 from .views import (
     CallAudioPartialViewset,
@@ -33,6 +33,9 @@ call_router.register(r"transcripts", CallTranscriptViewset, basename="call-trans
 call_router.register(r"purposes", CallPurposeViewset, basename="call-purposes")
 call_router.register(r"outcomes", CallOutcomeViewset, basename="call-outcomes")
 call_router.register(r"outcome-reasons", CallOutcomeReasonViewset, basename="call-outcome-reasons")
+call_router.register(r"transcript-fragments", CallTranscriptFragmentViewset, basename="call-transcript-fragments")
+call_router.register(r"transcript-fragment-sentiments", CallTranscriptFragmentSentimentViewset, basename="call-transcript-fragment-sentiments")
+
 
 call_partials_router = routers.NestedSimpleRouter(call_router, r"partials", lookup="call_partial")
 call_partials_router.register(r"audio", CallAudioPartialViewset, basename="call-partial-audio")
