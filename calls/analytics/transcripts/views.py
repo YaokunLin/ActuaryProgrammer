@@ -7,10 +7,9 @@ from calls.analytics.transcripts.serializers import CallTranscriptFragmentSerial
 class CallTranscriptFragmentViewset(viewsets.ModelViewSet):
     queryset = CallTranscriptFragment.objects.all().order_by("-modified_at")
     serializer_class = CallTranscriptFragmentSerializer
-    # filter_fields =
-
+    filter_fields = ["call__id", "telecom_persona_type"]
 
 class CallTranscriptFragmentSentimentViewset(viewsets.ModelViewSet):
     queryset = CallTranscriptFragmentSentiment.objects.all().order_by("-modified_at")
     serializer_class = CallTranscriptFragmentSentimentSerializer
-    # TODO: filter_fields
+    filter_fields = ["call_transcript_fragment__id", "sentiment_score"]
