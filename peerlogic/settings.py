@@ -242,6 +242,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "core",
     "calls",
+    "care",
     "etl",
     "inbox",
     "reminders",

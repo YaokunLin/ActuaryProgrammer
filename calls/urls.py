@@ -4,6 +4,7 @@ from rest_framework_nested import routers
 from calls.analytics.intents.views import (
     CallOutcomeViewset,
     CallOutcomeReasonViewset,
+    CallProcedureDiscussedViewset,
     CallPurposeViewset
 )
 from .views import (
@@ -30,6 +31,7 @@ call_router = routers.NestedSimpleRouter(calls_app_root_router, r"calls", lookup
 call_router.register(r"audio", CallAudioViewset, basename="call-audio")
 call_router.register(r"partials", CallPartialViewset, basename="call-partials")
 call_router.register(r"transcripts", CallTranscriptViewset, basename="call-transcripts")
+call_router.register(r"procedures-discussed", CallProcedureDiscussedViewset, basename="call-procedures-discussed")
 call_router.register(r"purposes", CallPurposeViewset, basename="call-purposes")
 call_router.register(r"outcomes", CallOutcomeViewset, basename="call-outcomes")
 call_router.register(r"outcome-reasons", CallOutcomeReasonViewset, basename="call-outcome-reasons")
