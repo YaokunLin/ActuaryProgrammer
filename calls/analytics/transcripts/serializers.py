@@ -1,9 +1,16 @@
 from rest_framework import serializers
 
-from calls.analytics.transcripts.models import CallTranscriptFragment, CallTranscriptFragmentSentiment
+from calls.analytics.transcripts.models import CallSentiment, CallTranscriptFragment, CallTranscriptFragmentSentiment
+
+
+
+class CallSentimentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CallSentiment
+        fields = "__all__"
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 # TODO: InlineCallTranscriptFragmentSentimentSerializer
-
 
 class CallTranscriptFragmentSerializer(serializers.ModelSerializer):
     class Meta:
