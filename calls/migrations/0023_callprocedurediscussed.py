@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('care', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('calls', '0019_auto_20220331_1951'),
+        ('calls', '0022_calllongestpause'),
     ]
 
     operations = [
