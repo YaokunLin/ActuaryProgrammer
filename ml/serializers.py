@@ -4,6 +4,7 @@ from ml.models import MLModel, MLModelResultHistory
 
 
 class MLModelSerializer(serializers.ModelSerializer):
+    model_version = serializers.RegexField(regex=r"^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$")
     class Meta:
         model = MLModel
         fields = "__all__"
