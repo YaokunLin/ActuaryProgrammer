@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('calls', '0020_call_transcript_fragment'),
+        ('calls', '0021_callsentiment'),
     ]
 
     operations = [
