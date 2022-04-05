@@ -10,10 +10,7 @@ class Command(BaseCommand):
     #     parser.add_argument("poll_ids", nargs="+", type=int)
 
     def handle(self, *args, **options):
-        cap_retrievals_in_progress_qs = (
-            CallAudioPartial.objects.exclude(status="uploaded")
-            .order_by("call_partial__time_interaction_started", "-modified_at")
-        )
+        cap_retrievals_in_progress_qs = CallAudioPartial.objects.exclude(status="uploaded").order_by("call_partial__time_interaction_started", "-modified_at")
         caps_to_delete = None
         caps_to_delete = list()
         caps_passing = list()
@@ -37,12 +34,9 @@ class Command(BaseCommand):
 
             print(f"Deletion count: '{len(caps_to_delete)}'")
             print(f"Passing over count: '{len(caps_passing)}'")
-        
-        cap_uploadeds_qs = (
-            CallAudioPartial.objects.filter(status="uploaded")
-            .order_by("call_partial__time_interaction_started", "modified_at")
-        )
-        
+
+        cap_uploadeds_qs = CallAudioPartial.objects.filter(status="uploaded").order_by("call_partial__time_interaction_started", "modified_at")
+
         for cap in cap_uploadeds_qs.iterator(chunk_size=settings.QUERYSET_ITERATION_CHUNK_SIZE):
             cp = None
             print(cap.id)
