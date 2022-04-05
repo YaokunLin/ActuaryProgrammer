@@ -155,7 +155,9 @@ else:
 
 # CORS
 CORS_ORIGIN_ALLOW_ALL = DEBUG
-CORS_ORIGIN_WHITELIST = ("http://localhost:3000", "app://.")
+# TODO: Figure out how to pass lists via .env files
+CORS_ALLOWED_ORIGIN_REGEXES = [r"^https://\w+\.peerlogic\.tech$", r"^http://localhost:8080$", r"^app://\..*$"]
+
 
 # DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "core.User"
