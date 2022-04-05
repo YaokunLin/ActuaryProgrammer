@@ -3,10 +3,10 @@ from rest_framework_nested import routers
 
 from calls.analytics.intents.views import CallOutcomeViewset, CallOutcomeReasonViewset, CallPurposeViewset
 from calls.analytics.transcripts.views import (
+    CallLongestPauseViewset,
     CallSentimentViewset,
     CallTranscriptFragmentViewset,
     CallTranscriptFragmentSentimentViewset,
-    CallLongestPauseViewset,
 )
 from .views import (
     CallAudioPartialViewset,
