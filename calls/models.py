@@ -10,8 +10,8 @@ from django_extensions.db.fields import ShortUUIDField
 from gcloud.storage import Client, Bucket
 from phonenumber_field.modelfields import PhoneNumberField
 
-from calls.analytics.intents.models import (CallOutcome, CallOutcomeReason, CallPurpose)
-from calls.analytics.transcripts.models import (CallTranscriptFragment, CallTranscriptFragmentSentiment)
+from calls.analytics.intents.models import CallOutcome, CallOutcomeReason, CallPurpose
+from calls.analytics.transcripts.models import CallTranscriptFragment, CallTranscriptFragmentSentiment
 from calls.field_choices import (
     CallAudioFileStatusTypes,
     CallConnectionTypes,
@@ -100,7 +100,9 @@ class CallTranscript(AuditTrailModel):
         choices=CallTranscriptFileStatusTypes.choices, max_length=80, default=CallTranscriptFileStatusTypes.RETRIEVAL_FROM_PROVIDER_IN_PROGRESS
     )
     raw_call_transcript_model_run_id = models.CharField(max_length=22)
-    # TODO: Foreign key of call_transcript_model_run to results history when available
+    call_transcript_model_run = models.ForeignKey(
+        "ml.MLModelResultHistory", on_delete=models.SET_NULL, verbose_name="ml model run for this call transcript", related_name="resulting_call_transcript"
+    )
 
     @property
     def file_basename(self) -> str:

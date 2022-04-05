@@ -1,12 +1,7 @@
 from django.urls import include, path
 from rest_framework_nested import routers
 
-from calls.analytics.intents.views import (
-    CallOutcomeViewset,
-    CallOutcomeReasonViewset,
-    CallProcedureDiscussedViewset,
-    CallPurposeViewset
-)
+from calls.analytics.intents.views import CallOutcomeViewset, CallOutcomeReasonViewset, CallProcedureDiscussedViewset, CallPurposeViewset
 from calls.analytics.transcripts.views import (
     CallLongestPauseViewset,
     CallSentimentViewset,

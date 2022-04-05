@@ -110,6 +110,7 @@ class SpeechToTextModelTypes(models.TextChoices):
     GOOGLE = "google"
     FACEBOOK_AI = "facebook_ai"
 
+
 class SentimentTypes(models.TextChoices):
     # TODO: SQL in BQ to update to lowercase field names
     # call_transcription_fragment.sentiment
