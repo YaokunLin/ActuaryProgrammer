@@ -31,8 +31,6 @@ handlers:
 # the entire handlers section) when there are no static files defined.
 - url: /.*
   script: auto
-  http_headers:
-    Access-Control-Allow-Origin: '*'
 
 
 # [END gaestd_py_django_app_yaml]
