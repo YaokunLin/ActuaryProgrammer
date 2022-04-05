@@ -1,7 +1,23 @@
 from rest_framework import viewsets
 
-from calls.analytics.transcripts.models import CallLongestPause, CallTranscriptFragment, CallTranscriptFragmentSentiment
-from calls.analytics.transcripts.serializers import CallLongestPauseSerializer, CallTranscriptFragmentSerializer, CallTranscriptFragmentSentimentSerializer
+from calls.analytics.transcripts.models import (
+    CallLongestPause,
+    CallSentiment,
+    CallTranscriptFragment,
+    CallTranscriptFragmentSentiment,
+)
+from calls.analytics.transcripts.serializers import (
+    CallLongestPauseSerializer,
+    CallSentimentSerializer,
+    CallTranscriptFragmentSerializer,
+    CallTranscriptFragmentSentimentSerializer,
+)
+
+
+class CallSentimentViewset(viewsets.ModelViewSet):
+    queryset = CallSentiment.objects.all().order_by("-modified_at")
+    serializer_class = CallSentimentSerializer
+    filter_fields = ["call__id", "overall_sentiment_score", "caller_sentiment_score", "callee_sentiment_score"]
 
 
 class CallTranscriptFragmentViewset(viewsets.ModelViewSet):
