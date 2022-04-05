@@ -35,4 +35,4 @@ class CallTranscriptFragmentSentimentViewset(viewsets.ModelViewSet):
 class CallLongestPauseViewset(viewsets.ModelViewSet):
     queryset = CallLongestPause.objects.all().order_by("-modified_at")
     serializer_class = CallLongestPauseSerializer
-    filter_fields = ["call__id", "is_longest", "duration"]
+    filter_fields = ["call__id", "duration"]
