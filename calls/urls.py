@@ -3,6 +3,7 @@ from rest_framework_nested import routers
 
 from calls.analytics.intents.views import CallOutcomeViewset, CallOutcomeReasonViewset, CallPurposeViewset
 from calls.analytics.transcripts.views import (
+    CallLongestPauseViewset,
     CallSentimentViewset,
     CallTranscriptFragmentViewset,
     CallTranscriptFragmentSentimentViewset,
@@ -31,6 +32,7 @@ call_router = routers.NestedSimpleRouter(calls_app_root_router, r"calls", lookup
 call_router.register(r"audio", CallAudioViewset, basename="call-audio")
 call_router.register(r"partials", CallPartialViewset, basename="call-partials")
 call_router.register(r"transcripts", CallTranscriptViewset, basename="call-transcripts")
+call_router.register(r"pauses", CallLongestPauseViewset, basename="call-pauses")
 call_router.register(r"purposes", CallPurposeViewset, basename="call-purposes")
 call_router.register(r"outcomes", CallOutcomeViewset, basename="call-outcomes")
 call_router.register(r"outcome-reasons", CallOutcomeReasonViewset, basename="call-outcome-reasons")
