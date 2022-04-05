@@ -154,7 +154,8 @@ else:
     CLOUD_STORAGE_CLIENT = None
 
 # CORS
-CORS_ORIGIN_ALLOW_ALL = DEBUG
+CORS_ORIGIN_ALLOW_ALL = True
+# TODO: Re-enable CORS once cloud functions can use it.
 # TODO: Figure out how to pass lists via .env files
 CORS_ALLOWED_ORIGIN_REGEXES = [r"^https://\w+\.peerlogic\.tech$", r"^http://localhost:8080$", r"^app://\..*$"]
 
