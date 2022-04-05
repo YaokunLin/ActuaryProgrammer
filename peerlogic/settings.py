@@ -247,6 +247,7 @@ INSTALLED_APPS = [
     "care",
     "core",
     "calls",
+    "ml",
     "etl",
     "inbox",
     "netsapiens_integration",

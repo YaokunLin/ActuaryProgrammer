@@ -6,7 +6,7 @@ from care.views import ProcedureViewset
 
 router = routers.SimpleRouter()
 
-router.register(r"procedures", ProcedureViewset)
+router.register(r"procedures", ProcedureViewset, basename="call-procedures")
 
 
 urlpatterns = [

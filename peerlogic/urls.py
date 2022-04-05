@@ -20,6 +20,7 @@ from calls.urls import urlpatterns as calls_urlpatterns
 from care.urls import urlpatterns as care_urlpatterns
 from core.urls import urlpatterns as core_urlpatterns
 from etl.urls import urlpatterns as etl_urlpatterns
+from ml.urls import urlpatterns as ml_urlpatterns
 from inbox.urls import urlpatterns as inbox_urlpatterns
 from reminders.urls import urlpatterns as reminders_urlpatterns
 
@@ -38,6 +39,7 @@ urlpatterns = [
     path("api/", include(care_urlpatterns)),
     path("api/", include(core_urlpatterns)),
     path("api/", include(etl_urlpatterns)),
+    path("api/", include(ml_urlpatterns)),
     path("api/", include(inbox_urlpatterns)),
     path("api/", include(reminders_urlpatterns)),
 ]
