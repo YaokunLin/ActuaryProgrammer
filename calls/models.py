@@ -10,8 +10,8 @@ from django_extensions.db.fields import ShortUUIDField
 from gcloud.storage import Client, Bucket
 from phonenumber_field.modelfields import PhoneNumberField
 
-from calls.analytics.intents.models import (CallOutcome, CallOutcomeReason, CallPurpose)
-from calls.analytics.transcripts.models import (CallTranscriptFragment, CallTranscriptFragmentSentiment)
+from calls.analytics.intents.models import CallOutcome, CallOutcomeReason, CallPurpose
+from calls.analytics.transcripts.models import CallTranscriptFragment, CallTranscriptFragmentSentiment
 from calls.field_choices import (
     CallAudioFileStatusTypes,
     CallConnectionTypes,
