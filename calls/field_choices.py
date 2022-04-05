@@ -23,6 +23,8 @@ class CallConnectionTypes(models.TextChoices):
 
 
 class TelecomPersonaTypes(models.TextChoices):
+    # TODO: SQL in BQ to update to lowercase field names
+    # call_transcription_fragment.telecom_persona_type
     CALLER = "caller"
     CALLEE = "callee"
 
@@ -107,3 +109,10 @@ class TranscriptTypes(models.TextChoices):
 class SpeechToTextModelTypes(models.TextChoices):
     GOOGLE = "google"
     FACEBOOK_AI = "facebook_ai"
+
+class SentimentTypes(models.TextChoices):
+    # TODO: SQL in BQ to update to lowercase field names
+    # call_transcription_fragment.sentiment
+    POSITIVE = "positive"
+    NEUTRAL = "neutral"
+    NEGATIVE = "negative"

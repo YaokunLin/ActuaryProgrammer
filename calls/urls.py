@@ -7,6 +7,12 @@ from calls.analytics.intents.views import (
     CallProcedureDiscussedViewset,
     CallPurposeViewset
 )
+from calls.analytics.transcripts.views import (
+    CallLongestPauseViewset,
+    CallSentimentViewset,
+    CallTranscriptFragmentViewset,
+    CallTranscriptFragmentSentimentViewset,
+)
 from .views import (
     CallAudioPartialViewset,
     CallAudioViewset,
@@ -32,9 +38,14 @@ call_router.register(r"audio", CallAudioViewset, basename="call-audio")
 call_router.register(r"partials", CallPartialViewset, basename="call-partials")
 call_router.register(r"transcripts", CallTranscriptViewset, basename="call-transcripts")
 call_router.register(r"procedures-discussed", CallProcedureDiscussedViewset, basename="call-procedures-discussed")
+call_router.register(r"pauses", CallLongestPauseViewset, basename="call-pauses")
 call_router.register(r"purposes", CallPurposeViewset, basename="call-purposes")
 call_router.register(r"outcomes", CallOutcomeViewset, basename="call-outcomes")
 call_router.register(r"outcome-reasons", CallOutcomeReasonViewset, basename="call-outcome-reasons")
+call_router.register(r"sentiments", CallSentimentViewset, "call-sentiments")
+call_router.register(r"transcript-fragments", CallTranscriptFragmentViewset, basename="call-transcript-fragments")
+call_router.register(r"transcript-fragment-sentiments", CallTranscriptFragmentSentimentViewset, basename="call-transcript-fragment-sentiments")
+
 
 call_partials_router = routers.NestedSimpleRouter(call_router, r"partials", lookup="call_partial")
 call_partials_router.register(r"audio", CallAudioPartialViewset, basename="call-partial-audio")
