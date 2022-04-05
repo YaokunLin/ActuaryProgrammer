@@ -156,8 +156,9 @@ else:
 # CORS
 CORS_ORIGIN_ALLOW_ALL = True
 # TODO: Re-enable CORS once cloud functions can use it.
+# https://cloud.google.com/functions/docs/samples/functions-http-cors-auth
 # TODO: Figure out how to pass lists via .env files
-CORS_ALLOWED_ORIGIN_REGEXES = [r"^https://\w+\.peerlogic\.tech$", r"^http://localhost:8080$", r"^app://\..*$"]
+CORS_ALLOWED_ORIGIN_REGEXES = [r"^https://\w+\.peerlogic\.tech$", r"^https://peerlogic\.tech$", r"^http://localhost:8080$", r"^app://\..*$"]
 
 
 # DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
