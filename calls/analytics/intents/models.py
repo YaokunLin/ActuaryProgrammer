@@ -12,9 +12,7 @@ from calls.analytics.intents.field_choices import CallPurposeTypes, CallOutcomeT
 
 class CallPurpose(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
-    call = models.ForeignKey(
-        "Call", on_delete=models.CASCADE, verbose_name="Purpose of the call", related_name="call_purposes"
-    )
+    call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="Purpose of the call", related_name="call_purposes")
     call_purpose_type = models.CharField(choices=CallPurposeTypes.choices, max_length=50, db_index=True, blank=True)
     raw_call_purpose_model_run_id = models.CharField(max_length=22)
     # TODO: Foreign key of call_purpose_model_run to results history when available
@@ -28,6 +26,7 @@ class CallOutcome(AuditTrailModel):
     )
     raw_call_outcome_model_run_id = models.CharField(max_length=22)
     # TODO: Foreign key of call_outcome_model_run to results history when available
+
 
 class CallOutcomeReason(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
