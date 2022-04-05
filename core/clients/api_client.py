@@ -71,7 +71,9 @@ def extract_and_transform(translator: Callable) -> Callable:
         def wrapper(*args, **kwargs):
             result = function(*args, **kwargs)
             return translator(result)
+
         return wrapper
+
     return decorator
 
 
