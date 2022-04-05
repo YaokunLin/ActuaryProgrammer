@@ -24,6 +24,7 @@ class JSONWebTokenAuthentication(BaseAuthentication):
         jwt_token = self.get_auth_access_token_from_request(request)
 
         if jwt_token is None:
+            logger.exception("JSONWebTokenAuthentication#authenticate: jwt token is none!")
             return None
 
         response = self.introspect_token(jwt_token)
@@ -31,6 +32,10 @@ class JSONWebTokenAuthentication(BaseAuthentication):
 
         USER_MODEL = self.get_user_model()
         user = USER_MODEL.objects.get_or_create_from_introspect_token_payload(payload)
+
+        if user is None:
+            logger.exception("JSONWebTokenAuthentication#authenticate: user not found or created!")
+
         return (user, None)
 
     def introspect_token(self, token: str):
@@ -41,6 +46,7 @@ class JSONWebTokenAuthentication(BaseAuthentication):
         with requests.Session() as session:
             response = session.get(url, headers=headers, data=data)
             if not response.ok:
+                logger.exception("JSONWebTokenAuthentication#introspect_token: response not ok!")
                 raise AuthenticationFailed()
 
             return response.content
