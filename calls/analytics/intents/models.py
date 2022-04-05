@@ -36,3 +36,9 @@ class CallOutcomeReason(AuditTrailModel):
     call_outcome_reason_type = models.CharField(choices=CallOutcomeReasonTypes.choices, max_length=75, db_index=True, blank=True)
     raw_call_outcome_reason_model_run_id = models.CharField(max_length=22)
     # TODO: Foreign key of call_outcome_reason_model_run to results history when available
+
+
+class CallProcedureDiscussed(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="procedure reference discussed during a call", related_name="procedures_discussed")
+    procedure = models.ForeignKey("care.Procedure", on_delete=models.CASCADE, verbose_name="procedure", related_name="calls_in_which_discussed")

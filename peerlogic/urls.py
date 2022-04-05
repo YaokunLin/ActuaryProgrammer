@@ -17,6 +17,7 @@ from django.contrib import admin
 from django.urls import include, path
 
 from calls.urls import urlpatterns as calls_urlpatterns
+from care.urls import urlpatterns as care_urlpatterns
 from core.urls import urlpatterns as core_urlpatterns
 from etl.urls import urlpatterns as etl_urlpatterns
 from inbox.urls import urlpatterns as inbox_urlpatterns
@@ -34,6 +35,7 @@ urlpatterns = [
     path("api-docs/", include("rest_framework.urls", namespace="rest_framework")),
     path("api/integrations/", include(integration_url_patterns)),
     path("api/", include(calls_urlpatterns)),
+    path("api/", include(care_urlpatterns)),
     path("api/", include(core_urlpatterns)),
     path("api/", include(etl_urlpatterns)),
     path("api/", include(inbox_urlpatterns)),
