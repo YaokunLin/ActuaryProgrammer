@@ -20,7 +20,11 @@ class CallSentiment(AuditTrailModel):
     callee_sentiment_score = models.CharField(choices=SentimentTypes.choices, max_length=50)
     raw_call_sentiment_model_run_id = models.CharField(max_length=22)
     call_sentiment_model_run = models.ForeignKey(
-        "ml.MLModelResultHistory", on_delete=models.SET_NULL, verbose_name="ml model run for this call sentiment", related_name="resulting_call_sentiment"
+        "ml.MLModelResultHistory",
+        on_delete=models.SET_NULL,
+        verbose_name="ml model run for this call sentiment",
+        related_name="resulting_call_sentiment",
+        null=True,
     )
 
 
@@ -40,6 +44,7 @@ class CallTranscriptFragment(AuditTrailModel):
         on_delete=models.SET_NULL,
         verbose_name="ml model run for this call transcript fragment",
         related_name="resulting_call_transcript_fragments",
+        null=True,
     )
 
 
@@ -58,6 +63,7 @@ class CallTranscriptFragmentSentiment(AuditTrailModel):
         on_delete=models.SET_NULL,
         verbose_name="ml model run for this call transcript fragment sentiment",
         related_name="resulting_call_transcript_fragment_sentiment",
+        null=True,
     )
 
 

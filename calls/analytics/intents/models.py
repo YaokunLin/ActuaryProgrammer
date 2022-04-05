@@ -16,7 +16,11 @@ class CallPurpose(AuditTrailModel):
     call_purpose_type = models.CharField(choices=CallPurposeTypes.choices, max_length=50, db_index=True, blank=True)
     raw_call_purpose_model_run_id = models.CharField(max_length=22)
     call_purpose_model_run = models.ForeignKey(
-        "ml.MLModelResultHistory", on_delete=models.SET_NULL, verbose_name="ml model run for this call purpose", related_name="resulting_call_purpose"
+        "ml.MLModelResultHistory",
+        on_delete=models.SET_NULL,
+        verbose_name="ml model run for this call purpose",
+        related_name="resulting_call_purpose",
+        null=True,
     )
 
 
@@ -28,7 +32,11 @@ class CallOutcome(AuditTrailModel):
     )
     raw_call_outcome_model_run_id = models.CharField(max_length=22)
     call_outcome_model_run = models.ForeignKey(
-        "ml.MLModelResultHistory", on_delete=models.SET_NULL, verbose_name="ml model run for this call outcome", related_name="resulting_call_outcome"
+        "ml.MLModelResultHistory",
+        on_delete=models.SET_NULL,
+        verbose_name="ml model run for this call outcome",
+        related_name="resulting_call_outcome",
+        null=True,
     )
 
 
@@ -44,6 +52,7 @@ class CallOutcomeReason(AuditTrailModel):
         on_delete=models.SET_NULL,
         verbose_name="ml model run for this call outcome reason",
         related_name="resulting_call_outcome_reason",
+        null=True,
     )
 
 

@@ -101,7 +101,11 @@ class CallTranscript(AuditTrailModel):
     )
     raw_call_transcript_model_run_id = models.CharField(max_length=22)
     call_transcript_model_run = models.ForeignKey(
-        "ml.MLModelResultHistory", on_delete=models.SET_NULL, verbose_name="ml model run for this call transcript", related_name="resulting_call_transcript"
+        "ml.MLModelResultHistory",
+        on_delete=models.SET_NULL,
+        verbose_name="ml model run for this call transcript",
+        related_name="resulting_call_transcript",
+        null=True,
     )
 
     @property
