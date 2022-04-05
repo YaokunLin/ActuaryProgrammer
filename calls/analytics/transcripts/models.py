@@ -11,6 +11,17 @@ log = logging.getLogger(__name__)
 
 # TODO: Move full CallTranscript model here
 
+class CallSentiment(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    call = models.ForeignKey(
+        "Call", on_delete=models.CASCADE, verbose_name="Sentiment score of the call", related_name="call_sentiments"
+    )
+    overall_sentiment_score = models.CharField(choices=SentimentTypes.choices, max_length=50)
+    caller_sentiment_score = models.CharField(choices=SentimentTypes.choices, max_length=50)
+    callee_sentiment_score = models.CharField(choices=SentimentTypes.choices, max_length=50)
+    raw_call_sentiment_model_run_id = models.CharField(max_length=22)
+    # TODO: Foreign key of call_sentiment_model_run to results history when available
+
 
 class CallTranscriptFragment(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)

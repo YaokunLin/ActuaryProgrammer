@@ -3,6 +3,7 @@ from rest_framework_nested import routers
 
 from calls.analytics.intents.views import CallOutcomeViewset, CallOutcomeReasonViewset, CallPurposeViewset
 from calls.analytics.transcripts.views import (
+    CallSentimentViewset,
     CallTranscriptFragmentViewset,
     CallTranscriptFragmentSentimentViewset,
     CallLongestPauseViewset,
@@ -35,6 +36,7 @@ call_router.register(r"pauses", CallLongestPauseViewset, basename="call-pauses")
 call_router.register(r"purposes", CallPurposeViewset, basename="call-purposes")
 call_router.register(r"outcomes", CallOutcomeViewset, basename="call-outcomes")
 call_router.register(r"outcome-reasons", CallOutcomeReasonViewset, basename="call-outcome-reasons")
+call_router.register(r"sentiments", CallSentimentViewset, "call-sentiments")
 call_router.register(r"transcript-fragments", CallTranscriptFragmentViewset, basename="call-transcript-fragments")
 call_router.register(r"transcript-fragment-sentiments", CallTranscriptFragmentSentimentViewset, basename="call-transcript-fragment-sentiments")
 
