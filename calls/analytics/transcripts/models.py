@@ -21,7 +21,7 @@ class CallTranscriptFragment(AuditTrailModel):
     time_end = models.DateTimeField()
     text = models.TextField()
     telecom_persona_type = models.CharField(choices=TelecomPersonaTypes.choices, max_length=50)
-    # isn't this a transcript model run id on the CallTranscript datatable? They seem to be the same in BQ...
+    # TODO: generate by sentiment line by line model, it's currently a regression to use sentiment model
     raw_call_transcript_fragment_model_run_id = models.CharField(max_length=22)
     # TODO: Foreign key of call_transcript_fragment_model_run to results history when available
 
