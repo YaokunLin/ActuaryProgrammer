@@ -39,7 +39,7 @@ urlpatterns = [
     path("api/", include(care_urlpatterns)),
     path("api/", include(core_urlpatterns)),
     path("api/", include(etl_urlpatterns)),
-    path("api/", include(ml_urlpatterns)),
     path("api/", include(inbox_urlpatterns)),
+    path("api/", include(ml_urlpatterns)),
     path("api/", include(reminders_urlpatterns)),
 ]
