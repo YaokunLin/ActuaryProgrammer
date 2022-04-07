@@ -1,27 +1,21 @@
 from django.urls import include, path
 from rest_framework_nested import routers
 
-from calls.analytics.intents.views import CallOutcomeViewset, CallOutcomeReasonViewset, CallProcedureDiscussedViewset, CallPurposeViewset
+from calls.analytics.intents.views import (CallAnalyticsFieldChoicesView,
+                                           CallOutcomeReasonViewset,
+                                           CallOutcomeViewset,
+                                           CallProcedureDiscussedViewset,
+                                           CallPurposeViewset)
 from calls.analytics.transcripts.views import (
-    CallLongestPauseViewset,
-    CallSentimentViewset,
-    CallTranscriptFragmentViewset,
-    CallTranscriptFragmentSentimentViewset,
-)
-from .views import (
-    CallAudioPartialViewset,
-    CallAudioViewset,
-    CallLabelViewset,
-    CallPartialViewset,
-    CallTranscriptPartialViewset,
-    CallTranscriptViewset,
-    CallViewset,
-    GetCallAudioPartial,
-    GetCallAudioPartials,
-    GetCallTranscriptPartial,
-    GetCallTranscriptPartials,
-    TelecomCallerNameInfoViewSet,
-)
+    CallLongestPauseViewset, CallSentimentViewset,
+    CallTranscriptFragmentSentimentViewset, CallTranscriptFragmentViewset)
+
+from .views import (CallAudioPartialViewset, CallAudioViewset, CallFieldChoicesView,
+                    CallLabelViewset, CallPartialViewset,
+                    CallTranscriptPartialViewset, CallTranscriptViewset,
+                    CallViewset, GetCallAudioPartial, GetCallAudioPartials,
+                    GetCallTranscriptPartial, GetCallTranscriptPartials,
+                    TelecomCallerNameInfoViewSet)
 
 calls_app_root_router = routers.SimpleRouter()
 
@@ -51,6 +45,8 @@ calls_app_root_router.register(r"telecom-caller-name-info", TelecomCallerNameInf
 
 
 urlpatterns = [
+    path(r"call-analytics-field-choices", CallAnalyticsFieldChoicesView.as_view(), name="call-analytics-field-choices"),
+    path(r"call-field-choices", CallFieldChoicesView.as_view(), name="call-field-choices"),
     path(r"audio-partials/<pk>/", GetCallAudioPartial.as_view(), name="audio-partial"),
     path(r"audio-partials/", GetCallAudioPartials.as_view(), name="audio-partials"),
     path(r"transcript-partials/<pk>/", GetCallTranscriptPartial.as_view(), name="transcript-partial"),

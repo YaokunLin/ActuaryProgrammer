@@ -1,8 +1,18 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, views
+from rest_framework.response import Response
 
+from calls.analytics.intents.field_choices import CallOutcomeTypes, CallOutcomeReasonTypes, CallPurposeTypes
 from calls.analytics.intents.models import CallOutcome, CallOutcomeReason, CallProcedureDiscussed, CallPurpose
 from calls.analytics.intents.serializers import CallOutcomeSerializer, CallOutcomeReasonSerializer, CallProcedureDiscussedSerializer, CallPurposeSerializer
 
+class CallAnalyticsFieldChoicesView(views.APIView):
+
+    def get(self, request, format=None):
+        result = {}
+        result["call_purpose_types"] = dict((y, x) for x, y in CallPurposeTypes.choices)
+        result["call_outcome_types"] = dict((y, x) for x, y in CallOutcomeTypes.choices)
+        result["call_outcome_reason_types"] = dict((y, x) for x, y in CallOutcomeReasonTypes.choices)
+        return Response(result)
 
 class CallPurposeViewset(viewsets.ModelViewSet):
     queryset = CallPurpose.objects.all().order_by("-modified_at")
