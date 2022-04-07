@@ -33,3 +33,4 @@ class CallOutcomeReasonTypes(models.TextChoices):
     TOO_EXPENSIVE = "too_expensive"
     CALL_INTERRUPTED = "call_interrupted"
     INSURANCE_NOT_TAKEN = "insurance_not_taken"
+    OTHERS = "others"  # create/refactor as noneoftheabove once we re-do the model and/or frontend
