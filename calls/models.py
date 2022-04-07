@@ -100,7 +100,13 @@ class CallTranscript(AuditTrailModel):
         choices=CallTranscriptFileStatusTypes.choices, max_length=80, default=CallTranscriptFileStatusTypes.RETRIEVAL_FROM_PROVIDER_IN_PROGRESS
     )
     raw_call_transcript_model_run_id = models.CharField(max_length=22)
-    # TODO: Foreign key of call_transcript_model_run to results history when available
+    call_transcript_model_run = models.ForeignKey(
+        "ml.MLModelResultHistory",
+        on_delete=models.SET_NULL,
+        verbose_name="ml model run for this call transcript",
+        related_name="resulting_call_transcripts",
+        null=True,
+    )
 
     @property
     def file_basename(self) -> str:
