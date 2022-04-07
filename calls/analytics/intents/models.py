@@ -1,3 +1,4 @@
+from dataclasses import field
 import logging
 from core.abstract_models import AuditTrailModel
 from django.conf import settings
@@ -59,4 +60,16 @@ class CallOutcomeReason(AuditTrailModel):
 class CallProcedureDiscussed(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="procedure reference discussed during a call", related_name="procedures_discussed")
-    procedure = models.ForeignKey("care.Procedure", on_delete=models.CASCADE, verbose_name="procedure", related_name="calls_in_which_discussed")
+    keyword = models.CharField(
+        max_length=50, db_index=True, blank=True
+    )  # not a formal ForeignKey but will be referenced by ProcedureKeyword, kept as-is so we don't have to have mappings to still extract entities
+
+
+class ProcedureKeyword(AuditTrailModel):
+    procedure = models.ForeignKey(
+        "care.Procedure", on_delete=models.SET_NULL, verbose_name="procedures associated with a keyword", related_name="keywords", null=True
+    )
+    keyword = models.CharField(max_length=50, db_index=True, blank=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["procedure", "keyword"], name="unique keyword mapping")]
