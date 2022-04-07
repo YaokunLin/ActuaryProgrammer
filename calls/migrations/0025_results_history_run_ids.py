@@ -8,7 +8,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('ml', '0001_initial'),
-        ('calls', '0023_callprocedurediscussed'),
+        ('calls', '0024_procedure_updates_and_keyword_lookup'),
     ]
 
     operations = [
