@@ -23,7 +23,7 @@ class CallSentiment(AuditTrailModel):
         "ml.MLModelResultHistory",
         on_delete=models.SET_NULL,
         verbose_name="ml model run for this call sentiment",
-        related_name="resulting_call_sentiment",
+        related_name="resulting_call_sentiments",
         null=True,
     )
 

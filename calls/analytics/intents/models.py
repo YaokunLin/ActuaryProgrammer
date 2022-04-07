@@ -20,7 +20,7 @@ class CallPurpose(AuditTrailModel):
         "ml.MLModelResultHistory",
         on_delete=models.SET_NULL,
         verbose_name="ml model run for this call purpose",
-        related_name="resulting_call_purpose",
+        related_name="resulting_call_purposes",
         null=True,
     )
 
@@ -36,7 +36,7 @@ class CallOutcome(AuditTrailModel):
         "ml.MLModelResultHistory",
         on_delete=models.SET_NULL,
         verbose_name="ml model run for this call outcome",
-        related_name="resulting_call_outcome",
+        related_name="resulting_call_outcomes",
         null=True,
     )
 
@@ -52,7 +52,7 @@ class CallOutcomeReason(AuditTrailModel):
         "ml.MLModelResultHistory",
         on_delete=models.SET_NULL,
         verbose_name="ml model run for this call outcome reason",
-        related_name="resulting_call_outcome_reason",
+        related_name="resulting_call_outcome_reasons",
         null=True,
     )
 
