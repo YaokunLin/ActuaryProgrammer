@@ -19,27 +19,27 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='calloutcome',
             name='call_outcome_model_run',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='resulting_call_outcome', to='ml.mlmodelresulthistory', verbose_name='ml model run for this call outcome'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='resulting_call_outcomes', to='ml.mlmodelresulthistory', verbose_name='ml model run for this call outcome'),
         ),
         migrations.AddField(
             model_name='calloutcomereason',
             name='call_outcome_reason_model_run',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='resulting_call_outcome_reason', to='ml.mlmodelresulthistory', verbose_name='ml model run for this call outcome reason'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='resulting_call_outcome_reasons', to='ml.mlmodelresulthistory', verbose_name='ml model run for this call outcome reason'),
         ),
         migrations.AddField(
             model_name='callpurpose',
             name='call_purpose_model_run',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='resulting_call_purpose', to='ml.mlmodelresulthistory', verbose_name='ml model run for this call purpose'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='resulting_call_purposes', to='ml.mlmodelresulthistory', verbose_name='ml model run for this call purpose'),
         ),
         migrations.AddField(
             model_name='callsentiment',
             name='call_sentiment_model_run',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='resulting_call_sentiment', to='ml.mlmodelresulthistory', verbose_name='ml model run for this call sentiment'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='resulting_call_sentiments', to='ml.mlmodelresulthistory', verbose_name='ml model run for this call sentiment'),
         ),
         migrations.AddField(
             model_name='calltranscript',
             name='call_transcript_model_run',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='resulting_call_transcript', to='ml.mlmodelresulthistory', verbose_name='ml model run for this call transcript'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='resulting_call_transcripts', to='ml.mlmodelresulthistory', verbose_name='ml model run for this call transcript'),
         ),
         migrations.AddField(
             model_name='calltranscriptfragment',
@@ -49,6 +49,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='calltranscriptfragmentsentiment',
             name='call_transcript_fragment_sentiment_model_run',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='resulting_call_transcript_fragment_sentiment', to='ml.mlmodelresulthistory', verbose_name='ml model run for this call transcript fragment sentiment'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='resulting_call_transcript_fragment_sentiments', to='ml.mlmodelresulthistory', verbose_name='ml model run for this call transcript fragment sentiment'),
         ),
     ]

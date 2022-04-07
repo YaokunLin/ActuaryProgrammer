@@ -62,7 +62,7 @@ class CallTranscriptFragmentSentiment(AuditTrailModel):
         "ml.MLModelResultHistory",
         on_delete=models.SET_NULL,
         verbose_name="ml model run for this call transcript fragment sentiment",
-        related_name="resulting_call_transcript_fragment_sentiment",
+        related_name="resulting_call_transcript_fragment_sentiments",
         null=True,
     )
 

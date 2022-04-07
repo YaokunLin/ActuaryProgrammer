@@ -104,7 +104,7 @@ class CallTranscript(AuditTrailModel):
         "ml.MLModelResultHistory",
         on_delete=models.SET_NULL,
         verbose_name="ml model run for this call transcript",
-        related_name="resulting_call_transcript",
+        related_name="resulting_call_transcripts",
         null=True,
     )
 
