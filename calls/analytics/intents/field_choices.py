@@ -11,6 +11,7 @@ class CallPurposeTypes(models.TextChoices):
     CONFIRM_APPOINTMENT = "confirm_appointment"
     PRICING = "pricing"
     BILLING = "billing"
+    OTHERS = "others"  # TODO: create/refactor as noneoftheabove once we can re-do the model and/or frontend
 
 
 class CallOutcomeTypes(models.TextChoices):
