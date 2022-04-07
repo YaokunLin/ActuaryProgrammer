@@ -5,6 +5,7 @@ from calls.analytics.intents.views import (CallAnalyticsFieldChoicesView,
                                            CallOutcomeReasonViewset,
                                            CallOutcomeViewset,
                                            CallProcedureDiscussedViewset,
+                                           CallProductDiscussed,
                                            CallPurposeViewset)
 from calls.analytics.transcripts.views import (
     CallLongestPauseViewset, CallSentimentViewset,
@@ -27,6 +28,7 @@ call_router.register(r"audio", CallAudioViewset, basename="call-audio")
 call_router.register(r"partials", CallPartialViewset, basename="call-partials")
 call_router.register(r"transcripts", CallTranscriptViewset, basename="call-transcripts")
 call_router.register(r"procedures-discussed", CallProcedureDiscussedViewset, basename="call-procedures-discussed")
+call_router.register(r"products-discussed", CallProductDiscussed, basename="call-products-discussed")
 call_router.register(r"pauses", CallLongestPauseViewset, basename="call-pauses")
 call_router.register(r"purposes", CallPurposeViewset, basename="call-purposes")
 call_router.register(r"outcomes", CallOutcomeViewset, basename="call-outcomes")

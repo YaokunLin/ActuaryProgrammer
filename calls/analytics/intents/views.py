@@ -1,9 +1,25 @@
 from rest_framework import viewsets, views
 from rest_framework.response import Response
 
-from calls.analytics.intents.field_choices import CallOutcomeTypes, CallOutcomeReasonTypes, CallPurposeTypes
-from calls.analytics.intents.models import CallOutcome, CallOutcomeReason, CallProcedureDiscussed, CallPurpose
-from calls.analytics.intents.serializers import CallOutcomeSerializer, CallOutcomeReasonSerializer, CallProcedureDiscussedSerializer, CallPurposeSerializer
+from calls.analytics.intents.field_choices import (
+    CallOutcomeTypes,
+    CallOutcomeReasonTypes,
+    CallPurposeTypes,
+)
+from calls.analytics.intents.models import (
+    CallOutcome,
+    CallOutcomeReason,
+    CallProcedureDiscussed,
+    CallProductDiscussed,
+    CallPurpose,
+)
+from calls.analytics.intents.serializers import (
+    CallOutcomeSerializer,
+    CallOutcomeReasonSerializer,
+    CallProductDiscussedSerializer,
+    CallProcedureDiscussedSerializer,
+    CallPurposeSerializer,
+)
 
 class CallAnalyticsFieldChoicesView(views.APIView):
 
@@ -36,3 +52,10 @@ class CallProcedureDiscussedViewset(viewsets.ModelViewSet):
     queryset = CallProcedureDiscussed.objects.all().order_by("-modified_at").select_related("procedure")
     serializer_class = CallProcedureDiscussedSerializer
     filter_fields = ["procedure__id", "call__id"]
+
+
+class CallProductDiscussedViewset(viewsets.ModelViewSet):
+    queryset = CallProductDiscussed.objects.all().order_by("-modified_at")
+    serializer_class = CallProductDiscussedSerializer
+    filter_fields = ["call__id", "keyword"]
+

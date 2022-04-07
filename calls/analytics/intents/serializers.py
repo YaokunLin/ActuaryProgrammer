@@ -1,6 +1,12 @@
 from rest_framework import serializers
 
-from calls.analytics.intents.models import CallOutcome, CallOutcomeReason, CallProcedureDiscussed, CallPurpose
+from calls.analytics.intents.models import (
+    CallOutcome,
+    CallOutcomeReason,
+    CallProcedureDiscussed,
+    CallProductDiscussed,
+    CallPurpose,
+)
 from care.serializers import InlineProcedureSerializer
 
 
@@ -30,5 +36,13 @@ class CallProcedureDiscussedSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CallProcedureDiscussed
+        fields = "__all__"
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
+
+
+class CallProductDiscussedSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = CallProductDiscussed
         fields = "__all__"
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
