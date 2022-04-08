@@ -63,6 +63,12 @@ class CallCompanyDiscussed(AuditTrailModel):
     keyword = models.CharField(max_length=50, db_index=True, blank=True)  # not a formal ForeignKey but will eventually require validation from another table
 
 
+class CallInsuranceDiscussed(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="insurance discussed during a call", related_name="discussed_insurances")
+    keyword = models.CharField(max_length=50, db_index=True, blank=True)  # not a formal ForeignKey but will eventually require validation from another table
+
+
 
 class CallProcedureDiscussed(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
@@ -81,6 +87,7 @@ class ProcedureKeyword(AuditTrailModel):
     class Meta:
         constraints = [models.UniqueConstraint(fields=["procedure", "keyword"], name="unique keyword mapping")]
 
+
 class CallProductDiscussed(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="product discussed during a call", related_name="discussed_products")
@@ -91,5 +98,3 @@ class CallSymptomDiscussed(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="symptom discussed during a call", related_name="discussed_symptoms")
     keyword = models.CharField(max_length=50, db_index=True, blank=True)  # not a formal ForeignKey but will eventually require validation from another table
-
-
