@@ -26,6 +26,7 @@ from .field_choices import (
     AudioCodecType,
     CallAudioFileStatusTypes,
     CallConnectionTypes,
+    CallDirectionTypes,
     CallTranscriptFileStatusTypes,
     EngagementPersonaTypes,
     NonAgentEngagementPersonaTypes,
@@ -73,6 +74,7 @@ class CallFieldChoicesView(views.APIView):
         result["engagement_persona_types"] = dict((y, x) for x, y in EngagementPersonaTypes.choices)
         result["non_agent_engagement_persona_types"] = dict((y, x) for x, y in NonAgentEngagementPersonaTypes.choices)
         result["call_connection_types"] = dict((y, x) for x, y in CallConnectionTypes.choices)
+        result["call_direction_types"] = dict((y, x) for x, y in CallDirectionTypes.choices)
         result["telecom_persona_types"] = dict((y, x) for x, y in TelecomPersonaTypes.choices)
         result["referral_source_types"] = dict((y, x) for x, y in ReferralSourceTypes.choices)
         result["telecom_caller_name_info_types"] = dict((y, x) for x, y in TelecomCallerNameInfoTypes.choices)
