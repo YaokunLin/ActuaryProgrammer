@@ -16,14 +16,23 @@ from calls.analytics.transcripts.views import (
     CallLongestPauseViewset,
     CallSentimentViewset,
     CallTranscriptFragmentSentimentViewset,
-    CallTranscriptFragmentViewset
+    CallTranscriptFragmentViewset,
 )
-from .views import (CallAudioPartialViewset, CallAudioViewset, CallFieldChoicesView,
-                    CallLabelViewset, CallPartialViewset,
-                    CallTranscriptPartialViewset, CallTranscriptViewset,
-                    CallViewset, GetCallAudioPartial, GetCallAudioPartials,
-                    GetCallTranscriptPartial, GetCallTranscriptPartials,
-                    TelecomCallerNameInfoViewSet)
+from .views import (
+    CallAudioPartialViewset,
+    CallAudioViewset,
+    CallFieldChoicesView,
+    CallLabelViewset,
+    CallPartialViewset,
+    CallTranscriptPartialViewset,
+    CallTranscriptViewset,
+    CallViewset,
+    GetCallAudioPartial,
+    GetCallAudioPartials,
+    GetCallTranscriptPartial,
+    GetCallTranscriptPartials,
+    TelecomCallerNameInfoViewSet,
+)
 
 
 calls_app_root_router = routers.SimpleRouter()
@@ -48,14 +57,11 @@ call_router.register(r"sentiments", CallSentimentViewset, "call-sentiments")
 call_router.register(r"transcript-fragments", CallTranscriptFragmentViewset, basename="call-transcript-fragments")
 call_router.register(r"transcript-fragment-sentiments", CallTranscriptFragmentSentimentViewset, basename="call-transcript-fragment-sentiments")
 
-
 call_partials_router = routers.NestedSimpleRouter(call_router, r"partials", lookup="call_partial")
 call_partials_router.register(r"audio", CallAudioPartialViewset, basename="call-partial-audio")
 call_partials_router.register(r"transcripts", CallTranscriptPartialViewset, basename="call-partial-transcripts")
 
-
 calls_app_root_router.register(r"telecom-caller-name-info", TelecomCallerNameInfoViewSet, basename="telecom-caller-name-info")
-
 
 urlpatterns = [
     path(r"call-analytics-field-choices", CallAnalyticsFieldChoicesView.as_view(), name="call-analytics-field-choices"),
