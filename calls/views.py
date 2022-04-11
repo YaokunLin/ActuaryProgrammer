@@ -7,7 +7,7 @@ from django.db import DatabaseError, transaction
 from django.http import Http404, HttpResponseBadRequest
 from google.api_core.exceptions import PermissionDenied
 from phonenumber_field.modelfields import to_python as to_phone_number
-from rest_framework import status, viewsets
+from rest_framework import status, views, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
@@ -23,12 +23,22 @@ from calls.twilio_etl import (
     update_telecom_caller_name_info_with_twilio_data_for_valid_sections,
 )
 from .field_choices import (
+    AudioCodecType,
     CallAudioFileStatusTypes,
+    CallConnectionTypes,
+    CallDirectionTypes,
     CallTranscriptFileStatusTypes,
+    EngagementPersonaTypes,
+    NonAgentEngagementPersonaTypes,
+    ReferralSourceTypes,
+    SentimentTypes,
+    SpeechToTextModelTypes,
     SupportedAudioMimeTypes,
     SupportedTranscriptMimeTypes,
     TelecomCallerNameInfoSourceTypes,
     TelecomCallerNameInfoTypes,
+    TelecomPersonaTypes,
+    TranscriptTypes,
 )
 from .models import (
     Call,
@@ -55,6 +65,28 @@ from .serializers import (
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
+
+
+class CallFieldChoicesView(views.APIView):
+
+    def get(self, request, format=None):
+        result = {}
+        result["engagement_persona_types"] = dict((y, x) for x, y in EngagementPersonaTypes.choices)
+        result["non_agent_engagement_persona_types"] = dict((y, x) for x, y in NonAgentEngagementPersonaTypes.choices)
+        result["call_connection_types"] = dict((y, x) for x, y in CallConnectionTypes.choices)
+        result["call_direction_types"] = dict((y, x) for x, y in CallDirectionTypes.choices)
+        result["telecom_persona_types"] = dict((y, x) for x, y in TelecomPersonaTypes.choices)
+        result["referral_source_types"] = dict((y, x) for x, y in ReferralSourceTypes.choices)
+        result["telecom_caller_name_info_types"] = dict((y, x) for x, y in TelecomCallerNameInfoTypes.choices)
+        # result["audio_codec_types"] = dict((y, x) for x, y in AudioCodecType.choices)
+        result["call_audio_file_status_types"] = dict((y, x) for x, y in CallAudioFileStatusTypes.choices)
+        result["call_transcript_file_status_types"] = dict((y, x) for x, y in CallTranscriptFileStatusTypes.choices)
+        result["supported_audio_mime_types"] = dict((y, x) for x, y in SupportedAudioMimeTypes.choices)
+        result["supported_transcript_mime_types"] = dict((y, x) for x, y in SupportedTranscriptMimeTypes.choices)
+        result["transcript_types"] = dict((y, x) for x, y in TranscriptTypes.choices)
+        result["speech_to_text_model_types"] = dict((y, x) for x, y in SpeechToTextModelTypes.choices)
+        result["sentiment_types"] = dict((y, x) for x, y in SentimentTypes.choices)
+        return Response(result)
 
 
 class CallViewset(viewsets.ModelViewSet):

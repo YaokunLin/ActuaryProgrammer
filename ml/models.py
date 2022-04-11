@@ -14,7 +14,8 @@ class MLModel(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     model_type = models.CharField(choices=ModelTypes.choices, max_length=100, db_index=True, blank=True)
     model_version = models.CharField(max_length=64)  # https://github.com/semver/semver/issues/364
-    # TODO: hyper_parameters
+    hyper_parameters = models.JSONField(null=True)
+    vertex_deployed_model_id = models.CharField(max_length=18)
 
 
 class MLModelResultHistory(AuditTrailModel):

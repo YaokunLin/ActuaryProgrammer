@@ -16,7 +16,13 @@ class CallPurpose(AuditTrailModel):
     call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="Purpose of the call", related_name="call_purposes")
     call_purpose_type = models.CharField(choices=CallPurposeTypes.choices, max_length=50, db_index=True, blank=True)
     raw_call_purpose_model_run_id = models.CharField(max_length=22)
-    # TODO: Foreign key of call_purpose_model_run to results history when available
+    call_purpose_model_run = models.ForeignKey(
+        "ml.MLModelResultHistory",
+        on_delete=models.SET_NULL,
+        verbose_name="ml model run for this call purpose",
+        related_name="resulting_call_purposes",
+        null=True,
+    )
 
 
 class CallOutcome(AuditTrailModel):
@@ -26,7 +32,13 @@ class CallOutcome(AuditTrailModel):
         CallPurpose, on_delete=models.SET_NULL, verbose_name="The source purpose for this outcome", related_name="outcome_results", null=True
     )
     raw_call_outcome_model_run_id = models.CharField(max_length=22)
-    # TODO: Foreign key of call_outcome_model_run to results history when available
+    call_outcome_model_run = models.ForeignKey(
+        "ml.MLModelResultHistory",
+        on_delete=models.SET_NULL,
+        verbose_name="ml model run for this call outcome",
+        related_name="resulting_call_outcomes",
+        null=True,
+    )
 
 
 class CallOutcomeReason(AuditTrailModel):
@@ -36,12 +48,31 @@ class CallOutcomeReason(AuditTrailModel):
     )
     call_outcome_reason_type = models.CharField(choices=CallOutcomeReasonTypes.choices, max_length=75, db_index=True, blank=True)
     raw_call_outcome_reason_model_run_id = models.CharField(max_length=22)
-    # TODO: Foreign key of call_outcome_reason_model_run to results history when available
+    call_outcome_reason_model_run = models.ForeignKey(
+        "ml.MLModelResultHistory",
+        on_delete=models.SET_NULL,
+        verbose_name="ml model run for this call outcome reason",
+        related_name="resulting_call_outcome_reasons",
+        null=True,
+    )
 
 
-class CallProcedureDiscussed(AuditTrailModel):
+class CallDiscussedCompany(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
-    call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="procedure reference discussed during a call", related_name="procedures_discussed")
+    call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="company discussed during a call", related_name="discussed_companies")
+    keyword = models.CharField(max_length=50, db_index=True, blank=True)  # not a formal ForeignKey but will eventually require validation from another table
+
+
+class CallDiscussedInsurance(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="insurance discussed during a call", related_name="discussed_insurances")
+    keyword = models.CharField(max_length=50, db_index=True, blank=True)  # not a formal ForeignKey but will eventually require validation from another table
+
+
+
+class CallDiscussedProcedure(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="procedure discussed during a call", related_name="discussed_procedures")
     keyword = models.CharField(
         max_length=50, db_index=True, blank=True
     )  # not a formal ForeignKey but will be referenced by ProcedureKeyword, kept as-is so we don't have to have mappings to still extract entities
@@ -55,3 +86,15 @@ class ProcedureKeyword(AuditTrailModel):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["procedure", "keyword"], name="unique keyword mapping")]
+
+
+class CallDiscussedProduct(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="product discussed during a call", related_name="discussed_products")
+    keyword = models.CharField(max_length=50, db_index=True, blank=True)  # not a formal ForeignKey but will eventually require validation from another table
+
+
+class CallDiscussedSymptom(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="symptom discussed during a call", related_name="discussed_symptoms")
+    keyword = models.CharField(max_length=50, db_index=True, blank=True)  # not a formal ForeignKey but will eventually require validation from another table
