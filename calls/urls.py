@@ -47,6 +47,7 @@ call_router.register(r"transcripts", CallTranscriptViewset, basename="call-trans
 call_router.register(r"discussed-companies", CallDiscussedCompanyViewset, basename="call-discussed-companies")
 call_router.register(r"discussed-insurances", CallDiscussedInsuranceViewset, basename="call-discussed-insurances")
 call_router.register(r"discussed-procedures", CallDiscussedProcedureViewset, basename="call-discussed-procedures")
+call_router.register(r"procedures-discussed", CallDiscussedProcedureViewset, basename="call-procedures-discussed")  # TODO, remove this once ml-stream-pipeline no longer needs backwards compatibility
 call_router.register(r"discussed-products", CallDiscussedProductViewset, basename="call-discussed-products")
 call_router.register(r"discussed-symptoms", CallDiscussedSymptomViewset, basename="call-discussed-symptoms")
 call_router.register(r"pauses", CallLongestPauseViewset, basename="call-pauses")
