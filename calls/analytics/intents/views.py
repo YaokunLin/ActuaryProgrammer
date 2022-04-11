@@ -67,9 +67,9 @@ class CallDiscussedInsuranceViewset(viewsets.ModelViewSet):
 
 
 class CallDiscussedProcedureViewset(viewsets.ModelViewSet):
-    queryset = CallDiscussedProcedure.objects.all().order_by("-modified_at").select_related("procedure")
+    queryset = CallDiscussedProcedure.objects.all().order_by("-modified_at")
     serializer_class = CallDiscussedProcedureSerializer
-    filter_fields = ["procedure__id", "call__id"]
+    filter_fields = ["call__id", "keyword"]
 
 
 class CallDiscussedProductViewset(viewsets.ModelViewSet):

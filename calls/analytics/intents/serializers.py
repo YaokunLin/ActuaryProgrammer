@@ -10,7 +10,6 @@ from calls.analytics.intents.models import (
     CallPurpose,
     CallDiscussedSymptom,
 )
-from care.serializers import InlineProcedureSerializer
 
 
 class CallPurposeSerializer(serializers.ModelSerializer):
@@ -51,7 +50,6 @@ class CallDiscussedInsuranceSerializer(serializers.ModelSerializer):
 
 
 class CallDiscussedProcedureSerializer(serializers.ModelSerializer):
-    procedure = InlineProcedureSerializer(read_only=True)
 
     class Meta:
         model = CallDiscussedProcedure
