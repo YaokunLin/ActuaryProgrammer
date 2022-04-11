@@ -35,7 +35,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='mlmodelresulthistory',
             name='model',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='model_results', to='ml.mlmodel', verbose_name='model results from the model runs'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='model_results', to='ml.mlmodel', verbose_name='model results from the model runs'),
         ),
         migrations.AlterField(
             model_name='mlmodelresulthistory',

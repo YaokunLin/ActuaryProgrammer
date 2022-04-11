@@ -22,7 +22,7 @@ class MLModelResultHistory(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     classification_domain = models.CharField(choices=ClassificationDomain.choices, max_length=100, db_index=True)
     call = models.ForeignKey("calls.Call", on_delete=models.CASCADE, verbose_name="model results from the call", related_name="call_model_results")
-    model = models.ForeignKey(MLModel, on_delete=models.CASCADE, null=True, verbose_name="model results from the model runs", related_name="model_results")
+    model = models.ForeignKey(MLModel, on_delete=models.SET_NULL, null=True, verbose_name="model results from the model runs", related_name="model_results")
     run_id = models.CharField(max_length=22)
     label = models.CharField(max_length=150)
     score = models.FloatField(null=True)
