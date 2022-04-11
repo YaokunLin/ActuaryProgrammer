@@ -15,7 +15,7 @@ class MLModel(AuditTrailModel):
     classification_domain = models.CharField(choices=ClassificationDomain.choices, max_length=100, db_index=True)
     model_version = models.CharField(max_length=64)  # https://github.com/semver/semver/issues/364
     hyper_parameters = models.JSONField(null=True)
-    vertex_deployed_model_id = models.CharField(max_length=18, null=True)
+    vertex_deployed_model_id = models.CharField(max_length=20, null=True)
 
 
 class MLModelResultHistory(AuditTrailModel):
