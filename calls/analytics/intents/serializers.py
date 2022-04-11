@@ -1,14 +1,14 @@
 from rest_framework import serializers
 
 from calls.analytics.intents.models import (
-    CallCompanyDiscussed,
-    CallInsuranceDiscussed,
+    CallDiscussedCompany,
+    CallDiscussedInsurance,
     CallOutcome,
     CallOutcomeReason,
-    CallProcedureDiscussed,
-    CallProductDiscussed,
+    CallDiscussedProcedure,
+    CallDiscussedProduct,
     CallPurpose,
-    CallSymptomDiscussed,
+    CallDiscussedSymptom,
 )
 from care.serializers import InlineProcedureSerializer
 
@@ -34,43 +34,43 @@ class CallOutcomeReasonSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
-class CallCompanyDiscussedSerializer(serializers.ModelSerializer):
+class CallDiscussedCompanySerializer(serializers.ModelSerializer):
     
     class Meta:
-        model = CallCompanyDiscussed
+        model = CallDiscussedCompany
         fields = "__all__"
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
-class CallInsuranceDiscussedSerializer(serializers.ModelSerializer):
+class CallDiscussedInsuranceSerializer(serializers.ModelSerializer):
     
     class Meta:
-        model = CallInsuranceDiscussed
+        model = CallDiscussedInsurance
         fields = "__all__"
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
-class CallProcedureDiscussedSerializer(serializers.ModelSerializer):
+class CallDiscussedProcedureSerializer(serializers.ModelSerializer):
     procedure = InlineProcedureSerializer(read_only=True)
 
     class Meta:
-        model = CallProcedureDiscussed
+        model = CallDiscussedProcedure
         fields = "__all__"
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
-class CallProductDiscussedSerializer(serializers.ModelSerializer):
+class CallDiscussedProductSerializer(serializers.ModelSerializer):
     
     class Meta:
-        model = CallProductDiscussed
+        model = CallDiscussedProduct
         fields = "__all__"
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
-class CallSymptomDiscussedSerializer(serializers.ModelSerializer):
+class CallDiscussedSymptomSerializer(serializers.ModelSerializer):
     
     class Meta:
-        model = CallSymptomDiscussed
+        model = CallDiscussedSymptom
         fields = "__all__"
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 

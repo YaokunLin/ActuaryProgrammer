@@ -3,14 +3,14 @@ from rest_framework_nested import routers
 
 from calls.analytics.intents.views import (
     CallAnalyticsFieldChoicesView,
-    CallCompanyDiscussedViewset,
-    CallInsuranceDiscussedViewset,
+    CallDiscussedCompanyViewset,
+    CallDiscussedInsuranceViewset,
     CallOutcomeReasonViewset,
     CallOutcomeViewset,
-    CallProcedureDiscussedViewset,
-    CallProductDiscussedViewset,
+    CallDiscussedProcedureViewset,
+    CallDiscussedProductViewset,
     CallPurposeViewset,
-    CallSymptomDiscussedViewset,
+    CallDiscussedSymptomViewset,
 )
 from calls.analytics.transcripts.views import (
     CallLongestPauseViewset,
@@ -44,11 +44,11 @@ call_router = routers.NestedSimpleRouter(calls_app_root_router, r"calls", lookup
 call_router.register(r"audio", CallAudioViewset, basename="call-audio")
 call_router.register(r"partials", CallPartialViewset, basename="call-partials")
 call_router.register(r"transcripts", CallTranscriptViewset, basename="call-transcripts")
-call_router.register(r"companies-discussed", CallCompanyDiscussedViewset, basename="call-companies-discussed")
-call_router.register(r"insurances-discussed", CallInsuranceDiscussedViewset, basename="call-insurances-discussed")
-call_router.register(r"procedures-discussed", CallProcedureDiscussedViewset, basename="call-procedures-discussed")
-call_router.register(r"products-discussed", CallProductDiscussedViewset, basename="call-products-discussed")
-call_router.register(r"symptoms-discussed", CallSymptomDiscussedViewset, basename="call-symptoms-discussed")
+call_router.register(r"discussed-companies", CallDiscussedCompanyViewset, basename="call-discussed-companies")
+call_router.register(r"discussed-insurances", CallDiscussedInsuranceViewset, basename="call-discussed-insurances")
+call_router.register(r"discussed-procedures", CallDiscussedProcedureViewset, basename="call-discussed-procedures")
+call_router.register(r"discussed-products", CallDiscussedProductViewset, basename="call-discussed-products")
+call_router.register(r"discussed-symptoms", CallDiscussedSymptomViewset, basename="call-discussed-symptoms")
 call_router.register(r"pauses", CallLongestPauseViewset, basename="call-pauses")
 call_router.register(r"purposes", CallPurposeViewset, basename="call-purposes")
 call_router.register(r"outcomes", CallOutcomeViewset, basename="call-outcomes")
