@@ -113,7 +113,7 @@ class CallTranscript(AuditTrailModel):
 
     @property
     def file_basename(self) -> str:
-        return f"{self.id}_{self.transcript_type}.txt"
+        return f"{self.call.pk}_{self.id}_{self.transcript_type}.txt"
 
     @property
     def signed_url(self) -> Optional[str]:
