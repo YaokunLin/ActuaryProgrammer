@@ -221,6 +221,10 @@ echo "${textgreen}Creating ${ENVIRONMENT}-call_audio_saved topic${textreset}"
 gcloud pubsub topics create "${ENVIRONMENT}-call_audio_saved" \
       --message-retention-duration=31d
 
+echo "${textgreen}Creating ${ENVIRONMENT}-call_transcript_saved topic${textreset}"
+gcloud pubsub topics create "${ENVIRONMENT}-call_transcript_saved" \
+      --message-retention-duration=31d
+
 echo "${textgreen}Creating ${ENVIRONMENT}-netsapiens-leg_b_finished topic${textreset}"
 gcloud pubsub topics create "${ENVIRONMENT}-netsapiens-leg_b_finished" \
       --message-retention-duration=31d
