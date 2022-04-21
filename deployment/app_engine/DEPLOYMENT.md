@@ -54,7 +54,7 @@ If the previous steps have already been completed you are now ready to run `gclo
    ```
 
 8. Escape any funny characters in your `./deployment/<PROJECT_ID>.env` file that bash doesn't like with " " around the value after the `=` sign.
-9.  Run `./deployment/cloud_sql_proxy.bash` and `./deployment/psql_deploy.bash` in another terminal.
+9.  Run `./devtools/cloud_sql_proxy.bash` and `./deployment/psql_deploy.bash` in another terminal.
 10. Verify your peerlogic-api works in the environment you're using by going to Logging in the console.cloud.google.com and running a couple of GET and POST calls.
 
 ## Troubleshooting Deploys

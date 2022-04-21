@@ -13,7 +13,7 @@ textreset=$(tput sgr0) # Text reset.
 
 which cloud_sql_proxy
 if [[ $? != 0 ]]; then
-    echo "${textred}Error: please add the location of your installed cloud_sql_proxy in your shell's profile"
+    echo "${textred}Error: please add the location of your installed cloud_sql_proxy in your shell's profile/PATH"
     exit 1
 fi
 
