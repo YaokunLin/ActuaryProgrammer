@@ -99,7 +99,7 @@ class CallTranscript(AuditTrailModel):
     status = models.CharField(
         choices=CallTranscriptFileStatusTypes.choices, max_length=80, default=CallTranscriptFileStatusTypes.RETRIEVAL_FROM_PROVIDER_IN_PROGRESS
     )
-    raw_call_transcript_model_run_id = models.CharField(max_length=22)
+    raw_call_transcript_model_run_id = models.CharField(max_length=22, blank=True)
     call_transcript_model_run = models.ForeignKey(
         "ml.MLModelResultHistory",
         on_delete=models.SET_NULL,
