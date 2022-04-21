@@ -247,4 +247,4 @@ gcloud pubsub topics create "${ENVIRONMENT}-process_analytics" \
 echo "${textpurple} TO FINISH:"
 echo "1. Place a  ${PROJECT_ID}.env into deployment/ directory,"
 echo "2. Be sure to escape certain key value pairs in the ${PROJECT_ID}.env that have special characters in them"
-echo "3. Make sure to run cloud_sql_proxy.bash in one terminal and in a separate terminal, run ./deployment/psql_deploy.bash to finish up the process.${textreset}"
+echo "3. Make sure to run ./devtools/cloud_sql_proxy.bash in one terminal and in a separate terminal, run ./deployment/psql_deploy.bash to finish up the process.${textreset}"

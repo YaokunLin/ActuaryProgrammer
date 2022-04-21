@@ -220,7 +220,7 @@ envsubst < "$KUBERNETES_BASE_DIR/configmap.yaml" > "$KUBERNETES_OVERLAY_DIR/conf
 #   --substitutions "_DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY},_POSTGRES_USER=peerlogic,_POSTGRES_DB=peerlogic,_POSTGRES_PEERLOGIC_PASSWORD=${POSTGRES_PEERLOGIC_PASSWORD},_DOCKER_REPO=${DOCKER_REPO}"
 
 
-echo "${textgreen}Start cloud_sql_proxy.bash in a new window and continue to the next script - psql_deploy.bash ${textreset}"
+echo "${textgreen}Start ./devtools/cloud_sql_proxy.bash in a new window and continue to the next script - psql_deploy.bash ${textreset}"
 
 
 kustomize build $KUBERNETES_OVERLAY_DIR |\
