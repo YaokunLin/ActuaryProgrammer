@@ -99,6 +99,9 @@ class CallTranscript(AuditTrailModel):
     status = models.CharField(
         choices=CallTranscriptFileStatusTypes.choices, max_length=80, default=CallTranscriptFileStatusTypes.RETRIEVAL_FROM_PROVIDER_IN_PROGRESS
     )
+    # Full audio transcript run would provide this ID,
+    # but we are concatenating from audio partials, then transcript partials' strings
+    # for the finalized cradle to grave transcript
     raw_call_transcript_model_run_id = models.CharField(max_length=22, blank=True)
     call_transcript_model_run = models.ForeignKey(
         "ml.MLModelResultHistory",
