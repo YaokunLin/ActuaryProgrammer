@@ -221,6 +221,10 @@ echo "${textgreen}Creating ${ENVIRONMENT}-call_audio_saved topic${textreset}"
 gcloud pubsub topics create "${ENVIRONMENT}-call_audio_saved" \
       --message-retention-duration=31d
 
+echo "${textgreen}Creating ${ENVIRONMENT}-call_transcript_saved topic${textreset}"
+gcloud pubsub topics create "${ENVIRONMENT}-call_transcript_saved" \
+      --message-retention-duration=31d
+
 echo "${textgreen}Creating ${ENVIRONMENT}-netsapiens-leg_b_finished topic${textreset}"
 gcloud pubsub topics create "${ENVIRONMENT}-netsapiens-leg_b_finished" \
       --message-retention-duration=31d
@@ -243,4 +247,4 @@ gcloud pubsub topics create "${ENVIRONMENT}-process_analytics" \
 echo "${textpurple} TO FINISH:"
 echo "1. Place a  ${PROJECT_ID}.env into deployment/ directory,"
 echo "2. Be sure to escape certain key value pairs in the ${PROJECT_ID}.env that have special characters in them"
-echo "3. Make sure to run cloud_sql_proxy.bash in one terminal and in a separate terminal, run ./deployment/psql_deploy.bash to finish up the process.${textreset}"
+echo "3. Make sure to run ./devtools/cloud_sql_proxy.bash in one terminal and in a separate terminal, run ./deployment/psql_deploy.bash to finish up the process.${textreset}"

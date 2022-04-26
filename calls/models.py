@@ -99,7 +99,10 @@ class CallTranscript(AuditTrailModel):
     status = models.CharField(
         choices=CallTranscriptFileStatusTypes.choices, max_length=80, default=CallTranscriptFileStatusTypes.RETRIEVAL_FROM_PROVIDER_IN_PROGRESS
     )
-    raw_call_transcript_model_run_id = models.CharField(max_length=22)
+    # Full audio transcript run would provide this ID,
+    # but we are concatenating from audio partials, then transcript partials' strings
+    # for the finalized cradle to grave transcript
+    raw_call_transcript_model_run_id = models.CharField(max_length=22, blank=True)
     call_transcript_model_run = models.ForeignKey(
         "ml.MLModelResultHistory",
         on_delete=models.SET_NULL,
@@ -110,7 +113,10 @@ class CallTranscript(AuditTrailModel):
 
     @property
     def file_basename(self) -> str:
-        return f"{self.id}_{self.transcript_type}.txt"
+        # Use ID at beginning and then normal domain heirarchy employed in the
+        # nested routers and/or dependency flow and then important model fields for ease
+        # This is for easy searchability within the Cloud Storage/S3 console
+        return f"{self.id}_{self.call.pk}_{self.id}_{self.transcript_type}.txt"
 
     @property
     def signed_url(self) -> Optional[str]:
@@ -162,7 +168,10 @@ class CallTranscriptPartial(AuditTrailModel):
 
     @property
     def file_basename(self) -> str:
-        return f"{self.id}_{self.transcript_type}.txt"
+        # Use ID at beginning and then normal domain heirarchy employed in the
+        # nested routers and/or dependency flow and then important model fields for ease
+        # This is for easy searchability within the Cloud Storage/S3 console
+        return f"{self.id}_{self.call_partial.call.id}_{self.call_partial.pk}_{self.call_audio_partial.pk}_{self.id}_{self.transcript_type}.txt"
 
     @property
     def signed_url(self) -> Optional[str]:
