@@ -154,9 +154,7 @@ else:
     CLOUD_STORAGE_CLIENT = None
 
 # CORS
-CORS_ORIGIN_ALLOW_ALL = True
-# TODO: Re-enable CORS once cloud functions can use it.
-# https://cloud.google.com/functions/docs/samples/functions-http-cors-auth
+CORS_ALLOW_ALL_ORIGINS = True
 # TODO: Figure out how to pass lists via .env files
 CORS_ALLOWED_ORIGIN_REGEXES = [r"^https://\w+\.peerlogic\.tech$", r"^https://peerlogic\.tech$", r"^http://localhost:8080$", r"^app://\..*$"]
 
@@ -257,13 +255,15 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    # CorsMiddleware should be placed as high as possible, especially before any middleware that can generate responses such as Django’s CommonMiddleware If 
+    # it is not before, it will not be able to add the CORS headers to these responses.
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django_userforeignkey.middleware.UserForeignKeyMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
 ]
 
 ROOT_URLCONF = "peerlogic.urls"
