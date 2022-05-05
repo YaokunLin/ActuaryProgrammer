@@ -80,10 +80,9 @@ class Call(AuditTrailModel):
         signed_url = None
         try:
             call_audio = CallAudio.objects.order_by("-modified_at").filter(call=self).first()
-            log.debug(f"call_audio={call_audio}")
             signed_url = call_audio.signed_url
         except Exception as e:
-            log.info("No audio found.")
+            log.info(f"No audio for call={self.pk}.")
         return signed_url
 
     @property
@@ -91,10 +90,9 @@ class Call(AuditTrailModel):
         signed_url = None
         try:
             call_transcript = CallTranscript.objects.order_by("-modified_at").filter(call=self).first()
-            log.debug(f"call_transcript={call_transcript}")
             signed_url = call_transcript.signed_url
         except Exception as e:
-            log.info("No transcript found.")
+            log.info(f"No transcript found for call={self.pk}")
         return signed_url
 
 
