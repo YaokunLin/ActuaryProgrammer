@@ -12,11 +12,13 @@ log = logging.getLogger(__name__)
 
 class CallSerializer(serializers.ModelSerializer):
     domain = serializers.CharField(required=False)
+    latest_audio_signed_url = serializers.CharField(allow_null=True, required=False)
+    latest_transcript_signed_url = serializers.CharField(allow_null=True, required=False)
 
     class Meta:
         model = Call
         fields = "__all__"
-        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "domain"]
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "domain", "latest_audio_signed_url", "latest_transcript_signed_url"]
 
 
 class CallTranscriptSerializer(serializers.ModelSerializer):

@@ -75,6 +75,26 @@ class Call(AuditTrailModel):
         practice_telecom = PracticeTelecom.objects.get(practice=self.practice)
         return practice_telecom.domain
 
+    @property
+    def latest_audio_signed_url(self) -> str:
+        signed_url = None
+        try:
+            call_audio = CallAudio.objects.order_by("-modified_at").filter(call=self).first()
+            signed_url = call_audio.signed_url
+        except Exception as e:
+            log.info(f"No audio for call={self.pk}.")
+        return signed_url
+
+    @property
+    def latest_transcript_signed_url(self) -> str:
+        signed_url = None
+        try:
+            call_transcript = CallTranscript.objects.order_by("-modified_at").filter(call=self).first()
+            signed_url = call_transcript.signed_url
+        except Exception as e:
+            log.info(f"No transcript found for call={self.pk}")
+        return signed_url
+
 
 class CallAudio(AuditTrailModel):
     BUCKET_NAME: str = settings.BUCKET_NAME_CALL_AUDIO
