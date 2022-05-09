@@ -34,6 +34,7 @@ class JSONWebTokenAuthentication(BaseAuthentication):
 
         if user is None:
             logger.exception("JSONWebTokenAuthentication#authenticate: user not found or created!")
+            raise AuthenticationFailed(f"Malformed auth request")
 
         return (user, None)
 
@@ -48,7 +49,7 @@ class JSONWebTokenAuthentication(BaseAuthentication):
         auth_parts = auth_header_value.split(" ")
 
         if len(auth_parts) != 2:
-            raise AuthenticationFailed(f"'{auth_header_name}' header is invalid. Received: '{auth_header_value}'")
+            raise AuthenticationFailed(f"'{auth_header_name}' header value is invalid. Received: '{auth_header_value}'")
 
         token_type, token = auth_parts
         token_type_expected = "Bearer"
