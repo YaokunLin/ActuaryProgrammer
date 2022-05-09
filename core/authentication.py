@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 
 class JSONWebTokenAuthentication(BaseAuthentication):
     """Token based authentication using the JSON Web Token standard."""
+    token_type_expected = "Bearer"
 
     def authenticate_header(self, request):
         """
@@ -30,7 +31,7 @@ class JSONWebTokenAuthentication(BaseAuthentication):
         https://www.django-rest-framework.org/api-guide/authentication/#custom-authentication
         https://www.django-rest-framework.org/api-guide/permissions/#how-permissions-are-determined
         """
-        return "Use api/login to (re)generate a bearer token."
+        return f"{JSONWebTokenAuthentication.token_type_expected}"
 
     def authenticate(self, request):
         """Entrypoint for Django Rest Framework
@@ -77,14 +78,13 @@ class JSONWebTokenAuthentication(BaseAuthentication):
             raise NotAuthenticated(f"'{auth_header_name}' header is required")  # technically a violation of w3c since they want an empty body in this case
 
         auth_parts = auth_header_value.split(" ")
-
+        token_type_expected = JSONWebTokenAuthentication.token_type_expected
         if len(auth_parts) != 2:
-            raise ParseError(f"'{auth_header_name}' header value is invalid. Received: '{auth_header_value}'")
+            raise ParseError(f"'{auth_header_name}' header value is invalid. Received value: '{auth_header_value}' Expected value: '{token_type_expected} <token>'")
 
         token_type, token = auth_parts
-        token_type_expected = "Bearer"
-        if token_type.lower() != token_type_expected.lower():
-            raise ParseError(f"'{auth_header_name}' header value must be a '{token_type_expected}' token")
+        if token_type.lower() != JSONWebTokenAuthentication.token_type_expected.lower():
+            raise ParseError(f"'{auth_header_name}' header value must be a '{token_type_expected}' token. Received value: '{auth_header_value}' Expected value: '{token_type_expected} <token>'")
 
         # make sure it's not empty, theoretically impossible and should be caught by length check above
         if not token:
