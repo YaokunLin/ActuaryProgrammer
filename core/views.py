@@ -77,6 +77,10 @@ class LoginView(APIView):
             log.exception(e)
             return Response(status=403, data={"error": "Forbidden"})
 
+    #
+    # login / password grant
+    #
+
     def _login_to_netsapiens(
         self,
         request: HttpRequest,
@@ -137,6 +141,9 @@ class LoginView(APIView):
                 practice, _ = setup_practice(netsapiens_auth_token.domain)
                 create_agent(user, practice)
 
+    #
+    # Refresh flow
+    #
 
     def _refresh_token_with_netsapiens(
         self,
