@@ -21,10 +21,14 @@ class JSONWebTokenAuthentication(BaseAuthentication):
     def authenticate(self, request):
         """Entrypoint for Django Rest Framework"""
 
+        # extract token
         jwt_token = self.validate_header_and_get_token_value(request)
+        
+        # delegate authentication
         response = self.introspect_token(jwt_token)
         payload = xmltodict.parse(response)["Oauthtoken"]
 
+        # obtain user
         USER_MODEL = self.get_user_model()
         user = USER_MODEL.objects.get_or_create_from_introspect_token_payload(payload)
 
