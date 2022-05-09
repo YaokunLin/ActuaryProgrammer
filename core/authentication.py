@@ -75,7 +75,9 @@ class JSONWebTokenAuthentication(BaseAuthentication):
         auth_header_name = "Authorization"
         auth_header_value = request_object.headers.get(auth_header_name, None)
         if not auth_header_value:
-            raise NotAuthenticated(f"'{auth_header_name}' header is required")  # technically a violation of w3c since they want an empty body in this case
+            # w3c says it SHOULD NOT have a payload in this case, so it's optional but valuable to give clients some information. It would require additional
+            # work to make django not include a value in the response
+            raise NotAuthenticated(f"'{auth_header_name}' header is required")
 
         message_for_expected_auth_value = "Received value: '{auth_header_value}' Expected value: '{token_type_expected} <token>'"
         auth_parts = auth_header_value.split(" ")
