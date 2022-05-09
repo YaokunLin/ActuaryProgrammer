@@ -16,7 +16,7 @@ from rest_framework.authentication import BaseAuthentication
 import xmltodict
 
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 
 class InternalServerError(APIException):
@@ -76,7 +76,7 @@ class JSONWebTokenAuthentication(BaseAuthentication):
         user = USER_MODEL.objects.get_and_update_from_introspect_token_payload(payload)
 
         if user is None:
-            logger.exception("JSONWebTokenAuthentication#authenticate: user not found or created!")
+            log.exception("JSONWebTokenAuthentication#authenticate: user not found or created!")
             raise InternalServerError("Encountered an error while trying to obtain authenticated user from Peerlogic API system!")
 
         return (user, None)
@@ -125,28 +125,28 @@ class JSONWebTokenAuthentication(BaseAuthentication):
 
             # problems with Netsapiens access / infrastructure!
             if response.status_code >= 500:
-                logger.exception(
+                log.exception(
                     f"JSONWebTokenAuthentication#introspect_token: Encountered 500 error when attempting to authenticate with Netsapiens! Netsapiens may be down or an invalid url is being used! Used url='{url}'."
                 )
                 raise ServiceUnavailableError(f"Authentication service unavailable for Peerlogic API. Please contact support.")
 
             # this is a misconfiguration or coding problem in peerlogic api
             if response.status_code == 400:
-                logger.exception(
+                log.exception(
                     f"JSONWebTokenAuthentication#introspect_token: Encountered 400 error when attempting to authenticate with Netsapiens! We may have an invalid Authentication header value, some other misconfiguration, or coding problem in the Peerlogic API."
                 )
                 raise InternalServerError(f"Unable to authenticate. Authentication service is misconfigured. Please contact support.")
 
             # Netsapiens permissions problem
             if response.status_code == 403:
-                logger.warning(
+                log.warning(
                     f"JSONWebTokenAuthentication#introspect_token: Netsapiens denied user permissions / found user had insufficient scope! This may or may not be a problem since we aren't using scopes to determine access from them."
                 )
                 return PermissionDenied()
 
             # Everything else coerces into an authentication problem
             if not response.ok:
-                logger.warning("JSONWebTokenAuthentication#introspect_token: response not ok!")
+                log.warning("JSONWebTokenAuthentication#introspect_token: response not ok!")
                 raise AuthenticationFailed()
 
             return response.content
