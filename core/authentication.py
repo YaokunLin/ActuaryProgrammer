@@ -13,7 +13,6 @@ from rest_framework.exceptions import (
     NotAuthenticated,
     ParseError,
     PermissionDenied,
-    server_error,
 )
 from rest_framework.authentication import BaseAuthentication
 
