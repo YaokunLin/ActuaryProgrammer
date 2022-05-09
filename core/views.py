@@ -106,7 +106,6 @@ class LoginView(APIView):
 
         netsapiens_access_token_response = netsapiens_client.request("POST", settings.NETSAPIENS_ACCESS_TOKEN_URL, data=data)
 
-
         netsapiens_access_token_response.raise_for_status()
         response_json = netsapiens_access_token_response.json()
 
