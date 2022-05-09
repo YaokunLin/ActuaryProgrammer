@@ -13,6 +13,7 @@ from rest_framework.exceptions import (
     NotAuthenticated,
     ParseError,
     PermissionDenied,
+    server_error,
 )
 from rest_framework.authentication import BaseAuthentication
 
@@ -74,13 +75,13 @@ class JSONWebTokenAuthentication(BaseAuthentication):
         response = self.introspect_token(jwt_token)
         payload = xmltodict.parse(response)["Oauthtoken"]
 
-        # obtain user
+        # authentication succeeded from auth system, obtain user from ours
         USER_MODEL = self.get_user_model()
         user = USER_MODEL.objects.get_and_update_from_introspect_token_payload(payload)
 
         if user is None:
             logger.exception("JSONWebTokenAuthentication#authenticate: user not found or created!")
-            raise AuthenticationFailed(f"Malformed auth request")
+            raise InternalServerError("Encountered an error while trying to obtain authenticated user from Peerlogic API system!")
 
         return (user, None)
 
