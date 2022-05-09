@@ -22,11 +22,6 @@ class JSONWebTokenAuthentication(BaseAuthentication):
         """Entrypoint for Django Rest Framework"""
 
         jwt_token = self.get_auth_access_token_from_request(request)
-
-        if jwt_token is None:
-            logger.exception("JSONWebTokenAuthentication#authenticate: jwt token is none!")
-            return None
-
         response = self.introspect_token(jwt_token)
         payload = xmltodict.parse(response)["Oauthtoken"]
 
@@ -71,5 +66,9 @@ class JSONWebTokenAuthentication(BaseAuthentication):
         token_type_expected = "Bearer"
         if token_type.lower() != token_type_expected.lower():
             raise AuthenticationFailed(f"'{auth_header_name}' header must be a '{token_type_expected}' token")
+
+        # make sure it's not empty
+        if not token:
+            raise AuthenticationFailed(f"'{auth_header_name}' is missed a Bearer token value")
 
         return token
