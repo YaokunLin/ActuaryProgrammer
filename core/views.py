@@ -105,6 +105,8 @@ class LoginView(APIView):
         }
 
         netsapiens_access_token_response = netsapiens_client.request("POST", settings.NETSAPIENS_ACCESS_TOKEN_URL, data=data)
+
+
         netsapiens_access_token_response.raise_for_status()
         response_json = netsapiens_access_token_response.json()
 
@@ -140,19 +142,17 @@ class LoginView(APIView):
         netsapiens_response_json = netsapiens_access_token_response.json()
         netsapiens_refresh_token = LoginView.NetsapiensRefreshToken.parse_obj(netsapiens_response_json)
 
-        self._update_user_and_save_activity(refresh_token=refresh_token, netsapiens_refresh_token=netsapiens_refresh_token)
+        self._update_user_and_save_activity(netsapiens_refresh_token=netsapiens_refresh_token)
 
         return netsapiens_access_token_response
 
-    def _update_user_and_save_activity(self, refresh_token: str, netsapiens_refresh_token: NetsapiensRefreshToken) -> None:
+    def _update_user_and_save_activity(self, netsapiens_refresh_token: NetsapiensRefreshToken) -> None:
         now = timezone.now()
 
         with transaction.atomic():
             update_user_on_refresh(
-                previous_refresh_token=refresh_token,
-                new_refresh_token=netsapiens_refresh_token.refresh_token,
+                username=netsapiens_refresh_token.uid,
                 login_time=now,
-                expires_in_seconds=netsapiens_refresh_token.expires_in,
             )
 
     def _setup_user_and_save_activity(self, netsapiens_auth_token: NetsapiensAuthToken) -> None:
