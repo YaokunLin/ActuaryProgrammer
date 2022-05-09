@@ -21,7 +21,7 @@ class JSONWebTokenAuthentication(BaseAuthentication):
     def authenticate(self, request):
         """Entrypoint for Django Rest Framework"""
 
-        jwt_token = self.authenticate_header(request)
+        jwt_token = self.validate_header_and_get_token_value(request)
         response = self.introspect_token(jwt_token)
         payload = xmltodict.parse(response)["Oauthtoken"]
 
@@ -33,7 +33,7 @@ class JSONWebTokenAuthentication(BaseAuthentication):
 
         return (user, None)
 
-    def authenticate_header(self, request_object) -> str:
+    def validate_header_and_get_token_value(self, request_object) -> str:
         """Obtain the access token from the appropriate header."""
 
         auth_header_name = "Authorization"
