@@ -105,10 +105,9 @@ class LoginView(APIView):
         }
 
         netsapiens_access_token_response = netsapiens_client.request("POST", settings.NETSAPIENS_ACCESS_TOKEN_URL, data=data)
-
         netsapiens_access_token_response.raise_for_status()
-        response_json = netsapiens_access_token_response.json()
 
+        response_json = netsapiens_access_token_response.json()
         netsapiens_auth_token = LoginView.NetsapiensAuthToken.parse_obj(response_json)
         self._setup_user_and_save_activity(netsapiens_auth_token)
 
@@ -138,9 +137,9 @@ class LoginView(APIView):
         # NOTE: this is done both ways in the field but the appropriate way may be for POSTs with body params
         netsapiens_access_token_response = netsapiens_client.request("GET", settings.NETSAPIENS_ACCESS_TOKEN_URL, params=data)
         netsapiens_access_token_response.raise_for_status()
+
         netsapiens_response_json = netsapiens_access_token_response.json()
         netsapiens_refresh_token = LoginView.NetsapiensRefreshToken.parse_obj(netsapiens_response_json)
-
         self._update_user_and_save_activity(netsapiens_refresh_token=netsapiens_refresh_token)
 
         return netsapiens_access_token_response
