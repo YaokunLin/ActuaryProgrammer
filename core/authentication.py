@@ -30,7 +30,7 @@ class JSONWebTokenAuthentication(BaseAuthentication):
 
         # obtain user
         USER_MODEL = self.get_user_model()
-        user = USER_MODEL.objects.get_or_create_from_introspect_token_payload(payload)
+        user = USER_MODEL.objects.get_and_update_from_introspect_token_payload(payload)
 
         if user is None:
             logger.exception("JSONWebTokenAuthentication#authenticate: user not found or created!")

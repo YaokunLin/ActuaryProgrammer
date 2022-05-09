@@ -16,7 +16,7 @@ class PracticeManager(models.Manager):
 class UserManager(_UserManager):
     INTROSPECT_TOKEN_PAYLOAD_KEYS = ["token", "client_id", "territory", "domain", "uid", "expires", "scope", "mask_chain"]
 
-    def get_or_create_from_introspect_token_payload(self, payload):
+    def get_and_update_from_introspect_token_payload(self, payload):
         self._validate_introspect_token_payload(payload)
         uid = payload["uid"]
 
