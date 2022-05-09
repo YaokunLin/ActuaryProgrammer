@@ -18,6 +18,16 @@ logger = logging.getLogger(__name__)
 class JSONWebTokenAuthentication(BaseAuthentication):
     """Token based authentication using the JSON Web Token standard."""
 
+    def authenticate_header(self, request):
+        """
+        Return a string to be used as the value of the `WWW-Authenticate`
+        header in a `401 Unauthenticated` response, or `None` if the
+        authentication scheme should return `403 Permission Denied` responses.
+        https://www.django-rest-framework.org/api-guide/authentication/#custom-authentication
+        https://www.django-rest-framework.org/api-guide/permissions/#how-permissions-are-determined
+        """
+        return "Use api/login to (re)generate a bearer token."
+
     def authenticate(self, request):
         """Entrypoint for Django Rest Framework"""
         # extract token
