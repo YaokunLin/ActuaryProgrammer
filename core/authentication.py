@@ -33,22 +33,6 @@ class JSONWebTokenAuthentication(BaseAuthentication):
 
         return (user, None)
 
-    def introspect_token(self, token: str):
-        url = settings.NETSAPIENS_INTROSPECT_TOKEN_URL
-        headers = {"Authorization": f"Bearer {token}"}
-        data = {"access_token": token}
-
-        with requests.Session() as session:
-            response = session.get(url, headers=headers, data=data)
-            if not response.ok:
-                logger.exception("JSONWebTokenAuthentication#introspect_token: response not ok!")
-                raise AuthenticationFailed()
-
-            return response.content
-
-    def get_user_model(self):
-        return django_apps.get_model(settings.AUTH_USER_MODEL, require_ready=False)
-
     def authenticate_header(self, request_object) -> str:
         """Obtain the access token from the appropriate header."""
 
@@ -72,3 +56,19 @@ class JSONWebTokenAuthentication(BaseAuthentication):
             raise AuthenticationFailed(f"'{auth_header_name}' is missed a Bearer token value")
 
         return token
+
+    def introspect_token(self, token: str):
+        url = settings.NETSAPIENS_INTROSPECT_TOKEN_URL
+        headers = {"Authorization": f"Bearer {token}"}
+        data = {"access_token": token}
+
+        with requests.Session() as session:
+            response = session.get(url, headers=headers, data=data)
+            if not response.ok:
+                logger.exception("JSONWebTokenAuthentication#introspect_token: response not ok!")
+                raise AuthenticationFailed()
+
+            return response.content
+
+    def get_user_model(self):
+        return django_apps.get_model(settings.AUTH_USER_MODEL, require_ready=False)
