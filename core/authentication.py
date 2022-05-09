@@ -31,7 +31,7 @@ class JSONWebTokenAuthentication(BaseAuthentication):
         https://www.django-rest-framework.org/api-guide/authentication/#custom-authentication
         https://www.django-rest-framework.org/api-guide/permissions/#how-permissions-are-determined
         """
-        return f"{JSONWebTokenAuthentication.token_type_expected}"
+        return f"{JSONWebTokenAuthentication.token_type_expected}"  # usually includes a realm="" but our implementation does not have an appropriate value
 
     def authenticate(self, request):
         """Entrypoint for Django Rest Framework
@@ -102,6 +102,12 @@ class JSONWebTokenAuthentication(BaseAuthentication):
 
         with requests.Session() as session:
             response = session.get(url, headers=headers, data=data)
+            # we're responsible for 401s elsewhere now we handle / co-erce the netsapiens status codes
+            # netsapiens responses:
+            # bad client id or secret: 400
+            # missing required field: 400
+            # bad username or password: 403
+            # no available: 500s
             if not response.ok:
                 logger.exception("JSONWebTokenAuthentication#introspect_token: response not ok!")
                 raise AuthenticationFailed()
