@@ -37,9 +37,8 @@ class JSONWebTokenAuthentication(BaseAuthentication):
 
     def authenticate_header(self, request) -> str:
         """
-        Return a string to be used as the value of the `WWW-Authenticate`
-        header in a `401 Unauthenticated` response, or `None` if the
-        authentication scheme should return `403 Permission Denied` responses.
+        Return a string to be used as the value of the `WWW-Authenticate` header in a `401 Unauthenticated` response, or `None` if the authentication scheme
+        should return `403 Permission Denied` responses.
         https://www.django-rest-framework.org/api-guide/authentication/#custom-authentication
         https://www.django-rest-framework.org/api-guide/permissions/#how-permissions-are-determined
         """
