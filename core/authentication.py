@@ -86,9 +86,9 @@ class JSONWebTokenAuthentication(BaseAuthentication):
         if token_type.lower() != JSONWebTokenAuthentication.token_type_expected.lower():
             raise ParseError(f"'{auth_header_name}' header value must be a '{token_type_expected}' token. Received value: '{auth_header_value}' Expected value: '{token_type_expected} <token>'")
 
-        # make sure it's not empty, theoretically impossible and should be caught by length check above
+        # make sure it's not empty, theoretically impossible and should be caught by length checks above
         if not token:
-            raise ParseError(f"'{auth_header_name}' is missed a Bearer token value")
+            raise ParseError(f"'{auth_header_name}' is missing a Bearer token value. Received value: '{auth_header_value}' Expected value: '{token_type_expected} <token>'")
 
         return token
 
