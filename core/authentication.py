@@ -6,7 +6,7 @@ import requests
 from django.apps import apps as django_apps
 from django.conf import settings
 from django.utils.translation import ugettext as _
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed, NotAuthenticated, ParseError
 from rest_framework.authentication import BaseAuthentication
 
 import xmltodict
@@ -44,21 +44,21 @@ class JSONWebTokenAuthentication(BaseAuthentication):
         auth_header_name = "Authorization"
         auth_header_value = request_object.headers.get(auth_header_name, None)
         if not auth_header_value:
-            raise AuthenticationFailed(f"'{auth_header_name}' header is required")
+            raise NotAuthenticated(f"'{auth_header_name}' header is required")
 
         auth_parts = auth_header_value.split(" ")
 
         if len(auth_parts) != 2:
-            raise AuthenticationFailed(f"'{auth_header_name}' header value is invalid. Received: '{auth_header_value}'")
+            raise ParseError(f"'{auth_header_name}' header value is invalid. Received: '{auth_header_value}'")
 
         token_type, token = auth_parts
         token_type_expected = "Bearer"
         if token_type.lower() != token_type_expected.lower():
-            raise AuthenticationFailed(f"'{auth_header_name}' header must be a '{token_type_expected}' token")
+            raise ParseError(f"'{auth_header_name}' header value must be a '{token_type_expected}' token")
 
-        # make sure it's not empty
+        # make sure it's not empty, theoretically impossible and should be caught by length check above
         if not token:
-            raise AuthenticationFailed(f"'{auth_header_name}' is missed a Bearer token value")
+            raise ParseError(f"'{auth_header_name}' is missed a Bearer token value")
 
         return token
 
