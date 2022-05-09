@@ -23,6 +23,9 @@ class UserManager(_UserManager):
         uid = payload["uid"]
 
         try:
+            # this would generally be an get_or_create since we call this message after successful authentication, so a user SHOULD BE in our system
+            # however, we are only creating users during our login operation for the time being to provide a single entrypoint for user creation
+            # why? because an external system (netsapiens) is currently involved in authentication and we want to minimize code surface area that trusts it
             user = self.get(username=uid)
             user.last_login = timezone.now()
             user.is_active = True
