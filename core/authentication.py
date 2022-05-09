@@ -1,7 +1,5 @@
 import logging
-from typing import Dict
 import requests
-
 
 from django.apps import apps as django_apps
 from django.conf import settings
@@ -15,7 +13,6 @@ from rest_framework.exceptions import (
     PermissionDenied,
 )
 from rest_framework.authentication import BaseAuthentication
-
 import xmltodict
 
 
