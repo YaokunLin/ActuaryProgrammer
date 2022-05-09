@@ -113,6 +113,31 @@ class LoginView(APIView):
 
         return netsapiens_access_token_response
 
+    def _setup_user_and_save_activity(self, netsapiens_auth_token: NetsapiensAuthToken) -> None:
+        now = timezone.now()
+
+        with transaction.atomic():
+            user, user_created = setup_user(
+                username=netsapiens_auth_token.username,
+                name=netsapiens_auth_token.displayName,
+                email=netsapiens_auth_token.user_email,
+                domain=netsapiens_auth_token.domain,
+                login_time=now,
+            )
+            save_user_activity_and_token(
+                access_token=netsapiens_auth_token.access_token,
+                refresh_token=netsapiens_auth_token.refresh_token,
+                login_time=now,
+                expires_in_seconds=netsapiens_auth_token.expires_in,
+                user=user,
+            )
+
+            if user_created:
+                create_user_telecom(user)
+                practice, _ = setup_practice(netsapiens_auth_token.domain)
+                create_agent(user, practice)
+
+
     def _refresh_token_with_netsapiens(
         self,
         request: HttpRequest,
@@ -152,30 +177,6 @@ class LoginView(APIView):
                 username=netsapiens_refresh_token.uid,
                 login_time=now,
             )
-
-    def _setup_user_and_save_activity(self, netsapiens_auth_token: NetsapiensAuthToken) -> None:
-        now = timezone.now()
-
-        with transaction.atomic():
-            user, user_created = setup_user(
-                username=netsapiens_auth_token.username,
-                name=netsapiens_auth_token.displayName,
-                email=netsapiens_auth_token.user_email,
-                domain=netsapiens_auth_token.domain,
-                login_time=now,
-            )
-            save_user_activity_and_token(
-                access_token=netsapiens_auth_token.access_token,
-                refresh_token=netsapiens_auth_token.refresh_token,
-                login_time=now,
-                expires_in_seconds=netsapiens_auth_token.expires_in,
-                user=user,
-            )
-
-            if user_created:
-                create_user_telecom(user)
-                practice, _ = setup_practice(netsapiens_auth_token.domain)
-                create_agent(user, practice)
 
 
 class ClientViewset(viewsets.ModelViewSet):
