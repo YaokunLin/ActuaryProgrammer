@@ -35,7 +35,7 @@ class JSONWebTokenAuthentication(BaseAuthentication):
     """Token based authentication using the JSON Web Token standard."""
     token_type_expected = "Bearer"
 
-    def authenticate_header(self, request):
+    def authenticate_header(self, request) -> str:
         """
         Return a string to be used as the value of the `WWW-Authenticate`
         header in a `401 Unauthenticated` response, or `None` if the
@@ -107,7 +107,7 @@ class JSONWebTokenAuthentication(BaseAuthentication):
 
         return token
 
-    def introspect_token(self, token: str):
+    def introspect_token(self, token: str) -> str:
         url = settings.NETSAPIENS_INTROSPECT_TOKEN_URL
         headers = {"Authorization": f"Bearer {token}"}
         data = {"access_token": token}
