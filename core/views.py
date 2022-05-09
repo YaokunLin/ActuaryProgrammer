@@ -58,9 +58,9 @@ class LoginView(APIView):
         uid: str  # e.g. "1234@Peerlogic"
 
     def post(self, request, format=None):
-        default_action = self._login_to_netsapiens
+        default_handler = self._login_to_netsapiens
         grant_handler_map = {
-            "password": default_action,
+            "password": default_handler,
             "refresh_token": self._refresh_token_with_netsapiens,
         }
 
@@ -68,7 +68,7 @@ class LoginView(APIView):
 
         try:
             grant_type = request.data.get("grant_type")
-            handler = grant_handler_map.get(grant_type, default_action)
+            handler = grant_handler_map.get(grant_type, default_handler)
             netsapiens_access_token_response = handler(request)
             netsapiens_user = netsapiens_access_token_response.json()
 
