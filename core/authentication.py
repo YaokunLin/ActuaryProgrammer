@@ -20,7 +20,6 @@ class JSONWebTokenAuthentication(BaseAuthentication):
 
     def authenticate(self, request):
         """Entrypoint for Django Rest Framework"""
-
         # extract token
         jwt_token = self.validate_header_and_get_token_value(request)
         
