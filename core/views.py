@@ -30,7 +30,7 @@ class LoginView(APIView):
         # Expected format as of 2022-02-22
         access_token: str  # alphanumberic
         apiversion: str  # e.g. "Version: 41.2.3"
-        client_id: str  # peerlogic-api-ENVIRONMENT
+        client_id: str  # peerlogic-api-{ENVIRONMENT}
         displayName: str  # USER NAME
         domain: str  # e.g. "Peerlogic"
         expires_in: int  # e.g. "3600"
@@ -46,7 +46,7 @@ class LoginView(APIView):
     class NetsapiensRefreshToken(BaseModel):
         access_token: str  # alphanumberic
         apiversion: str  # e.g. "Version: 41.2.3"
-        client_id: str  # peerlogic-api-ENVIRONMENT
+        client_id: str  # peerlogic-api-{ENVIRONMENT}
         domain: str  # e.g. "Peerlogic"
         expires: int  # time when this token expires in seconds since epoch e.g. "1645728699"
         expires_in: int  # e.g. "3600"
