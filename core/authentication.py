@@ -33,6 +33,7 @@ class ServiceUnavailableError(APIException):
 
 class JSONWebTokenAuthentication(BaseAuthentication):
     """Token based authentication using the JSON Web Token standard."""
+
     token_type_expected = "Bearer"
 
     def authenticate_header(self, request) -> str:
@@ -48,24 +49,24 @@ class JSONWebTokenAuthentication(BaseAuthentication):
         """Entrypoint for Django Rest Framework
         Standards for status codes from: https://tools.ietf.org/id/draft-ietf-oauth-v2-bearer-22.xml#resource-error-codes
 
-        When a request fails, the resource server responds using the appropriate HTTP status code (typically, 400, 401, 403, or 405), and includes one of the 
+        When a request fails, the resource server responds using the appropriate HTTP status code (typically, 400, 401, 403, or 405), and includes one of the
         following error codes in the response:
 
         * invalid_request - The request is missing a required parameter, includes an unsupported parameter or parameter value, repeats the same parameter, uses
-                            more than one method for including an access token, or is otherwise malformed. The resource server SHOULD respond with the HTTP 400 
+                            more than one method for including an access token, or is otherwise malformed. The resource server SHOULD respond with the HTTP 400
                             (Bad Request) status code.
-        * invalid_token - The access token provided is expired, revoked, malformed, or invalid for other reasons. The resource SHOULD respond with the HTTP 401 
+        * invalid_token - The access token provided is expired, revoked, malformed, or invalid for other reasons. The resource SHOULD respond with the HTTP 401
                             (Unauthorized) status code. The client MAY request a new access token and retry the protected resource request.
-        * insufficient_scope - The request requires higher privileges than provided by the access token. The resource server SHOULD respond with the HTTP 403 
+        * insufficient_scope - The request requires higher privileges than provided by the access token. The resource server SHOULD respond with the HTTP 403
                             (Forbidden) status code and MAY include the scope attribute with the scope necessary to access the protected resource.
 
-        If the request lacks any authentication information (e.g., the client was unaware authentication is necessary or attempted using an unsupported 
+        If the request lacks any authentication information (e.g., the client was unaware authentication is necessary or attempted using an unsupported
         authentication method), the resource server SHOULD NOT include an error code or other error information.
         """
 
         # extract token
         jwt_token = self.validate_header_and_get_token_value(request)
-        
+
         # delegate authentication
         response = self.introspect_token(jwt_token)
         payload = xmltodict.parse(response)["Oauthtoken"]
@@ -124,17 +125,23 @@ class JSONWebTokenAuthentication(BaseAuthentication):
 
             # problems with Netsapiens access / infrastructure!
             if response.status_code >= 500:
-                logger.exception(f"JSONWebTokenAuthentication#introspect_token: Encountered 500 error when attempting to authenticate with Netsapiens! Netsapiens may be down or an invalid url is being used! Used url='{url}'.")
+                logger.exception(
+                    f"JSONWebTokenAuthentication#introspect_token: Encountered 500 error when attempting to authenticate with Netsapiens! Netsapiens may be down or an invalid url is being used! Used url='{url}'."
+                )
                 raise ServiceUnavailableError(f"Authentication service unavailable for Peerlogic API. Please contact support.")
 
             # this is a misconfiguration or coding problem in peerlogic api
             if response.status_code == 400:
-                logger.exception(f"JSONWebTokenAuthentication#introspect_token: Encountered 400 error when attempting to authenticate with Netsapiens! We may have an invalid Authentication header value, some other misconfiguration, or coding problem in the Peerlogic API.")
+                logger.exception(
+                    f"JSONWebTokenAuthentication#introspect_token: Encountered 400 error when attempting to authenticate with Netsapiens! We may have an invalid Authentication header value, some other misconfiguration, or coding problem in the Peerlogic API."
+                )
                 raise InternalServerError(f"Unable to authenticate. Authentication service is misconfigured. Please contact support.")
 
             # Netsapiens permissions problem
             if response.status_code == 403:
-                logger.warning(f"JSONWebTokenAuthentication#introspect_token: Netsapiens denied user permissions / found user had insufficient scope! This may or may not be a problem since we aren't using scopes to determine access from them.")
+                logger.warning(
+                    f"JSONWebTokenAuthentication#introspect_token: Netsapiens denied user permissions / found user had insufficient scope! This may or may not be a problem since we aren't using scopes to determine access from them."
+                )
                 return PermissionDenied()
 
             # Everything else coerces into an authentication problem
