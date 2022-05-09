@@ -77,18 +77,19 @@ class JSONWebTokenAuthentication(BaseAuthentication):
         if not auth_header_value:
             raise NotAuthenticated(f"'{auth_header_name}' header is required")  # technically a violation of w3c since they want an empty body in this case
 
+        message_for_expected_auth_value = "Received value: '{auth_header_value}' Expected value: '{token_type_expected} <token>'"
         auth_parts = auth_header_value.split(" ")
         token_type_expected = JSONWebTokenAuthentication.token_type_expected
         if len(auth_parts) != 2:
-            raise ParseError(f"'{auth_header_name}' header value is invalid. Received value: '{auth_header_value}' Expected value: '{token_type_expected} <token>'")
+            raise ParseError(f"'{auth_header_name}' header value is invalid. {message_for_expected_auth_value}")
 
         token_type, token = auth_parts
         if token_type.lower() != JSONWebTokenAuthentication.token_type_expected.lower():
-            raise ParseError(f"'{auth_header_name}' header value must be a '{token_type_expected}' token. Received value: '{auth_header_value}' Expected value: '{token_type_expected} <token>'")
+            raise ParseError(f"'{auth_header_name}' header value must be a '{token_type_expected}' token. {message_for_expected_auth_value}")
 
         # make sure it's not empty, theoretically impossible and should be caught by length checks above
         if not token:
-            raise ParseError(f"'{auth_header_name}' is missing a Bearer token value. Received value: '{auth_header_value}' Expected value: '{token_type_expected} <token>'")
+            raise ParseError(f"'{auth_header_name}' is missing a Bearer token value. {message_for_expected_auth_value}")
 
         return token
 
