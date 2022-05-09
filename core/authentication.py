@@ -90,7 +90,7 @@ class JSONWebTokenAuthentication(BaseAuthentication):
             # work to make django not include a value in the response
             raise NotAuthenticated(f"'{auth_header_name}' header is required")
 
-        message_for_expected_auth_value = "Received value: '{auth_header_value}' Expected value: '{token_type_expected} <token>'"
+        message_for_expected_auth_value = f"Received value: '{auth_header_value}' Expected value: '{token_type_expected} <token>'"
         auth_parts = auth_header_value.split(" ")
         token_type_expected = JSONWebTokenAuthentication.token_type_expected
         if len(auth_parts) != 2:
