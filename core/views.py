@@ -7,12 +7,25 @@ from django.http import (
     HttpResponseBadRequest,
 )
 from django.utils import timezone
+from django.utils.translation import ugettext as _
 from pydantic import BaseModel
 from rest_framework import viewsets
+from rest_framework.exceptions import (
+    APIException,
+    AuthenticationFailed,
+    NotAuthenticated,
+    ParseError,
+    PermissionDenied,
+)
+from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core.exceptions import (
+    InternalServerError,
+    ServiceUnavailableError,
+)
 from core.setup_user_and_practice import create_agent, create_user_telecom, save_user_activity_and_token, setup_practice, setup_user, update_user_on_refresh
 from .models import Client, Patient, Practice, PracticeTelecom, VoipProvider
 from .serializers import ClientSerializer, PatientSerializer, PracticeSerializer, PracticeTelecomSerializer, VoipProviderSerializer
@@ -20,6 +33,12 @@ from .serializers import ClientSerializer, PatientSerializer, PracticeSerializer
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
+
+
+class ServiceUnavailableError(APIException):
+    status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+    default_detail = _("Service unavailable. Try again later.")
+    default_code = "service_unavailable_error"
 
 
 class LoginView(APIView):
@@ -70,12 +89,15 @@ class LoginView(APIView):
             grant_type = request.data.get("grant_type")
             handler = grant_handler_map.get(grant_type, default_handler)
             netsapiens_access_token_response = handler(request)
-            netsapiens_user = netsapiens_access_token_response.json()
-
-            return Response(status=200, data=netsapiens_user)
+            
+            return netsapiens_access_token_response
+        except APIException as api_exception:
+            # pass it through
+            raise api_exception
         except Exception as e:
+            # unexpected exceptions 500 internal server error
             log.exception(e)
-            return Response(status=403, data={"error": "Forbidden"})
+            return Response(status=500, data={"detail": "Server Error"})
 
     #
     # login / password grant
@@ -97,7 +119,8 @@ class LoginView(APIView):
         # validate
         if not (username and password):
             log.info(f"Bad Request detected for login. Missing one or more required fields.")
-            return HttpResponseBadRequest("Missing one or more required fields: 'username' and 'password'")
+            raise ParseError()
+            #return Response(status=400, data={"detail": "Missing one or more required fields: 'username' and 'password'"})
 
         data = {
             "grant_type": "password",
@@ -109,13 +132,13 @@ class LoginView(APIView):
         }
 
         netsapiens_access_token_response = netsapiens_client.request("POST", settings.NETSAPIENS_ACCESS_TOKEN_URL, data=data)
-        netsapiens_access_token_response.raise_for_status()
-
+        self._validate_netsapiens_status_code(netsapiens_access_token_response)
+        
         response_json = netsapiens_access_token_response.json()
         netsapiens_auth_token = LoginView.NetsapiensAuthToken.parse_obj(response_json)
         self._setup_user_and_save_activity(netsapiens_auth_token)
 
-        return netsapiens_access_token_response
+        return Response(status=200, data=netsapiens_access_token_response.json())
 
     def _setup_user_and_save_activity(self, netsapiens_auth_token: NetsapiensAuthToken) -> None:
         now = timezone.now()
@@ -168,13 +191,13 @@ class LoginView(APIView):
         # netsapiens uses a GET with query parameters
         # NOTE: this is done both ways in the field but the appropriate way may be for POSTs with body params
         netsapiens_access_token_response = netsapiens_client.request("GET", settings.NETSAPIENS_ACCESS_TOKEN_URL, params=data)
-        netsapiens_access_token_response.raise_for_status()
+        self._validate_netsapiens_status_code(netsapiens_access_token_response)
 
         netsapiens_response_json = netsapiens_access_token_response.json()
         netsapiens_refresh_token = LoginView.NetsapiensRefreshToken.parse_obj(netsapiens_response_json)
         self._update_user_and_save_activity(netsapiens_refresh_token=netsapiens_refresh_token)
 
-        return netsapiens_access_token_response
+        return Response(status=200, data=netsapiens_access_token_response.json())
 
     def _update_user_and_save_activity(self, netsapiens_refresh_token: NetsapiensRefreshToken) -> None:
         now = timezone.now()
@@ -184,6 +207,35 @@ class LoginView(APIView):
                 username=netsapiens_refresh_token.uid,
                 login_time=now,
             )
+
+    def _validate_netsapiens_status_code(self, netsapiens_access_token_response):
+        # bad client id or secret: 400
+        # missing required field: 400
+        if netsapiens_access_token_response.status_code == 400:
+            log.exception(
+                f"Encountered 400 error when attempting to authenticate with Netsapiens! We may have an invalid client_id, client_secret, missing field, or coding problem in the Peerlogic API."
+            )
+            raise InternalServerError(f"Unable to authenticate. Authentication service is misconfigured. Please contact support.")
+
+        # bad username or password: 403
+        if netsapiens_access_token_response.status_code == 403:
+            log.exception(
+                f"JSONWebTokenAuthentication#introspect_token: Netsapiens denied user permissions / found user had insufficient scope! This may or may not be a problem since we aren't using scopes to determine access from them."
+            )
+            raise PermissionDenied()
+
+        # netsapiens server problem: 500s
+        if netsapiens_access_token_response.status_code >= 500:
+            log.exception(
+                f"JSONWebTokenAuthentication#introspect_token: Encountered 500 error when attempting to authenticate with Netsapiens! Netsapiens may be down or an invalid url is being used!"
+            )
+            raise ServiceUnavailableError(f"Authentication service unavailable for Peerlogic API. Please contact support.")
+
+        if not netsapiens_access_token_response.ok:
+            log.warning("JSONWebTokenAuthentication#introspect_token: response not ok!")
+            raise AuthenticationFailed()
+
+        return None
 
 
 class ClientViewset(viewsets.ModelViewSet):

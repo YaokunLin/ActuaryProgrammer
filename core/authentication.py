@@ -4,31 +4,22 @@ import requests
 from django.apps import apps as django_apps
 from django.conf import settings
 from django.utils.translation import ugettext as _
-from rest_framework import status
+from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import (
-    APIException,
     AuthenticationFailed,
     NotAuthenticated,
     ParseError,
     PermissionDenied,
 )
-from rest_framework.authentication import BaseAuthentication
 import xmltodict
+
+from core.exceptions import (
+    InternalServerError,
+    ServiceUnavailableError,
+)
 
 
 log = logging.getLogger(__name__)
-
-
-class InternalServerError(APIException):
-    status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
-    default_detail = _("Internal Server Error")
-    default_code = "internal_server_error"
-
-
-class ServiceUnavailableError(APIException):
-    status_code = status.HTTP_503_SERVICE_UNAVAILABLE
-    default_detail = _("Service unavailable. Try again later.")
-    default_code = "service_unavailable_error"
 
 
 class JSONWebTokenAuthentication(BaseAuthentication):
@@ -115,20 +106,16 @@ class JSONWebTokenAuthentication(BaseAuthentication):
         with requests.Session() as session:
             response = session.get(url, headers=headers, data=data)
 
-            # we're responsible for 401s elsewhere now we handle / co-erce the netsapiens status codes
-            # netsapiens responses:
+            # misconfiguration or coding problem in peerlogic api
+            # examples:
             # missing Authorization header: 400
             # missing "Bearer": 400
             # mispelled "Bearer" or other token type: 400
-            # missing token value: 401
-            # netsapiens server problem: 500s
-
-            # problems with Netsapiens access / infrastructure!
-            if response.status_code >= 500:
+            if response.status_code == 400:
                 log.exception(
-                    f"JSONWebTokenAuthentication#introspect_token: Encountered 500 error when attempting to authenticate with Netsapiens! Netsapiens may be down or an invalid url is being used! Used url='{url}'."
+                    f"JSONWebTokenAuthentication#introspect_token: Encountered 400 error when attempting to authenticate with Netsapiens! We may have an invalid Authentication header value, some other misconfiguration, or coding problem in the Peerlogic API."
                 )
-                raise ServiceUnavailableError(f"Authentication service unavailable for Peerlogic API. Please contact support.")
+                raise InternalServerError(f"Unable to authenticate. Authentication service is misconfigured. Please contact support.")
 
             # Netsapiens permissions problem
             if response.status_code == 403:
@@ -137,14 +124,15 @@ class JSONWebTokenAuthentication(BaseAuthentication):
                 )
                 return PermissionDenied()
 
-            # this is a misconfiguration or coding problem in peerlogic api
-            if response.status_code == 400:
+            # problems with Netsapiens access / infrastructure!
+            if response.status_code >= 500:
                 log.exception(
-                    f"JSONWebTokenAuthentication#introspect_token: Encountered 400 error when attempting to authenticate with Netsapiens! We may have an invalid Authentication header value, some other misconfiguration, or coding problem in the Peerlogic API."
+                    f"JSONWebTokenAuthentication#introspect_token: Encountered 500 error when attempting to authenticate with Netsapiens! Netsapiens may be down or an invalid url is being used! Used url='{url}'."
                 )
-                raise InternalServerError(f"Unable to authenticate. Authentication service is misconfigured. Please contact support.")
+                raise ServiceUnavailableError(f"Authentication service unavailable for Peerlogic API. Please contact support.")
 
             # Everything else coerces into an authentication problem
+            # missing token value: 401
             if not response.ok:
                 log.warning("JSONWebTokenAuthentication#introspect_token: response not ok!")
                 raise AuthenticationFailed()
