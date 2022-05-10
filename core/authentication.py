@@ -130,19 +130,19 @@ class JSONWebTokenAuthentication(BaseAuthentication):
                 )
                 raise ServiceUnavailableError(f"Authentication service unavailable for Peerlogic API. Please contact support.")
 
-            # this is a misconfiguration or coding problem in peerlogic api
-            if response.status_code == 400:
-                log.exception(
-                    f"JSONWebTokenAuthentication#introspect_token: Encountered 400 error when attempting to authenticate with Netsapiens! We may have an invalid Authentication header value, some other misconfiguration, or coding problem in the Peerlogic API."
-                )
-                raise InternalServerError(f"Unable to authenticate. Authentication service is misconfigured. Please contact support.")
-
             # Netsapiens permissions problem
             if response.status_code == 403:
                 log.warning(
                     f"JSONWebTokenAuthentication#introspect_token: Netsapiens denied user permissions / found user had insufficient scope! This may or may not be a problem since we aren't using scopes to determine access from them."
                 )
                 return PermissionDenied()
+
+            # this is a misconfiguration or coding problem in peerlogic api
+            if response.status_code == 400:
+                log.exception(
+                    f"JSONWebTokenAuthentication#introspect_token: Encountered 400 error when attempting to authenticate with Netsapiens! We may have an invalid Authentication header value, some other misconfiguration, or coding problem in the Peerlogic API."
+                )
+                raise InternalServerError(f"Unable to authenticate. Authentication service is misconfigured. Please contact support.")
 
             # Everything else coerces into an authentication problem
             if not response.ok:
