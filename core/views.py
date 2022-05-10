@@ -120,7 +120,6 @@ class LoginView(APIView):
         if not (username and password):
             log.info(f"Bad Request detected for login. Missing one or more required fields.")
             raise ParseError()
-            #return Response(status=400, data={"detail": "Missing one or more required fields: 'username' and 'password'"})
 
         data = {
             "grant_type": "password",
