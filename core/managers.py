@@ -1,3 +1,5 @@
+from typing import Any, Optional
+
 from django.apps import apps
 from django.db import models
 from django.db import IntegrityError
@@ -16,11 +18,14 @@ class PracticeManager(models.Manager):
 class UserManager(_UserManager):
     INTROSPECT_TOKEN_PAYLOAD_KEYS = ["token", "client_id", "territory", "domain", "uid", "expires", "scope", "mask_chain"]
 
-    def get_or_create_from_introspect_token_payload(self, payload):
+    def get_and_update_from_introspect_token_payload(self, payload) -> Optional[Any]:
         self._validate_introspect_token_payload(payload)
         uid = payload["uid"]
 
         try:
+            # this would generally be an get_or_create since we call this message after successful authentication, so a user SHOULD BE in our system
+            # however, we are only creating users during our login operation for the time being to provide a single entrypoint for user creation
+            # why? because an external system (netsapiens) is currently involved in authentication and we want to minimize code surface area that trusts it
             user = self.get(username=uid)
             user.last_login = timezone.now()
             user.is_active = True
@@ -29,6 +34,8 @@ class UserManager(_UserManager):
         except self.model.DoesNotExist:
             pass  # you shall not pass
 
-    def _validate_introspect_token_payload(self, payload):
+        return None
+
+    def _validate_introspect_token_payload(self, payload) -> None:
         if not all(key in self.INTROSPECT_TOKEN_PAYLOAD_KEYS for key in payload):
             raise ValueError("Wrong payload to get or create a user")

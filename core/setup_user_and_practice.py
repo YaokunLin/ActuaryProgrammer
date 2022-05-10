@@ -48,18 +48,13 @@ def setup_user(username: str, name: str, email: str, domain: str, login_time: ti
     )
 
 
-def update_user_on_refresh(previous_refresh_token: str, new_refresh_token: str, login_time: timezone, expires_in_seconds: int) -> User:
+def update_user_on_refresh(username: str, login_time: timezone) -> User:
     try:
-        user = get_object_or_404(User, refresh_token=previous_refresh_token)
-        user.refresh_token = new_refresh_token
+        user = get_object_or_404(User, username=username)
         user.last_login = login_time
-        user.token_expiry = login_time + timezone.timedelta(seconds=expires_in_seconds)
         user.save()
     except MultipleObjectsReturned as mor:
         msg = "Error occurred identifying user by refresh token. Please contact the system administrator."
-        log.critical(
-            f"Multiple users were returned for the given refresh_token='{new_refresh_token}'! This should NEVER occur. INVESTIGATE IMMEDIATELY. {str(mor)}"
-        )
         raise ValueError(msg)
 
     return user
