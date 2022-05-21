@@ -3,7 +3,7 @@ from django.contrib.auth.models import Group
 
 from core.forms import PracticeAdminForm
 
-from .models import Agent, Client, Practice, User, VoipProvider
+from .models import Agent, Client, Practice, User, VoipProvider, PracticeTelecom
 
 admin.site.unregister(Group)
 
@@ -39,3 +39,4 @@ admin.site.register(Agent)
 admin.site.register(Practice, PracticeAdmin)
 admin.site.register(Client, ClientAdmin)
 admin.site.register(VoipProvider, VoipProviderAdmin)
+admin.site.register(PracticeTelecom)

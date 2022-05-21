@@ -2,7 +2,7 @@
 
 ## Dependencies
 
-\# TODO
+# TODO
 
 ## Docker
 
@@ -16,7 +16,8 @@ Create a new file in the root of the peerlogic-api directory called `.env`.
 
 Paste the contents of this 1Password secret into the `.env` file
 
-See 1Password for a starter file: [peerlogic-api LOCAL  starter .env file](https://start.1password.com/open/i?a=P3RU52IFYBEH3GKEDF2UBYENBQ&v=wlmpasbyyncmhpjji3lfc7ra4a&i=sxjcghmtefeqvdystb2l6q7k5y&h=my.1password.com)
+See 1Password for a starter
+file: [peerlogic-api LOCAL  starter .env file](https://start.1password.com/open/i?a=P3RU52IFYBEH3GKEDF2UBYENBQ&v=wlmpasbyyncmhpjji3lfc7ra4a&i=sxjcghmtefeqvdystb2l6q7k5y&h=my.1password.com)
 
 ### Docker commands:
 
@@ -55,7 +56,7 @@ Start:
 `docker-compose up`
 
 End all processes:
-`docker-compose down  --remove-orphans`
+`docker-compose down --remove-orphans`
 
 ### Database and Data Schema Creations
 
@@ -65,8 +66,8 @@ End all processes:
 
 Not really recommended; docker has been more tested.
 
-
 ### Initializing, Installing, and Migrating:
+
 First time?
 
 ```bash
@@ -90,24 +91,27 @@ python3 manage.py runserver
 
 # Postman Collection
 
-There is a Postman Collection that can be used to validate setup and test changes. Import the following: (Peerlogic API Collection)[https://www.getpostman.com/collections/c1045d02c72c56abd559]
+There is a Postman Collection that can be used to validate setup and test changes. Import the following: (Peerlogic API
+Collection)[https://www.getpostman.com/collections/c1045d02c72c56abd559]
 
 # Deployment
 
 CI/CD is set up for deploying to development with App Engine.
 
 See `deployment/app_engine/DEPLOYMENT.md` for deploying to another environment with App Engine.
+
 # 1Password sign-in
 
 Set up your CLI tool: https://support.1password.com/command-line-getting-started/
 
-Sign in: 
+Sign in:
 
 https://support.1password.com/command-line/#sign-in-or-out
 
 ```bash
 op signin [<sign_in_address>](https://peerlogic.1password.com/signin) <email_address> <secret_key>
 ```
+
 eval $(op signin my)
 
 <!-- For MAC:

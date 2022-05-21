@@ -129,3 +129,6 @@ key-file
 
 # Security / Credentials
 .credentials
+
+.idea/*
+volumes/*
