@@ -115,3 +115,70 @@ eval $(op signin my)
 ```bash
 echo "1PASSWORD_SHORTHAND=<youroutputtedtokenhere>" >> ~/.bashrc
 ``` -->
+
+## Netsapiens Subscription Creation
+
+### Setup Proxy Access to the Environment
+
+Creation of credentials requires us to be local / on the same network as the environment in question since we're using the ORM to update the database itself directly.
+
+1. Download the appropriate credentials file to access the environment via IAM. Place this somewhere that is secure and you won't forget it. You'll need to use this later.
+
+2. Create or activate the google cloud environment
+
+    Either this with the appropriate values at the prompts:
+
+    ```bash
+    gcloud init
+    ```
+
+    Or this:
+
+    ```bash
+    gcloud config configuration activate peerlogic-api-prod
+    ```
+
+3. Enter the google cloud environment to access the database with cloud sql proxy
+
+    ```bash
+    ./devtools/cloud_sql_proxy.bash
+    ```
+
+### Database Access to the Environment
+
+Google Cloud credentials are necessary to access the database. Your environment file must be setup accordingly.
+
+1. Ensure you have a copy of the appropriate deployment's environment. Use Secret Manager of the appropriate environment to download a copy.
+
+2. Backup your local .env
+
+    ```bash
+    mv .env .env.local
+    ```
+
+3. Rename the environment configuration to .env so you can use it.
+
+    ```bash
+    mv .env.prod .env
+    ```
+
+4. Update the .env file to use the google credentials file.
+
+    ```bash
+    GOOGLE_APPLICATION_CREDENTIALS=.credentials/peerlogic-api-prod-9d33d6f6e911.json  # THIS IS JUST AN EXAMPLE, YOURS WILL BE NAMED DIFFERENTLY.
+    ```
+
+## Create subscription
+
+1. Run the creation command:
+
+    ```bash
+    docker-compose -f ./devtools/cloudsql-docker-compose.yml run api python3 manage.py create_netsapiens_integration {peerlogic_root_api_url}, {voip_provider_id}, {practice_name}, {practice_voip_domain}
+    ```
+
+
+    NOTE: double check the peerlogic_root_api_url. It's not as easy as just swapping out "dev", "stage", and "prod" as the subdomains themselves are different!
+
+    ```bash
+    docker-compose -f ./devtools/cloudsql-docker-compose.yml run api python3 manage.py create_netsapiens_integration https://peerlogic-api-prod.wm.r.appspot.com drFoXEnEwrN28Gowp3CoRN "Thunderbird Dental Studio" dentaldesignstudios_thunderbird
+    ```
