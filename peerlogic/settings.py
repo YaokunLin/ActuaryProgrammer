@@ -15,8 +15,6 @@ from datetime import timedelta
 import io
 import logging
 import os
-import requests
-from requests.auth import HTTPBasicAuth
 
 from dotenv import load_dotenv
 from google.cloud import (
@@ -24,6 +22,9 @@ from google.cloud import (
     secretmanager,
     storage,
 )
+import requests
+from requests.auth import HTTPBasicAuth
+
 
 
 # Get an instance of a logger
@@ -286,8 +287,27 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "peerlogic.wsgi.application"
 
+AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
+AUTH0_AUDIENCE = os.getenv('AUTH0_AUDIENCE')
+
+SIMPLE_JWT = {
+    'ALGORITHM': 'RS256',
+    'JWK_URL': f'https://{AUTH0_DOMAIN}/.well-known/jwks.json',
+    'AUDIENCE': AUTH0_AUDIENCE,
+    'USER_ID_FIELD': 'auth0_id',
+    'ISSUER': f'https://{AUTH0_DOMAIN}/',
+    'USER_ID_CLAIM': 'sub',
+    'AUTH_TOKEN_CLASSES': ('authz.tokens.Auth0Token',),
+}
+
+
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": ["core.authentication.JSONWebTokenAuthentication"],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        #"core.authentication.JSONWebTokenAuthentication",
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        # 'rest_framework.authentication.SessionAuthentication',
+        # 'rest_framework.authentication.BasicAuthentication',
+    ],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "DEFAULT_FILTER_BACKENDS": [

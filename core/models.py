@@ -87,6 +87,7 @@ class User(AbstractUser, PermissionsMixin):
     # Using plain "name" here since we may not have it broken out into
     # first and last
     name = models.CharField(_("name"), max_length=300, blank=True)
+    auth0_id = models.CharField(max_length=120, blank=True)
     objects = UserManager()
 
 
