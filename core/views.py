@@ -219,19 +219,19 @@ class LoginView(APIView):
         # bad username or password: 403
         if netsapiens_access_token_response.status_code == 403:
             log.exception(
-                f"JSONWebTokenAuthentication#introspect_token: Netsapiens denied user permissions / found user had insufficient scope! This may or may not be a problem since we aren't using scopes to determine access from them."
+                f"NetsapiensJSONWebTokenAuthentication#introspect_token: Netsapiens denied user permissions / found user had insufficient scope! This may or may not be a problem since we aren't using scopes to determine access from them."
             )
             raise PermissionDenied()
 
         # netsapiens server problem: 500s
         if netsapiens_access_token_response.status_code >= 500:
             log.exception(
-                f"JSONWebTokenAuthentication#introspect_token: Encountered 500 error when attempting to authenticate with Netsapiens! Netsapiens may be down or an invalid url is being used!"
+                f"NetsapiensJSONWebTokenAuthentication#introspect_token: Encountered 500 error when attempting to authenticate with Netsapiens! Netsapiens may be down or an invalid url is being used!"
             )
             raise ServiceUnavailableError(f"Authentication service unavailable for Peerlogic API. Please contact support.")
 
         if not netsapiens_access_token_response.ok:
-            log.warning("JSONWebTokenAuthentication#introspect_token: response not ok!")
+            log.warning("NetsapiensJSONWebTokenAuthentication#introspect_token: response not ok!")
             raise AuthenticationFailed()
 
         return None

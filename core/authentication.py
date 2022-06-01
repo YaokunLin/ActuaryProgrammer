@@ -23,7 +23,7 @@ from core.exceptions import (
 log = logging.getLogger(__name__)
 
 
-class JSONWebTokenAuthentication(BaseAuthentication):
+class NetsapiensJSONWebTokenAuthentication(BaseAuthentication):
     """Token based authentication using the JSON Web Token standard."""
 
     token_type_expected = "Bearer"
@@ -35,7 +35,7 @@ class JSONWebTokenAuthentication(BaseAuthentication):
         https://www.django-rest-framework.org/api-guide/authentication/#custom-authentication
         https://www.django-rest-framework.org/api-guide/permissions/#how-permissions-are-determined
         """
-        return f"{JSONWebTokenAuthentication.token_type_expected}"  # usually includes a realm="" but our implementation does not have an appropriate value
+        return f"{NetsapiensJSONWebTokenAuthentication.token_type_expected}"  # usually includes a realm="" but our implementation does not have an appropriate value
 
     def authenticate(self, request):
         """Entrypoint for Django Rest Framework
@@ -60,7 +60,12 @@ class JSONWebTokenAuthentication(BaseAuthentication):
         jwt_token = self.validate_header_and_get_token_value(request)
 
         # delegate authentication
-        response = self.introspect_token(jwt_token)
+        try:
+            response = self.introspect_token(jwt_token)
+        except AuthenticationFailed:
+            log.info(f"Netsapiens Authentication failed with token {jwt_token}, trying the next Authentication class.")
+            return None
+
         payload = xmltodict.parse(response)["Oauthtoken"]
 
         # authentication succeeded from auth system, obtain user from ours
@@ -68,7 +73,7 @@ class JSONWebTokenAuthentication(BaseAuthentication):
         user = USER_MODEL.objects.get_and_update_from_introspect_token_payload(payload)
 
         if user is None:
-            log.exception("JSONWebTokenAuthentication#authenticate: user not found or created!")
+            log.exception("NetsapiensJSONWebTokenAuthentication#authenticate: user not found or created!")
             raise InternalServerError("Encountered an error while trying to obtain authenticated user from Peerlogic API system!")
 
         return (user, None)
@@ -83,14 +88,14 @@ class JSONWebTokenAuthentication(BaseAuthentication):
             # work to make django not include a value in the response
             raise NotAuthenticated(f"'{auth_header_name}' header is required")
 
-        token_type_expected = JSONWebTokenAuthentication.token_type_expected
+        token_type_expected = NetsapiensJSONWebTokenAuthentication.token_type_expected
         message_for_expected_auth_value = f"Received value: '{auth_header_value}' Expected value: '{token_type_expected} <token>'"
         auth_parts = auth_header_value.split(" ")
         if len(auth_parts) != 2:
             raise ParseError(f"'{auth_header_name}' header value is invalid. {message_for_expected_auth_value}")
 
         token_type, token = auth_parts
-        if token_type.lower() != JSONWebTokenAuthentication.token_type_expected.lower():
+        if token_type.lower() != NetsapiensJSONWebTokenAuthentication.token_type_expected.lower():
             raise ParseError(f"'{auth_header_name}' header value must be a '{token_type_expected}' token. {message_for_expected_auth_value}")
 
         # make sure it's not empty, theoretically impossible and should be caught by length checks above
@@ -114,28 +119,28 @@ class JSONWebTokenAuthentication(BaseAuthentication):
             # mispelled "Bearer" or other token type: 400
             if response.status_code == 400:
                 log.exception(
-                    f"JSONWebTokenAuthentication#introspect_token: Encountered 400 error when attempting to authenticate with Netsapiens! We may have an invalid Authentication header value, some other misconfiguration, or coding problem in the Peerlogic API."
+                    f"NetsapiensJSONWebTokenAuthentication#introspect_token: Encountered 400 error when attempting to authenticate with Netsapiens! We may have an invalid Authentication header value, some other misconfiguration, or coding problem in the Peerlogic API."
                 )
                 raise InternalServerError(f"Unable to authenticate. Authentication service is misconfigured. Please contact support.")
 
             # Netsapiens permissions problem
             if response.status_code == 403:
                 log.warning(
-                    f"JSONWebTokenAuthentication#introspect_token: Netsapiens denied user permissions / found user had insufficient scope! This may or may not be a problem since we aren't using scopes to determine access from them."
+                    f"NetsapiensJSONWebTokenAuthentication#introspect_token: Netsapiens denied user permissions / found user had insufficient scope! This may or may not be a problem since we aren't using scopes to determine access from them."
                 )
                 return PermissionDenied()
 
             # problems with Netsapiens access / infrastructure!
             if response.status_code >= 500:
                 log.exception(
-                    f"JSONWebTokenAuthentication#introspect_token: Encountered 500 error when attempting to authenticate with Netsapiens! Netsapiens may be down or an invalid url is being used! Used url='{url}'."
+                    f"NetsapiensJSONWebTokenAuthentication#introspect_token: Encountered 500 error when attempting to authenticate with Netsapiens! Netsapiens may be down or an invalid url is being used! Used url='{url}'."
                 )
                 raise ServiceUnavailableError(f"Authentication service unavailable for Peerlogic API. Please contact support.")
 
             # Everything else coerces into an authentication problem
             # missing token value: 401
             if not response.ok:
-                log.warning("JSONWebTokenAuthentication#introspect_token: response not ok!")
+                log.warning("NetsapiensJSONWebTokenAuthentication#introspect_token: response not ok!")
                 raise AuthenticationFailed()
 
             return response.content
