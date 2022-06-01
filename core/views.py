@@ -89,7 +89,7 @@ class LoginView(APIView):
             grant_type = request.data.get("grant_type")
             handler = grant_handler_map.get(grant_type, default_handler)
             netsapiens_access_token_response = handler(request)
-            
+
             return netsapiens_access_token_response
         except APIException as api_exception:
             # pass it through
@@ -132,7 +132,7 @@ class LoginView(APIView):
 
         netsapiens_access_token_response = netsapiens_client.request("POST", settings.NETSAPIENS_ACCESS_TOKEN_URL, data=data)
         self._validate_netsapiens_status_code(netsapiens_access_token_response)
-        
+
         response_json = netsapiens_access_token_response.json()
         netsapiens_auth_token = LoginView.NetsapiensAuthToken.parse_obj(response_json)
         self._setup_user_and_save_activity(netsapiens_auth_token)
@@ -219,19 +219,19 @@ class LoginView(APIView):
         # bad username or password: 403
         if netsapiens_access_token_response.status_code == 403:
             log.exception(
-                f"JSONWebTokenAuthentication#introspect_token: Netsapiens denied user permissions / found user had insufficient scope! This may or may not be a problem since we aren't using scopes to determine access from them."
+                f"NetsapiensJSONWebTokenAuthentication#introspect_token: Netsapiens denied user permissions / found user had insufficient scope! This may or may not be a problem since we aren't using scopes to determine access from them."
             )
             raise PermissionDenied()
 
         # netsapiens server problem: 500s
         if netsapiens_access_token_response.status_code >= 500:
             log.exception(
-                f"JSONWebTokenAuthentication#introspect_token: Encountered 500 error when attempting to authenticate with Netsapiens! Netsapiens may be down or an invalid url is being used!"
+                f"NetsapiensJSONWebTokenAuthentication#introspect_token: Encountered 500 error when attempting to authenticate with Netsapiens! Netsapiens may be down or an invalid url is being used!"
             )
             raise ServiceUnavailableError(f"Authentication service unavailable for Peerlogic API. Please contact support.")
 
         if not netsapiens_access_token_response.ok:
-            log.warning("JSONWebTokenAuthentication#introspect_token: response not ok!")
+            log.warning("NetsapiensJSONWebTokenAuthentication#introspect_token: response not ok!")
             raise AuthenticationFailed()
 
         return None
