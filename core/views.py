@@ -89,7 +89,7 @@ class LoginView(APIView):
             grant_type = request.data.get("grant_type")
             handler = grant_handler_map.get(grant_type, default_handler)
             netsapiens_access_token_response = handler(request)
-            
+
             return netsapiens_access_token_response
         except APIException as api_exception:
             # pass it through
@@ -132,7 +132,7 @@ class LoginView(APIView):
 
         netsapiens_access_token_response = netsapiens_client.request("POST", settings.NETSAPIENS_ACCESS_TOKEN_URL, data=data)
         self._validate_netsapiens_status_code(netsapiens_access_token_response)
-        
+
         response_json = netsapiens_access_token_response.json()
         netsapiens_auth_token = LoginView.NetsapiensAuthToken.parse_obj(response_json)
         self._setup_user_and_save_activity(netsapiens_auth_token)

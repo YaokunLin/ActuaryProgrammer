@@ -26,7 +26,6 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 
-
 # Get an instance of a logger
 log = logging.getLogger(__name__)
 
@@ -256,7 +255,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    # CorsMiddleware should be placed as high as possible, especially before any middleware that can generate responses such as Django’s CommonMiddleware If 
+    # CorsMiddleware should be placed as high as possible, especially before any middleware that can generate responses such as Django’s CommonMiddleware If
     # it is not before, it will not be able to add the CORS headers to these responses.
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -287,26 +286,26 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "peerlogic.wsgi.application"
 
-AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
-AUTH0_AUDIENCE = os.getenv('AUTH0_AUDIENCE')
+AUTH0_DOMAIN = os.getenv("AUTH0_DOMAIN")
+AUTH0_AUDIENCE = os.getenv("AUTH0_AUDIENCE")
 
 SIMPLE_JWT = {
-    'ALGORITHM': 'RS256',
-    'JWK_URL': f'https://{AUTH0_DOMAIN}/.well-known/jwks.json',
-    'AUDIENCE': AUTH0_AUDIENCE,
-    'USER_ID_FIELD': 'auth0_id',
-    'ISSUER': f'https://{AUTH0_DOMAIN}/',
-    'USER_ID_CLAIM': 'sub',
-    'AUTH_TOKEN_CLASSES': ('authz.tokens.Auth0Token',),
+    "ALGORITHM": "RS256",
+    "JWK_URL": f"https://{AUTH0_DOMAIN}/.well-known/jwks.json",
+    "AUDIENCE": AUTH0_AUDIENCE,
+    "USER_ID_FIELD": "auth0_id",
+    "ISSUER": f"https://{AUTH0_DOMAIN}/",
+    "USER_ID_CLAIM": "sub",
+    "AUTH_TOKEN_CLASSES": ("authz.tokens.Auth0Token",),
 }
 
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "core.authentication.NetsapiensJSONWebTokenAuthentication",
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.BasicAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
