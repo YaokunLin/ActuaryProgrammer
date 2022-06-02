@@ -18,17 +18,19 @@ from rest_framework.exceptions import (
     PermissionDenied,
 )
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from oauth2_provider.contrib.rest_framework import TokenHasReadWriteScope, TokenHasScope
 
 from core.exceptions import (
     InternalServerError,
     ServiceUnavailableError,
 )
+from core.models import Client, Patient, Practice, PracticeTelecom, User, VoipProvider
+from core.serializers import AdminUserSerializer, ClientSerializer, PatientSerializer, PracticeSerializer, PracticeTelecomSerializer, VoipProviderSerializer
 from core.setup_user_and_practice import create_agent, create_user_telecom, save_user_activity_and_token, setup_practice, setup_user, update_user_on_refresh
-from .models import Client, Patient, Practice, PracticeTelecom, VoipProvider
-from .serializers import ClientSerializer, PatientSerializer, PracticeSerializer, PracticeTelecomSerializer, VoipProviderSerializer
 
 
 # Get an instance of a logger
@@ -278,3 +280,9 @@ class VoipProviderViewset(viewsets.ModelViewSet):
     serializer_class = VoipProviderSerializer
 
     filterset_fields = ["company_name"]
+
+
+class AdminUserViewset(viewsets.ModelViewSet):
+    queryset = User.objects.all().order_by("-modified_at")
+    permission_classes = [TokenHasReadWriteScope]
+    serializer_class = AdminUserSerializer

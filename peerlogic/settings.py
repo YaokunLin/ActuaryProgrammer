@@ -244,6 +244,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "care",
     "core",
+    "oauth2_provider",
     "calls",
     "etl",
     "inbox",
@@ -286,6 +287,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "peerlogic.wsgi.application"
 
+# OAUTH toolkit
+LOGIN_URL = "/admin/login/"
+OAUTH2_PROVIDER = {
+    # this is the list of available scopes
+    # TODO: refine, these are the generic tutorial ones.
+    "SCOPES": {"read": "Read scope", "write": "Write scope", "groups": "Access to your groups"}
+}
+
+
+# Auth0 User login
 AUTH0_DOMAIN = os.getenv("AUTH0_DOMAIN")
 AUTH0_AUDIENCE = os.getenv("AUTH0_AUDIENCE")
 
@@ -303,6 +314,7 @@ SIMPLE_JWT = {
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "core.authentication.NetsapiensJSONWebTokenAuthentication",
+        "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.BasicAuthentication",
