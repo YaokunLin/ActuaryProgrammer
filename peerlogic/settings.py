@@ -297,8 +297,8 @@ OAUTH2_PROVIDER = {
 
 
 # Auth0 User login
-AUTH0_DOMAIN = os.getenv("AUTH0_DOMAIN")
 AUTH0_AUDIENCE = os.getenv("AUTH0_AUDIENCE")
+AUTH0_DOMAIN = os.getenv("AUTH0_DOMAIN")
 
 SIMPLE_JWT = {
     "ALGORITHM": "RS256",
@@ -310,11 +310,15 @@ SIMPLE_JWT = {
     "AUTH_TOKEN_CLASSES": ("authz.tokens.Auth0Token",),
 }
 
+# Auth0 Machine User ID
+AUTH0_MACHINE_CLIENT_ID = os.getenv("AUTH0_MACHINE_CLIENT_ID")
+AUTH0_MACHINE_USER_ID = os.getenv("AUTH0_MACHINE_USER_ID")
+
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "core.authentication.NetsapiensJSONWebTokenAuthentication",
-        "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
+        "core.authentication.ClientCredentialsUserAuthentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.BasicAuthentication",

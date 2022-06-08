@@ -57,5 +57,5 @@ class VoipProviderSerializer(serializers.ModelSerializer):
 class AdminUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
+        read_only_fields = ["id", "created_at", "modified_by", "modified_at", "password"]
         fields = "__all__"
