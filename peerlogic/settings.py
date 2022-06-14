@@ -244,12 +244,12 @@ INSTALLED_APPS = [
     "corsheaders",
     "care",
     "core",
-    "oauth2_provider",
     "calls",
     "etl",
     "inbox",
     "ml",
     "netsapiens_integration",
+    "oauth2_provider",
     "reminders",
 ]
 
