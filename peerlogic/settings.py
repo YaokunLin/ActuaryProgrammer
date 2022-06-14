@@ -249,6 +249,7 @@ INSTALLED_APPS = [
     "inbox",
     "ml",
     "netsapiens_integration",
+    "jive_integration",
     "reminders",
 ]
 
@@ -400,3 +401,10 @@ CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", CELERY_BROKER_URL)
 
 # Admin
 X_FRAME_OPTIONS = "SAMEORIGIN"
+
+JIVE_CLIENT_ID = os.getenv("JIVE_CLIENT_ID", "")
+JIVE_CLIENT_SECRET = os.getenv("JIVE_CLIENT_SECRET", "")
+
+JIVE_BUCKET_NAME = os.getenv("JIVE_BUCKET_NAME", "")
+JIVE_BUCKET_ACCESS_KEY = os.getenv("JIVE_BUCKET_ACCESS_KEY", "")
+JIVE_BUCKET_ACCESS_SECRET = os.getenv("JIVE_BUCKET_ACCESS_SECRET", "")

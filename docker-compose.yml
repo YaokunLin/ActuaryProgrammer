@@ -10,6 +10,10 @@ services:
           - .env
       volumes:
           - ./volumes/postgres:/var/lib/postgresql
+      environment:
+          - POSTGRES_PASSWORD=password
+          - POSTGRES_USER=peerlogic
+          - POSTGRES_DB=peerlogic
 
   api:
       build: .

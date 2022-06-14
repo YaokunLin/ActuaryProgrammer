@@ -25,3 +25,4 @@ class IndustryTypes(models.TextChoices):
 
 class VoipProviderIntegrationTypes(models.TextChoices):
     NETSAPIENS = "netsapiens"
+    JIVE = "jive"
