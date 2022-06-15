@@ -240,6 +240,7 @@ INSTALLED_APPS = [
     "django_filters",
     "phonenumber_field",
     "rest_framework",
+    "oauth2_provider",
     "peerlogic_admin",
     "corsheaders",
     "care",
@@ -249,7 +250,7 @@ INSTALLED_APPS = [
     "inbox",
     "ml",
     "netsapiens_integration",
-    "oauth2_provider",
+    "jive_integration",
     "reminders",
 ]
 
@@ -416,3 +417,10 @@ CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", CELERY_BROKER_URL)
 
 # Admin
 X_FRAME_OPTIONS = "SAMEORIGIN"
+
+JIVE_CLIENT_ID = os.getenv("JIVE_CLIENT_ID", "")
+JIVE_CLIENT_SECRET = os.getenv("JIVE_CLIENT_SECRET", "")
+
+JIVE_BUCKET_NAME = os.getenv("JIVE_BUCKET_NAME", "")
+JIVE_BUCKET_ACCESS_KEY = os.getenv("JIVE_BUCKET_ACCESS_KEY", "")
+JIVE_BUCKET_ACCESS_SECRET = os.getenv("JIVE_BUCKET_ACCESS_SECRET", "")

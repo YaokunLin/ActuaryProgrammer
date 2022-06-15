@@ -41,3 +41,17 @@ def get_signed_url(
     )
     log.info(f"Generated GET signed URL: {url}")
     return url
+
+
+def put_file(
+    file_obj,
+    filename,
+    bucket_name,
+    storage_client: Client = settings.CLOUD_STORAGE_CLIENT,
+):
+    """Generates a v4 signed URL for downloading a blob."""
+
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(filename)
+
+    blob.upload_from_file(file_obj=file_obj)
