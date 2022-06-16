@@ -6,7 +6,6 @@ import logging
 from datetime import datetime, timedelta
 from typing import Set
 
-import boto3 as boto3
 import dateutil.parser
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
@@ -92,7 +91,7 @@ def webhook(request):
             cap = CallAudioPartial.objects.create(call_partial=cp, mime_type=SupportedAudioMimeTypes.AUDIO_WAV, status=CallAudioFileStatusTypes.UPLOADED)
 
             with io.BytesIO() as buf:
-                _get_s3_client().download_fileobj(settings.JIVE_BUCKET_NAME, filename, buf)
+                settings.S3_CLIENT.download_fileobj(settings.JIVE_BUCKET_NAME, filename, buf)
                 cap.put_file(buf)
 
             publish_call_audio_partial_saved(call_id=call.id, partial_id=cp.id, audio_partial_id=cap.id)
@@ -224,8 +223,3 @@ def cron(request):
         connection.save()
 
     return HttpResponse(status=202)
-
-
-@functools.cache
-def _get_s3_client():
-    return boto3.Session(aws_access_key_id=settings.JIVE_BUCKET_ACCESS_KEY, aws_secret_access_key=settings.JIVE_BUCKET_ACCESS_SECRET).client("s3")
