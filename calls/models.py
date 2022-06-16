@@ -28,7 +28,7 @@ from calls.field_choices import (
     TelecomPersonaTypes,
     TranscriptTypes,
 )
-from core.cloud_storage_helpers import get_signed_url, copy_file, put_file
+from core.cloud_storage_helpers import get_signed_url, put_file
 from core.models import PracticeTelecom
 
 # Get an instance of a logger
@@ -106,8 +106,11 @@ class CallAudio(AuditTrailModel):
     def signed_url(self) -> Optional[str]:
         return get_signed_url(filename=self.id, bucket_name=self.BUCKET_NAME)
 
-    def copy_from(self, filename: str) -> Optional[str]:
-        return copy_file(old_name=filename, new_name=self.id, bucket_name=self.BUCKET_NAME)
+    # TODO: someday, this functionality may be useful
+    # Commenting out because the copy_file is somehow missing from core.cloud_storage_helpers
+    # and I need to unblock the current release.
+    # def copy_from(self, filename: str) -> Optional[str]:
+    #     return copy_file(old_name=filename, new_name=self.id, bucket_name=self.BUCKET_NAME)
 
 
 class CallTranscript(AuditTrailModel):
