@@ -120,9 +120,9 @@ eval $(op signin my)
 echo "1PASSWORD_SHORTHAND=<youroutputtedtokenhere>" >> ~/.bashrc
 ``` -->
 
-## Netsapiens Subscription Creation
+# Running Management Commands
 
-### Setup Proxy Access to the Environment
+## Setup Proxy Access to the Environment
 
 Creation of credentials requires us to be local / on the same network as the environment in question since we're using the ORM to update the database itself directly.
 
@@ -148,7 +148,7 @@ Creation of credentials requires us to be local / on the same network as the env
     ./devtools/cloud_sql_proxy.bash
     ```
 
-### Database Access to the Environment
+## Database Access to the Environment
 
 Google Cloud credentials are necessary to access the database. Your environment file must be setup accordingly.
 
@@ -172,9 +172,11 @@ Google Cloud credentials are necessary to access the database. Your environment 
     GOOGLE_APPLICATION_CREDENTIALS=.credentials/peerlogic-api-prod-9d33d6f6e911.json  # THIS IS JUST AN EXAMPLE, YOURS WILL BE NAMED DIFFERENTLY.
     ```
 
-## Create subscription
+## Management Command - Create Netsapiens subscription
 
-1. Run the creation command:
+1. Follow above instructions under "Running Management Commands" before continuing.
+
+2. Run the creation command:
 
     ```bash
     docker-compose -f ./devtools/cloudsql-docker-compose.yml run api python3 manage.py create_netsapiens_integration {peerlogic_root_api_url}, {voip_provider_id}, {practice_name}, {practice_voip_domain}
@@ -186,3 +188,30 @@ Google Cloud credentials are necessary to access the database. Your environment 
     ```bash
     docker-compose -f ./devtools/cloudsql-docker-compose.yml run api python3 manage.py create_netsapiens_integration https://peerlogic-api-prod.wm.r.appspot.com drFoXEnEwrN28Gowp3CoRN "Thunderbird Dental Studio" dentaldesignstudios_thunderbird
     ```
+
+## Management Command - Create Client Credential Auth User
+
+1. Follow above instructions under "Running Management Commands" before continuing.
+
+2. Create a client credential / application at https://peerlogic-api-{rest-of-appspot-baseurl}/o/applications/. Take note of the client ID and Secret on the form and add it to 1Password before clicking Save.
+   *NOTE: The moment you click the Save button you will no longer have access to the client secret.*
+   *NOTE: For Client type, select Public. Otherwise you will have a bad time.*
+
+3. Run the creation command:
+
+    ```bash
+    docker-compose -f ./devtools/cloudsql-docker-compose.yml run api python3 manage.py create_auth0_client_credential_user {name}, {client_id}
+    ```
+
+    example:
+
+    ```bash
+    docker-compose -f ./devtools/cloudsql-docker-compose.yml run api python3 manage.py create_auth0_client_credential_user auth0 a8jEHWwQlonYAdOOm4h07bzp7PZhNw6ozdanNoyj
+    ```
+
+    Take note of the id.
+
+4. Set the proper secret in Secret Manager for your environment and redeploy the API.
+    In the Secret manager you will need to update AUTH0_MACHINE_CLIENT_ID and AUTH0_MACHINE_USER_ID so the mapping can be used when authenticating with client credentials for admin endpoints, like `/api/users`.
+
+5. [Update the Auth0 Custom Action secrets](https://manage.auth0.com/dashboard/us/dev-ea57un9z/actions/library) for `PEERLOGIC_API_CLIENT_ID` `PEERLOGIC_API_CLIENT_SECRET` for the application.

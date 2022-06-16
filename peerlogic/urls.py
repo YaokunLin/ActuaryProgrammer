@@ -43,4 +43,5 @@ urlpatterns = [
     path("api/", include(inbox_urlpatterns)),
     path("api/", include(ml_urlpatterns)),
     path("api/", include(reminders_urlpatterns)),
+    path("oauth/", include("oauth2_provider.urls", namespace="oauth2_provider")),
 ]
