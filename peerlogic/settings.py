@@ -16,6 +16,7 @@ import io
 import logging
 import os
 
+import boto3 as boto3
 from dotenv import load_dotenv
 from google.cloud import (
     pubsub_v1,
@@ -408,3 +409,6 @@ JIVE_CLIENT_SECRET = os.getenv("JIVE_CLIENT_SECRET", "")
 JIVE_BUCKET_NAME = os.getenv("JIVE_BUCKET_NAME", "")
 JIVE_BUCKET_ACCESS_KEY = os.getenv("JIVE_BUCKET_ACCESS_KEY", "")
 JIVE_BUCKET_ACCESS_SECRET = os.getenv("JIVE_BUCKET_ACCESS_SECRET", "")
+
+
+S3_CLIENT = boto3.Session(aws_access_key_id=JIVE_BUCKET_ACCESS_KEY, aws_secret_access_key=JIVE_BUCKET_ACCESS_SECRET).client("s3")
