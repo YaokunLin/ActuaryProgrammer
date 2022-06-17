@@ -139,7 +139,7 @@ Creation of credentials requires us to be local / on the same network as the env
     Or this:
 
     ```bash
-    gcloud config configuration activate peerlogic-api-prod
+    gcloud config configuration activate peerlogic-api-dev
     ```
 
 3. Enter the google cloud environment to access the database with cloud sql proxy
@@ -163,14 +163,21 @@ Google Cloud credentials are necessary to access the database. Your environment 
 3. Rename the environment configuration to .env so you can use it.
 
     ```bash
-    mv .env.prod .env
+    cp .env.dev .env
     ```
 
 4. Update the .env file to use the google credentials file.
 
     ```bash
-    GOOGLE_APPLICATION_CREDENTIALS=.credentials/peerlogic-api-prod-9d33d6f6e911.json  # THIS IS JUST AN EXAMPLE, YOURS WILL BE NAMED DIFFERENTLY.
+    PROJECT_ID=peerlogic-api-dev # put your env here
+    GOOGLE_APPLICATION_CREDENTIALS=.credentials/peerlogic-api-dev-9d33d6f6e911.json  # THIS IS JUST AN EXAMPLE, YOURS WILL BE NAMED DIFFERENTLY.
     ```
+
+5. Build the necessary dependencies in a separate terminal window:
+
+   ```bash
+   docker-compose -f ./devtools/cloudsql-docker-compose.yml up --build
+   ```
 
 ## Management Command - Create Netsapiens subscription
 
@@ -206,7 +213,7 @@ Google Cloud credentials are necessary to access the database. Your environment 
     example:
 
     ```bash
-    docker-compose -f ./devtools/cloudsql-docker-compose.yml run api python3 manage.py create_auth0_client_credential_user auth0 a8jEHWwQlonYAdOOm4h07bzp7PZhNw6ozdanNoyj
+    docker-compose -f ./devtools/cloudsql-docker-compose.yml run api python3 manage.py create_auth0_client_credential_user auth0 NAWAyL0aOx6mw0kzLXXccSTKiSPJ4JqvuLE33qeX
     ```
 
     Take note of the id.
