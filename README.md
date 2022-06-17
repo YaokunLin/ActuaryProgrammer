@@ -193,7 +193,7 @@ Google Cloud credentials are necessary to access the database. Your environment 
 
 1. Follow above instructions under "Running Management Commands" before continuing.
 
-2. Create a client credential / application at https://peerlogic-api-{rest-of-appspot-baseurl}/o/applications/. Take note of the client ID and Secret on the form and add it to 1Password before clicking Save.
+2. Create a client credential / application at https://peerlogic-api-{rest-of-appspot-baseurl}/oauth/applications/. Take note of the client ID and Secret on the form and add it to 1Password before clicking Save.
    *NOTE: The moment you click the Save button you will no longer have access to the client secret.*
    *NOTE: For Client type, select Public. Otherwise you will have a bad time.*
 
