@@ -18,7 +18,7 @@ from rest_framework.exceptions import (
     PermissionDenied,
 )
 from rest_framework import status
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -28,7 +28,7 @@ from core.exceptions import (
     InternalServerError,
     ServiceUnavailableError,
 )
-from core.models import Client, Patient, Practice, PracticeTelecom, User, VoipProvider
+from core.models import Agent, Client, Patient, Practice, PracticeTelecom, User, VoipProvider
 from core.serializers import AdminUserSerializer, ClientSerializer, PatientSerializer, PracticeSerializer, PracticeTelecomSerializer, VoipProviderSerializer
 from core.setup_user_and_practice import create_agent, create_user_telecom, save_user_activity_and_token, setup_practice, setup_user, update_user_on_refresh
 
@@ -262,9 +262,19 @@ class PatientViewset(viewsets.ModelViewSet):
 class PracticeViewSet(viewsets.ModelViewSet):
     queryset = Practice.objects.all().order_by("-modified_at")
     serializer_class = PracticeSerializer
-    # TODO: provide filtering of queryset to logged in voip providers' practices
 
     search_fields = ["name"]
+
+    def get_queryset(self):
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            return Practice.objects.all().order_by("-modified_at")
+
+        if self.request.method in SAFE_METHODS:
+            # Can see any practice if you are an assigned agent to a practice
+            practice_ids = Agent.objects.filter(user=self.request.user.id).values("practice_id")
+            return Practice.objects.filter(pk__in=practice_ids)
+
+        return Practice.objects.none()
 
 
 class PracticeTelecomViewSet(viewsets.ModelViewSet):

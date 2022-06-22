@@ -12,7 +12,9 @@ class UserAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "name",
+        "username",
         "email",
+        "auth0_id",
         "is_staff",
         "is_superuser",
     )
@@ -29,13 +31,19 @@ class ClientAdmin(admin.ModelAdmin):
 class VoipProviderAdmin(admin.ModelAdmin):
     list_display = ("id", "company_name")
 
+class AgentAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "user",
+        "practice"
+    )
 
 class PracticeAdmin(admin.ModelAdmin):
     form = PracticeAdminForm
 
 
 admin.site.register(User, UserAdmin)
-admin.site.register(Agent)
+admin.site.register(Agent, AgentAdmin)
 admin.site.register(Practice, PracticeAdmin)
 admin.site.register(Client, ClientAdmin)
 admin.site.register(VoipProvider, VoipProviderAdmin)
