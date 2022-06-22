@@ -292,7 +292,7 @@ WSGI_APPLICATION = "peerlogic.wsgi.application"
 # OAUTH toolkit
 LOGIN_URL = "/admin/login/"
 OAUTH2_PROVIDER = {
-    # this is the list of available scopes
+    # this is the list of available oauth scopes
     # TODO: refine, these are the generic tutorial ones.
     "SCOPES": {"read": "Read scope", "write": "Write scope", "groups": "Access to your groups"}
 }
