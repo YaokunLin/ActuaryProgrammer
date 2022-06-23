@@ -87,6 +87,8 @@ class User(AbstractUser, PermissionsMixin):
     # Using plain "name" here since we may not have it broken out into
     # first and last
     name = models.CharField(_("name"), max_length=300, blank=True)
+    password = models.CharField(_("password"), max_length=128, blank=True)  # Auth0 is authing most of this stuff, so making password optional
+    auth0_id = models.CharField(max_length=120, blank=True)
     objects = UserManager()
 
 

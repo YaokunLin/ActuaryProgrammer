@@ -18,17 +18,19 @@ from rest_framework.exceptions import (
     PermissionDenied,
 )
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from oauth2_provider.contrib.rest_framework import TokenHasReadWriteScope, TokenHasScope
 
 from core.exceptions import (
     InternalServerError,
     ServiceUnavailableError,
 )
+from core.models import Agent, Client, Patient, Practice, PracticeTelecom, User, VoipProvider
+from core.serializers import AdminUserSerializer, ClientSerializer, PatientSerializer, PracticeSerializer, PracticeTelecomSerializer, VoipProviderSerializer
 from core.setup_user_and_practice import create_agent, create_user_telecom, save_user_activity_and_token, setup_practice, setup_user, update_user_on_refresh
-from .models import Client, Patient, Practice, PracticeTelecom, VoipProvider
-from .serializers import ClientSerializer, PatientSerializer, PracticeSerializer, PracticeTelecomSerializer, VoipProviderSerializer
 
 
 # Get an instance of a logger
@@ -89,7 +91,7 @@ class LoginView(APIView):
             grant_type = request.data.get("grant_type")
             handler = grant_handler_map.get(grant_type, default_handler)
             netsapiens_access_token_response = handler(request)
-            
+
             return netsapiens_access_token_response
         except APIException as api_exception:
             # pass it through
@@ -132,7 +134,7 @@ class LoginView(APIView):
 
         netsapiens_access_token_response = netsapiens_client.request("POST", settings.NETSAPIENS_ACCESS_TOKEN_URL, data=data)
         self._validate_netsapiens_status_code(netsapiens_access_token_response)
-        
+
         response_json = netsapiens_access_token_response.json()
         netsapiens_auth_token = LoginView.NetsapiensAuthToken.parse_obj(response_json)
         self._setup_user_and_save_activity(netsapiens_auth_token)
@@ -219,19 +221,19 @@ class LoginView(APIView):
         # bad username or password: 403
         if netsapiens_access_token_response.status_code == 403:
             log.exception(
-                f"JSONWebTokenAuthentication#introspect_token: Netsapiens denied user permissions / found user had insufficient scope! This may or may not be a problem since we aren't using scopes to determine access from them."
+                f"NetsapiensJSONWebTokenAuthentication#introspect_token: Netsapiens denied user permissions / found user had insufficient scope! This may or may not be a problem since we aren't using scopes to determine access from them."
             )
             raise PermissionDenied()
 
         # netsapiens server problem: 500s
         if netsapiens_access_token_response.status_code >= 500:
             log.exception(
-                f"JSONWebTokenAuthentication#introspect_token: Encountered 500 error when attempting to authenticate with Netsapiens! Netsapiens may be down or an invalid url is being used!"
+                f"NetsapiensJSONWebTokenAuthentication#introspect_token: Encountered 500 error when attempting to authenticate with Netsapiens! Netsapiens may be down or an invalid url is being used!"
             )
             raise ServiceUnavailableError(f"Authentication service unavailable for Peerlogic API. Please contact support.")
 
         if not netsapiens_access_token_response.ok:
-            log.warning("JSONWebTokenAuthentication#introspect_token: response not ok!")
+            log.warning("NetsapiensJSONWebTokenAuthentication#introspect_token: response not ok!")
             raise AuthenticationFailed()
 
         return None
@@ -260,9 +262,19 @@ class PatientViewset(viewsets.ModelViewSet):
 class PracticeViewSet(viewsets.ModelViewSet):
     queryset = Practice.objects.all().order_by("-modified_at")
     serializer_class = PracticeSerializer
-    # TODO: provide filtering of queryset to logged in voip providers' practices
 
     search_fields = ["name"]
+
+    def get_queryset(self):
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            return Practice.objects.all().order_by("-modified_at")
+
+        if self.request.method in SAFE_METHODS:
+            # Can see any practice if you are an assigned agent to a practice
+            practice_ids = Agent.objects.filter(user=self.request.user.id).values("practice_id")
+            return Practice.objects.filter(pk__in=practice_ids)
+
+        return Practice.objects.none()
 
 
 class PracticeTelecomViewSet(viewsets.ModelViewSet):
@@ -278,3 +290,9 @@ class VoipProviderViewset(viewsets.ModelViewSet):
     serializer_class = VoipProviderSerializer
 
     filterset_fields = ["company_name"]
+
+
+class AdminUserViewset(viewsets.ModelViewSet):
+    queryset = User.objects.all().order_by("-modified_at")
+    permission_classes = [TokenHasReadWriteScope]
+    serializer_class = AdminUserSerializer

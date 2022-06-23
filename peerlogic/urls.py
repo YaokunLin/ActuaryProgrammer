@@ -29,6 +29,7 @@ admin.site.site_header = "Peerlogic API Admin Portal"
 
 integration_url_patterns = [
     path("netsapiens/", include("netsapiens_integration.urls", namespace="netsapiens")),
+    path("jive/", include("jive_integration.urls", namespace="jive")),
 ]
 
 urlpatterns = [
@@ -42,4 +43,5 @@ urlpatterns = [
     path("api/", include(inbox_urlpatterns)),
     path("api/", include(ml_urlpatterns)),
     path("api/", include(reminders_urlpatterns)),
+    path("oauth/", include("oauth2_provider.urls", namespace="oauth2_provider")),
 ]

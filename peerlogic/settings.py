@@ -15,15 +15,16 @@ from datetime import timedelta
 import io
 import logging
 import os
-import requests
-from requests.auth import HTTPBasicAuth
 
+import boto3 as boto3
 from dotenv import load_dotenv
 from google.cloud import (
     pubsub_v1,
     secretmanager,
     storage,
 )
+import requests
+from requests.auth import HTTPBasicAuth
 
 
 # Get an instance of a logger
@@ -240,6 +241,7 @@ INSTALLED_APPS = [
     "django_filters",
     "phonenumber_field",
     "rest_framework",
+    "oauth2_provider",
     "peerlogic_admin",
     "corsheaders",
     "care",
@@ -249,13 +251,14 @@ INSTALLED_APPS = [
     "inbox",
     "ml",
     "netsapiens_integration",
+    "jive_integration",
     "reminders",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    # CorsMiddleware should be placed as high as possible, especially before any middleware that can generate responses such as Django’s CommonMiddleware If 
+    # CorsMiddleware should be placed as high as possible, especially before any middleware that can generate responses such as Django’s CommonMiddleware If
     # it is not before, it will not be able to add the CORS headers to these responses.
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -286,8 +289,42 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "peerlogic.wsgi.application"
 
+# OAUTH toolkit
+LOGIN_URL = "/admin/login/"
+OAUTH2_PROVIDER = {
+    # this is the list of available oauth scopes
+    # TODO: refine, these are the generic tutorial ones.
+    "SCOPES": {"read": "Read scope", "write": "Write scope", "groups": "Access to your groups"}
+}
+
+
+# Auth0 User login
+AUTH0_AUDIENCE = os.getenv("AUTH0_AUDIENCE")
+AUTH0_DOMAIN = os.getenv("AUTH0_DOMAIN")
+
+SIMPLE_JWT = {
+    "ALGORITHM": "RS256",
+    "JWK_URL": f"https://{AUTH0_DOMAIN}/.well-known/jwks.json",
+    "AUDIENCE": AUTH0_AUDIENCE,
+    "USER_ID_FIELD": "auth0_id",
+    "ISSUER": f"https://{AUTH0_DOMAIN}/",
+    "USER_ID_CLAIM": "sub",
+    "AUTH_TOKEN_CLASSES": ("authz.tokens.Auth0Token",),
+}
+
+# Auth0 Machine User ID
+AUTH0_MACHINE_CLIENT_ID = os.getenv("AUTH0_MACHINE_CLIENT_ID")
+AUTH0_MACHINE_USER_ID = os.getenv("AUTH0_MACHINE_USER_ID")
+
+
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": ["core.authentication.JSONWebTokenAuthentication"],
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "core.authentication.NetsapiensJSONWebTokenAuthentication",
+        "core.authentication.ClientCredentialsUserAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.BasicAuthentication",
+    ],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "DEFAULT_FILTER_BACKENDS": [
@@ -303,13 +340,14 @@ REST_FRAMEWORK = {
 
 
 # [START dbconfig]
+DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.getenv("POSTGRES_USER"),
         "USER": os.getenv("POSTGRES_DB"),
         "PASSWORD": os.getenv("POSTGRES_PEERLOGIC_PASSWORD"),
-        "HOST": os.getenv("DB_HOST", "127.0.0.1"),
+        "HOST": DB_HOST,
         "PORT": "5432",
     }
 }
@@ -381,3 +419,13 @@ CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", CELERY_BROKER_URL)
 
 # Admin
 X_FRAME_OPTIONS = "SAMEORIGIN"
+
+JIVE_CLIENT_ID = os.getenv("JIVE_CLIENT_ID", "")
+JIVE_CLIENT_SECRET = os.getenv("JIVE_CLIENT_SECRET", "")
+
+JIVE_BUCKET_NAME = os.getenv("JIVE_BUCKET_NAME", "")
+JIVE_BUCKET_ACCESS_KEY = os.getenv("JIVE_BUCKET_ACCESS_KEY", "")
+JIVE_BUCKET_ACCESS_SECRET = os.getenv("JIVE_BUCKET_ACCESS_SECRET", "")
+
+
+S3_CLIENT = boto3.Session(aws_access_key_id=JIVE_BUCKET_ACCESS_KEY, aws_secret_access_key=JIVE_BUCKET_ACCESS_SECRET).client("s3")
