@@ -262,7 +262,7 @@ class PatientViewset(viewsets.ModelViewSet):
 class PracticeViewSet(viewsets.ModelViewSet):
     queryset = Practice.objects.all().order_by("-modified_at")
     serializer_class = PracticeSerializer
-
+    filterset_fields = ["active"]
     search_fields = ["name"]
 
     def get_queryset(self):
