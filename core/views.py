@@ -265,15 +265,17 @@ class PracticeViewSet(viewsets.ModelViewSet):
     search_fields = ["name"]
 
     def get_queryset(self):
-        if self.request.user.is_staff or self.request.user.is_superuser:
-            return Practice.objects.all().order_by("-name")
 
-        if self.request.method in SAFE_METHODS:
+        query_set = Practice.objects.none()
+
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            query_set = Practice.objects.all()
+        elif self.request.method in SAFE_METHODS:
             # Can see any practice if you are an assigned agent to a practice
             practice_ids = Agent.objects.filter(user=self.request.user.id).values("practice_id")
-            return Practice.objects.filter(pk__in=practice_ids).order_by("-name")
+            query_set = Practice.objects.filter(pk__in=practice_ids)
 
-        return Practice.objects.none()
+        return query_set.order_by("name")
 
 
 class PracticeTelecomViewSet(viewsets.ModelViewSet):
