@@ -260,19 +260,18 @@ class PatientViewset(viewsets.ModelViewSet):
 
 
 class PracticeViewSet(viewsets.ModelViewSet):
-    queryset = Practice.objects.all().order_by("-modified_at")
     serializer_class = PracticeSerializer
     filterset_fields = ["active"]
     search_fields = ["name"]
 
     def get_queryset(self):
         if self.request.user.is_staff or self.request.user.is_superuser:
-            return Practice.objects.all().order_by("-modified_at")
+            return Practice.objects.all().order_by("-name")
 
         if self.request.method in SAFE_METHODS:
             # Can see any practice if you are an assigned agent to a practice
             practice_ids = Agent.objects.filter(user=self.request.user.id).values("practice_id")
-            return Practice.objects.filter(pk__in=practice_ids)
+            return Practice.objects.filter(pk__in=practice_ids).order_by("-name")
 
         return Practice.objects.none()
 
