@@ -3,7 +3,7 @@ from django.contrib.auth.models import Group
 
 from core.forms import PracticeAdminForm
 
-from .models import Agent, Client, Practice, User, VoipProvider, PracticeTelecom
+from .models import Agent, Client, Patient, Practice, User, UserPatient, UserTelecom, VoipProvider, PracticeTelecom
 
 admin.site.unregister(Group)
 
@@ -20,6 +20,17 @@ class UserAdmin(admin.ModelAdmin):
     )
 
 
+class UserTelecomAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "user",
+        "telecom_user",
+        "username",
+        "phone_sms",
+        "phone_callback",
+    )
+
+
 class ClientAdmin(admin.ModelAdmin):
     list_display = (
         "id",
@@ -29,22 +40,36 @@ class ClientAdmin(admin.ModelAdmin):
 
 
 class VoipProviderAdmin(admin.ModelAdmin):
-    list_display = ("id", "company_name")
+    list_display = ("id", "company_name", "integration_type")
+
 
 class AgentAdmin(admin.ModelAdmin):
-    list_display = (
-        "id",
-        "user",
-        "practice"
-    )
+    list_display = ("id", "user", "practice")
+
 
 class PracticeAdmin(admin.ModelAdmin):
+    list_display = ("id", "name", "active", "industry")
     form = PracticeAdminForm
 
 
+class PracticeTelecomAdmin(admin.ModelAdmin):
+    list_display = ("id", "practice", "domain", "voip_provider")
+
+
+class PatientAdmin(admin.ModelAdmin):
+    list_display = ("id", "practice", "name_first", "name_last")
+
+
+class UserPatientAdmin(admin.ModelAdmin):
+    list_display = ("id", "user", "patient")
+
+
 admin.site.register(User, UserAdmin)
+admin.site.register(UserTelecom, UserTelecomAdmin)
 admin.site.register(Agent, AgentAdmin)
 admin.site.register(Practice, PracticeAdmin)
 admin.site.register(Client, ClientAdmin)
 admin.site.register(VoipProvider, VoipProviderAdmin)
-admin.site.register(PracticeTelecom)
+admin.site.register(PracticeTelecom, PracticeTelecomAdmin)
+admin.site.register(Patient, PatientAdmin)
+admin.site.register(UserPatient, UserPatientAdmin)
