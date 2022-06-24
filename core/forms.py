@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.admin.widgets import FilteredSelectMultiple
-from core.models import Practice, Agent
+from core.models import Practice, Agent, PracticeTelecom
 
 
 User = get_user_model()
