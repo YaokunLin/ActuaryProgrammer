@@ -253,6 +253,7 @@ INSTALLED_APPS = [
     "netsapiens_integration",
     "jive_integration",
     "reminders",
+    "fixture_magic",
 ]
 
 MIDDLEWARE = [
