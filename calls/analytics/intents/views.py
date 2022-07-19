@@ -27,14 +27,6 @@ from calls.analytics.intents.serializers import (
     CallDiscussedSymptomSerializer,
 )
 
-class CallAnalyticsFieldChoicesView(views.APIView):
-
-    def get(self, request, format=None):
-        result = {}
-        result["call_purpose_types"] = dict((y, x) for x, y in CallPurposeTypes.choices)
-        result["call_outcome_types"] = dict((y, x) for x, y in CallOutcomeTypes.choices)
-        result["call_outcome_reason_types"] = dict((y, x) for x, y in CallOutcomeReasonTypes.choices)
-        return Response(result)
 
 class CallPurposeViewset(viewsets.ModelViewSet):
     queryset = CallPurpose.objects.all().order_by("-modified_at")
@@ -82,4 +74,3 @@ class CallDiscussedSymptomViewset(viewsets.ModelViewSet):
     queryset = CallDiscussedSymptom.objects.all().order_by("-modified_at")
     serializer_class = CallDiscussedSymptomSerializer
     filter_fields = ["call__id", "keyword"]
-

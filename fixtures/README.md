@@ -40,3 +40,8 @@ docker-compose -f ./devtools/cloudsql-docker-compose.yml run --rm  api python3 m
 ./devtools/cloudsql-docker-compose.yml run --rm  api python3 manage.py dump_object calls.CallTranscript WbtxpYUXqupNfNApktyy2D 9DwQJmcBnGoPRR6rimkdSM MhdCXmPQDu2e7wU7KWHLuW > fixtures/calls_calltranscript.json
 # remove all system warnings before continuing
 ```
+
+
+<!-- TODO: gsutil commands to sync files from production to your own bucket -->
+
+Manually, get all the caps, ctps, call audio and call transcripts from production bucket into your own bucket. You can search by their IDs to find them all.

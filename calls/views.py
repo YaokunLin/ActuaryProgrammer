@@ -22,14 +22,16 @@ from calls.twilio_etl import (
     get_caller_name_info_from_twilio,
     update_telecom_caller_name_info_with_twilio_data_for_valid_sections,
 )
+from calls.analytics.participants.field_choices import (
+    EngagementPersonaTypes,
+    NonAgentEngagementPersonaTypes,
+)
 from .field_choices import (
     AudioCodecType,
     CallAudioFileStatusTypes,
     CallConnectionTypes,
     CallDirectionTypes,
     CallTranscriptFileStatusTypes,
-    EngagementPersonaTypes,
-    NonAgentEngagementPersonaTypes,
     ReferralSourceTypes,
     SentimentTypes,
     SpeechToTextModelTypes,
@@ -68,7 +70,6 @@ log = logging.getLogger(__name__)
 
 
 class CallFieldChoicesView(views.APIView):
-
     def get(self, request, format=None):
         result = {}
         result["engagement_persona_types"] = dict((y, x) for x, y in EngagementPersonaTypes.choices)

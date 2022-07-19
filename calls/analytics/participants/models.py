@@ -1,0 +1,20 @@
+from django.db import models
+from django_extensions.db.fields import ShortUUIDField
+
+from core.abstract_models import AuditTrailModel
+
+from calls.analytics.participants.field_choices import NonAgentEngagementPersonaTypes
+
+
+class AgentEngagedWith(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="The call engaged with", related_name="engaged_in_calls")
+    non_agent_engagement_persona_type = models.CharField(choices=NonAgentEngagementPersonaTypes.choices, max_length=50, blank=True)
+    raw_non_agent_engagement_persona_model_run_id = models.CharField(max_length=22)
+    non_agent_engagement_persona_model_run = models.ForeignKey(
+        "ml.MLModelResultHistory",
+        on_delete=models.SET_NULL,
+        verbose_name="ml model run for this non agent engagement persona",
+        related_name="resulting_non_agent_engagement_personas",
+        null=True,
+    )
