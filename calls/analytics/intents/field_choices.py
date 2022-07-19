@@ -34,3 +34,13 @@ class CallOutcomeReasonTypes(models.TextChoices):
     CALL_INTERRUPTED = "call_interrupted"
     INSURANCE_NOT_TAKEN = "insurance_not_taken"
     OTHERS = "others"  # create/refactor as noneoftheabove once we re-do the model and/or frontend
+
+
+class PopularProceduresMentioned(models.TextChoices):
+    EXAM = "exam"
+    RESCHEDULE = "reschedule"
+    # TODO: appointment_confirm - matching BQ and ml-stream-pipeline for now
+    CONFIRM_APPOINTMENT = "confirm_appointment"
+    PRICING = "pricing"
+    BILLING = "billing"
+    OTHERS = "others"  # TODO: create/refactor as noneoftheabove once we re-do the model and/or frontend
