@@ -2,7 +2,7 @@ from django.urls import include, path
 from rest_framework_nested import routers
 
 
-from ml.views import MLModelViewset, MLModelResultHistoryViewset
+from ml.views import MLFieldChoicesView, MLModelViewset, MLModelResultHistoryViewset
 
 router = routers.SimpleRouter()
 
@@ -11,5 +11,6 @@ router.register(r"ml-model-result-history", MLModelResultHistoryViewset, basenam
 
 
 urlpatterns = [
+    path(r"ml-field-choices", MLFieldChoicesView.as_view(), name="ml-field-choices"),
     path(r"", include(router.urls)),
 ]
