@@ -1,8 +1,8 @@
 from django.urls import include, path
 from rest_framework_nested import routers
 
+
 from calls.analytics.intents.views import (
-    CallAnalyticsFieldChoicesView,
     CallDiscussedCompanyViewset,
     CallDiscussedInsuranceViewset,
     CallOutcomeReasonViewset,
@@ -12,13 +12,23 @@ from calls.analytics.intents.views import (
     CallPurposeViewset,
     CallDiscussedSymptomViewset,
 )
+
 from calls.analytics.transcripts.views import (
     CallLongestPauseViewset,
     CallSentimentViewset,
     CallTranscriptFragmentSentimentViewset,
     CallTranscriptFragmentViewset,
 )
-from .views import (
+
+from calls.analytics.participants.views import (
+    AgentEngagedWithViewset,
+)
+
+from calls.analytics.views import (
+    CallAnalyticsFieldChoicesView,
+)
+
+from calls.views import (
     CallAudioPartialViewset,
     CallAudioViewset,
     CallFieldChoicesView,
@@ -44,10 +54,13 @@ call_router = routers.NestedSimpleRouter(calls_app_root_router, r"calls", lookup
 call_router.register(r"audio", CallAudioViewset, basename="call-audio")
 call_router.register(r"partials", CallPartialViewset, basename="call-partials")
 call_router.register(r"transcripts", CallTranscriptViewset, basename="call-transcripts")
+call_router.register(r"agent-engaged-with", AgentEngagedWithViewset, basename="call-agent-engaged-with")
 call_router.register(r"discussed-companies", CallDiscussedCompanyViewset, basename="call-discussed-companies")
 call_router.register(r"discussed-insurances", CallDiscussedInsuranceViewset, basename="call-discussed-insurances")
 call_router.register(r"discussed-procedures", CallDiscussedProcedureViewset, basename="call-discussed-procedures")
-call_router.register(r"procedures-discussed", CallDiscussedProcedureViewset, basename="call-procedures-discussed")  # TODO, remove this once ml-stream-pipeline no longer needs backwards compatibility
+call_router.register(
+    r"procedures-discussed", CallDiscussedProcedureViewset, basename="call-procedures-discussed"
+)  # TODO, remove this once ml-stream-pipeline no longer needs backwards compatibility
 call_router.register(r"discussed-products", CallDiscussedProductViewset, basename="call-discussed-products")
 call_router.register(r"discussed-symptoms", CallDiscussedSymptomViewset, basename="call-discussed-symptoms")
 call_router.register(r"pauses", CallLongestPauseViewset, basename="call-pauses")

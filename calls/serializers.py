@@ -5,7 +5,6 @@ from rest_framework import serializers
 
 from .models import Call, CallAudio, CallAudioPartial, CallLabel, CallPartial, CallTranscript, CallTranscriptPartial, TelecomCallerNameInfo
 
-
 # Get an instance of a logger
 log = logging.getLogger(__name__)
 

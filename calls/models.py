@@ -9,15 +9,15 @@ from django_countries.fields import CountryField
 from django_extensions.db.fields import ShortUUIDField
 from phonenumber_field.modelfields import PhoneNumberField
 
-from calls.analytics.intents.models import CallOutcome, CallOutcomeReason, CallPurpose
-from calls.analytics.transcripts.models import CallTranscriptFragment, CallTranscriptFragmentSentiment
+from calls.analytics.participants.field_choices import (
+    EngagementPersonaTypes,
+)
+
 from calls.field_choices import (
     CallAudioFileStatusTypes,
     CallConnectionTypes,
     CallDirectionTypes,
     CallTranscriptFileStatusTypes,
-    EngagementPersonaTypes,
-    NonAgentEngagementPersonaTypes,
     ReferralSourceTypes,
     SpeechToTextModelTypes,
     SupportedAudioMimeTypes,
@@ -29,7 +29,6 @@ from calls.field_choices import (
     TranscriptTypes,
 )
 from core.cloud_storage_helpers import get_signed_url, put_file
-from core.models import PracticeTelecom
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -63,16 +62,6 @@ class Call(AuditTrailModel):
     referral_source = models.CharField(choices=ReferralSourceTypes.choices, max_length=50, blank=True)
     caller_type = models.CharField(choices=EngagementPersonaTypes.choices, max_length=50, blank=True)
     callee_type = models.CharField(choices=EngagementPersonaTypes.choices, max_length=50, blank=True)
-
-    # TODO: Remove domain everywhere and use practice_id
-    # Dependencies:
-    #   - peerlogic-ml-stream-pipeline
-    #   - peerlogic-ml-rest-api
-    #   - analytics-dashboard
-    @property
-    def domain(self) -> str:
-        practice_telecom = PracticeTelecom.objects.get(practice=self.practice)
-        return practice_telecom.domain
 
     @property
     def latest_audio_signed_url(self) -> str:
@@ -204,12 +193,6 @@ class CallTranscriptPartial(AuditTrailModel):
     @property
     def signed_url(self) -> Optional[str]:
         return get_signed_url(filename=self.file_basename, bucket_name=self.BUCKET_NAME)
-
-
-class AgentEngagedWith(AuditTrailModel):
-    id = ShortUUIDField(primary_key=True, editable=False)
-    call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="The call engaged with", related_name="engaged_in_calls")
-    non_agent_engagement_persona_type = models.CharField(choices=NonAgentEngagementPersonaTypes.choices, max_length=50, blank=True)
 
 
 class CallLabel(AuditTrailModel):
