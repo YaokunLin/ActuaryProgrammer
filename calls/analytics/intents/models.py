@@ -1,7 +1,5 @@
-from dataclasses import field
 import logging
 from core.abstract_models import AuditTrailModel
-from django.conf import settings
 from django.db import models
 from django_extensions.db.fields import ShortUUIDField
 

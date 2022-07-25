@@ -1,11 +1,4 @@
-from rest_framework import viewsets, views
-from rest_framework.response import Response
-
-from calls.analytics.intents.field_choices import (
-    CallOutcomeTypes,
-    CallOutcomeReasonTypes,
-    CallPurposeTypes,
-)
+from rest_framework import viewsets
 from calls.analytics.intents.models import (
     CallMentionedCompany,
     CallMentionedInsurance,
