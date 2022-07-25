@@ -3,12 +3,12 @@ from rest_framework import serializers
 from calls.analytics.intents.models import (
     CallMentionedCompany,
     CallMentionedInsurance,
-    CallOutcome,
-    CallOutcomeReason,
     CallMentionedProcedure,
     CallMentionedProduct,
-    CallPurpose,
     CallMentionedSymptom,
+    CallOutcome,
+    CallOutcomeReason,
+    CallPurpose,
 )
 
 
