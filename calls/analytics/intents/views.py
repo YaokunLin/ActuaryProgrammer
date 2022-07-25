@@ -2,22 +2,22 @@ from rest_framework import viewsets
 from calls.analytics.intents.models import (
     CallMentionedCompany,
     CallMentionedInsurance,
-    CallOutcome,
-    CallOutcomeReason,
     CallMentionedProcedure,
     CallMentionedProduct,
-    CallPurpose,
     CallMentionedSymptom,
+    CallOutcome,
+    CallOutcomeReason,
+    CallPurpose,
 )
 from calls.analytics.intents.serializers import (
     CallMentionedCompanySerializer,
     CallMentionedInsuranceSerializer,
-    CallOutcomeSerializer,
-    CallOutcomeReasonSerializer,
     CallMentionedProductSerializer,
     CallMentionedProcedureSerializer,
-    CallPurposeSerializer,
     CallMentionedSymptomSerializer,
+    CallOutcomeSerializer,
+    CallOutcomeReasonSerializer,
+    CallPurposeSerializer,
 )
 
 
