@@ -12,10 +12,6 @@ class AgentInteractionMetricTypes(models.TextChoices):
     AGENT_OVERTALK = "agent_overtalk"
 
 
-class AgentInteractionMetricTypes(models.TextChoices):
-    pass
-
-
 class AgentInteractionOvertalkMetricTypes(models.TextChoices):
     NONE = "none"
     INFREQUENT = "infrequent"

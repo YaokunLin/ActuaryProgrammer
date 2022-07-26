@@ -36,6 +36,7 @@ class CallOutcomeReasonTypes(models.TextChoices):
     OTHERS = "others"  # create/refactor as noneoftheabove once we re-do the model and/or frontend
 
 
+# TODO: Revisit and redo
 class PopularProceduresMentioned(models.TextChoices):
     EXAM = "exam"
     RESCHEDULE = "reschedule"
