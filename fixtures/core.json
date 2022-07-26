@@ -1,1 +1,1216 @@
-[{"model": "core.user", "pk": "2Zzc53k3w2VVG3BFdPVreX", "fields": {"last_login": "2022-06-22T22:00:34.820Z", "is_superuser": false, "username": "1551@peerlogic", "first_name": "", "last_name": "", "email": "ryan@peerlogic.com", "is_staff": true, "is_active": true, "date_joined": "2022-05-10T16:00:16.320Z", "created_at": "2022-05-10T16:00:16.472Z", "modified_at": "2022-06-22T22:00:34.955Z", "created_by": null, "modified_by": null, "name": "Ryan Miller", "password": "", "auth0_id": "", "user_permissions": []}}, {"model": "core.user", "pk": "6L3Eom5YPDBEZGSjug6mmC", "fields": {"last_login": null, "is_superuser": false, "username": "breanna@peerlogic.com", "first_name": "", "last_name": "", "email": "breanna@peerlogic.com", "is_staff": true, "is_active": true, "date_joined": "2022-06-23T22:57:54Z", "created_at": "2022-06-23T22:57:54.394Z", "modified_at": "2022-06-23T22:58:15.496Z", "created_by": "FyNKen2o8MoyRGWVdLP2Ea", "modified_by": "FyNKen2o8MoyRGWVdLP2Ea", "name": "", "password": "", "auth0_id": "auth0|62b4efeeea0234ae97fe8364", "user_permissions": []}}, {"model": "core.user", "pk": "acU97f8gbKjcL2c3SdCSsr", "fields": {"last_login": "2022-06-16T16:19:46.270Z", "is_superuser": false, "username": "1554@Peerlogic", "first_name": "", "last_name": "", "email": "ana@peerlogic.com", "is_staff": true, "is_active": true, "date_joined": "2022-04-05T18:55:51.033Z", "created_at": "2022-04-05T18:55:51.192Z", "modified_at": "2022-06-16T16:19:46.270Z", "created_by": null, "modified_by": null, "name": "Ana Tomboulian", "password": "", "auth0_id": "", "user_permissions": []}}, {"model": "core.user", "pk": "bkddPrX7HUTin9KQFrbv5f", "fields": {"last_login": null, "is_superuser": false, "username": "ana@peerlogic.com", "first_name": "", "last_name": "", "email": "ana@peerlogic.com", "is_staff": true, "is_active": true, "date_joined": "2022-06-23T23:03:21Z", "created_at": "2022-06-23T23:03:21.356Z", "modified_at": "2022-06-23T23:04:58.494Z", "created_by": "FyNKen2o8MoyRGWVdLP2Ea", "modified_by": "FyNKen2o8MoyRGWVdLP2Ea", "name": "", "password": "", "auth0_id": "auth0|62b4f135e428f08bb44e453d", "user_permissions": []}}, {"model": "core.user", "pk": "bmknKSpaYeLZGtgYeApw9r", "fields": {"last_login": "2022-05-18T20:00:31.301Z", "is_superuser": false, "username": "9898@Peerlogic", "first_name": "", "last_name": "", "email": "pltest@peerlogic.com", "is_staff": true, "is_active": true, "date_joined": "2022-05-04T17:28:47.833Z", "created_at": "2022-05-04T17:28:47.986Z", "modified_at": "2022-05-18T20:00:31.301Z", "created_by": null, "modified_by": null, "name": "Demo User", "password": "", "auth0_id": "", "user_permissions": []}}, {"model": "core.user", "pk": "c3Yxxq4kGSxqMgSjkbvLkW", "fields": {"last_login": "2022-06-22T22:00:35.707Z", "is_superuser": false, "username": "1551@Peerlogic", "first_name": "", "last_name": "", "email": "ryan@peerlogic.com", "is_staff": true, "is_active": true, "date_joined": "2022-04-15T23:03:32.612Z", "created_at": "2022-04-15T23:03:32.775Z", "modified_at": "2022-06-22T22:00:35.707Z", "created_by": null, "modified_by": null, "name": "Ryan Miller", "password": "", "auth0_id": "", "user_permissions": []}}, {"model": "core.user", "pk": "eGKpCiAscSu3VAeQhws5ZG", "fields": {"last_login": null, "is_superuser": false, "username": "natalie@peerlogic.com", "first_name": "", "last_name": "", "email": "natalie@peerlogic.com", "is_staff": true, "is_active": true, "date_joined": "2022-06-23T23:01:52Z", "created_at": "2022-06-23T23:01:52.800Z", "modified_at": "2022-06-23T23:02:46.060Z", "created_by": "FyNKen2o8MoyRGWVdLP2Ea", "modified_by": "FyNKen2o8MoyRGWVdLP2Ea", "name": "", "password": "", "auth0_id": "auth0|62b4f0dc7edd8099b3ec3de5", "user_permissions": []}}, {"model": "core.user", "pk": "fHcWrubsNQDuqUKsUEyGQi", "fields": {"last_login": null, "is_superuser": false, "username": "test_jive-user", "first_name": "Jive", "last_name": "User", "email": "ana.tomboulian@gmail.com", "is_staff": false, "is_active": true, "date_joined": "2022-05-25T23:16:14Z", "created_at": "2022-05-25T23:17:30.285Z", "modified_at": "2022-05-25T23:17:30.285Z", "created_by": "jdwF5e72Zb4ynMabsTqkFh", "modified_by": "jdwF5e72Zb4ynMabsTqkFh", "name": "Jive User", "password": "changeme54321!", "auth0_id": "", "user_permissions": []}}, {"model": "core.user", "pk": "FyNKen2o8MoyRGWVdLP2Ea", "fields": {"last_login": null, "is_superuser": false, "username": "", "first_name": "", "last_name": "", "email": "", "is_staff": false, "is_active": true, "date_joined": "2022-06-23T22:23:49.570Z", "created_at": "2022-06-23T22:23:49.571Z", "modified_at": "2022-06-23T22:23:49.571Z", "created_by": null, "modified_by": null, "name": "auth0", "password": "", "auth0_id": "", "user_permissions": []}}, {"model": "core.user", "pk": "hGRzSFFAJL5KtXKBa4xJBo", "fields": {"last_login": null, "is_superuser": false, "username": "alex@peerlogic.com", "first_name": "", "last_name": "", "email": "alex@peerlogic.com", "is_staff": true, "is_active": true, "date_joined": "2022-06-24T17:46:34Z", "created_at": "2022-06-24T17:46:34.929Z", "modified_at": "2022-06-24T17:47:39.269Z", "created_by": "FyNKen2o8MoyRGWVdLP2Ea", "modified_by": "FyNKen2o8MoyRGWVdLP2Ea", "name": "", "password": "", "auth0_id": "auth0|62b5f8763971ac75e276cccd", "user_permissions": []}}, {"model": "core.user", "pk": "jdwF5e72Zb4ynMabsTqkFh", "fields": {"last_login": "2022-06-23T21:43:19.882Z", "is_superuser": true, "username": "admin", "first_name": "", "last_name": "", "email": "r-and-d@peerlogic.com", "is_staff": true, "is_active": true, "date_joined": "2022-03-10T21:56:40.462Z", "created_at": "2022-03-10T21:56:40.643Z", "modified_at": "2022-03-10T21:56:40.643Z", "created_by": null, "modified_by": null, "name": "", "password": "pbkdf2_sha256$260000$04W7XNNwQ02BXh1bxjttyu$SPqqM9POVBdi2TVDeY9FsvC6l7StUYHFQrxC+kJ0Y34=", "auth0_id": "", "user_permissions": []}}, {"model": "core.user", "pk": "KawMqdLZzc3aaPQYhhsdWn", "fields": {"last_login": null, "is_superuser": false, "username": "ana.tomboulian@gmail.com", "first_name": "", "last_name": "", "email": "ana.tomboulian@gmail.com", "is_staff": false, "is_active": true, "date_joined": "2022-06-24T00:14:48.873Z", "created_at": "2022-06-24T00:14:48.873Z", "modified_at": "2022-06-24T00:14:48.873Z", "created_by": "FyNKen2o8MoyRGWVdLP2Ea", "modified_by": "FyNKen2o8MoyRGWVdLP2Ea", "name": "", "password": "", "auth0_id": "auth0|62b501f448b94e0a9efba357", "user_permissions": []}}, {"model": "core.user", "pk": "o6cxyFiCPT2fSbwQAupVJk", "fields": {"last_login": "2022-06-09T03:21:29.457Z", "is_superuser": false, "username": "1556@Peerlogic", "first_name": "", "last_name": "", "email": "alex@peerlogic.com", "is_staff": true, "is_active": true, "date_joined": "2022-01-05T22:20:42.006Z", "created_at": "2022-01-05T22:20:42.169Z", "modified_at": "2022-06-09T03:21:29.457Z", "created_by": null, "modified_by": null, "name": "Alex Maskovyak", "password": "", "auth0_id": "", "user_permissions": []}}, {"model": "core.user", "pk": "PWkYtqEBWGLaiKSuY8CgqL", "fields": {"last_login": "2022-06-14T22:27:07.755Z", "is_superuser": false, "username": "1004@Gentle", "first_name": "", "last_name": "", "email": "test@test.com", "is_staff": false, "is_active": true, "date_joined": "2022-06-14T22:27:06.292Z", "created_at": "2022-06-14T22:27:06.447Z", "modified_at": "2022-06-14T22:27:07.755Z", "created_by": null, "modified_by": null, "name": "Office Manager", "password": "", "auth0_id": "", "user_permissions": []}}, {"model": "core.user", "pk": "ShZNqT43JJVzFkEG55AhxT", "fields": {"last_login": null, "is_superuser": false, "username": "ryan@peerlogic.com", "first_name": "", "last_name": "", "email": "ryan@peerlogic.com", "is_staff": true, "is_active": true, "date_joined": "2022-06-23T22:52:11Z", "created_at": "2022-06-23T22:52:11.566Z", "modified_at": "2022-06-23T22:55:57.464Z", "created_by": "FyNKen2o8MoyRGWVdLP2Ea", "modified_by": "FyNKen2o8MoyRGWVdLP2Ea", "name": "", "password": "", "auth0_id": "auth0|62b4ee97ea0234ae97fe834b", "user_permissions": []}}, {"model": "core.user", "pk": "Ujk4AKoCfxrcGyMzkHDrbw", "fields": {"last_login": "2022-07-07T21:04:37.582Z", "is_superuser": false, "username": "6000@Peerlogic", "first_name": "", "last_name": "", "email": "r-and-d@peerlogic.com", "is_staff": true, "is_active": true, "date_joined": "2021-12-17T00:58:50Z", "created_at": "2021-12-17T00:58:50.930Z", "modified_at": "2022-07-07T21:04:37.582Z", "created_by": null, "modified_by": null, "name": "API User", "password": "", "auth0_id": "", "user_permissions": []}}, {"model": "core.user", "pk": "UuET4u5uC7XvtjMZ84Nc2Z", "fields": {"last_login": "2022-06-23T16:45:37.462Z", "is_superuser": false, "username": "2556@Peerlogic", "first_name": "", "last_name": "", "email": "natalie@peerlogic.com", "is_staff": true, "is_active": true, "date_joined": "2022-06-16T16:26:13.237Z", "created_at": "2022-06-16T16:26:13.398Z", "modified_at": "2022-06-23T16:45:37.462Z", "created_by": null, "modified_by": null, "name": "Natalie Figueroa", "password": "", "auth0_id": "", "user_permissions": []}}, {"model": "core.user", "pk": "VMtdyHAmsfrry29NHGn4me", "fields": {"last_login": "2022-01-10T19:43:15.658Z", "is_superuser": false, "username": "1554@peerlogic", "first_name": "", "last_name": "", "email": "ana@peerlogic.com", "is_staff": true, "is_active": true, "date_joined": "2021-12-17T00:59:10.924Z", "created_at": "2021-12-17T00:59:11.087Z", "modified_at": "2022-01-10T19:43:15.793Z", "created_by": null, "modified_by": null, "name": "Ana Tomboulian", "password": "", "auth0_id": "", "user_permissions": []}}, {"model": "core.user", "pk": "XdXqLKJxTTifXDoyWm56aA", "fields": {"last_login": null, "is_superuser": false, "username": "andrea@peerlogic.com", "first_name": "", "last_name": "", "email": "andrea@peerlogic.com", "is_staff": true, "is_active": true, "date_joined": "2022-06-23T23:05:53Z", "created_at": "2022-06-23T23:05:53.079Z", "modified_at": "2022-06-23T23:06:19.359Z", "created_by": "FyNKen2o8MoyRGWVdLP2Ea", "modified_by": "FyNKen2o8MoyRGWVdLP2Ea", "name": "", "password": "", "auth0_id": "auth0|62b4f1cd48b94e0a9efba167", "user_permissions": []}}, {"model": "core.user", "pk": "XtSbrdKLuAvFg8oRvv4P42", "fields": {"last_login": "2022-06-23T16:54:56.366Z", "is_superuser": false, "username": "1604@peerlogic", "first_name": "", "last_name": "", "email": "breanna@peerlogic.com", "is_staff": true, "is_active": true, "date_joined": "2022-05-10T17:00:37.951Z", "created_at": "2022-05-10T17:00:38.113Z", "modified_at": "2022-06-23T16:54:56.510Z", "created_by": null, "modified_by": null, "name": "Breanna McMillen", "password": "", "auth0_id": "", "user_permissions": []}}, {"model": "core.user", "pk": "XY74h4j8ANVsKR4UCiwoVe", "fields": {"last_login": "2022-06-20T20:37:08.819Z", "is_superuser": false, "username": "1006@Gentle", "first_name": "", "last_name": "", "email": "Diannegfd@outlook.com", "is_staff": false, "is_active": true, "date_joined": "2022-06-20T19:03:45.367Z", "created_at": "2022-06-20T19:03:45.532Z", "modified_at": "2022-06-20T20:37:08.820Z", "created_by": null, "modified_by": null, "name": "Dianne Praul", "password": "", "auth0_id": "", "user_permissions": []}}, {"model": "core.usertelecom", "pk": "6FqHTBF7TzFqvMvhvbcgGB", "fields": {"created_at": "2022-05-10T17:00:38.225Z", "modified_at": "2022-05-10T17:00:38.225Z", "created_by": null, "modified_by": null, "user": "XtSbrdKLuAvFg8oRvv4P42", "username": "1604@peerlogic", "phone_sms": "", "phone_callback": ""}}, {"model": "core.usertelecom", "pk": "9i6BaWLQJYzE5z9qpv9N4b", "fields": {"created_at": "2022-06-20T19:03:45.636Z", "modified_at": "2022-06-20T19:03:45.636Z", "created_by": null, "modified_by": null, "user": "XY74h4j8ANVsKR4UCiwoVe", "username": "1006@Gentle", "phone_sms": "", "phone_callback": ""}}, {"model": "core.usertelecom", "pk": "aLypgFBMyp7m7VbnM3jgJx", "fields": {"created_at": "2022-05-04T17:28:48.102Z", "modified_at": "2022-05-04T17:28:48.102Z", "created_by": null, "modified_by": null, "user": "bmknKSpaYeLZGtgYeApw9r", "username": "9898@Peerlogic", "phone_sms": "", "phone_callback": ""}}, {"model": "core.usertelecom", "pk": "cgaq7uX9TiLKzFsUZFtfMp", "fields": {"created_at": "2022-06-16T16:26:13.502Z", "modified_at": "2022-06-16T16:26:13.502Z", "created_by": null, "modified_by": null, "user": "UuET4u5uC7XvtjMZ84Nc2Z", "username": "2556@Peerlogic", "phone_sms": "", "phone_callback": ""}}, {"model": "core.usertelecom", "pk": "eqLT8XB22zjtCYHiWVMxcQ", "fields": {"created_at": "2022-05-10T16:00:16.576Z", "modified_at": "2022-05-10T16:00:16.576Z", "created_by": null, "modified_by": null, "user": "2Zzc53k3w2VVG3BFdPVreX", "username": "1551@peerlogic", "phone_sms": "", "phone_callback": ""}}, {"model": "core.usertelecom", "pk": "G7QPXgJ2D7MH9bJQhw5AwR", "fields": {"created_at": "2022-06-14T22:27:06.554Z", "modified_at": "2022-06-14T22:27:06.554Z", "created_by": null, "modified_by": null, "user": "PWkYtqEBWGLaiKSuY8CgqL", "username": "1004@Gentle", "phone_sms": "", "phone_callback": ""}}, {"model": "core.usertelecom", "pk": "gBQiPZxqsEsWjwNiuduHa3", "fields": {"created_at": "2022-04-05T18:55:51.312Z", "modified_at": "2022-04-05T18:55:51.312Z", "created_by": null, "modified_by": null, "user": "acU97f8gbKjcL2c3SdCSsr", "username": "1554@Peerlogic", "phone_sms": "", "phone_callback": ""}}, {"model": "core.usertelecom", "pk": "GCVpHXePCjmdgyyDGkDY2B", "fields": {"created_at": "2022-04-15T23:03:32.892Z", "modified_at": "2022-04-15T23:03:32.892Z", "created_by": null, "modified_by": null, "user": "c3Yxxq4kGSxqMgSjkbvLkW", "username": "1551@Peerlogic", "phone_sms": "", "phone_callback": ""}}, {"model": "core.usertelecom", "pk": "j6EfQyx4TEABhqX8WrFKYp", "fields": {"created_at": "2021-12-17T00:59:11.203Z", "modified_at": "2021-12-17T00:59:11.203Z", "created_by": null, "modified_by": null, "user": "VMtdyHAmsfrry29NHGn4me", "username": "1554@peerlogic", "phone_sms": "", "phone_callback": ""}}, {"model": "core.usertelecom", "pk": "K7zqVYFR55pd6Nrsc4VZsW", "fields": {"created_at": "2022-01-05T22:20:42.278Z", "modified_at": "2022-01-05T22:20:42.278Z", "created_by": null, "modified_by": null, "user": "o6cxyFiCPT2fSbwQAupVJk", "username": "1556@Peerlogic", "phone_sms": "", "phone_callback": ""}}, {"model": "core.usertelecom", "pk": "TUeRgu4LFazwSc84bkH9xL", "fields": {"created_at": "2021-12-17T00:58:51.035Z", "modified_at": "2021-12-17T00:58:51.035Z", "created_by": null, "modified_by": null, "user": "Ujk4AKoCfxrcGyMzkHDrbw", "username": "6000@Peerlogic", "phone_sms": "", "phone_callback": ""}}, {"model": "core.practice", "pk": "2d32ZHoXXo7RYVjZ7Grker", "fields": {"created_at": "2022-04-16T03:03:54.239Z", "modified_at": "2022-04-16T03:03:54.239Z", "created_by": null, "modified_by": null, "name": "Peerlogic Test", "industry": "dentistry_general", "active": true}}, {"model": "core.practice", "pk": "3fpWe3Q2rzM683zwC85aap", "fields": {"created_at": "2022-03-11T04:35:03.907Z", "modified_at": "2022-03-11T04:35:03.907Z", "created_by": "Ujk4AKoCfxrcGyMzkHDrbw", "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw", "name": "Gentle Dental", "industry": "dentistry_general", "active": true}}, {"model": "core.practice", "pk": "4N7wt2acgWaTcXY7LDL27Z", "fields": {"created_at": "2022-05-31T18:40:16.492Z", "modified_at": "2022-05-31T18:40:16.492Z", "created_by": null, "modified_by": null, "name": "Thunderbird Dental Studio", "industry": "dentistry_general", "active": true}}, {"model": "core.practice", "pk": "4zCMasUoYmCdrwMGBfdkdv", "fields": {"created_at": "2022-03-11T05:02:34.554Z", "modified_at": "2022-03-11T05:02:34.554Z", "created_by": null, "modified_by": null, "name": "Pleasant Dental Care Peoria", "industry": "dentistry_general", "active": true}}, {"model": "core.practice", "pk": "9tmVYaBJcXZkeRyABsks8F", "fields": {"created_at": "2022-03-11T04:21:10.506Z", "modified_at": "2022-03-11T04:21:10.506Z", "created_by": "Ujk4AKoCfxrcGyMzkHDrbw", "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw", "name": "Alluring Smiles", "industry": "dentistry_general", "active": true}}, {"model": "core.practice", "pk": "dxqQzgRc7yBVg3JbRjf9kn", "fields": {"created_at": "2022-03-11T04:55:38.002Z", "modified_at": "2022-03-11T04:55:38.002Z", "created_by": "Ujk4AKoCfxrcGyMzkHDrbw", "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw", "name": "Michael L Bleeker, DMD - Cosmetic Dentistry & Dental Implants", "industry": "dentistry_general", "active": true}}, {"model": "core.practice", "pk": "gKFyccEAWCRtDZSFcAQdkw", "fields": {"created_at": "2022-03-11T04:59:54.678Z", "modified_at": "2022-03-11T04:59:54.678Z", "created_by": null, "modified_by": null, "name": "Smile Crafters AZ", "industry": "dentistry_general", "active": true}}, {"model": "core.practice", "pk": "iE3vqteBXnR6vtPmWVHLwu", "fields": {"created_at": "2022-03-11T04:56:35.052Z", "modified_at": "2022-03-11T04:56:35.052Z", "created_by": null, "modified_by": null, "name": "Smile Loft AZ", "industry": "dentistry_general", "active": true}}, {"model": "core.practice", "pk": "KheSQgTE8V6Fbbt5NSmPay", "fields": {"created_at": "2022-05-31T19:48:38.721Z", "modified_at": "2022-05-31T19:48:38.721Z", "created_by": null, "modified_by": null, "name": "75th Avenue Dental Studio", "industry": "dentistry_general", "active": true}}, {"model": "core.practice", "pk": "kzwPJTZpQkAptxF3LVrdEW", "fields": {"created_at": "2022-03-11T04:28:41.783Z", "modified_at": "2022-03-11T04:28:41.783Z", "created_by": "Ujk4AKoCfxrcGyMzkHDrbw", "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw", "name": "Desert Dental Assisting Academy", "industry": "dentistry_general", "active": true}}, {"model": "core.practice", "pk": "LfVjCLKuVbkTjLTtA8vemc", "fields": {"created_at": "2022-05-31T19:45:32.064Z", "modified_at": "2022-05-31T19:45:32.064Z", "created_by": null, "modified_by": null, "name": "Happy Valley Dental Studios", "industry": "dentistry_general", "active": true}}, {"model": "core.practice", "pk": "m5d2xZmKKtWfMqD9vvrLGH", "fields": {"created_at": "2022-03-11T04:41:16.827Z", "modified_at": "2022-06-24T20:21:53.933Z", "created_by": "Ujk4AKoCfxrcGyMzkHDrbw", "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw", "name": "Goodman Dental Center", "industry": "dentistry_general", "active": false}}, {"model": "core.practice", "pk": "PrgPmtXDEygKg2KzvEE9gE", "fields": {"created_at": "2022-05-31T19:42:03.456Z", "modified_at": "2022-05-31T19:42:03.456Z", "created_by": null, "modified_by": null, "name": "Hatcher Dental Studio", "industry": "dentistry_general", "active": true}}, {"model": "core.practice", "pk": "QrzVUscc327cJB6W6CKedu", "fields": {"created_at": "2022-03-11T04:09:48.290Z", "modified_at": "2022-03-11T04:09:48.290Z", "created_by": "Ujk4AKoCfxrcGyMzkHDrbw", "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw", "name": "ABC Dentistry for Children", "industry": "dentistry_general", "active": true}}, {"model": "core.practice", "pk": "RNmBAAqod3aj4q3fRBgA89", "fields": {"created_at": "2022-03-11T04:46:39.930Z", "modified_at": "2022-03-11T04:46:39.930Z", "created_by": "Ujk4AKoCfxrcGyMzkHDrbw", "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw", "name": "Implant Pathway", "industry": "dentistry_general", "active": true}}, {"model": "core.practice", "pk": "SCsERWeWiVcEC4vcP3U47X", "fields": {"created_at": "2021-12-17T00:58:51.117Z", "modified_at": "2021-12-17T00:58:51.117Z", "created_by": null, "modified_by": null, "name": "Peerlogic", "industry": "dentistry_general", "active": true}}, {"model": "core.practice", "pk": "V4KMjLJLMnYasXaZuoHe5g", "fields": {"created_at": "2022-05-31T19:38:41.216Z", "modified_at": "2022-05-31T19:38:41.216Z", "created_by": null, "modified_by": null, "name": "Scottsdale Dental Studios", "industry": "dentistry_general", "active": true}}, {"model": "core.practice", "pk": "WnRQYPmx3ZfJyi4tuFTz4q", "fields": {"created_at": "2022-05-31T19:33:14.443Z", "modified_at": "2022-05-31T19:33:14.443Z", "created_by": null, "modified_by": null, "name": "Smile Dental Studio", "industry": "dentistry_general", "active": true}}, {"model": "core.agent", "pk": "cotqB6xxqGtKsVNHdyCyRu", "fields": {"created_at": "2022-04-05T18:55:51.434Z", "modified_at": "2022-04-05T18:55:51.434Z", "created_by": null, "modified_by": null, "practice": "SCsERWeWiVcEC4vcP3U47X", "user": "acU97f8gbKjcL2c3SdCSsr"}}, {"model": "core.agent", "pk": "et8kE7wdSHApn33AeH9ZQK", "fields": {"created_at": "2022-06-24T00:16:42.841Z", "modified_at": "2022-06-24T00:16:42.841Z", "created_by": "jdwF5e72Zb4ynMabsTqkFh", "modified_by": "jdwF5e72Zb4ynMabsTqkFh", "practice": "4N7wt2acgWaTcXY7LDL27Z", "user": "KawMqdLZzc3aaPQYhhsdWn"}}, {"model": "core.agent", "pk": "KHxMyBtAmQcM9Dwhxs67YB", "fields": {"created_at": "2022-05-04T17:28:48.217Z", "modified_at": "2022-05-04T17:28:48.217Z", "created_by": null, "modified_by": null, "practice": "SCsERWeWiVcEC4vcP3U47X", "user": "bmknKSpaYeLZGtgYeApw9r"}}, {"model": "core.agent", "pk": "MpNrirhqoZDn9LjMEKEaQT", "fields": {"created_at": "2021-12-17T00:58:51.282Z", "modified_at": "2021-12-17T00:58:51.282Z", "created_by": null, "modified_by": null, "practice": "SCsERWeWiVcEC4vcP3U47X", "user": "Ujk4AKoCfxrcGyMzkHDrbw"}}, {"model": "core.agent", "pk": "o7Rb4ZXw36VZxjyGnTkkaF", "fields": {"created_at": "2022-06-24T00:15:50.150Z", "modified_at": "2022-06-24T00:15:50.150Z", "created_by": "jdwF5e72Zb4ynMabsTqkFh", "modified_by": "jdwF5e72Zb4ynMabsTqkFh", "practice": "KheSQgTE8V6Fbbt5NSmPay", "user": "KawMqdLZzc3aaPQYhhsdWn"}}, {"model": "core.voipprovider", "pk": "drFoXEnEwrN28Gowp3CoRN", "fields": {"created_at": "2022-02-07T00:00:00Z", "modified_at": "2022-02-07T00:00:00Z", "created_by": null, "modified_by": null, "company_name": "Peerlogic", "integration_type": "netsapiens", "active": true}}, {"model": "core.practicetelecom", "pk": "2GnCiiU4yMXTNBfvSpvvsA", "fields": {"created_at": "2022-03-11T04:47:28.750Z", "modified_at": "2022-03-11T04:47:28.750Z", "created_by": "Ujk4AKoCfxrcGyMzkHDrbw", "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw", "voip_provider": "drFoXEnEwrN28Gowp3CoRN", "practice": "RNmBAAqod3aj4q3fRBgA89", "domain": "implantpathway", "phone_sms": "", "phone_callback": ""}}, {"model": "core.practicetelecom", "pk": "a6fzUp42GtHusFxBxfKzYT", "fields": {"created_at": "2022-03-11T05:02:34.620Z", "modified_at": "2022-03-11T05:02:34.620Z", "created_by": null, "modified_by": null, "voip_provider": "drFoXEnEwrN28Gowp3CoRN", "practice": "4zCMasUoYmCdrwMGBfdkdv", "domain": "pleasantdental-peoria", "phone_sms": "", "phone_callback": ""}}, {"model": "core.practicetelecom", "pk": "ApWwcYdTzJZ7kjihe4uejy", "fields": {"created_at": "2022-05-31T19:45:32.159Z", "modified_at": "2022-05-31T19:45:32.159Z", "created_by": null, "modified_by": null, "voip_provider": "drFoXEnEwrN28Gowp3CoRN", "practice": "LfVjCLKuVbkTjLTtA8vemc", "domain": "happyvalleydentalstudios", "phone_sms": "", "phone_callback": ""}}, {"model": "core.practicetelecom", "pk": "DvkdnU7znXBTyVsDkSQHJu", "fields": {"created_at": "2022-05-31T19:48:38.821Z", "modified_at": "2022-05-31T19:48:38.821Z", "created_by": null, "modified_by": null, "voip_provider": "drFoXEnEwrN28Gowp3CoRN", "practice": "KheSQgTE8V6Fbbt5NSmPay", "domain": "dentaldesignstudios_75thavenue", "phone_sms": "", "phone_callback": ""}}, {"model": "core.practicetelecom", "pk": "ekx9bXJQ22kyBVtm3mQ74u", "fields": {"created_at": "2022-03-11T04:59:54.756Z", "modified_at": "2022-03-11T04:59:54.756Z", "created_by": null, "modified_by": null, "voip_provider": "drFoXEnEwrN28Gowp3CoRN", "practice": "gKFyccEAWCRtDZSFcAQdkw", "domain": "smilecraftersaz", "phone_sms": "", "phone_callback": ""}}, {"model": "core.practicetelecom", "pk": "gFQdZmzLXYq2HZKKwP6bM9", "fields": {"created_at": "2022-03-11T04:42:25.839Z", "modified_at": "2022-03-11T04:42:25.839Z", "created_by": "Ujk4AKoCfxrcGyMzkHDrbw", "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw", "voip_provider": "drFoXEnEwrN28Gowp3CoRN", "practice": "m5d2xZmKKtWfMqD9vvrLGH", "domain": "goodmandentalcenter", "phone_sms": "", "phone_callback": ""}}, {"model": "core.practicetelecom", "pk": "iXPS92NMg5hKgFXzeTiA8W", "fields": {"created_at": "2022-03-11T04:29:55.677Z", "modified_at": "2022-03-11T04:29:55.677Z", "created_by": "Ujk4AKoCfxrcGyMzkHDrbw", "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw", "voip_provider": "drFoXEnEwrN28Gowp3CoRN", "practice": "kzwPJTZpQkAptxF3LVrdEW", "domain": "desertdentalaa", "phone_sms": "", "phone_callback": ""}}, {"model": "core.practicetelecom", "pk": "Ki4GwBy3T4GZGYvm9rso7N", "fields": {"created_at": "2022-05-31T19:33:14.547Z", "modified_at": "2022-05-31T19:33:14.548Z", "created_by": null, "modified_by": null, "voip_provider": "drFoXEnEwrN28Gowp3CoRN", "practice": "WnRQYPmx3ZfJyi4tuFTz4q", "domain": "dentaldesignstudios_smile", "phone_sms": "", "phone_callback": ""}}, {"model": "core.practicetelecom", "pk": "MhBiwyTbfAoZ2HZGnNZpFx", "fields": {"created_at": "2022-05-31T18:40:16.600Z", "modified_at": "2022-05-31T18:40:16.600Z", "created_by": null, "modified_by": null, "voip_provider": "drFoXEnEwrN28Gowp3CoRN", "practice": "4N7wt2acgWaTcXY7LDL27Z", "domain": "dentaldesignstudios_thunderbird", "phone_sms": "", "phone_callback": ""}}, {"model": "core.practicetelecom", "pk": "NKRsLx9DznwGWVpKfBpkzM", "fields": {"created_at": "2021-12-17T00:58:51.200Z", "modified_at": "2021-12-17T00:58:51.200Z", "created_by": null, "modified_by": null, "voip_provider": "drFoXEnEwrN28Gowp3CoRN", "practice": "SCsERWeWiVcEC4vcP3U47X", "domain": "Peerlogic", "phone_sms": "", "phone_callback": ""}}, {"model": "core.practicetelecom", "pk": "oQtSBPU8BJ27D5wzasDA4s", "fields": {"created_at": "2022-04-16T03:03:54.408Z", "modified_at": "2022-04-16T03:03:54.408Z", "created_by": null, "modified_by": null, "voip_provider": "drFoXEnEwrN28Gowp3CoRN", "practice": "2d32ZHoXXo7RYVjZ7Grker", "domain": "peerlogictest", "phone_sms": "", "phone_callback": ""}}, {"model": "core.practicetelecom", "pk": "P6JPBRG7RezH2yfmxRrDDk", "fields": {"created_at": "2022-03-11T04:56:20.918Z", "modified_at": "2022-03-11T04:56:20.918Z", "created_by": "Ujk4AKoCfxrcGyMzkHDrbw", "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw", "voip_provider": "drFoXEnEwrN28Gowp3CoRN", "practice": "dxqQzgRc7yBVg3JbRjf9kn", "domain": "michaellbleekerdmd.com", "phone_sms": "", "phone_callback": ""}}, {"model": "core.practicetelecom", "pk": "RYrzz4sBKwvVeqWKWCfAoJ", "fields": {"created_at": "2022-03-11T04:36:41.952Z", "modified_at": "2022-03-11T04:36:41.952Z", "created_by": "Ujk4AKoCfxrcGyMzkHDrbw", "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw", "voip_provider": "drFoXEnEwrN28Gowp3CoRN", "practice": "3fpWe3Q2rzM683zwC85aap", "domain": "Gentle", "phone_sms": "", "phone_callback": ""}}, {"model": "core.practicetelecom", "pk": "SenqhHY2J6uwsNmmBGsLqF", "fields": {"created_at": "2022-05-31T19:38:41.328Z", "modified_at": "2022-05-31T19:38:41.328Z", "created_by": null, "modified_by": null, "voip_provider": "drFoXEnEwrN28Gowp3CoRN", "practice": "V4KMjLJLMnYasXaZuoHe5g", "domain": "dentaldesignstudios_scottsdale", "phone_sms": "", "phone_callback": ""}}, {"model": "core.practicetelecom", "pk": "Ufis7Aa5w7TMKTSHVXYBAd", "fields": {"created_at": "2022-03-11T04:10:56.986Z", "modified_at": "2022-03-11T04:10:56.986Z", "created_by": "Ujk4AKoCfxrcGyMzkHDrbw", "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw", "voip_provider": "drFoXEnEwrN28Gowp3CoRN", "practice": "QrzVUscc327cJB6W6CKedu", "domain": "abcdentistryforchildren", "phone_sms": "", "phone_callback": ""}}, {"model": "core.practicetelecom", "pk": "Unem4awcshxRM2jdpmnLsh", "fields": {"created_at": "2022-03-11T04:56:35.123Z", "modified_at": "2022-03-11T04:56:35.123Z", "created_by": null, "modified_by": null, "voip_provider": "drFoXEnEwrN28Gowp3CoRN", "practice": "iE3vqteBXnR6vtPmWVHLwu", "domain": "smileloftaz", "phone_sms": "", "phone_callback": ""}}, {"model": "core.practicetelecom", "pk": "UUmjqm4fYHc8Xmw9YXpFx6", "fields": {"created_at": "2022-03-11T04:22:11.233Z", "modified_at": "2022-03-11T04:22:11.233Z", "created_by": "Ujk4AKoCfxrcGyMzkHDrbw", "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw", "voip_provider": "drFoXEnEwrN28Gowp3CoRN", "practice": "9tmVYaBJcXZkeRyABsks8F", "domain": "alluringsmiles", "phone_sms": "", "phone_callback": ""}}, {"model": "core.practicetelecom", "pk": "X5gAcfJzthZN8UfujgpnQD", "fields": {"created_at": "2022-05-31T19:42:03.566Z", "modified_at": "2022-05-31T19:42:03.567Z", "created_by": null, "modified_by": null, "voip_provider": "drFoXEnEwrN28Gowp3CoRN", "practice": "PrgPmtXDEygKg2KzvEE9gE", "domain": "dentaldesignstudios_hatcher", "phone_sms": "", "phone_callback": ""}}]
+[
+  {
+    "model": "core.user",
+    "pk": "2Zzc53k3w2VVG3BFdPVreX",
+    "fields": {
+      "last_login": "2022-06-22T22:00:34.820Z",
+      "is_superuser": false,
+      "username": "1551@peerlogic",
+      "first_name": "",
+      "last_name": "",
+      "email": "ryan@peerlogic.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2022-05-10T16:00:16.320Z",
+      "created_at": "2022-05-10T16:00:16.472Z",
+      "modified_at": "2022-06-22T22:00:34.955Z",
+      "created_by": null,
+      "modified_by": null,
+      "name": "Ryan Miller",
+      "password": "",
+      "auth0_id": "",
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.user",
+    "pk": "6L3Eom5YPDBEZGSjug6mmC",
+    "fields": {
+      "last_login": null,
+      "is_superuser": false,
+      "username": "breanna@peerlogic.com",
+      "first_name": "",
+      "last_name": "",
+      "email": "breanna@peerlogic.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2022-06-23T22:57:54Z",
+      "created_at": "2022-06-23T22:57:54.394Z",
+      "modified_at": "2022-06-23T22:58:15.496Z",
+      "created_by": "FyNKen2o8MoyRGWVdLP2Ea",
+      "modified_by": "FyNKen2o8MoyRGWVdLP2Ea",
+      "name": "",
+      "password": "",
+      "auth0_id": "auth0|62b4efeeea0234ae97fe8364",
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.user",
+    "pk": "acU97f8gbKjcL2c3SdCSsr",
+    "fields": {
+      "last_login": "2022-06-16T16:19:46.270Z",
+      "is_superuser": false,
+      "username": "1554@Peerlogic",
+      "first_name": "",
+      "last_name": "",
+      "email": "ana@peerlogic.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2022-04-05T18:55:51.033Z",
+      "created_at": "2022-04-05T18:55:51.192Z",
+      "modified_at": "2022-06-16T16:19:46.270Z",
+      "created_by": null,
+      "modified_by": null,
+      "name": "Ana Tomboulian",
+      "password": "",
+      "auth0_id": "",
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.user",
+    "pk": "bkddPrX7HUTin9KQFrbv5f",
+    "fields": {
+      "last_login": null,
+      "is_superuser": false,
+      "username": "ana@peerlogic.com",
+      "first_name": "",
+      "last_name": "",
+      "email": "ana@peerlogic.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2022-06-23T23:03:21Z",
+      "created_at": "2022-06-23T23:03:21.356Z",
+      "modified_at": "2022-06-23T23:04:58.494Z",
+      "created_by": "FyNKen2o8MoyRGWVdLP2Ea",
+      "modified_by": "FyNKen2o8MoyRGWVdLP2Ea",
+      "name": "",
+      "password": "",
+      "auth0_id": "auth0|62b4f135e428f08bb44e453d",
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.user",
+    "pk": "bmknKSpaYeLZGtgYeApw9r",
+    "fields": {
+      "last_login": "2022-05-18T20:00:31.301Z",
+      "is_superuser": false,
+      "username": "9898@Peerlogic",
+      "first_name": "",
+      "last_name": "",
+      "email": "pltest@peerlogic.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2022-05-04T17:28:47.833Z",
+      "created_at": "2022-05-04T17:28:47.986Z",
+      "modified_at": "2022-05-18T20:00:31.301Z",
+      "created_by": null,
+      "modified_by": null,
+      "name": "Demo User",
+      "password": "",
+      "auth0_id": "",
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.user",
+    "pk": "c3Yxxq4kGSxqMgSjkbvLkW",
+    "fields": {
+      "last_login": "2022-06-22T22:00:35.707Z",
+      "is_superuser": false,
+      "username": "1551@Peerlogic",
+      "first_name": "",
+      "last_name": "",
+      "email": "ryan@peerlogic.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2022-04-15T23:03:32.612Z",
+      "created_at": "2022-04-15T23:03:32.775Z",
+      "modified_at": "2022-06-22T22:00:35.707Z",
+      "created_by": null,
+      "modified_by": null,
+      "name": "Ryan Miller",
+      "password": "",
+      "auth0_id": "",
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.user",
+    "pk": "eGKpCiAscSu3VAeQhws5ZG",
+    "fields": {
+      "last_login": null,
+      "is_superuser": false,
+      "username": "natalie@peerlogic.com",
+      "first_name": "",
+      "last_name": "",
+      "email": "natalie@peerlogic.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2022-06-23T23:01:52Z",
+      "created_at": "2022-06-23T23:01:52.800Z",
+      "modified_at": "2022-06-23T23:02:46.060Z",
+      "created_by": "FyNKen2o8MoyRGWVdLP2Ea",
+      "modified_by": "FyNKen2o8MoyRGWVdLP2Ea",
+      "name": "",
+      "password": "",
+      "auth0_id": "auth0|62b4f0dc7edd8099b3ec3de5",
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.user",
+    "pk": "fHcWrubsNQDuqUKsUEyGQi",
+    "fields": {
+      "last_login": null,
+      "is_superuser": false,
+      "username": "test_jive-user",
+      "first_name": "Jive",
+      "last_name": "User",
+      "email": "ana.tomboulian@gmail.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2022-05-25T23:16:14Z",
+      "created_at": "2022-05-25T23:17:30.285Z",
+      "modified_at": "2022-05-25T23:17:30.285Z",
+      "created_by": "jdwF5e72Zb4ynMabsTqkFh",
+      "modified_by": "jdwF5e72Zb4ynMabsTqkFh",
+      "name": "Jive User",
+      "password": "changeme54321!",
+      "auth0_id": "",
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.user",
+    "pk": "FyNKen2o8MoyRGWVdLP2Ea",
+    "fields": {
+      "last_login": null,
+      "is_superuser": false,
+      "username": "",
+      "first_name": "",
+      "last_name": "",
+      "email": "",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2022-06-23T22:23:49.570Z",
+      "created_at": "2022-06-23T22:23:49.571Z",
+      "modified_at": "2022-06-23T22:23:49.571Z",
+      "created_by": null,
+      "modified_by": null,
+      "name": "auth0",
+      "password": "",
+      "auth0_id": "",
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.user",
+    "pk": "hGRzSFFAJL5KtXKBa4xJBo",
+    "fields": {
+      "last_login": null,
+      "is_superuser": false,
+      "username": "alex@peerlogic.com",
+      "first_name": "",
+      "last_name": "",
+      "email": "alex@peerlogic.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2022-06-24T17:46:34Z",
+      "created_at": "2022-06-24T17:46:34.929Z",
+      "modified_at": "2022-06-24T17:47:39.269Z",
+      "created_by": "FyNKen2o8MoyRGWVdLP2Ea",
+      "modified_by": "FyNKen2o8MoyRGWVdLP2Ea",
+      "name": "",
+      "password": "",
+      "auth0_id": "auth0|62b5f8763971ac75e276cccd",
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.user",
+    "pk": "jdwF5e72Zb4ynMabsTqkFh",
+    "fields": {
+      "last_login": "2022-06-23T21:43:19.882Z",
+      "is_superuser": true,
+      "username": "admin",
+      "first_name": "",
+      "last_name": "",
+      "email": "r-and-d@peerlogic.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2022-03-10T21:56:40.462Z",
+      "created_at": "2022-03-10T21:56:40.643Z",
+      "modified_at": "2022-03-10T21:56:40.643Z",
+      "created_by": null,
+      "modified_by": null,
+      "name": "",
+      "password": "pbkdf2_sha256$260000$04W7XNNwQ02BXh1bxjttyu$SPqqM9POVBdi2TVDeY9FsvC6l7StUYHFQrxC+kJ0Y34=",
+      "auth0_id": "",
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.user",
+    "pk": "KawMqdLZzc3aaPQYhhsdWn",
+    "fields": {
+      "last_login": null,
+      "is_superuser": false,
+      "username": "ana.tomboulian@gmail.com",
+      "first_name": "",
+      "last_name": "",
+      "email": "ana.tomboulian@gmail.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2022-06-24T00:14:48.873Z",
+      "created_at": "2022-06-24T00:14:48.873Z",
+      "modified_at": "2022-06-24T00:14:48.873Z",
+      "created_by": "FyNKen2o8MoyRGWVdLP2Ea",
+      "modified_by": "FyNKen2o8MoyRGWVdLP2Ea",
+      "name": "",
+      "password": "",
+      "auth0_id": "auth0|62b501f448b94e0a9efba357",
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.user",
+    "pk": "o6cxyFiCPT2fSbwQAupVJk",
+    "fields": {
+      "last_login": "2022-06-09T03:21:29.457Z",
+      "is_superuser": false,
+      "username": "1556@Peerlogic",
+      "first_name": "",
+      "last_name": "",
+      "email": "alex@peerlogic.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2022-01-05T22:20:42.006Z",
+      "created_at": "2022-01-05T22:20:42.169Z",
+      "modified_at": "2022-06-09T03:21:29.457Z",
+      "created_by": null,
+      "modified_by": null,
+      "name": "Alex Maskovyak",
+      "password": "",
+      "auth0_id": "",
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.user",
+    "pk": "PWkYtqEBWGLaiKSuY8CgqL",
+    "fields": {
+      "last_login": "2022-06-14T22:27:07.755Z",
+      "is_superuser": false,
+      "username": "1004@Gentle",
+      "first_name": "",
+      "last_name": "",
+      "email": "test@test.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2022-06-14T22:27:06.292Z",
+      "created_at": "2022-06-14T22:27:06.447Z",
+      "modified_at": "2022-06-14T22:27:07.755Z",
+      "created_by": null,
+      "modified_by": null,
+      "name": "Office Manager",
+      "password": "",
+      "auth0_id": "",
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.user",
+    "pk": "ShZNqT43JJVzFkEG55AhxT",
+    "fields": {
+      "last_login": null,
+      "is_superuser": false,
+      "username": "ryan@peerlogic.com",
+      "first_name": "",
+      "last_name": "",
+      "email": "ryan@peerlogic.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2022-06-23T22:52:11Z",
+      "created_at": "2022-06-23T22:52:11.566Z",
+      "modified_at": "2022-06-23T22:55:57.464Z",
+      "created_by": "FyNKen2o8MoyRGWVdLP2Ea",
+      "modified_by": "FyNKen2o8MoyRGWVdLP2Ea",
+      "name": "",
+      "password": "",
+      "auth0_id": "auth0|62b4ee97ea0234ae97fe834b",
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.user",
+    "pk": "Ujk4AKoCfxrcGyMzkHDrbw",
+    "fields": {
+      "last_login": "2022-07-07T21:04:37.582Z",
+      "is_superuser": false,
+      "username": "6000@Peerlogic",
+      "first_name": "",
+      "last_name": "",
+      "email": "r-and-d@peerlogic.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2021-12-17T00:58:50Z",
+      "created_at": "2021-12-17T00:58:50.930Z",
+      "modified_at": "2022-07-07T21:04:37.582Z",
+      "created_by": null,
+      "modified_by": null,
+      "name": "API User",
+      "password": "",
+      "auth0_id": "",
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.user",
+    "pk": "UuET4u5uC7XvtjMZ84Nc2Z",
+    "fields": {
+      "last_login": "2022-06-23T16:45:37.462Z",
+      "is_superuser": false,
+      "username": "2556@Peerlogic",
+      "first_name": "",
+      "last_name": "",
+      "email": "natalie@peerlogic.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2022-06-16T16:26:13.237Z",
+      "created_at": "2022-06-16T16:26:13.398Z",
+      "modified_at": "2022-06-23T16:45:37.462Z",
+      "created_by": null,
+      "modified_by": null,
+      "name": "Natalie Figueroa",
+      "password": "",
+      "auth0_id": "",
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.user",
+    "pk": "VMtdyHAmsfrry29NHGn4me",
+    "fields": {
+      "last_login": "2022-01-10T19:43:15.658Z",
+      "is_superuser": false,
+      "username": "1554@peerlogic",
+      "first_name": "",
+      "last_name": "",
+      "email": "ana@peerlogic.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2021-12-17T00:59:10.924Z",
+      "created_at": "2021-12-17T00:59:11.087Z",
+      "modified_at": "2022-01-10T19:43:15.793Z",
+      "created_by": null,
+      "modified_by": null,
+      "name": "Ana Tomboulian",
+      "password": "",
+      "auth0_id": "",
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.user",
+    "pk": "XdXqLKJxTTifXDoyWm56aA",
+    "fields": {
+      "last_login": null,
+      "is_superuser": false,
+      "username": "andrea@peerlogic.com",
+      "first_name": "",
+      "last_name": "",
+      "email": "andrea@peerlogic.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2022-06-23T23:05:53Z",
+      "created_at": "2022-06-23T23:05:53.079Z",
+      "modified_at": "2022-06-23T23:06:19.359Z",
+      "created_by": "FyNKen2o8MoyRGWVdLP2Ea",
+      "modified_by": "FyNKen2o8MoyRGWVdLP2Ea",
+      "name": "",
+      "password": "",
+      "auth0_id": "auth0|62b4f1cd48b94e0a9efba167",
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.user",
+    "pk": "XtSbrdKLuAvFg8oRvv4P42",
+    "fields": {
+      "last_login": "2022-06-23T16:54:56.366Z",
+      "is_superuser": false,
+      "username": "1604@peerlogic",
+      "first_name": "",
+      "last_name": "",
+      "email": "breanna@peerlogic.com",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2022-05-10T17:00:37.951Z",
+      "created_at": "2022-05-10T17:00:38.113Z",
+      "modified_at": "2022-06-23T16:54:56.510Z",
+      "created_by": null,
+      "modified_by": null,
+      "name": "Breanna McMillen",
+      "password": "",
+      "auth0_id": "",
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.user",
+    "pk": "XY74h4j8ANVsKR4UCiwoVe",
+    "fields": {
+      "last_login": "2022-06-20T20:37:08.819Z",
+      "is_superuser": false,
+      "username": "1006@Gentle",
+      "first_name": "",
+      "last_name": "",
+      "email": "Diannegfd@outlook.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2022-06-20T19:03:45.367Z",
+      "created_at": "2022-06-20T19:03:45.532Z",
+      "modified_at": "2022-06-20T20:37:08.820Z",
+      "created_by": null,
+      "modified_by": null,
+      "name": "Dianne Praul",
+      "password": "",
+      "auth0_id": "",
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "core.usertelecom",
+    "pk": "6FqHTBF7TzFqvMvhvbcgGB",
+    "fields": {
+      "created_at": "2022-05-10T17:00:38.225Z",
+      "modified_at": "2022-05-10T17:00:38.225Z",
+      "created_by": null,
+      "modified_by": null,
+      "user": "XtSbrdKLuAvFg8oRvv4P42",
+      "username": "1604@peerlogic",
+      "phone_sms": "",
+      "phone_callback": ""
+    }
+  },
+  {
+    "model": "core.usertelecom",
+    "pk": "9i6BaWLQJYzE5z9qpv9N4b",
+    "fields": {
+      "created_at": "2022-06-20T19:03:45.636Z",
+      "modified_at": "2022-06-20T19:03:45.636Z",
+      "created_by": null,
+      "modified_by": null,
+      "user": "XY74h4j8ANVsKR4UCiwoVe",
+      "username": "1006@Gentle",
+      "phone_sms": "",
+      "phone_callback": ""
+    }
+  },
+  {
+    "model": "core.usertelecom",
+    "pk": "aLypgFBMyp7m7VbnM3jgJx",
+    "fields": {
+      "created_at": "2022-05-04T17:28:48.102Z",
+      "modified_at": "2022-05-04T17:28:48.102Z",
+      "created_by": null,
+      "modified_by": null,
+      "user": "bmknKSpaYeLZGtgYeApw9r",
+      "username": "9898@Peerlogic",
+      "phone_sms": "",
+      "phone_callback": ""
+    }
+  },
+  {
+    "model": "core.usertelecom",
+    "pk": "cgaq7uX9TiLKzFsUZFtfMp",
+    "fields": {
+      "created_at": "2022-06-16T16:26:13.502Z",
+      "modified_at": "2022-06-16T16:26:13.502Z",
+      "created_by": null,
+      "modified_by": null,
+      "user": "UuET4u5uC7XvtjMZ84Nc2Z",
+      "username": "2556@Peerlogic",
+      "phone_sms": "",
+      "phone_callback": ""
+    }
+  },
+  {
+    "model": "core.usertelecom",
+    "pk": "eqLT8XB22zjtCYHiWVMxcQ",
+    "fields": {
+      "created_at": "2022-05-10T16:00:16.576Z",
+      "modified_at": "2022-05-10T16:00:16.576Z",
+      "created_by": null,
+      "modified_by": null,
+      "user": "2Zzc53k3w2VVG3BFdPVreX",
+      "username": "1551@peerlogic",
+      "phone_sms": "",
+      "phone_callback": ""
+    }
+  },
+  {
+    "model": "core.usertelecom",
+    "pk": "G7QPXgJ2D7MH9bJQhw5AwR",
+    "fields": {
+      "created_at": "2022-06-14T22:27:06.554Z",
+      "modified_at": "2022-06-14T22:27:06.554Z",
+      "created_by": null,
+      "modified_by": null,
+      "user": "PWkYtqEBWGLaiKSuY8CgqL",
+      "username": "1004@Gentle",
+      "phone_sms": "",
+      "phone_callback": ""
+    }
+  },
+  {
+    "model": "core.usertelecom",
+    "pk": "gBQiPZxqsEsWjwNiuduHa3",
+    "fields": {
+      "created_at": "2022-04-05T18:55:51.312Z",
+      "modified_at": "2022-04-05T18:55:51.312Z",
+      "created_by": null,
+      "modified_by": null,
+      "user": "acU97f8gbKjcL2c3SdCSsr",
+      "username": "1554@Peerlogic",
+      "phone_sms": "",
+      "phone_callback": ""
+    }
+  },
+  {
+    "model": "core.usertelecom",
+    "pk": "GCVpHXePCjmdgyyDGkDY2B",
+    "fields": {
+      "created_at": "2022-04-15T23:03:32.892Z",
+      "modified_at": "2022-04-15T23:03:32.892Z",
+      "created_by": null,
+      "modified_by": null,
+      "user": "c3Yxxq4kGSxqMgSjkbvLkW",
+      "username": "1551@Peerlogic",
+      "phone_sms": "",
+      "phone_callback": ""
+    }
+  },
+  {
+    "model": "core.usertelecom",
+    "pk": "j6EfQyx4TEABhqX8WrFKYp",
+    "fields": {
+      "created_at": "2021-12-17T00:59:11.203Z",
+      "modified_at": "2021-12-17T00:59:11.203Z",
+      "created_by": null,
+      "modified_by": null,
+      "user": "VMtdyHAmsfrry29NHGn4me",
+      "username": "1554@peerlogic",
+      "phone_sms": "",
+      "phone_callback": ""
+    }
+  },
+  {
+    "model": "core.usertelecom",
+    "pk": "K7zqVYFR55pd6Nrsc4VZsW",
+    "fields": {
+      "created_at": "2022-01-05T22:20:42.278Z",
+      "modified_at": "2022-01-05T22:20:42.278Z",
+      "created_by": null,
+      "modified_by": null,
+      "user": "o6cxyFiCPT2fSbwQAupVJk",
+      "username": "1556@Peerlogic",
+      "phone_sms": "",
+      "phone_callback": ""
+    }
+  },
+  {
+    "model": "core.usertelecom",
+    "pk": "TUeRgu4LFazwSc84bkH9xL",
+    "fields": {
+      "created_at": "2021-12-17T00:58:51.035Z",
+      "modified_at": "2021-12-17T00:58:51.035Z",
+      "created_by": null,
+      "modified_by": null,
+      "user": "Ujk4AKoCfxrcGyMzkHDrbw",
+      "username": "6000@Peerlogic",
+      "phone_sms": "",
+      "phone_callback": ""
+    }
+  },
+  {
+    "model": "core.practice",
+    "pk": "2d32ZHoXXo7RYVjZ7Grker",
+    "fields": {
+      "created_at": "2022-04-16T03:03:54.239Z",
+      "modified_at": "2022-04-16T03:03:54.239Z",
+      "created_by": null,
+      "modified_by": null,
+      "name": "Peerlogic Test",
+      "industry": "dentistry_general",
+      "active": true
+    }
+  },
+  {
+    "model": "core.practice",
+    "pk": "3fpWe3Q2rzM683zwC85aap",
+    "fields": {
+      "created_at": "2022-03-11T04:35:03.907Z",
+      "modified_at": "2022-03-11T04:35:03.907Z",
+      "created_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+      "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+      "name": "Gentle Dental",
+      "industry": "dentistry_general",
+      "active": true
+    }
+  },
+  {
+    "model": "core.practice",
+    "pk": "4N7wt2acgWaTcXY7LDL27Z",
+    "fields": {
+      "created_at": "2022-05-31T18:40:16.492Z",
+      "modified_at": "2022-05-31T18:40:16.492Z",
+      "created_by": null,
+      "modified_by": null,
+      "name": "Thunderbird Dental Studio",
+      "industry": "dentistry_general",
+      "active": true
+    }
+  },
+  {
+    "model": "core.practice",
+    "pk": "4zCMasUoYmCdrwMGBfdkdv",
+    "fields": {
+      "created_at": "2022-03-11T05:02:34.554Z",
+      "modified_at": "2022-03-11T05:02:34.554Z",
+      "created_by": null,
+      "modified_by": null,
+      "name": "Pleasant Dental Care Peoria",
+      "industry": "dentistry_general",
+      "active": true
+    }
+  },
+  {
+    "model": "core.practice",
+    "pk": "9tmVYaBJcXZkeRyABsks8F",
+    "fields": {
+      "created_at": "2022-03-11T04:21:10.506Z",
+      "modified_at": "2022-03-11T04:21:10.506Z",
+      "created_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+      "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+      "name": "Alluring Smiles",
+      "industry": "dentistry_general",
+      "active": true
+    }
+  },
+  {
+    "model": "core.practice",
+    "pk": "dxqQzgRc7yBVg3JbRjf9kn",
+    "fields": {
+      "created_at": "2022-03-11T04:55:38.002Z",
+      "modified_at": "2022-03-11T04:55:38.002Z",
+      "created_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+      "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+      "name": "Michael L Bleeker, DMD - Cosmetic Dentistry & Dental Implants",
+      "industry": "dentistry_general",
+      "active": true
+    }
+  },
+  {
+    "model": "core.practice",
+    "pk": "gKFyccEAWCRtDZSFcAQdkw",
+    "fields": {
+      "created_at": "2022-03-11T04:59:54.678Z",
+      "modified_at": "2022-03-11T04:59:54.678Z",
+      "created_by": null,
+      "modified_by": null,
+      "name": "Smile Crafters AZ",
+      "industry": "dentistry_general",
+      "active": true
+    }
+  },
+  {
+    "model": "core.practice",
+    "pk": "iE3vqteBXnR6vtPmWVHLwu",
+    "fields": {
+      "created_at": "2022-03-11T04:56:35.052Z",
+      "modified_at": "2022-03-11T04:56:35.052Z",
+      "created_by": null,
+      "modified_by": null,
+      "name": "Smile Loft AZ",
+      "industry": "dentistry_general",
+      "active": true
+    }
+  },
+  {
+    "model": "core.practice",
+    "pk": "KheSQgTE8V6Fbbt5NSmPay",
+    "fields": {
+      "created_at": "2022-05-31T19:48:38.721Z",
+      "modified_at": "2022-05-31T19:48:38.721Z",
+      "created_by": null,
+      "modified_by": null,
+      "name": "75th Avenue Dental Studio",
+      "industry": "dentistry_general",
+      "active": true
+    }
+  },
+  {
+    "model": "core.practice",
+    "pk": "kzwPJTZpQkAptxF3LVrdEW",
+    "fields": {
+      "created_at": "2022-03-11T04:28:41.783Z",
+      "modified_at": "2022-03-11T04:28:41.783Z",
+      "created_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+      "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+      "name": "Desert Dental Assisting Academy",
+      "industry": "dentistry_general",
+      "active": true
+    }
+  },
+  {
+    "model": "core.practice",
+    "pk": "LfVjCLKuVbkTjLTtA8vemc",
+    "fields": {
+      "created_at": "2022-05-31T19:45:32.064Z",
+      "modified_at": "2022-05-31T19:45:32.064Z",
+      "created_by": null,
+      "modified_by": null,
+      "name": "Happy Valley Dental Studios",
+      "industry": "dentistry_general",
+      "active": true
+    }
+  },
+  {
+    "model": "core.practice",
+    "pk": "m5d2xZmKKtWfMqD9vvrLGH",
+    "fields": {
+      "created_at": "2022-03-11T04:41:16.827Z",
+      "modified_at": "2022-06-24T20:21:53.933Z",
+      "created_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+      "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+      "name": "Goodman Dental Center",
+      "industry": "dentistry_general",
+      "active": false
+    }
+  },
+  {
+    "model": "core.practice",
+    "pk": "PrgPmtXDEygKg2KzvEE9gE",
+    "fields": {
+      "created_at": "2022-05-31T19:42:03.456Z",
+      "modified_at": "2022-05-31T19:42:03.456Z",
+      "created_by": null,
+      "modified_by": null,
+      "name": "Hatcher Dental Studio",
+      "industry": "dentistry_general",
+      "active": true
+    }
+  },
+  {
+    "model": "core.practice",
+    "pk": "QrzVUscc327cJB6W6CKedu",
+    "fields": {
+      "created_at": "2022-03-11T04:09:48.290Z",
+      "modified_at": "2022-03-11T04:09:48.290Z",
+      "created_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+      "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+      "name": "ABC Dentistry for Children",
+      "industry": "dentistry_general",
+      "active": true
+    }
+  },
+  {
+    "model": "core.practice",
+    "pk": "RNmBAAqod3aj4q3fRBgA89",
+    "fields": {
+      "created_at": "2022-03-11T04:46:39.930Z",
+      "modified_at": "2022-03-11T04:46:39.930Z",
+      "created_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+      "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+      "name": "Implant Pathway",
+      "industry": "dentistry_general",
+      "active": true
+    }
+  },
+  {
+    "model": "core.practice",
+    "pk": "SCsERWeWiVcEC4vcP3U47X",
+    "fields": {
+      "created_at": "2021-12-17T00:58:51.117Z",
+      "modified_at": "2021-12-17T00:58:51.117Z",
+      "created_by": null,
+      "modified_by": null,
+      "name": "Peerlogic",
+      "industry": "dentistry_general",
+      "active": true
+    }
+  },
+  {
+    "model": "core.practice",
+    "pk": "V4KMjLJLMnYasXaZuoHe5g",
+    "fields": {
+      "created_at": "2022-05-31T19:38:41.216Z",
+      "modified_at": "2022-05-31T19:38:41.216Z",
+      "created_by": null,
+      "modified_by": null,
+      "name": "Scottsdale Dental Studios",
+      "industry": "dentistry_general",
+      "active": true
+    }
+  },
+  {
+    "model": "core.practice",
+    "pk": "WnRQYPmx3ZfJyi4tuFTz4q",
+    "fields": {
+      "created_at": "2022-05-31T19:33:14.443Z",
+      "modified_at": "2022-05-31T19:33:14.443Z",
+      "created_by": null,
+      "modified_by": null,
+      "name": "Smile Dental Studio",
+      "industry": "dentistry_general",
+      "active": true
+    }
+  },
+  {
+    "model": "core.agent",
+    "pk": "cotqB6xxqGtKsVNHdyCyRu",
+    "fields": {
+      "created_at": "2022-04-05T18:55:51.434Z",
+      "modified_at": "2022-04-05T18:55:51.434Z",
+      "created_by": null,
+      "modified_by": null,
+      "practice": "SCsERWeWiVcEC4vcP3U47X",
+      "user": "acU97f8gbKjcL2c3SdCSsr"
+    }
+  },
+  {
+    "model": "core.agent",
+    "pk": "et8kE7wdSHApn33AeH9ZQK",
+    "fields": {
+      "created_at": "2022-06-24T00:16:42.841Z",
+      "modified_at": "2022-06-24T00:16:42.841Z",
+      "created_by": "jdwF5e72Zb4ynMabsTqkFh",
+      "modified_by": "jdwF5e72Zb4ynMabsTqkFh",
+      "practice": "4N7wt2acgWaTcXY7LDL27Z",
+      "user": "KawMqdLZzc3aaPQYhhsdWn"
+    }
+  },
+  {
+    "model": "core.agent",
+    "pk": "KHxMyBtAmQcM9Dwhxs67YB",
+    "fields": {
+      "created_at": "2022-05-04T17:28:48.217Z",
+      "modified_at": "2022-05-04T17:28:48.217Z",
+      "created_by": null,
+      "modified_by": null,
+      "practice": "SCsERWeWiVcEC4vcP3U47X",
+      "user": "bmknKSpaYeLZGtgYeApw9r"
+    }
+  },
+  {
+    "model": "core.agent",
+    "pk": "MpNrirhqoZDn9LjMEKEaQT",
+    "fields": {
+      "created_at": "2021-12-17T00:58:51.282Z",
+      "modified_at": "2021-12-17T00:58:51.282Z",
+      "created_by": null,
+      "modified_by": null,
+      "practice": "SCsERWeWiVcEC4vcP3U47X",
+      "user": "Ujk4AKoCfxrcGyMzkHDrbw"
+    }
+  },
+  {
+    "model": "core.agent",
+    "pk": "o7Rb4ZXw36VZxjyGnTkkaF",
+    "fields": {
+      "created_at": "2022-06-24T00:15:50.150Z",
+      "modified_at": "2022-06-24T00:15:50.150Z",
+      "created_by": "jdwF5e72Zb4ynMabsTqkFh",
+      "modified_by": "jdwF5e72Zb4ynMabsTqkFh",
+      "practice": "KheSQgTE8V6Fbbt5NSmPay",
+      "user": "KawMqdLZzc3aaPQYhhsdWn"
+    }
+  },
+  {
+    "model": "core.voipprovider",
+    "pk": "drFoXEnEwrN28Gowp3CoRN",
+    "fields": {
+      "created_at": "2022-02-07T00:00:00Z",
+      "modified_at": "2022-02-07T00:00:00Z",
+      "created_by": null,
+      "modified_by": null,
+      "company_name": "Peerlogic",
+      "integration_type": "netsapiens",
+      "active": true
+    }
+  },
+  {
+    "model": "core.practicetelecom",
+    "pk": "2GnCiiU4yMXTNBfvSpvvsA",
+    "fields": {
+      "created_at": "2022-03-11T04:47:28.750Z",
+      "modified_at": "2022-03-11T04:47:28.750Z",
+      "created_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+      "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+      "voip_provider": "drFoXEnEwrN28Gowp3CoRN",
+      "practice": "RNmBAAqod3aj4q3fRBgA89",
+      "domain": "implantpathway",
+      "phone_sms": "",
+      "phone_callback": ""
+    }
+  },
+  {
+    "model": "core.practicetelecom",
+    "pk": "a6fzUp42GtHusFxBxfKzYT",
+    "fields": {
+      "created_at": "2022-03-11T05:02:34.620Z",
+      "modified_at": "2022-03-11T05:02:34.620Z",
+      "created_by": null,
+      "modified_by": null,
+      "voip_provider": "drFoXEnEwrN28Gowp3CoRN",
+      "practice": "4zCMasUoYmCdrwMGBfdkdv",
+      "domain": "pleasantdental-peoria",
+      "phone_sms": "",
+      "phone_callback": ""
+    }
+  },
+  {
+    "model": "core.practicetelecom",
+    "pk": "ApWwcYdTzJZ7kjihe4uejy",
+    "fields": {
+      "created_at": "2022-05-31T19:45:32.159Z",
+      "modified_at": "2022-05-31T19:45:32.159Z",
+      "created_by": null,
+      "modified_by": null,
+      "voip_provider": "drFoXEnEwrN28Gowp3CoRN",
+      "practice": "LfVjCLKuVbkTjLTtA8vemc",
+      "domain": "happyvalleydentalstudios",
+      "phone_sms": "",
+      "phone_callback": ""
+    }
+  },
+  {
+    "model": "core.practicetelecom",
+    "pk": "DvkdnU7znXBTyVsDkSQHJu",
+    "fields": {
+      "created_at": "2022-05-31T19:48:38.821Z",
+      "modified_at": "2022-05-31T19:48:38.821Z",
+      "created_by": null,
+      "modified_by": null,
+      "voip_provider": "drFoXEnEwrN28Gowp3CoRN",
+      "practice": "KheSQgTE8V6Fbbt5NSmPay",
+      "domain": "dentaldesignstudios_75thavenue",
+      "phone_sms": "",
+      "phone_callback": ""
+    }
+  },
+  {
+    "model": "core.practicetelecom",
+    "pk": "ekx9bXJQ22kyBVtm3mQ74u",
+    "fields": {
+      "created_at": "2022-03-11T04:59:54.756Z",
+      "modified_at": "2022-03-11T04:59:54.756Z",
+      "created_by": null,
+      "modified_by": null,
+      "voip_provider": "drFoXEnEwrN28Gowp3CoRN",
+      "practice": "gKFyccEAWCRtDZSFcAQdkw",
+      "domain": "smilecraftersaz",
+      "phone_sms": "",
+      "phone_callback": ""
+    }
+  },
+  {
+    "model": "core.practicetelecom",
+    "pk": "gFQdZmzLXYq2HZKKwP6bM9",
+    "fields": {
+      "created_at": "2022-03-11T04:42:25.839Z",
+      "modified_at": "2022-03-11T04:42:25.839Z",
+      "created_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+      "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+      "voip_provider": "drFoXEnEwrN28Gowp3CoRN",
+      "practice": "m5d2xZmKKtWfMqD9vvrLGH",
+      "domain": "goodmandentalcenter",
+      "phone_sms": "",
+      "phone_callback": ""
+    }
+  },
+  {
+    "model": "core.practicetelecom",
+    "pk": "iXPS92NMg5hKgFXzeTiA8W",
+    "fields": {
+      "created_at": "2022-03-11T04:29:55.677Z",
+      "modified_at": "2022-03-11T04:29:55.677Z",
+      "created_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+      "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+      "voip_provider": "drFoXEnEwrN28Gowp3CoRN",
+      "practice": "kzwPJTZpQkAptxF3LVrdEW",
+      "domain": "desertdentalaa",
+      "phone_sms": "",
+      "phone_callback": ""
+    }
+  },
+  {
+    "model": "core.practicetelecom",
+    "pk": "Ki4GwBy3T4GZGYvm9rso7N",
+    "fields": {
+      "created_at": "2022-05-31T19:33:14.547Z",
+      "modified_at": "2022-05-31T19:33:14.548Z",
+      "created_by": null,
+      "modified_by": null,
+      "voip_provider": "drFoXEnEwrN28Gowp3CoRN",
+      "practice": "WnRQYPmx3ZfJyi4tuFTz4q",
+      "domain": "dentaldesignstudios_smile",
+      "phone_sms": "",
+      "phone_callback": ""
+    }
+  },
+  {
+    "model": "core.practicetelecom",
+    "pk": "MhBiwyTbfAoZ2HZGnNZpFx",
+    "fields": {
+      "created_at": "2022-05-31T18:40:16.600Z",
+      "modified_at": "2022-05-31T18:40:16.600Z",
+      "created_by": null,
+      "modified_by": null,
+      "voip_provider": "drFoXEnEwrN28Gowp3CoRN",
+      "practice": "4N7wt2acgWaTcXY7LDL27Z",
+      "domain": "dentaldesignstudios_thunderbird",
+      "phone_sms": "",
+      "phone_callback": ""
+    }
+  },
+  {
+    "model": "core.practicetelecom",
+    "pk": "NKRsLx9DznwGWVpKfBpkzM",
+    "fields": {
+      "created_at": "2021-12-17T00:58:51.200Z",
+      "modified_at": "2021-12-17T00:58:51.200Z",
+      "created_by": null,
+      "modified_by": null,
+      "voip_provider": "drFoXEnEwrN28Gowp3CoRN",
+      "practice": "SCsERWeWiVcEC4vcP3U47X",
+      "domain": "Peerlogic",
+      "phone_sms": "",
+      "phone_callback": ""
+    }
+  },
+  {
+    "model": "core.practicetelecom",
+    "pk": "oQtSBPU8BJ27D5wzasDA4s",
+    "fields": {
+      "created_at": "2022-04-16T03:03:54.408Z",
+      "modified_at": "2022-04-16T03:03:54.408Z",
+      "created_by": null,
+      "modified_by": null,
+      "voip_provider": "drFoXEnEwrN28Gowp3CoRN",
+      "practice": "2d32ZHoXXo7RYVjZ7Grker",
+      "domain": "peerlogictest",
+      "phone_sms": "",
+      "phone_callback": ""
+    }
+  },
+  {
+    "model": "core.practicetelecom",
+    "pk": "P6JPBRG7RezH2yfmxRrDDk",
+    "fields": {
+      "created_at": "2022-03-11T04:56:20.918Z",
+      "modified_at": "2022-03-11T04:56:20.918Z",
+      "created_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+      "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+      "voip_provider": "drFoXEnEwrN28Gowp3CoRN",
+      "practice": "dxqQzgRc7yBVg3JbRjf9kn",
+      "domain": "michaellbleekerdmd.com",
+      "phone_sms": "",
+      "phone_callback": ""
+    }
+  },
+  {
+    "model": "core.practicetelecom",
+    "pk": "RYrzz4sBKwvVeqWKWCfAoJ",
+    "fields": {
+      "created_at": "2022-03-11T04:36:41.952Z",
+      "modified_at": "2022-03-11T04:36:41.952Z",
+      "created_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+      "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+      "voip_provider": "drFoXEnEwrN28Gowp3CoRN",
+      "practice": "3fpWe3Q2rzM683zwC85aap",
+      "domain": "Gentle",
+      "phone_sms": "",
+      "phone_callback": ""
+    }
+  },
+  {
+    "model": "core.practicetelecom",
+    "pk": "SenqhHY2J6uwsNmmBGsLqF",
+    "fields": {
+      "created_at": "2022-05-31T19:38:41.328Z",
+      "modified_at": "2022-05-31T19:38:41.328Z",
+      "created_by": null,
+      "modified_by": null,
+      "voip_provider": "drFoXEnEwrN28Gowp3CoRN",
+      "practice": "V4KMjLJLMnYasXaZuoHe5g",
+      "domain": "dentaldesignstudios_scottsdale",
+      "phone_sms": "",
+      "phone_callback": ""
+    }
+  },
+  {
+    "model": "core.practicetelecom",
+    "pk": "Ufis7Aa5w7TMKTSHVXYBAd",
+    "fields": {
+      "created_at": "2022-03-11T04:10:56.986Z",
+      "modified_at": "2022-03-11T04:10:56.986Z",
+      "created_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+      "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+      "voip_provider": "drFoXEnEwrN28Gowp3CoRN",
+      "practice": "QrzVUscc327cJB6W6CKedu",
+      "domain": "abcdentistryforchildren",
+      "phone_sms": "",
+      "phone_callback": ""
+    }
+  },
+  {
+    "model": "core.practicetelecom",
+    "pk": "Unem4awcshxRM2jdpmnLsh",
+    "fields": {
+      "created_at": "2022-03-11T04:56:35.123Z",
+      "modified_at": "2022-03-11T04:56:35.123Z",
+      "created_by": null,
+      "modified_by": null,
+      "voip_provider": "drFoXEnEwrN28Gowp3CoRN",
+      "practice": "iE3vqteBXnR6vtPmWVHLwu",
+      "domain": "smileloftaz",
+      "phone_sms": "",
+      "phone_callback": ""
+    }
+  },
+  {
+    "model": "core.practicetelecom",
+    "pk": "UUmjqm4fYHc8Xmw9YXpFx6",
+    "fields": {
+      "created_at": "2022-03-11T04:22:11.233Z",
+      "modified_at": "2022-03-11T04:22:11.233Z",
+      "created_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+      "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+      "voip_provider": "drFoXEnEwrN28Gowp3CoRN",
+      "practice": "9tmVYaBJcXZkeRyABsks8F",
+      "domain": "alluringsmiles",
+      "phone_sms": "",
+      "phone_callback": ""
+    }
+  },
+  {
+    "model": "core.practicetelecom",
+    "pk": "X5gAcfJzthZN8UfujgpnQD",
+    "fields": {
+      "created_at": "2022-05-31T19:42:03.566Z",
+      "modified_at": "2022-05-31T19:42:03.567Z",
+      "created_by": null,
+      "modified_by": null,
+      "voip_provider": "drFoXEnEwrN28Gowp3CoRN",
+      "practice": "PrgPmtXDEygKg2KzvEE9gE",
+      "domain": "dentaldesignstudios_hatcher",
+      "phone_sms": "",
+      "phone_callback": ""
+    }
+  }
+]

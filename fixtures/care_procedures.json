@@ -1,0 +1,184 @@
+[
+    {
+      "model": "care.procedure",
+      "pk": "PQQxtUtuowtcLFyC2uKo6Z",
+      "fields": {
+        "created_at": "2022-07-05T20:00:36.927Z",
+        "modified_at": "2022-07-05T20:00:36.927Z",
+        "created_by": null,
+        "modified_by": null,
+        "ada_code": "D0150",
+        "procedure_price_average_in_usd": 75,
+        "description": "Comprehensive oral evaluation"
+      }
+    },
+    {
+        "model": "care.procedure",
+        "pk": "GQJS62i2FvNNt99nk5udu4",
+        "fields": {
+            "created_at": "2022-07-05T20:00:36.927Z",
+            "modified_at": "2022-07-05T20:00:36.927Z",
+            "created_by": null,
+            "modified_by": null,
+            "ada_code": "D2740",
+            "procedure_price_average_in_usd": 1050,
+            "description": "Crown - porcelain/ceramic"
+        }
+    },
+    {
+        "model": "care.procedure",
+        "pk": "T8yYHZyq4xomQk3duCFR23",
+        "fields": {
+            "created_at": "2022-07-05T20:00:36.927Z",
+            "modified_at": "2022-07-05T20:00:36.927Z",
+            "created_by": null,
+            "modified_by": null,
+            "ada_code": "D0274",
+            "procedure_price_average_in_usd": 59,
+            "description": "Bitewing Four Image"
+        }
+    },
+    {
+        "model": "care.procedure",
+        "pk": "C82geKwsYxVWwYJxD7WC7P",
+        "fields": {
+            "created_at": "2022-07-05T20:00:36.927Z",
+            "modified_at": "2022-07-05T20:00:36.927Z",
+            "created_by": null,
+            "modified_by": null,
+            "ada_code": "D8040",
+            "procedure_price_average_in_usd": 525,
+            "description": "Limited ortho treat, adult dent"
+        }
+    },
+    {
+        "model": "care.procedure",
+        "pk": "eQF2oXGsovJJ4cLgWjdrtP",
+        "fields": {
+            "created_at": "2022-07-05T20:00:36.927Z",
+            "modified_at": "2022-07-05T20:00:36.927Z",
+            "created_by": null,
+            "modified_by": null,
+            "ada_code": "D2962",
+            "procedure_price_average_in_usd": 1100,
+            "description": "Labial veneer (porceln lam)-lab"
+        }
+    },
+    {
+        "model": "care.procedure",
+        "pk": "JJkHoPbZvdxaTMB9DgcZJE",
+        "fields": {
+            "created_at": "2022-07-05T20:00:36.927Z",
+            "modified_at": "2022-07-05T20:00:36.927Z",
+            "created_by": null,
+            "modified_by": null,
+            "ada_code": "D2330",
+            "procedure_price_average_in_usd": 147,
+            "description": "Resin-one surface, anterior"
+        }
+    },
+    {
+        "model": "care.procedure",
+        "pk": "YnQL2C3m333zUHanZ7xCsC",
+        "fields": {
+            "created_at": "2022-07-05T20:00:36.927Z",
+            "modified_at": "2022-07-05T20:00:36.927Z",
+            "created_by": null,
+            "modified_by": null,
+            "ada_code": "D7970",
+            "procedure_price_average_in_usd": 158,
+            "description": "Excision, hyperplast tiss-arch"
+        }
+    },
+    {
+        "model": "care.procedure",
+        "pk": "mJ9yhjHLDhGCUcedUAYMYT",
+        "fields": {
+            "created_at": "2022-07-05T20:00:36.927Z",
+            "modified_at": "2022-07-05T20:00:36.927Z",
+            "created_by": null,
+            "modified_by": null,
+            "ada_code": "D5211",
+            "procedure_price_average_in_usd": 696,
+            "description": "Maxillary partial - resin base"
+        }
+    },
+    {
+        "model": "care.procedure",
+        "pk": "LZTguLrXRULEVgfotcNrnV",
+        "fields": {
+            "created_at": "2022-07-05T20:00:36.927Z",
+            "modified_at": "2022-07-05T20:00:36.927Z",
+            "created_by": null,
+            "modified_by": null,
+            "ada_code": "D2140",
+            "procedure_price_average_in_usd": 129,
+            "description": "Amalgam-1 surf. prim/perm"
+        }
+    },
+    {
+        "model": "care.procedure",
+        "pk": "MHLrgXqNDWtqDjU72CbLYP",
+        "fields": {
+            "created_at": "2022-07-05T20:00:36.927Z",
+            "modified_at": "2022-07-05T20:00:36.927Z",
+            "created_by": null,
+            "modified_by": null,
+            "ada_code": "D3460",
+            "procedure_price_average_in_usd": 315,
+            "description": "Endodontic endosseous implant"
+        }
+    },
+    {
+        "model": "care.procedure",
+        "pk": "PK7Se9uz4BcUwfjpWDDFBQ",
+        "fields": {
+            "created_at": "2022-07-05T20:00:36.927Z",
+            "modified_at": "2022-07-05T20:00:36.927Z",
+            "created_by": null,
+            "modified_by": null,
+            "ada_code": "D4355",
+            "procedure_price_average_in_usd": 184,
+            "description": "Full mouth debridemnt,eval/diag"
+        }
+    },
+    {
+        "model": "care.procedure",
+        "pk": "meu9Q4R5yHaaHnWXnjgAEK",
+        "fields": {
+            "created_at": "2022-07-05T20:00:36.927Z",
+            "modified_at": "2022-07-05T20:00:36.927Z",
+            "created_by": null,
+            "modified_by": null,
+            "ada_code": "D5110",
+            "procedure_price_average_in_usd": 1350,
+            "description": "Complete denture - maxillary"
+        }
+    },
+    {
+        "model": "care.procedure",
+        "pk": "ZyKdRXHNTmPyiUmg2fMU9S",
+        "fields": {
+            "created_at": "2022-07-05T20:00:36.927Z",
+            "modified_at": "2022-07-05T20:00:36.927Z",
+            "created_by": null,
+            "modified_by": null,
+            "ada_code": "D9990",
+            "procedure_price_average_in_usd": 600,
+            "description": "BLEACHING (INCL TRAYS AND MATER"
+        }
+    },
+    {
+        "model": "care.procedure",
+        "pk": "QKzhFm9tVyHkgd7pKjmB3U",
+        "fields": {
+            "created_at": "2022-07-05T20:00:36.927Z",
+            "modified_at": "2022-07-05T20:00:36.927Z",
+            "created_by": null,
+            "modified_by": null,
+            "ada_code": "D7240",
+            "procedure_price_average_in_usd": 237,
+            "description": "Extraction-impacted/compl bony"
+        }
+    }
+]
