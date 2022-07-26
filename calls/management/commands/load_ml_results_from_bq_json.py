@@ -22,7 +22,6 @@ from calls.analytics.transcripts.models import CallSentiment
 from calls.field_choices import SentimentTypes
 from calls.models import Call
 from core.models import Practice
-from ml.models import MLModelResultHistory
 
 Application = get_application_model()
 
@@ -109,12 +108,12 @@ class Command(BaseCommand):
 
         self._load_agent_call_scores(call_agent_interactions, peerlogic_api_call)
         self._load_call_sentiment(call_sentiment, peerlogic_api_call)
-        self._load_procedure_mentioned(call_procedure_mentioned, peerlogic_api_call)
+        self._load_call_purposes_and_outcomes_with_outcome_reasons(call_purpose, peerlogic_api_call)
         self._load_company_mentioned(call_company_mentioned, peerlogic_api_call)
         self._load_insurance_mentioned(call_insurance_mentioned, peerlogic_api_call)
+        self._load_procedure_mentioned(call_procedure_mentioned, peerlogic_api_call)
         self._load_product_mentioned(call_product_mentioned, peerlogic_api_call)
         self._load_symptom_mentioned(call_symptom_mentioned, peerlogic_api_call)
-        self._load_call_purposes_and_outcomes_with_outcome_reasons(call_purpose, peerlogic_api_call)
 
     def _load_agent_call_scores(self, call_agent_interactions, call):
 
@@ -129,7 +128,6 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.SUCCESS(f"Created agent call score with pk='{peerlogic_api_agent_call_score.pk}'"))
             else:
                 self.stdout.write(f"Not creating - Found existing agent call score with pk={peerlogic_api_agent_call_score.pk}")
-
 
     def _load_call_sentiment(self, call_sentiment, call):
         BQ_TO_PEERLOGIC_API_SENTIMENT_TYPE_MAP = {
@@ -153,23 +151,6 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"Created call sentiment with pk='{peerlogic_api_call_sentiment.pk}'"))
         else:
             self.stdout.write(f"Not creating - Found existing call sentiment with pk={peerlogic_api_call_sentiment.pk}")
-
-
-    def _load_procedure_mentioned(self, call_procedure_mentioned: Dict, call: Call) -> None:
-
-        for procedure in call_procedure_mentioned:
-            keyword = procedure["call_procedure_keyword"]
-            if not keyword:
-                continue
-
-            self.stdout.write(f"Getting or creating Call Mentioned Procedure with keyword='{keyword}'.")
-            peerlogic_api_call_mentioned_procedure, created = CallMentionedProcedure.objects.get_or_create(
-                pk=procedure["call_procedure_discussed_id"], call=call, keyword=keyword
-            )
-            if created:
-                self.stdout.write(self.style.SUCCESS(f"Created call mentioned procedure with pk='{peerlogic_api_call_mentioned_procedure.pk}'"))
-            else:
-                self.stdout.write(f"Not creating - Found existing call mentioned procedure with pk={peerlogic_api_call_mentioned_procedure.pk}")
 
     def _load_company_mentioned(self, call_company_mentioned: Dict, call: Call) -> None:
 
@@ -202,6 +183,22 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.SUCCESS(f"Created call mentioned insurance with pk='{peerlogic_api_call_mentioned_insurance.pk}'"))
             else:
                 self.stdout.write(f"Not creating - Found existing call mentioned insurance with pk={peerlogic_api_call_mentioned_insurance.pk}")
+
+    def _load_procedure_mentioned(self, call_procedure_mentioned: Dict, call: Call) -> None:
+
+        for procedure in call_procedure_mentioned:
+            keyword = procedure["call_procedure_keyword"]
+            if not keyword:
+                continue
+
+            self.stdout.write(f"Getting or creating Call Mentioned Procedure with keyword='{keyword}'.")
+            peerlogic_api_call_mentioned_procedure, created = CallMentionedProcedure.objects.get_or_create(
+                pk=procedure["call_procedure_discussed_id"], call=call, keyword=keyword
+            )
+            if created:
+                self.stdout.write(self.style.SUCCESS(f"Created call mentioned procedure with pk='{peerlogic_api_call_mentioned_procedure.pk}'"))
+            else:
+                self.stdout.write(f"Not creating - Found existing call mentioned procedure with pk={peerlogic_api_call_mentioned_procedure.pk}")
 
     def _load_symptom_mentioned(self, call_symptom_mentioned: Dict, call: Call) -> None:
 
