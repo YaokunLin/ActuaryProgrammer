@@ -104,3 +104,4 @@ class SentimentTypes(models.TextChoices):
     POSITIVE = "positive"
     NEUTRAL = "neutral"
     NEGATIVE = "negative"
+    NOT_APPLICABLE = "not_applicable"

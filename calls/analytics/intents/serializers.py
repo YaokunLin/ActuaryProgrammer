@@ -1,14 +1,14 @@
 from rest_framework import serializers
 
 from calls.analytics.intents.models import (
-    CallDiscussedCompany,
-    CallDiscussedInsurance,
+    CallMentionedCompany,
+    CallMentionedInsurance,
+    CallMentionedProcedure,
+    CallMentionedProduct,
+    CallMentionedSymptom,
     CallOutcome,
     CallOutcomeReason,
-    CallDiscussedProcedure,
-    CallDiscussedProduct,
     CallPurpose,
-    CallDiscussedSymptom,
 )
 
 
@@ -33,42 +33,36 @@ class CallOutcomeReasonSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
-class CallDiscussedCompanySerializer(serializers.ModelSerializer):
-    
+class CallMentionedCompanySerializer(serializers.ModelSerializer):
     class Meta:
-        model = CallDiscussedCompany
+        model = CallMentionedCompany
         fields = "__all__"
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
-class CallDiscussedInsuranceSerializer(serializers.ModelSerializer):
-    
+class CallMentionedInsuranceSerializer(serializers.ModelSerializer):
     class Meta:
-        model = CallDiscussedInsurance
+        model = CallMentionedInsurance
         fields = "__all__"
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
-class CallDiscussedProcedureSerializer(serializers.ModelSerializer):
-
+class CallMentionedProcedureSerializer(serializers.ModelSerializer):
     class Meta:
-        model = CallDiscussedProcedure
+        model = CallMentionedProcedure
         fields = "__all__"
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
-class CallDiscussedProductSerializer(serializers.ModelSerializer):
-    
+class CallMentionedProductSerializer(serializers.ModelSerializer):
     class Meta:
-        model = CallDiscussedProduct
+        model = CallMentionedProduct
         fields = "__all__"
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
-class CallDiscussedSymptomSerializer(serializers.ModelSerializer):
-    
+class CallMentionedSymptomSerializer(serializers.ModelSerializer):
     class Meta:
-        model = CallDiscussedSymptom
+        model = CallMentionedSymptom
         fields = "__all__"
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
-
