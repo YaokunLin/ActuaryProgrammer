@@ -5,12 +5,12 @@ from rest_framework_nested import routers
 from calls.analytics.intents.views import (
     CallMentionedCompanyViewset,
     CallMentionedInsuranceViewset,
-    CallOutcomeReasonViewset,
-    CallOutcomeViewset,
     CallMentionedProcedureViewset,
     CallMentionedProductViewset,
-    CallPurposeViewset,
     CallMentionedSymptomViewset,
+    CallOutcomeReasonViewset,
+    CallOutcomeViewset,
+    CallPurposeViewset,
 )
 
 from calls.analytics.interactions.views import AgentCallScoreViewset
