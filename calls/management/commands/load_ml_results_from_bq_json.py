@@ -95,13 +95,28 @@ class Command(BaseCommand):
 
         self.stdout.write(f"Working with Peerlogic Call {peerlogic_api_call.pk}")
 
-        self._load_call_sentiment(call_sentiment, peerlogic_api_call)
         self._load_agent_call_scores(call_agent_interactions, peerlogic_api_call)
+        self._load_call_sentiment(call_sentiment, peerlogic_api_call)
         self._load_procedure_mentioned(call_procedure_mentioned, peerlogic_api_call)
         self._load_company_mentioned(call_company_mentioned, peerlogic_api_call)
         self._load_insurance_mentioned(call_insurance_mentioned, peerlogic_api_call)
         self._load_product_mentioned(call_product_mentioned, peerlogic_api_call)
         self._load_symptom_mentioned(call_symptom_mentioned, peerlogic_api_call)
+
+    def _load_agent_call_scores(self, call_agent_interactions, call):
+
+        for interaction in call_agent_interactions:
+            metric = interaction["agent_interaction_metric_name"]
+            defaults = {"raw_model_run_id": interaction["agent_interaction_metric_run_id"], "score": interaction["agent_interaction_metric_score"]}
+
+            self.stdout.write(f"Getting or creating Agent Call Score with metric='{metric}'.")
+            peerlogic_api_agent_call_score, created = AgentCallScore.objects.get_or_create(call=call, metric=metric, defaults=defaults)
+
+            if created:
+                self.stdout.write(self.style.SUCCESS(f"Created agent call score with pk='{peerlogic_api_agent_call_score.pk}'"))
+            else:
+                self.stdout.write(f"Not creating - Found existing agent call score with pk={peerlogic_api_agent_call_score.pk}")
+
 
     def _load_call_sentiment(self, call_sentiment, call):
         BQ_TO_PEERLOGIC_API_SENTIMENT_TYPE_MAP = {
@@ -124,21 +139,8 @@ class Command(BaseCommand):
         if created:
             self.stdout.write(self.style.SUCCESS(f"Created call sentiment with pk='{peerlogic_api_call_sentiment.pk}'"))
         else:
-            self.stdout.write(f"Found call sentiment with pk={peerlogic_api_call_sentiment.pk}")
+            self.stdout.write(f"Not creating - Found existing call sentiment with pk={peerlogic_api_call_sentiment.pk}")
 
-    def _load_agent_call_scores(self, call_agent_interactions, call):
-
-        for interaction in call_agent_interactions:
-            metric = interaction["agent_interaction_metric_name"]
-            defaults = {"raw_model_run_id": interaction["agent_interaction_metric_run_id"], "score": interaction["agent_interaction_metric_score"]}
-
-            self.stdout.write(f"Getting or creating Agent Call Score with metric='{metric}'.")
-            peerlogic_api_agent_call_score, created = AgentCallScore.objects.get_or_create(call=call, metric=metric, defaults=defaults)
-
-            if created:
-                self.stdout.write(self.style.SUCCESS(f"Created agent call score with pk='{peerlogic_api_agent_call_score.pk}'"))
-            else:
-                self.stdout.write(f"Found agent call score with pk={peerlogic_api_agent_call_score.pk}")
 
     def _load_procedure_mentioned(self, call_procedure_mentioned, call):
 
@@ -154,7 +156,7 @@ class Command(BaseCommand):
             if created:
                 self.stdout.write(self.style.SUCCESS(f"Created call mentioned procedure with pk='{peerlogic_api_call_mentioned_procedure.pk}'"))
             else:
-                self.stdout.write(f"Found call mentioned procedure with pk={peerlogic_api_call_mentioned_procedure.pk}")
+                self.stdout.write(f"Not creating - Found existing call mentioned procedure with pk={peerlogic_api_call_mentioned_procedure.pk}")
 
     def _load_company_mentioned(self, call_company_mentioned, call):
 
@@ -170,7 +172,7 @@ class Command(BaseCommand):
             if created:
                 self.stdout.write(self.style.SUCCESS(f"Created call mentioned cp,[amu] with pk='{peerlogic_api_call_mentioned_company.pk}'"))
             else:
-                self.stdout.write(f"Found call mentioned company with pk={peerlogic_api_call_mentioned_company.pk}")
+                self.stdout.write(f"Not creating - Found existing call mentioned company with pk={peerlogic_api_call_mentioned_company.pk}")
 
     def _load_insurance_mentioned(self, call_insurance_mentioned, call):
 
@@ -186,7 +188,7 @@ class Command(BaseCommand):
             if created:
                 self.stdout.write(self.style.SUCCESS(f"Created call mentioned insurance with pk='{peerlogic_api_call_mentioned_insurance.pk}'"))
             else:
-                self.stdout.write(f"Found call mentioned insurance with pk={peerlogic_api_call_mentioned_insurance.pk}")
+                self.stdout.write(f"Not creating - Found existing call mentioned insurance with pk={peerlogic_api_call_mentioned_insurance.pk}")
 
     def _load_symptom_mentioned(self, call_symptom_mentioned, call):
 
@@ -202,7 +204,7 @@ class Command(BaseCommand):
             if created:
                 self.stdout.write(self.style.SUCCESS(f"Created call mentioned symptom with pk='{peerlogic_api_call_mentioned_symptom.pk}'"))
             else:
-                self.stdout.write(f"Found call mentioned symptom with pk={peerlogic_api_call_mentioned_symptom.pk}")
+                self.stdout.write(f"Not creating - Found existing call mentioned symptom with pk={peerlogic_api_call_mentioned_symptom.pk}")
 
     def _load_product_mentioned(self, call_product_mentioned, call):
 
@@ -218,4 +220,4 @@ class Command(BaseCommand):
             if created:
                 self.stdout.write(self.style.SUCCESS(f"Created call mentioned product with pk='{peerlogic_api_call_mentioned_product.pk}'"))
             else:
-                self.stdout.write(f"Found call mentioned product with pk={peerlogic_api_call_mentioned_product.pk}")
+                self.stdout.write(f"Not creating - Found existing call mentioned product with pk={peerlogic_api_call_mentioned_product.pk}")
