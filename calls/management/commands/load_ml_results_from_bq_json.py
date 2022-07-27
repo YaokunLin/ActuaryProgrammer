@@ -8,6 +8,7 @@ from django.core.management.base import BaseCommand
 from oauth2_provider.models import (
     get_application_model,
 )
+from calls.analytics.intents.field_choices import CallOutcomeReasonTypes, CallOutcomeTypes
 from calls.analytics.intents.models import (
     CallMentionedInsurance,
     CallMentionedProcedure,
@@ -21,7 +22,7 @@ from calls.analytics.interactions.models import AgentCallScore
 from calls.analytics.participants.field_choices import NonAgentEngagementPersonaTypes
 from calls.analytics.participants.models import AgentEngagedWith
 from calls.analytics.transcripts.models import CallSentiment
-from calls.field_choices import SentimentTypes
+from calls.field_choices import ReferralSourceTypes, SentimentTypes
 from calls.models import Call
 from core.models import Practice
 
@@ -43,6 +44,7 @@ class Command(BaseCommand):
             self.stderr.write(f"Practice practice_id='{options['practice_id']}' does not exist! Exiting.")
             exit(2)
 
+        # TODO: Load from Cloud Storage bucket instead of locally
         self.stdout.write(f"Loading file options['relative_file_path']={options['relative_file_path']}")
         relative_file_path = options["relative_file_path"]
         absolute_file_path = os.path.join(settings.BASE_DIR, relative_file_path)
@@ -56,67 +58,69 @@ class Command(BaseCommand):
 
         self.stdout.write(f"Loaded file {absolute_file_path}")
 
-        call = calls[0]
-        # TODO: Replace with for loop
-        self.stdout.write(f"Getting or creating call with call['call_id']='{call['call_id']}'")
-        call_id = call.pop("call_id")
-        defaults = {}
-        defaults.update(
-            {
-                "id": call_id,
-                "call_start_time": call.pop("call_start"),
-                "call_end_time": call.pop("call_end"),
-                "practice": practice,
-                "checked_voicemail": bool(call.pop("checked_voicemail")),
-                "went_to_voicemail": bool(call.pop("went_to_voicemail")),
-            }
-        )
+        for call in calls:
+            self.stdout.write(f"Getting or creating call with call['call_id']='{call['call_id']}'")
+            call_id = call.pop("call_id")
+            defaults = {}
+            defaults.update(
+                {
+                    "id": call_id,
+                    "call_start_time": call.pop("call_start"),
+                    "call_end_time": call.pop("call_end"),
+                    "practice": practice,
+                    "checked_voicemail": bool(call.pop("checked_voicemail")),
+                    "went_to_voicemail": bool(call.pop("went_to_voicemail")),
+                    "referral_source": self._get_referral_source(call.pop("referral_source")),
+                }
+            )
 
-        call_sentiment = call.pop("call_sentiment")
-        call_agent_interactions = call.pop("call_agent_interaction")
+            call_sentiment = call.pop("call_sentiment")
+            call_agent_interactions = call.pop("call_agent_interaction")
 
-        # Mentioned
-        call_company_mentioned = call.pop("call_company_discussed")
-        call_insurance_mentioned = call.pop("call_insurance_discussed")
-        call_procedure_mentioned = call.pop("call_procedure_discussed")
-        call_product_mentioned = call.pop("call_product_discussed")
-        call_symptom_mentioned = call.pop("call_symptom_discussed")
-        call_pause = call.pop("call_pause")
-        call_purpose = call.pop("call_purpose")
-        non_agent_engagement_persona_info = call.pop("non_agent_engagement_persona_info")
-        referral_source = call.pop("referral_source")
-        del call["callee_domain"]  # TODO: remove from schema, deprecated
-        del call["caller_domain"]  # TODO: remove from schema, deprecated
-        del call["domain"]  # TODO: remove from schema, deprecated
-        del call["metadata_file_uri"]  # TODO: remove from schema, deprecated
-        del call["new_patient_opportunity_info"]  # TODO: remove from schema, never used
-        del call["caller_audio_url"]
-        del call["callee_audio_url"]
-        del call["call_transcription"]
-        del call["call_transcription_fragment"]
-        del call["practice_id"]
-        del call["caller_type_info"]
-        del call["insert_timestamp"]
-        del call["site_id"]
+            # Mentioned
+            call_company_mentioned = call.pop("call_company_discussed")
+            call_insurance_mentioned = call.pop("call_insurance_discussed")
+            call_procedure_mentioned = call.pop("call_procedure_discussed")
+            call_product_mentioned = call.pop("call_product_discussed")
+            call_symptom_mentioned = call.pop("call_symptom_discussed")
 
-        print(call)
+            call_purpose = call.pop("call_purpose")
+            non_agent_engagement_persona_info = call.pop("non_agent_engagement_persona_info")
 
-        defaults.update(call)
-        peerlogic_api_call, created = Call.objects.get_or_create(pk=call_id, defaults=defaults)
-        if created:
-            self.stdout.write(self.style.SUCCESS(f"Created call with pk='{peerlogic_api_call.pk}'"))
+            # Not necessary
+            del call["caller_type_info"]  # TODO: remove from schema, deprecated
+            del call["callee_domain"]  # TODO: remove from schema, deprecated
+            del call["caller_domain"]  # TODO: remove from schema, deprecated
+            del call["domain"]  # TODO: remove from schema, deprecated
+            del call["metadata_file_uri"]  # TODO: remove from schema, deprecated
+            del call["new_patient_opportunity_info"]  # TODO: remove from schema, never used
+            del call["call_pause"]  # TODO: Implement when we're determining longest pause again
+            del call["caller_audio_url"]
+            del call["callee_audio_url"]
+            del call["call_transcription"]
+            del call["call_transcription_fragment"]
+            del call["practice_id"]
+            del call["insert_timestamp"]
+            del call["site_id"]
 
-        self.stdout.write(f"Working with Peerlogic Call {peerlogic_api_call.pk}")
+            defaults.update(call)
 
-        self._load_agent_call_scores(call_agent_interactions, peerlogic_api_call)
-        self._load_call_sentiment(call_sentiment, peerlogic_api_call)
-        self._load_call_purposes_and_outcomes_with_outcome_reasons(call_purpose, peerlogic_api_call)
-        self._load_non_agent_engagement_persona_info(non_agent_engagement_persona_info, peerlogic_api_call)
-        self._load_company_mentioned(call_company_mentioned, peerlogic_api_call)
-        self._load_insurance_mentioned(call_insurance_mentioned, peerlogic_api_call)
-        self._load_procedure_mentioned(call_procedure_mentioned, peerlogic_api_call)
-        self._load_product_mentioned(call_product_mentioned, peerlogic_api_call)
-        self._load_symptom_mentioned(call_symptom_mentioned, peerlogic_api_call)
+            peerlogic_api_call, created = Call.objects.update_or_create(pk=call_id, defaults=defaults)
+            if created:
+                self.stdout.write(self.style.SUCCESS(f"Created call with pk='{peerlogic_api_call.pk}'"))
+
+            self.stdout.write(self.style.SUCCESS(f"Updated and working with Peerlogic Call {peerlogic_api_call.pk}"))
+
+            self._load_agent_call_scores(call_agent_interactions, peerlogic_api_call)
+            self._load_call_sentiment(call_sentiment, peerlogic_api_call)
+            self._load_call_purposes_and_outcomes_with_outcome_reasons(call_purpose, peerlogic_api_call)
+            self._load_non_agent_engagement_persona_info(non_agent_engagement_persona_info, peerlogic_api_call)
+            # Mentioned
+            self._load_company_mentioned(call_company_mentioned, peerlogic_api_call)
+            self._load_insurance_mentioned(call_insurance_mentioned, peerlogic_api_call)
+            self._load_procedure_mentioned(call_procedure_mentioned, peerlogic_api_call)
+            self._load_product_mentioned(call_product_mentioned, peerlogic_api_call)
+            self._load_symptom_mentioned(call_symptom_mentioned, peerlogic_api_call)
 
     def _load_agent_call_scores(self, call_agent_interactions, call):
 
@@ -263,7 +267,7 @@ class Command(BaseCommand):
     def _load_call_outcome(self, call_purpose: Dict, peerlogic_api_call_purpose: CallPurpose) -> CallOutcome:
         call_outcome_type = call_purpose["outcome"]
         if not call_outcome_type:
-            return
+            call_outcome_type = CallOutcomeTypes.NOT_APPLICABLE  # mark as processed
 
         defaults = {
             # keep the model run id the same as the purpose run id because they come from
@@ -283,9 +287,27 @@ class Command(BaseCommand):
         return peerlogic_api_call_outcome
 
     def _load_call_outcome_reason(self, call_purpose: Dict, peerlogic_api_call_outcome: CallOutcome) -> CallOutcomeReason:
-        call_outcome_reason_type = call_purpose["outcome_reason"]
+
+        BQ_TO_PEERLOGIC_API_OUTCOME_REASON_TYPE_MAP = {
+            "n/a": CallOutcomeReasonTypes.NOT_APPLICABLE,
+            "not_enough_information_possesed_by_patient_or_agent": CallOutcomeReasonTypes.NOT_ENOUGH_INFORMATION_POSSESED_BY_PATIENT_OR_AGENT,
+            "procedure_not_offered": CallOutcomeReasonTypes.PROCEDURE_NOT_OFFERED,
+            "others": CallOutcomeReasonTypes.OTHERS,
+            "day_or_time_not_available": CallOutcomeReasonTypes.DAY_OR_TIME_NOT_AVAILABLE,
+            "call_interrupted": CallOutcomeReasonTypes.CALL_INTERRUPTED,
+            "caller_indifference": CallOutcomeReasonTypes.CALLER_INDIFFERENCE,
+            "lost": CallOutcomeReasonTypes.LOST,
+            "pricing": CallOutcomeReasonTypes.PRICING,
+            "treatment_not_offered": CallOutcomeReasonTypes.TREATMENT_NOT_OFFERED,
+            "other": CallOutcomeReasonTypes.OTHERS,
+            "scheduling": CallOutcomeReasonTypes.SCHEDULING,
+            "insurance": CallOutcomeReasonTypes.INSURANCE,
+            "too_expensive": CallOutcomeReasonTypes.TOO_EXPENSIVE,
+            "insurance_not_taken": CallOutcomeReasonTypes.INSURANCE_NOT_TAKEN,
+        }
+        call_outcome_reason_type = BQ_TO_PEERLOGIC_API_OUTCOME_REASON_TYPE_MAP.get(call_purpose.get("outcome_reason"))
         if not call_outcome_reason_type:
-            return
+            call_outcome_type = CallOutcomeReasonTypes.NOT_APPLICABLE  # mark as processed
 
         defaults = {
             # keep the model run id the same as the purpose run id because they come from
@@ -335,3 +357,19 @@ class Command(BaseCommand):
             self.stdout.write(f"Not creating - Found existing agent engaged with, with pk={peerlogic_api_agent_engaged_with.pk}")
 
         return peerlogic_api_agent_engaged_with
+
+    def _get_referral_source(self, bq_referral_source) -> str:
+        BQ_TO_PEERLOGIC_API_REFERRAL_SOURCE_TYPE_MAP = {
+            "patient_referral": ReferralSourceTypes.PATIENT_REFERRAL,
+            "medical_provider": ReferralSourceTypes.MEDICAL_PROVIDER,
+            "dental_provider": ReferralSourceTypes.DENTAL_PROVIDER,
+            "web_search": ReferralSourceTypes.WEB_SEARCH,
+            "social_media": ReferralSourceTypes.SOCIAL_MEDIA,
+            "insurance": ReferralSourceTypes.INSURANCE,
+            "paid_advertising": ReferralSourceTypes.PAID_ADVERTISING,
+            "others": ReferralSourceTypes.OTHERS,
+            "unknown": ReferralSourceTypes.OTHERS,
+            "n/a": ReferralSourceTypes.NOT_APPLICABLE,
+        }
+        referral_source_type = BQ_TO_PEERLOGIC_API_REFERRAL_SOURCE_TYPE_MAP.get(bq_referral_source.get("referral_source_type"))
+        return referral_source_type

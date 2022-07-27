@@ -17,6 +17,7 @@ class CallPurposeTypes(models.TextChoices):
 class CallOutcomeTypes(models.TextChoices):
     SUCCESS = "success"
     FAILURE = "failure"
+    NOT_APPLICABLE = "not_applicable"
 
 
 class CallOutcomeReasonTypes(models.TextChoices):
@@ -34,6 +35,7 @@ class CallOutcomeReasonTypes(models.TextChoices):
     CALL_INTERRUPTED = "call_interrupted"
     INSURANCE_NOT_TAKEN = "insurance_not_taken"
     OTHERS = "others"  # create/refactor as noneoftheabove once we re-do the model and/or frontend
+    NOT_APPLICABLE = "not_applicable"
 
 
 # TODO: Revisit and redo
