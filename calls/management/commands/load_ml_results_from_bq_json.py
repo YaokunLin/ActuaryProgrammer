@@ -18,6 +18,8 @@ from calls.analytics.intents.models import (
     CallPurpose,
 )
 from calls.analytics.interactions.models import AgentCallScore
+from calls.analytics.participants.field_choices import NonAgentEngagementPersonaTypes
+from calls.analytics.participants.models import AgentEngagedWith
 from calls.analytics.transcripts.models import CallSentiment
 from calls.field_choices import SentimentTypes
 from calls.models import Call
@@ -109,6 +111,7 @@ class Command(BaseCommand):
         self._load_agent_call_scores(call_agent_interactions, peerlogic_api_call)
         self._load_call_sentiment(call_sentiment, peerlogic_api_call)
         self._load_call_purposes_and_outcomes_with_outcome_reasons(call_purpose, peerlogic_api_call)
+        self._load_non_agent_engagement_persona_info(non_agent_engagement_persona_info, peerlogic_api_call)
         self._load_company_mentioned(call_company_mentioned, peerlogic_api_call)
         self._load_insurance_mentioned(call_insurance_mentioned, peerlogic_api_call)
         self._load_procedure_mentioned(call_procedure_mentioned, peerlogic_api_call)
@@ -300,3 +303,35 @@ class Command(BaseCommand):
             self.stdout.write(f"Not creating - Found existing call outcome reason with pk={peerlogic_api_call_outcome_reason.pk}")
 
         return peerlogic_api_call_outcome_reason
+
+    def _load_non_agent_engagement_persona_info(self, non_agent_engagement_persona_info: Dict, call: Call) -> None:
+
+        BQ_TO_PEERLOGIC_API_NON_AGENT_ENGAGEMENT_TYPE_MAP = {
+            "NewPatient": NonAgentEngagementPersonaTypes.NEW_PATIENT,
+            "ExistingPatient": NonAgentEngagementPersonaTypes.EXISTING_PATIENT,
+            "ContractorVendor": NonAgentEngagementPersonaTypes.CONTRACTOR_VENDOR,
+            "Others": NonAgentEngagementPersonaTypes.OTHERS,
+            "IntraOffice": None,
+        }
+
+        non_agent_engagement_persona_type = BQ_TO_PEERLOGIC_API_NON_AGENT_ENGAGEMENT_TYPE_MAP.get(
+            non_agent_engagement_persona_info.get("non_agent_engagement_persona_type")
+        )
+        if not non_agent_engagement_persona_type:
+            return
+
+        defaults = {"raw_non_agent_engagement_persona_model_run_id": non_agent_engagement_persona_info["non_agent_engagement_persona_run_id"]}
+
+        self.stdout.write(f"Getting or creating Agent Engaged With with non_agent_engagement_persona_type='{non_agent_engagement_persona_type}'.")
+        peerlogic_api_agent_engaged_with, created = AgentEngagedWith.objects.get_or_create(
+            pk=non_agent_engagement_persona_info["non_agent_engagement_persona_id"],
+            call=call,
+            non_agent_engagement_persona_type=non_agent_engagement_persona_type,
+            defaults=defaults,
+        )
+        if created:
+            self.stdout.write(self.style.SUCCESS(f"Created agent engaged with, with pk='{peerlogic_api_agent_engaged_with.pk}'"))
+        else:
+            self.stdout.write(f"Not creating - Found existing agent engaged with, with pk={peerlogic_api_agent_engaged_with.pk}")
+
+        return peerlogic_api_agent_engaged_with
