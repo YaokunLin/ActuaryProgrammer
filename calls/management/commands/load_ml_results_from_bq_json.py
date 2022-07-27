@@ -307,7 +307,7 @@ class Command(BaseCommand):
         }
         call_outcome_reason_type = BQ_TO_PEERLOGIC_API_OUTCOME_REASON_TYPE_MAP.get(call_purpose.get("outcome_reason"))
         if not call_outcome_reason_type:
-            call_outcome_type = CallOutcomeReasonTypes.NOT_APPLICABLE  # mark as processed
+            call_outcome_reason_type = CallOutcomeReasonTypes.NOT_APPLICABLE  # mark as processed
 
         defaults = {
             # keep the model run id the same as the purpose run id because they come from
