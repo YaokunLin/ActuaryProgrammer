@@ -1,10 +1,12 @@
 import json
 import os
+
 from typing import Dict
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
 
+from gcloud.storage import Client, Bucket
 from oauth2_provider.models import (
     get_application_model,
 )
@@ -30,10 +32,10 @@ Application = get_application_model()
 
 
 class Command(BaseCommand):
-    help = "Loads Peerlogic API with json values extracted from BigQuery call table."
+    help = "Loads Peerlogic API with jsonl values extracted from BigQuery call table."
 
     def add_arguments(self, parser):
-        parser.add_argument("relative_file_path", type=str)
+        parser.add_argument("month", type=str) # month is <YYYY-MM>
         parser.add_argument("practice_id", type=str)
 
     def handle(self, *args, **options):
@@ -45,82 +47,79 @@ class Command(BaseCommand):
             exit(2)
 
         # TODO: Load from Cloud Storage bucket instead of locally
-        self.stdout.write(f"Loading file options['relative_file_path']={options['relative_file_path']}")
-        relative_file_path = options["relative_file_path"]
-        absolute_file_path = os.path.join(settings.BASE_DIR, relative_file_path)
-        if not os.path.exists(absolute_file_path):
-            self.stderr.write("File does not exist! Exiting.")
-            exit(2)
+        self.stdout.write(f"Loading file options['month']={options['month']}")
+        month = options["month"]
 
         calls = None
-        with open(absolute_file_path, "r") as f:
-            calls = json.load(f)
 
-        self.stdout.write(f"Loaded file {absolute_file_path}")
+        self.stdout.write(f"Loaded file for {month}")
+        bucket = settings.CLOUD_STORAGE_CLIENT.bucket(settings.BUCKET_NAME_BQ_CALL_ANALYTICS_EXTRACTS)
+        for blob in bucket.list_blobs(prefix=month):
+            if blob.size == 0:
+                continue
+            with blob.open(mode="r") as f:
+                for line in f:
+                    bq_call = json.loads(line)
+                    self.load_call_and_analytics_dict(bq_call, practice)
+                exit()
 
-        for call in calls:
-            self.stdout.write(f"Getting or creating call with call['call_id']='{call['call_id']}'")
-            call_id = call.pop("call_id")
-            defaults = {}
-            defaults.update(
-                {
-                    "id": call_id,
-                    "call_start_time": call.pop("call_start"),
-                    "call_end_time": call.pop("call_end"),
-                    "practice": practice,
-                    "checked_voicemail": bool(call.pop("checked_voicemail")),
-                    "went_to_voicemail": bool(call.pop("went_to_voicemail")),
-                    "referral_source": self._get_referral_source(call.pop("referral_source")),
-                }
-            )
+    def load_call_and_analytics_dict(self, bq_call: Dict, practice: Practice) -> None:
+        self.stdout.write(f"Getting or creating call with call['call_id']='{bq_call['call_id']}'")
+        call_id = bq_call.pop("call_id")
+        defaults = {}
+        defaults.update(
+            {
+                "id": call_id,
+                "call_start_time": bq_call.pop("call_start"),
+                "call_end_time": bq_call.pop("call_end"),
+                "practice": practice,
+                "checked_voicemail": bool(bq_call.pop("checked_voicemail")),
+                "went_to_voicemail": bool(bq_call.pop("went_to_voicemail")),
+                "referral_source": self._get_referral_source(bq_call.pop("referral_source")),
+            }
+        )
 
-            call_sentiment = call.pop("call_sentiment")
-            call_agent_interactions = call.pop("call_agent_interaction")
+        call_sentiment = bq_call.pop("call_sentiment")
+        call_agent_interactions = bq_call.pop("call_agent_interaction")
 
-            # Mentioned
-            call_company_mentioned = call.pop("call_company_discussed")
-            call_insurance_mentioned = call.pop("call_insurance_discussed")
-            call_procedure_mentioned = call.pop("call_procedure_discussed")
-            call_product_mentioned = call.pop("call_product_discussed")
-            call_symptom_mentioned = call.pop("call_symptom_discussed")
+        # Mentioned
+        call_company_mentioned = bq_call.pop("call_company_discussed")
+        call_insurance_mentioned = bq_call.pop("call_insurance_discussed")
+        call_procedure_mentioned = bq_call.pop("call_procedure_discussed")
+        call_product_mentioned = bq_call.pop("call_product_discussed")
+        call_symptom_mentioned = bq_call.pop("call_symptom_discussed")
 
-            call_purpose = call.pop("call_purpose")
-            non_agent_engagement_persona_info = call.pop("non_agent_engagement_persona_info")
+        call_purpose = bq_call.pop("call_purpose")
+        non_agent_engagement_persona_info = bq_call.pop("non_agent_engagement_persona_info")
 
-            # Not necessary
-            del call["caller_type_info"]  # TODO: remove from schema, deprecated
-            del call["callee_domain"]  # TODO: remove from schema, deprecated
-            del call["caller_domain"]  # TODO: remove from schema, deprecated
-            del call["domain"]  # TODO: remove from schema, deprecated
-            del call["metadata_file_uri"]  # TODO: remove from schema, deprecated
-            del call["new_patient_opportunity_info"]  # TODO: remove from schema, never used
-            del call["call_pause"]  # TODO: Implement when we're determining longest pause again
-            del call["caller_audio_url"]
-            del call["callee_audio_url"]
-            del call["call_transcription"]
-            del call["call_transcription_fragment"]
-            del call["practice_id"]
-            del call["insert_timestamp"]
-            del call["site_id"]
+        # Not necessary
+        del bq_call["caller_type_info"]  # TODO: remove from schema, deprecated
+        del bq_call["domain"]  # TODO: remove from schema, deprecated
+        del bq_call["call_pause"]  # TODO: Implement when we're determining longest pause again
+        del bq_call["call_transcription"]
+        del bq_call["call_transcription_fragment"]
+        del bq_call["practice_id"]
+        del bq_call["insert_timestamp"]
+        # del bq_call["site_id"]
 
-            defaults.update(call)
+        defaults.update(bq_call)
 
-            peerlogic_api_call, created = Call.objects.update_or_create(pk=call_id, defaults=defaults)
-            if created:
-                self.stdout.write(self.style.SUCCESS(f"Created call with pk='{peerlogic_api_call.pk}'"))
+        peerlogic_api_call, created = Call.objects.update_or_create(pk=call_id, defaults=defaults)
+        if created:
+            self.stdout.write(self.style.SUCCESS(f"Created call with pk='{peerlogic_api_call.pk}'"))
 
-            self.stdout.write(self.style.SUCCESS(f"Updated and working with Peerlogic Call {peerlogic_api_call.pk}"))
+        self.stdout.write(self.style.SUCCESS(f"Updated and working with Peerlogic Call {peerlogic_api_call.pk}"))
 
-            self._load_agent_call_scores(call_agent_interactions, peerlogic_api_call)
-            self._load_call_sentiment(call_sentiment, peerlogic_api_call)
-            self._load_call_purposes_and_outcomes_with_outcome_reasons(call_purpose, peerlogic_api_call)
-            self._load_non_agent_engagement_persona_info(non_agent_engagement_persona_info, peerlogic_api_call)
-            # Mentioned
-            self._load_company_mentioned(call_company_mentioned, peerlogic_api_call)
-            self._load_insurance_mentioned(call_insurance_mentioned, peerlogic_api_call)
-            self._load_procedure_mentioned(call_procedure_mentioned, peerlogic_api_call)
-            self._load_product_mentioned(call_product_mentioned, peerlogic_api_call)
-            self._load_symptom_mentioned(call_symptom_mentioned, peerlogic_api_call)
+        self._load_agent_call_scores(call_agent_interactions, peerlogic_api_call)
+        self._load_call_sentiment(call_sentiment, peerlogic_api_call)
+        self._load_call_purposes_and_outcomes_with_outcome_reasons(call_purpose, peerlogic_api_call)
+        self._load_non_agent_engagement_persona_info(non_agent_engagement_persona_info, peerlogic_api_call)
+        # Mentioned
+        self._load_company_mentioned(call_company_mentioned, peerlogic_api_call)
+        self._load_insurance_mentioned(call_insurance_mentioned, peerlogic_api_call)
+        self._load_procedure_mentioned(call_procedure_mentioned, peerlogic_api_call)
+        self._load_product_mentioned(call_product_mentioned, peerlogic_api_call)
+        self._load_symptom_mentioned(call_symptom_mentioned, peerlogic_api_call)
 
     def _load_agent_call_scores(self, call_agent_interactions, call):
 
@@ -162,7 +161,7 @@ class Command(BaseCommand):
     def _load_company_mentioned(self, call_company_mentioned: Dict, call: Call) -> None:
 
         for company in call_company_mentioned:
-            keyword = company["call_company_keyword"]
+            keyword = company.get("call_company_keyword")
             if not keyword:
                 continue
 
@@ -178,7 +177,7 @@ class Command(BaseCommand):
     def _load_insurance_mentioned(self, call_insurance_mentioned: Dict, call: Call) -> None:
 
         for insurance in call_insurance_mentioned:
-            keyword = insurance["call_insurance_keyword"]
+            keyword = insurance.get("call_insurance_keyword")
             if not keyword:
                 continue
 
@@ -194,7 +193,7 @@ class Command(BaseCommand):
     def _load_procedure_mentioned(self, call_procedure_mentioned: Dict, call: Call) -> None:
 
         for procedure in call_procedure_mentioned:
-            keyword = procedure["call_procedure_keyword"]
+            keyword = procedure.get("call_procedure_keyword")
             if not keyword:
                 continue
 
@@ -210,7 +209,7 @@ class Command(BaseCommand):
     def _load_symptom_mentioned(self, call_symptom_mentioned: Dict, call: Call) -> None:
 
         for symptom in call_symptom_mentioned:
-            keyword = symptom["call_symptom_keyword"]
+            keyword = symptom.get("call_symptom_keyword")
             if not keyword:
                 continue
 
@@ -226,7 +225,7 @@ class Command(BaseCommand):
     def _load_product_mentioned(self, call_product_mentioned: Dict, call: Call) -> None:
 
         for product in call_product_mentioned:
-            keyword = product["call_product_keyword"]
+            keyword = product.get("call_product_keyword")
             if not keyword:
                 continue
 
@@ -372,4 +371,6 @@ class Command(BaseCommand):
             "n/a": ReferralSourceTypes.NOT_APPLICABLE,
         }
         referral_source_type = BQ_TO_PEERLOGIC_API_REFERRAL_SOURCE_TYPE_MAP.get(bq_referral_source.get("referral_source_type"))
+        if not referral_source_type:
+            referral_source_type = ReferralSourceTypes.NOT_APPLICABLE
         return referral_source_type
