@@ -6,6 +6,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 
 
+from google.cloud import storage
 from oauth2_provider.models import (
     get_application_model,
 )
@@ -48,20 +49,27 @@ class Command(BaseCommand):
 
         month = options["month"]
         starting_blobname = options["starting_blobname"]
-        started_first_file = False
 
         self.stdout.write(f"Loading blobs with options['month']={month}, starting at options['starting_blobname']='{starting_blobname}'")
-        bucket = settings.CLOUD_STORAGE_CLIENT.bucket(settings.BUCKET_NAME_BQ_CALL_ANALYTICS_EXTRACTS)
-        for blob in bucket.list_blobs(prefix=month):
+        bucket = storage.Bucket(settings.CLOUD_STORAGE_CLIENT, settings.BUCKET_NAME_BQ_CALL_ANALYTICS_EXTRACTS)
+
+        # List the objects stored in your Cloud Storage buckets, which are ordered in the list lexicographically by name.
+        # https://cloud.google.com/storage/docs/listing-objects
+        # No need to sort filename
+        blob_list = list(settings.CLOUD_STORAGE_CLIENT.list_blobs(bucket, prefix=month))
+        blob_name_list = [blob.name for blob in blob_list]
+        try:
+            starting_index = blob_name_list.index(starting_blobname)
+            blob_list = blob_list[starting_index:]
+            self.stdout.write(f"Starting with blob file named {blob_list[0]}")
+        except ValueError:
+            pass
+
+        for blob in blob_list:
             file_name = blob.name
             if blob.size == 0:
                 self.stdout.write(f"Skipping blob named {file_name}. Blob size is zero.")
                 continue
-            if starting_blobname and file_name != starting_blobname and not started_first_file:
-                self.stdout.write(f"Skipping blob named {file_name}.")
-                continue
-            else:
-                started_first_file = True
             with blob.open(mode="r") as f:
                 line_count = 0
                 for line in f:
