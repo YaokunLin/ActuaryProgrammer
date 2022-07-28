@@ -6,7 +6,6 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 
 
-from gcloud.storage import Client, Bucket
 from oauth2_provider.models import (
     get_application_model,
 )
@@ -46,7 +45,6 @@ class Command(BaseCommand):
             self.stderr.write(f"Practice practice_id='{options['practice_id']}' does not exist! Exiting.")
             exit(2)
 
-        # TODO: Load from Cloud Storage bucket instead of locally
         month = options["month"]
         self.stdout.write(f"Loading file options['month']={month}")
 
