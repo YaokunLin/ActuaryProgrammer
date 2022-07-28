@@ -6,6 +6,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand
 
 
+from google.cloud import storage
 from oauth2_provider.models import (
     get_application_model,
 )
@@ -34,8 +35,9 @@ class Command(BaseCommand):
     help = "Loads Peerlogic API with jsonl values extracted from BigQuery call table."
 
     def add_arguments(self, parser):
-        parser.add_argument("month", type=str)  # month is <YYYY-MM>
+        parser.add_argument("month", type=str, help="month string is <YYYY-MM>")
         parser.add_argument("practice_id", type=str)
+        parser.add_argument("--starting-blobname", type=str, help="format is <YYYY-MM/000000000002.json>")
 
     def handle(self, *args, **options):
         self.stdout.write(f"Going to database to obtain practice object for practice_id='{options['practice_id']}")
@@ -46,21 +48,40 @@ class Command(BaseCommand):
             exit(2)
 
         month = options["month"]
-        self.stdout.write(f"Loading file options['month']={month}")
+        starting_blobname = options["starting_blobname"]
 
-        self.stdout.write(f"Loaded file for {month}")
-        bucket = settings.CLOUD_STORAGE_CLIENT.bucket(settings.BUCKET_NAME_BQ_CALL_ANALYTICS_EXTRACTS)
-        for blob in bucket.list_blobs(prefix=month):
+        self.stdout.write(f"Loading blobs with options['month']={month}, starting at options['starting_blobname']='{starting_blobname}'")
+        bucket = storage.Bucket(settings.CLOUD_STORAGE_CLIENT, settings.BUCKET_NAME_BQ_CALL_ANALYTICS_EXTRACTS)
+
+        # List the objects stored in your Cloud Storage buckets, which are ordered in the list lexicographically by name.
+        # https://cloud.google.com/storage/docs/listing-objects
+        # No need to sort filename
+        blob_list = list(settings.CLOUD_STORAGE_CLIENT.list_blobs(bucket, prefix=month))
+        blob_name_list = [blob.name for blob in blob_list]
+        try:
+            starting_index = blob_name_list.index(starting_blobname)
+            blob_list = blob_list[starting_index:]
+            self.stdout.write(f"Starting with blob file named {blob_list[0]}")
+        except ValueError:
+            pass
+
+        for blob in blob_list:
+            file_name = blob.name
             if blob.size == 0:
+                self.stdout.write(f"Skipping blob named {file_name}. Blob size is zero.")
                 continue
             with blob.open(mode="r") as f:
+                line_count = 0
                 for line in f:
                     bq_call = json.loads(line)
+                    line_count += 1
+                    self.stdout.write(f"Getting or creating call with bq_call['call_id']='{bq_call['call_id']}'")
+                    self.stdout.write(f"Progress made so far: file_name='{file_name}', line number {line_count} of unknown amount of lines.'")
+
                     self.load_call_and_analytics_dict(bq_call, practice)
 
     def load_call_and_analytics_dict(self, bq_call: Dict, practice: Practice) -> None:
         call_id = bq_call.pop("call_id")
-        self.stdout.write(f"Getting or creating call with call['call_id']='{call_id}'")
         defaults = {}
         defaults.update(
             {
