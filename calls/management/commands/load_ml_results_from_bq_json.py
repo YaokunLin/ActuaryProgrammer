@@ -59,9 +59,6 @@ class Command(BaseCommand):
                 continue
             if starting_blobname and file_name != starting_blobname and not started_first_file:
                 self.stdout.write(f"Skipping blob named {file_name}.")
-                print(starting_blobname)
-                print(file_name)
-                print(started_first_file)
                 continue
             else:
                 started_first_file = True
