@@ -35,7 +35,7 @@ class Command(BaseCommand):
     help = "Loads Peerlogic API with jsonl values extracted from BigQuery call table."
 
     def add_arguments(self, parser):
-        parser.add_argument("month", type=str) # month is <YYYY-MM>
+        parser.add_argument("month", type=str)  # month is <YYYY-MM>
         parser.add_argument("practice_id", type=str)
 
     def handle(self, *args, **options):
@@ -47,10 +47,8 @@ class Command(BaseCommand):
             exit(2)
 
         # TODO: Load from Cloud Storage bucket instead of locally
-        self.stdout.write(f"Loading file options['month']={options['month']}")
         month = options["month"]
-
-        calls = None
+        self.stdout.write(f"Loading file options['month']={month}")
 
         self.stdout.write(f"Loaded file for {month}")
         bucket = settings.CLOUD_STORAGE_CLIENT.bucket(settings.BUCKET_NAME_BQ_CALL_ANALYTICS_EXTRACTS)
@@ -61,7 +59,6 @@ class Command(BaseCommand):
                 for line in f:
                     bq_call = json.loads(line)
                     self.load_call_and_analytics_dict(bq_call, practice)
-                exit()
 
     def load_call_and_analytics_dict(self, bq_call: Dict, practice: Practice) -> None:
         self.stdout.write(f"Getting or creating call with call['call_id']='{bq_call['call_id']}'")
