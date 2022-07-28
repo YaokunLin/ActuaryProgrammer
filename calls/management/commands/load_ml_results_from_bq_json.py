@@ -61,8 +61,8 @@ class Command(BaseCommand):
                     self.load_call_and_analytics_dict(bq_call, practice)
 
     def load_call_and_analytics_dict(self, bq_call: Dict, practice: Practice) -> None:
-        self.stdout.write(f"Getting or creating call with call['call_id']='{bq_call['call_id']}'")
         call_id = bq_call.pop("call_id")
+        self.stdout.write(f"Getting or creating call with call['call_id']='{call_id}'")
         defaults = {}
         defaults.update(
             {
