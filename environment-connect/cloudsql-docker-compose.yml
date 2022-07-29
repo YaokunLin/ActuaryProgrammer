@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  api:
+    build: ..
+    volumes:
+      - ..:/app
+    ports:
+      - 8000:8000
+      - 5432:5432
+    env_file:
+      - .env.dev
+    environment:
+      - PORT=8000
+      - WAIT_HOSTS_TIMEOUT=300
+      - WAIT_SLEEP_INTERVAL=30
+      - WAIT_HOST_CONNECT_TIMEOUT=30
+      - DB_HOST=host.docker.internal
