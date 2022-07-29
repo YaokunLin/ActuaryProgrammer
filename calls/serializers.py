@@ -3,6 +3,8 @@ import logging
 from django_countries.serializers import CountryFieldMixin
 from rest_framework import serializers
 
+from calls.inline_serializers import InlineAgentEngagedWithSerializer, InlineCallMentionedProductSerializer, InlineCallPurposeSerializer
+
 from .models import Call, CallAudio, CallAudioPartial, CallLabel, CallPartial, CallTranscript, CallTranscriptPartial, TelecomCallerNameInfo
 
 # Get an instance of a logger
@@ -10,9 +12,19 @@ log = logging.getLogger(__name__)
 
 
 class CallSerializer(serializers.ModelSerializer):
-    domain = serializers.CharField(required=False)
+    # TODO: fix multiple agent_engaged_with with same type value
+    engaged_in_calls = InlineAgentEngagedWithSerializer(many=True, read_only=True)
+    # TODO: fix both urls (LISTEN)
     latest_audio_signed_url = serializers.CharField(allow_null=True, required=False)
     latest_transcript_signed_url = serializers.CharField(allow_null=True, required=False)
+    # TODO: fix multiple call_purposes with same type value
+    call_purposes = InlineCallPurposeSerializer(many=True, read_only=True)
+    # Include outcome and outcome reasons
+    mentioned_procedures = InlineCallMentionedProductSerializer(many=True, read_only=True)
+    # TODO: Value calculations
+    total_value = serializers.ReadOnlyField()
+
+    domain = serializers.CharField(required=False)  # TODO: deprecate
 
     class Meta:
         model = Call

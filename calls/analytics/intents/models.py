@@ -70,16 +70,18 @@ class CallMentionedInsurance(AuditTrailModel):
 class CallMentionedProcedure(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="procedure mentioned during a call", related_name="mentioned_procedures")
+    procedure_keyword = models.ForeignKey("ProcedureKeyword", to_field="keyword", on_delete=models.SET_NULL, null=True, db_constraint=False)
     keyword = models.CharField(
         max_length=50, db_index=True, blank=True
     )  # not a formal ForeignKey but will be referenced by ProcedureKeyword, kept as-is so we don't have to have mappings to still extract entities
 
 
 class ProcedureKeyword(AuditTrailModel):
+    # TODO: fix related name
     procedure = models.ForeignKey(
         "care.Procedure", on_delete=models.SET_NULL, verbose_name="procedures associated with a keyword", related_name="keywords", null=True
     )
-    keyword = models.CharField(max_length=50, db_index=True, blank=True)
+    keyword = models.CharField(max_length=50, unique=True, db_index=True, blank=True)
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["procedure", "keyword"], name="unique keyword mapping")]

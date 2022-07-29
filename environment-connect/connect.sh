@@ -15,4 +15,3 @@ COMMAND=$@
 gcloud config configurations activate peerlogic-api-$ENVIRONMENT
 
 docker-compose -f ./environment-connect/cloudsql-docker-compose.yml run api $COMMAND
-

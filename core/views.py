@@ -4,7 +4,6 @@ from django.conf import settings
 from django.db import transaction
 from django.http import (
     HttpRequest,
-    HttpResponseBadRequest,
 )
 from django.utils import timezone
 from django.utils.translation import ugettext as _
@@ -13,7 +12,6 @@ from rest_framework import viewsets
 from rest_framework.exceptions import (
     APIException,
     AuthenticationFailed,
-    NotAuthenticated,
     ParseError,
     PermissionDenied,
 )

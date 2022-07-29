@@ -4,15 +4,22 @@ from typing import Dict, List, Union
 
 from django.conf import settings
 from django.db import DatabaseError, transaction
+
+from django.db.models import Count, ExpressionWrapper, F, FloatField, Sum, Exists, OuterRef, Q, Value as V, Subquery, TextField, Case, When
+from django.db.models.functions import Coalesce, Concat
+from django.db.models.expressions import Case, RawSQL, When
 from django.http import Http404, HttpResponseBadRequest
+
 from google.api_core.exceptions import PermissionDenied
 from phonenumber_field.modelfields import to_python as to_phone_number
 from rest_framework import status, views, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
+from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
+
 from twilio.base.exceptions import TwilioException
 from calls.publishers import publish_call_audio_partial_saved, publish_call_audio_saved, publish_call_transcript_saved
 
@@ -26,6 +33,7 @@ from calls.analytics.participants.field_choices import (
     EngagementPersonaTypes,
     NonAgentEngagementPersonaTypes,
 )
+from core.models import Agent
 from .field_choices import (
     AudioCodecType,
     CallAudioFileStatusTypes,
@@ -91,8 +99,29 @@ class CallFieldChoicesView(views.APIView):
 
 
 class CallViewset(viewsets.ModelViewSet):
-    queryset = Call.objects.all().order_by("-created_at")
+    queryset = Call.objects.all().order_by("-call_start_time")
     serializer_class = CallSerializer
+
+    def get_queryset(self):
+
+        query_set = Call.objects.none()
+
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            query_set = Call.objects.all()
+        elif self.request.method in SAFE_METHODS:
+            # Can see any practice's calls if you are an assigned agent to a practice
+            practice_ids = Agent.objects.filter(user=self.request.user.id).values("practice_id")
+            query_set = Call.objects.filter(practice__id__in=practice_ids)
+
+        query_set.select_related("engaged_in_calls").select_related("call_purposes__outcome_results__outcome_reason_results").select_related(
+            "mentioned_procedures__procedure_keyword__procedure"
+        )  # TODO: Figure out total_value annotation below
+        # .annotate(
+        #     total_value=Coalesce(
+        #         Sum("mentioned_procedures__procedure_keyword__procedure__procedure_price_average_in_usd"), V(0)
+        #     )
+        # )
+        return query_set.order_by("-call_start_time")
 
 
 class GetCallAudioPartial(ListAPIView):
