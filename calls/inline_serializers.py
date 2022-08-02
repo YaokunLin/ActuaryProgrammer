@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from calls.analytics.intents.models import CallMentionedProcedure, CallOutcome, CallOutcomeReason, CallPurpose
 from calls.analytics.participants.models import AgentEngagedWith
+from calls.analytics.transcripts.models import CallSentiment
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -32,6 +33,13 @@ class InlineCallPurposeSerializer(serializers.ModelSerializer):
         model = CallPurpose
         fields = ["id", "call_purpose_type", "outcome_results"]
         read_only_fields = ["id", "call_purpose_type"]
+
+
+class InlineCallSentimentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CallSentiment
+        fields = ["id", "overall_sentiment_score", "caller_sentiment_score", "caller_sentiment_score"]
+        read_only_fields = ["id", "overall_sentiment_score", "caller_sentiment_score", "caller_sentiment_score"]
 
 
 class InlineAgentEngagedWithSerializer(serializers.ModelSerializer):

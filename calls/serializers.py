@@ -3,7 +3,12 @@ import logging
 from django_countries.serializers import CountryFieldMixin
 from rest_framework import serializers
 
-from calls.inline_serializers import InlineAgentEngagedWithSerializer, InlineCallMentionedProductSerializer, InlineCallPurposeSerializer
+from calls.inline_serializers import (
+    InlineAgentEngagedWithSerializer,
+    InlineCallMentionedProductSerializer,
+    InlineCallPurposeSerializer,
+    InlineCallSentimentSerializer,
+)
 
 from .models import Call, CallAudio, CallAudioPartial, CallLabel, CallPartial, CallTranscript, CallTranscriptPartial, TelecomCallerNameInfo
 
@@ -21,6 +26,8 @@ class CallSerializer(serializers.ModelSerializer):
     call_purposes = InlineCallPurposeSerializer(many=True, read_only=True)
     # Include outcome and outcome reasons
     mentioned_procedures = InlineCallMentionedProductSerializer(many=True, read_only=True)
+    call_sentiments = InlineCallSentimentSerializer(many=True, read_only=True)
+
     # TODO: Value calculations
     total_value = serializers.ReadOnlyField()
 
