@@ -40,14 +40,14 @@ def insert_agent_score_groups(apps, schema_editor):
     AgentCallScoreMetric = apps.get_model("calls", "AgentCallScoreMetric")
     for metric, group in METRIC_TO_GROUP_MAP.items():
         print(f"Inserting: {metric.name} {metric.value} {metric.label}")
-        agent_call_score_metric, created = AgentCallScoreMetric.objects.get_or_create(metric=metric.name, group=group)
+        agent_call_score_metric, created = AgentCallScoreMetric.objects.get_or_create(metric=metric.value, group=group)
 
 
 def reverse_agent_score_groups(apps, schema_editor):
     AgentCallScoreMetric = apps.get_model("calls", "AgentCallScoreMetric")
     for metric, group in METRIC_TO_GROUP_MAP.items():
         print(f"Removing: {metric.name} {metric.value} {metric.label}")
-        agent_call_score_metric = AgentCallScoreMetric.objects.get(metric=metric.name, group=group)
+        agent_call_score_metric = AgentCallScoreMetric.objects.get(metric=metric.value, group=group)
         agent_call_score_metric.delete()
 
 
@@ -60,4 +60,3 @@ class Migration(migrations.Migration):
     operations = [
         migrations.RunPython(insert_agent_score_groups, reverse_agent_score_groups),
     ]
-
