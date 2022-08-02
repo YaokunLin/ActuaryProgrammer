@@ -5,39 +5,39 @@ from django.utils.translation import gettext_lazy as _
 class AgentInteractionGroupType(models.TextChoices):
     INTRO = "Introduction"
     SURVEY = "Survey"
-    SCORE = "Score"
+    SELLING = "Selling"
     RAPPORT = "Rapport"
     CONVERT = "Convert"
 
 
 class AgentInteractionMetricTypes(models.TextChoices):
     # Intro
-    GREETING = "Clear Well Spoken Greeting"
-    ANNOUNCED_NAME = "Announced Name"
-    OFFERED_ASSISTANCE = "Offered Assistance"
-    STATED_BUSINESS_NAME = "Stated Business Name"
+    GREETING = "GREETING", _("Clear Well Spoken Greeting")
+    ANNOUNCED_NAME = "ANNOUNCED_NAME", _("Announced Name")
+    OFFERED_ASSISTANCE = "OFFERED_ASSISTANCE", _("Offered Assistance")
+    STATED_BUSINESS_NAME = "STATED_BUSINESS_NAME", _("Stated Business Name")
     
     # Survey
-    COLLECTED_PATIENT_NAME = "Asked for the Patient's Name"
-    COLLECTED_PATIENT_CONTACT_INFO = "Asked for the Patient's Contact Information"
-    COLLECTED_PATIENT_PURPOSE = "Asked for the Patient's Purpose"
-    ASKED_REFERRING_SOURCE = "Asked About Referring Source"
+    ASKED_PATIENT_NAME = "ASKED_PATIENT_NAME", _("Asked for the Patient's Name")
+    ASKED_PATIENT_CONTACT_INFO = "ASKED_PATIENT_CONTACT_INFO", _("Asked for the Patient's Contact Information")
+    ASKED_PATIENT_PURPOSE = "ASKED_PATIENT_PURPOSE", _("Asked for the Patient's Purpose")
+    ASKED_REFERRING_SOURCE = "ASKED_REFERRING_SOURCE", _("Asked About Referring Source")
 
-    # Score
-    DISCUSSED_PROCEDURE = "Discussed Procedure Information"
-    DISCUSSED_INSURANCE_COVERAGE = "Discussed Insurance Coverage"
-    DISCUSSED_FINANCING = "Discussed Financing / Discount Club / Payment Plans"
-    OFFERED_FREE_CONSULTATION = "Offered a Free Consultation"
+    # Selling
+    MENTIONED_PROCEDURE = "MENTIONED_PROCEDURE", _("Mentioned Procedure Information")
+    MENTIONED_INSURANCE_COVERAGE = "MENTIONED_INSURANCE_COVERAGE", _("Mentioned Insurance Coverage")
+    MENTIONED_FINANCING = "MENTIONED_FINANCING", _("Mentioned Financing / Discount Club / Payment Plans")
+    OFFERED_FREE_CONSULTATION = "OFFERED_FREE_CONSULTATION", _("Offered a Free Consultation")
     
     # Rapport
-    AGENT_OVERTALK = "Listened Enough (Limited Overtalk)"
-    HOLD_TIME = "Acceptable Hold Time Length"
-    ASKED_ABOUT_DISCOMFORT = "Asked About Discomfort"
-    DISCUSSED_PRICING = "Discussed Pricing"
+    AGENT_OVERTALK = "AGENT_OVERTALK", _("Listened Enough (Limited Overtalk)")
+    HOLD_TIME = "HOLD_TIME", _("Acceptable Hold Time Length")
+    ASKED_ABOUT_DISCOMFORT = "ASKED_ABOUT_DISCOMFORT", _("Asked About Discomfort")
+    MENTIONED_PRICING = "MENTIONED_PRICING", _("Mentioned Pricing")
     
     # Convert
-    OFFERED_APPOINTMENT_DATE_TIME =  "Offered Appointment Date / Time"
-    BOOKED_APPOINTMENT = "Booked the Appointment"  # unsure as to whether to keep this since it's a metric elsewhere / separate from agents specifically
+    OFFERED_APPOINTMENT_DATE_TIME = "OFFERED_APPOINTMENT_DATE_TIME", _("Offered Appointment Date / Time")
+    BOOKED_APPOINTMENT = "BOOKED_APPOINTMENT", _("Booked the Appointment")  # unsure as to whether to keep this since it's a metric elsewhere / separate from agents specifically
 
 
 class AgentInteractionOvertalkMetricTypes(models.TextChoices):
