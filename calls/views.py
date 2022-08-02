@@ -126,7 +126,7 @@ class CallViewset(viewsets.ModelViewSet):
             practice_ids = Agent.objects.filter(user=self.request.user.id).values("practice_id")
             query_set = Call.objects.filter(practice__id__in=practice_ids)
 
-        query_set.select_related("engaged_in_calls").select_related("call_purposes__outcome_results__outcome_reason_results")
+        query_set.select_related("engaged_in_calls").select_related("call_purposes__outcome_results__outcome_reason_results").select_related("call_sentiments")
         # TODO: Figure out total_value annotation below
 
         return query_set.order_by("-call_start_time")
