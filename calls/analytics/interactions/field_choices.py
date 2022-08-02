@@ -29,7 +29,7 @@ class AgentInteractionMetricTypes(models.TextChoices):
     
     # Convert
     OFFERED_APPOINTMENT_DATE_TIME =  "Offered Appointment Date / Time"
-    BOOKED_APPOINTMENT = "Booked the Appointment"  # unsure as to whether to keep this since it's a duplicate
+    BOOKED_APPOINTMENT = "Booked the Appointment"  # unsure as to whether to keep this since it's a metric elsewhere / separate from agents specifically
 
 
 class AgentInteractionGroupType(models.TextChoices):
