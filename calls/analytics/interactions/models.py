@@ -10,9 +10,23 @@ from core.models import Agent
 log = logging.getLogger(__name__)
 
 
+class AgentCallScoreMetricGroup(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    group_name = models.CharField(max_length=120)
+
+
+class AgentCallScoreMetric(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    metric = models.CharField(choices=AgentInteractionMetricTypes.choices, max_length=180)
+    metric_human_readable = models.CharField(max_length=120)  # be aware this is for display purposes so lengths should be reasonable
+    group = models.ForeignKey(AgentCallScoreMetricGroup, on_delete=models.CASCADE, related_name="agent_call_score_metrics")
+
+
+
 class AgentCallScore(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="Interactions during the call", related_name="call_interactions")
-    metric = models.CharField(choices=AgentInteractionMetricTypes.choices, max_length=180)
+    metric = models.ForeignKey(AgentCallScoreMetric, on_delete=models.CASCADE, related_name="agent_call_scores")
     score = models.FloatField()
     raw_model_run_id = models.CharField(max_length=22)
+    

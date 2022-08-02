@@ -26,3 +26,4 @@ class MLModelResultHistory(AuditTrailModel):
     run_id = models.CharField(max_length=22)
     label = models.CharField(max_length=150)
     score = models.FloatField(null=True)
+
