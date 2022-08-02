@@ -162,7 +162,9 @@ Google Cloud credentials are necessary to access the database. Your environment 
     GOOGLE_APPLICATION_CREDENTIALS=.credentials/peerlogic-api-dev-9d33d6f6e911.json  # THIS IS JUST AN EXAMPLE, YOURS WILL BE NAMED DIFFERENTLY.
     ```
 
-4. Build the necessary dependencies in a separate terminal window:
+4. Change the value in ./environment-connect/cloudsql-docker-compose.yml env_file to point at your `.env.dev`.
+
+5. Build the necessary dependencies in a separate terminal window:
 
    ```bash
    docker-compose -f ./environment-connect/cloudsql-docker-compose.yml up --build
