@@ -11,8 +11,17 @@ class AgentCallScoreMetricSerializer(serializers.ModelSerializer):
         fields = ["id", "metric", "group"]
 
 
-class AgentCallScoreSerializer(serializers.ModelSerializer):
+
+class AgentCallScoreReadSerializer(serializers.ModelSerializer):
     metric = AgentCallScoreMetricSerializer(required=True)
+
+    class Meta:
+        model = AgentCallScore
+        fields = "__all__"
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
+
+
+class AgentCallScoreWriteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AgentCallScore
