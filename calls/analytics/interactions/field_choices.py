@@ -3,31 +3,41 @@ from django.utils.translation import gettext_lazy as _
 
 
 class AgentInteractionMetricTypes(models.TextChoices):
-    PAYMENT_METHOD = "payment_method"
-    PATIENT_DEMOGRAPHICS = "patient_demographics"
-
+    # Intro
     GREETING = "Clear Well Spoken Greeting"
     ANNOUNCED_NAME = "Announced Name"
     OFFERED_ASSISTANCE = "Offered Assistance"
     STATED_BUSINESS_NAME = "Stated Business Name"
     
+    # Survey
     COLLECTED_PATIENT_NAME = "Asked for the Patient's Name"
     COLLECTED_PATIENT_CONTACT_INFO = "Asked for the Patient's Contact Information"
     COLLECTED_PAITENT_PURPOSE = "Asked for the Patient's Purpose"
     ASKED_REFERRING_SOURCE = "Asked About Referring Source"
 
+    # Score
     DISCUSSED_PROCEDURE = "Discussed Procedure Information"
     DISCUSSED_INSURANCE_COVERAGE = "Discussed Insurance Coverage"
     MENTIONED_FINANCING = "Mentioned Financing / Discount Club / Payment Plans"
     OFFERED_FREE_CONSULTATION = "Offered a Free Consultation"
     
+    # Rapport
     AGENT_OVERTALK = "Listened Enough (Limited Overtalk)"
     HOLD_TIME = "Acceptable Hold Time Length"
     ASKED_ABOUT_DISCOMFORT = "Asked About Discomfort"
     MENTIONED_PRICING = "Mentioned Pricing"
     
+    # Convert
     OFFERED_APPOINTMENT_DATE_TIME =  "Offered Appointment Date / Time"
     BOOKED_APPOINTMENT = "Booked the Appointment"  # unsure as to whether to keep this since it's a duplicate
+
+
+class AgentInteractionGroupType(models.TextChoices):
+    INTRO = "Introduction"
+    SURVEY = "Survey"
+    SCORE = "Score"
+    RAPPORT = "Rapport"
+    CONVERT = "Convert"
 
 
 class AgentInteractionOvertalkMetricTypes(models.TextChoices):
