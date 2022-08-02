@@ -34,6 +34,7 @@ from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 
 from twilio.base.exceptions import TwilioException
+from calls.filters import CallsFilter
 from calls.publishers import publish_call_audio_partial_saved, publish_call_audio_saved, publish_call_transcript_saved
 
 from core.file_upload import FileToUpload
@@ -118,6 +119,7 @@ class CallFieldChoicesView(views.APIView):
 class CallViewset(viewsets.ModelViewSet):
     queryset = Call.objects.all().order_by("-call_start_time")
     serializer_class = CallSerializer
+    filterset_class = CallsFilter
 
     def get_queryset(self):
 
