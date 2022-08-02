@@ -22,4 +22,3 @@ class AgentCallScore(AuditTrailModel):
     metric = models.ForeignKey(AgentCallScoreMetric, on_delete=models.CASCADE, related_name="agent_call_scores")
     score = models.FloatField()
     raw_model_run_id = models.CharField(max_length=22)
-    
