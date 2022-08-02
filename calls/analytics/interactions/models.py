@@ -10,13 +10,11 @@ from core.models import Agent
 log = logging.getLogger(__name__)
 
 
-
 class AgentCallScoreMetric(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     metric = models.CharField(choices=AgentInteractionMetricTypes.choices, max_length=180)
     group = models.CharField(choices=AgentInteractionGroupType.choices, max_length=180)
 
-    
 
 class AgentCallScore(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
