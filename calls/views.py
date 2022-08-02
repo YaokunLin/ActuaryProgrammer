@@ -2,14 +2,27 @@ import logging
 import re
 from typing import Dict, List, Union
 
+
 from django.conf import settings
 from django.db import DatabaseError, transaction
-
-from django.db.models import Count, ExpressionWrapper, F, FloatField, Sum, Exists, OuterRef, Q, Value as V, Subquery, TextField, Case, When
-from django.db.models.functions import Coalesce, Concat
+from django.db.models import (
+    Case,
+    Count,
+    Exists,
+    ExpressionWrapper,
+    F,
+    FloatField,
+    OuterRef,
+    Q,
+    Subquery,
+    Sum,
+    TextField,
+    Value as V,
+    When
+)
 from django.db.models.expressions import Case, RawSQL, When
+from django.db.models.functions import Coalesce, Concat
 from django.http import Http404, HttpResponseBadRequest
-
 from google.api_core.exceptions import PermissionDenied
 from phonenumber_field.modelfields import to_python as to_phone_number
 from rest_framework import status, views, viewsets
