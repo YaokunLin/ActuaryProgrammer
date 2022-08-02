@@ -2,6 +2,14 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 
+class AgentInteractionGroupType(models.TextChoices):
+    INTRO = "Introduction"
+    SURVEY = "Survey"
+    SCORE = "Score"
+    RAPPORT = "Rapport"
+    CONVERT = "Convert"
+
+
 class AgentInteractionMetricTypes(models.TextChoices):
     # Intro
     GREETING = "Clear Well Spoken Greeting"
@@ -30,14 +38,6 @@ class AgentInteractionMetricTypes(models.TextChoices):
     # Convert
     OFFERED_APPOINTMENT_DATE_TIME =  "Offered Appointment Date / Time"
     BOOKED_APPOINTMENT = "Booked the Appointment"  # unsure as to whether to keep this since it's a metric elsewhere / separate from agents specifically
-
-
-class AgentInteractionGroupType(models.TextChoices):
-    INTRO = "Introduction"
-    SURVEY = "Survey"
-    SCORE = "Score"
-    RAPPORT = "Rapport"
-    CONVERT = "Convert"
 
 
 class AgentInteractionOvertalkMetricTypes(models.TextChoices):
