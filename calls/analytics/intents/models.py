@@ -72,7 +72,7 @@ class CallMentionedProcedure(AuditTrailModel):
     call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="procedure mentioned during a call", related_name="mentioned_procedures")
     keyword = models.CharField(
         max_length=50, db_index=True, blank=True
-    )  # not a formal ForeignKey but will be referenced by ProcedureKeyword, kept as-is so we don't have to have mappings to still extract entities
+    )  # not a formal ForeignKey but will be referenced by ProcedureKeyword. We need to extract and store entities from a call even if we don't have an entry in Procedures
 
 
 class ProcedureKeyword(AuditTrailModel):
