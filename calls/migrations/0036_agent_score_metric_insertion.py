@@ -7,7 +7,7 @@ from calls.analytics.interactions.field_choices import AgentInteractionGroupType
 
 # DO NOT USE THIS IN THE CODE
 # THIS IS SUPPOSED TO BE CONFIGURED VIA THE RDBMS
-# THIS ONLY OCCURS HERE FOR FIRST
+# THIS ONLY OCCURS HERE FOR FIRST INSERT
 METRIC_TO_GROUP_MAP = {
     AgentInteractionMetricTypes.GREETING: AgentInteractionGroupType.INTRO,
     AgentInteractionMetricTypes.ANNOUNCED_NAME: AgentInteractionGroupType.INTRO,
