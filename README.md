@@ -128,7 +128,7 @@ Creation of credentials requires us to be local / on the same network as the env
 
 1. Download the appropriate credentials file to access the environment via IAM. Place this somewhere that is secure and you won't forget it. You'll need to use this later.
 
-2. Create or activate the google cloud environment
+2. Create a google cloud environment
 
     Either this with the appropriate values at the prompts:
 
@@ -136,11 +136,10 @@ Creation of credentials requires us to be local / on the same network as the env
     gcloud init
     ```
 
-    Or this:
+    When it asks to pick a configuration, select `[2] Create a new configuration`.
 
-    ```bash
-    gcloud config configuration activate peerlogic-api-dev
-    ```
+    Name it `peerlogic-api-dev`, `peerlogic-api-stage` or `peerlogic-api-prod` depending on which project you choose. Select us-west4a as the Compute Region/Zone.
+
 
 3. Enter the google cloud environment to access the database with cloud sql proxy
 
@@ -154,29 +153,19 @@ Google Cloud credentials are necessary to access the database. Your environment 
 
 1. Ensure you have a copy of the appropriate deployment's environment. Use Secret Manager of the appropriate environment to download a copy.
 
-2. Backup your local .env
+2. Place into the ./environment-connect/ directory the downloaded .env file with its enviromment shorthand as a suffix such as ./environment-connect/.env.dev for example.
 
-    ```bash
-    mv .env .env.local
-    ```
-
-3. Rename the environment configuration to .env so you can use it.
-
-    ```bash
-    cp .env.dev .env
-    ```
-
-4. Update the .env file to use the google credentials file.
+3. Update the .env file to use the google credentials file.
 
     ```bash
     PROJECT_ID=peerlogic-api-dev # put your env here
     GOOGLE_APPLICATION_CREDENTIALS=.credentials/peerlogic-api-dev-9d33d6f6e911.json  # THIS IS JUST AN EXAMPLE, YOURS WILL BE NAMED DIFFERENTLY.
     ```
 
-5. Build the necessary dependencies in a separate terminal window:
+4. Build the necessary dependencies in a separate terminal window:
 
    ```bash
-   docker-compose -f ./devtools/cloudsql-docker-compose.yml up --build
+   docker-compose -f ./environment-connect/cloudsql-docker-compose.yml up --build
    ```
 
 ## Management Command - Create Netsapiens subscription
@@ -186,14 +175,14 @@ Google Cloud credentials are necessary to access the database. Your environment 
 2. Run the creation command:
 
     ```bash
-    docker-compose -f ./devtools/cloudsql-docker-compose.yml run api python3 manage.py create_netsapiens_integration {peerlogic_root_api_url}, {voip_provider_id}, {practice_name}, {practice_voip_domain}
+    ./environment-connect/connect.sh dev run api python3 manage.py create_netsapiens_integration {peerlogic_root_api_url}, {voip_provider_id}, {practice_name}, {practice_voip_domain}
     ```
 
 
     NOTE: double check the peerlogic_root_api_url. It's not as easy as just swapping out "dev", "stage", and "prod" as the subdomains themselves are different!
 
     ```bash
-    docker-compose -f ./devtools/cloudsql-docker-compose.yml run api python3 manage.py create_netsapiens_integration https://peerlogic-api-prod.wm.r.appspot.com drFoXEnEwrN28Gowp3CoRN "Thunderbird Dental Studio" dentaldesignstudios_thunderbird
+    ./environment-connect/connect.sh dev run api python3 manage.py create_netsapiens_integration https://peerlogic-api-prod.wm.r.appspot.com drFoXEnEwrN28Gowp3CoRN "Thunderbird Dental Studio" dentaldesignstudios_thunderbird
     ```
 
 ## Management Command - Create Client Credential Auth User
@@ -207,13 +196,13 @@ Google Cloud credentials are necessary to access the database. Your environment 
 3. Run the creation command:
 
     ```bash
-    docker-compose -f ./devtools/cloudsql-docker-compose.yml run api python3 manage.py create_auth0_client_credential_user {name}, {client_id}
+    ./environment-connect/connect.sh dev run api python3 manage.py create_auth0_client_credential_user {name}, {client_id}
     ```
 
     example:
 
     ```bash
-    docker-compose -f ./devtools/cloudsql-docker-compose.yml run api python3 manage.py create_auth0_client_credential_user auth0 NAWAyL0aOx6mw0kzLXXccSTKiSPJ4JqvuLE33qeX
+    ./environment-connect/connect.sh dev run api python3 manage.py create_auth0_client_credential_user auth0 NAWAyL0aOx6mw0kzLXXccSTKiSPJ4JqvuLE33qeX
     ```
 
     Take note of the id.

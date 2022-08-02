@@ -9,7 +9,7 @@ services:
       - 8000:8000
       - 5432:5432
     env_file:
-      - .env.dev
+      - .env.stage
     environment:
       - PORT=8000
       - WAIT_HOSTS_TIMEOUT=300
