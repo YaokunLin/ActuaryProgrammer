@@ -126,14 +126,9 @@ class CallViewset(viewsets.ModelViewSet):
             practice_ids = Agent.objects.filter(user=self.request.user.id).values("practice_id")
             query_set = Call.objects.filter(practice__id__in=practice_ids)
 
-        query_set.select_related("engaged_in_calls").select_related("call_purposes__outcome_results__outcome_reason_results").select_related(
-            "mentioned_procedures__procedure_keyword__procedure"
-        )  # TODO: Figure out total_value annotation below
-        # .annotate(
-        #     total_value=Coalesce(
-        #         Sum("mentioned_procedures__procedure_keyword__procedure__procedure_price_average_in_usd"), V(0)
-        #     )
-        # )
+        query_set.select_related("engaged_in_calls").select_related("call_purposes__outcome_results__outcome_reason_results")
+        # TODO: Figure out total_value annotation below
+
         return query_set.order_by("-call_start_time")
 
 
