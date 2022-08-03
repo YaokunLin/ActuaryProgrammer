@@ -319,6 +319,8 @@ AUTH0_MACHINE_CLIENT_ID = os.getenv("AUTH0_MACHINE_CLIENT_ID")
 AUTH0_MACHINE_USER_ID = os.getenv("AUTH0_MACHINE_USER_ID")
 
 
+# DRF
+MAX_PAGE_SIZE = os.getenv("MAX_PAGE_SIZE", 100)
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "core.authentication.NetsapiensJSONWebTokenAuthentication",
@@ -328,7 +330,7 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.BasicAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "DEFAULT_PAGINATION_CLASS": "core.pagination.IncludePageSizePagination",
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",
         "rest_framework.filters.SearchFilter",
