@@ -29,12 +29,16 @@ class IncludePageSizePagination(PageNumberPagination):
         response = Response(
             {
                 "meta": {
-                    "total_results": self.page.paginator.count,
-                    "total_pages": self.page.paginator.num_pages,
-                    "page_size": self.get_page_size(self.request),
                     "page": self.request.query_params.get(self.page_query_param, 1),
-                    "links": {"next": self.get_next_link(), "previous": self.get_previous_link()},
+                    "page_total": self.page.paginator.num_pages,
+                    "page_size": self.get_page_size(self.request),
+                    "results_total": self.page.paginator.count,
                     **self.extra_metadata,
+                },
+                "links": {
+                    "previous": self.get_previous_link(),
+                    "self": self.request.build_absolute_uri(),
+                    "next": self.get_next_link(),
                 },
                 "results": data,
             }
