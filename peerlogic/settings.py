@@ -320,7 +320,7 @@ AUTH0_MACHINE_USER_ID = os.getenv("AUTH0_MACHINE_USER_ID")
 
 
 # DRF
-MAX_PAGE_SIZE = 100
+MAX_PAGE_SIZE = os.getenv("MAX_PAGE_SIZE", 100)
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "core.authentication.NetsapiensJSONWebTokenAuthentication",
