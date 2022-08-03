@@ -1,4 +1,5 @@
 from rest_framework import viewsets
+from rest_framework.generics import ListAPIView
 from calls.analytics.intents.models import (
     CallMentionedCompany,
     CallMentionedInsurance,
@@ -12,6 +13,7 @@ from calls.analytics.intents.models import (
 from calls.analytics.intents.serializers import (
     CallMentionedCompanySerializer,
     CallMentionedInsuranceSerializer,
+    CallMentionedProcedureKeywordOnlySerializer,
     CallMentionedProductSerializer,
     CallMentionedProcedureSerializer,
     CallMentionedSymptomSerializer,
@@ -55,6 +57,11 @@ class CallMentionedProcedureViewset(viewsets.ModelViewSet):
     queryset = CallMentionedProcedure.objects.all().order_by("-modified_at")
     serializer_class = CallMentionedProcedureSerializer
     filter_fields = ["call__id", "keyword"]
+
+
+class CallMentionedProcedureDistinctView(ListAPIView):
+    queryset = CallMentionedProcedure.objects.all().distinct("keyword")
+    serializer_class = CallMentionedProcedureKeywordOnlySerializer
 
 
 class CallMentionedProductViewset(viewsets.ModelViewSet):
