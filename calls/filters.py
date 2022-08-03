@@ -4,8 +4,8 @@ from calls.models import Call
 
 
 class CallsFilter(filters.FilterSet):
-    sip_caller_number_search = filters.CharFilter(field_name="sip_caller_number", lookup_expr="icontains")
-    sip_callee_number_search = filters.CharFilter(field_name="sip_callee_number", lookup_expr="icontains")
+    sip_caller_number__startswith = filters.CharFilter(field_name="sip_caller_number", lookup_expr="startswith")
+    sip_callee_number__startswith = filters.CharFilter(field_name="sip_callee_number", lookup_expr="startswith")
 
     class Meta:
         model = Call
