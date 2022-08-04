@@ -5,6 +5,7 @@ from rest_framework_nested import routers
 from calls.analytics.intents.views import (
     CallMentionedCompanyViewset,
     CallMentionedInsuranceViewset,
+    CallMentionedProcedureDistinctView,
     CallMentionedProcedureViewset,
     CallMentionedProductViewset,
     CallMentionedSymptomViewset,
@@ -87,6 +88,7 @@ urlpatterns = [
     path(r"audio-partials/", GetCallAudioPartials.as_view(), name="audio-partials"),
     path(r"transcript-partials/<pk>/", GetCallTranscriptPartial.as_view(), name="transcript-partial"),
     path(r"transcript-partials/", GetCallTranscriptPartials.as_view(), name="transcript-partials"),
+    path(r"mentioned-procedures/", CallMentionedProcedureDistinctView.as_view(), name="mentioned-procedures"),
     path(r"", include(calls_app_root_router.urls)),
     path(r"", include(call_router.urls)),
     path(r"", include(call_partials_router.urls)),

@@ -54,6 +54,13 @@ class CallMentionedProcedureSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
+class CallMentionedProcedureKeywordOnlySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CallMentionedProcedure
+        fields = ["keyword"]
+        read_only_fields = ["keyword"]
+
+
 class CallMentionedProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = CallMentionedProduct
