@@ -41,6 +41,7 @@ class Call(AuditTrailModel):
     duration_seconds = models.DurationField()
     connect_duration_seconds = models.DurationField(null=True)
     progress_time_seconds = models.DurationField(null=True)
+    hold_time_seconds = models.DurationField(null=True)
     call_direction = models.CharField(choices=CallDirectionTypes.choices, max_length=50, db_index=True, blank=True)
     practice = models.ForeignKey(
         "core.Practice",
