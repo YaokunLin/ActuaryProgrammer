@@ -1,6 +1,13 @@
 from rest_framework import viewsets
-from calls.analytics.interactions.models import AgentCallScore
-from calls.analytics.interactions.serializers import AgentCallScoreReadSerializer, AgentCallScoreWriteSerializer
+from calls.analytics.interactions.models import (
+    AgentCallScore,
+    AgentCallScoreMetric,
+)
+from calls.analytics.interactions.serializers import (
+    AgentCallScoreMetricSerializer,
+    AgentCallScoreReadSerializer,
+    AgentCallScoreWriteSerializer,
+)
 
 
 class AgentCallScoreViewset(viewsets.ModelViewSet):
@@ -15,3 +22,8 @@ class AgentCallScoreViewset(viewsets.ModelViewSet):
             return self.serializer_class_write
 
         return self.serializer_class_read    
+
+
+class AgentCallScoreMetricViewset(viewsets.ModelViewSet):
+    queryset = AgentCallScoreMetric.objects.all().order_by("-modified_at")
+    serializer_class = AgentCallScoreMetricSerializer
