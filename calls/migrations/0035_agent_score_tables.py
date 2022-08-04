@@ -6,6 +6,79 @@ import django.db.models.deletion
 import django_extensions.db.fields
 import django_userforeignkey.models.fields
 
+from calls.analytics.interactions.field_choices import AgentInteractionGroupType, AgentInteractionMetricTypes
+
+
+# DO NOT USE THIS IN THE CODE
+# THIS IS SUPPOSED TO BE CONFIGURED VIA THE RDBMS
+# THIS ONLY OCCURS HERE FOR FIRST INSERT
+METRIC_TO_GROUP_MAP = {
+    AgentInteractionMetricTypes.GREETING: AgentInteractionGroupType.INTRO,
+    AgentInteractionMetricTypes.ANNOUNCED_NAME: AgentInteractionGroupType.INTRO,
+    AgentInteractionMetricTypes.OFFERED_ASSISTANCE: AgentInteractionGroupType.INTRO,
+    AgentInteractionMetricTypes.STATED_BUSINESS_NAME: AgentInteractionGroupType.INTRO,
+
+    AgentInteractionMetricTypes.ASKED_PATIENT_NAME: AgentInteractionGroupType.SURVEY,
+    AgentInteractionMetricTypes.ASKED_PATIENT_CONTACT_INFO: AgentInteractionGroupType.SURVEY,
+    AgentInteractionMetricTypes.ASKED_PATIENT_PURPOSE: AgentInteractionGroupType.SURVEY,
+    AgentInteractionMetricTypes.ASKED_REFERRING_SOURCE: AgentInteractionGroupType.SURVEY,
+
+    AgentInteractionMetricTypes.MENTIONED_PROCEDURE: AgentInteractionGroupType.SELLING,
+    AgentInteractionMetricTypes.MENTIONED_INSURANCE_COVERAGE: AgentInteractionGroupType.SELLING,
+    AgentInteractionMetricTypes.MENTIONED_FINANCING: AgentInteractionGroupType.SELLING,
+    AgentInteractionMetricTypes.OFFERED_FREE_CONSULTATION: AgentInteractionGroupType.SELLING,
+
+    AgentInteractionMetricTypes.AGENT_OVERTALK: AgentInteractionGroupType.RAPPORT,
+    AgentInteractionMetricTypes.HOLD_TIME: AgentInteractionGroupType.RAPPORT,
+    AgentInteractionMetricTypes.ASKED_ABOUT_DISCOMFORT: AgentInteractionGroupType.RAPPORT,
+    AgentInteractionMetricTypes.MENTIONED_PRICING: AgentInteractionGroupType.RAPPORT,
+
+    AgentInteractionMetricTypes.OFFERED_APPOINTMENT_DATE_TIME: AgentInteractionGroupType.CONVERT,
+    AgentInteractionMetricTypes.BOOKED_APPOINTMENT: AgentInteractionGroupType.CONVERT,
+}
+
+def insert_agent_score_groups(apps, schema_editor):
+    """
+    We can't import the model directly as it may be a newer version than this migration expects. We use the historical version.
+    """
+    AgentCallScoreMetric = apps.get_model("calls", "AgentCallScoreMetric")
+    for metric, group in METRIC_TO_GROUP_MAP.items():
+        print(f"Inserting: {metric.name} {metric.value} {metric.label}")
+        agent_call_score_metric, created = AgentCallScoreMetric.objects.get_or_create(metric=metric.value, group=group)
+
+
+def reverse_insert_agent_score_groups(apps, schema_editor):
+    AgentCallScoreMetric = apps.get_model("calls", "AgentCallScoreMetric")
+    for metric, group in METRIC_TO_GROUP_MAP.items():
+        print(f"Removing: {metric.name} {metric.value} {metric.label}")
+        agent_call_score_metric = AgentCallScoreMetric.objects.get(metric=metric.value, group=group)
+        agent_call_score_metric.delete()
+
+
+def update_agent_score_metrics(apps, schema_editor):
+    AgentCallScoreMetric = apps.get_model("calls", "AgentCallScoreMetric")
+    score_metrics = AgentCallScoreMetric.objects.all()
+    new_score_metric_to_id = { sm.metric: sm.pk for sm in score_metrics }
+
+    # find the appropriate ids
+    old_metric_to_new_metric_id = {
+        "agent_overtalk": new_score_metric_to_id[AgentInteractionMetricTypes.AGENT_OVERTALK.value],
+        "scheduling_accommodations": new_score_metric_to_id[AgentInteractionMetricTypes.OFFERED_APPOINTMENT_DATE_TIME.value],
+        "referral_source": new_score_metric_to_id[AgentInteractionMetricTypes.ASKED_REFERRING_SOURCE.value],
+        "procedure_explanation": new_score_metric_to_id[AgentInteractionMetricTypes.MENTIONED_PROCEDURE.value],
+        "patient_demographics": new_score_metric_to_id[AgentInteractionMetricTypes.ASKED_PATIENT_CONTACT_INFO.value],
+        "payment_method": new_score_metric_to_id[AgentInteractionMetricTypes.MENTIONED_PRICING.value],
+        "greeting": new_score_metric_to_id[AgentInteractionMetricTypes.GREETING.value],
+    }
+
+    AgentCallScore = apps.get_model("calls", "AgentCallScore")
+    for old_metric, new_metric_id in old_metric_to_new_metric_id.items():
+        AgentCallScore.objects.filter(metric=old_metric).update(metric=new_metric_id)
+
+
+def reverse_update_agent_scores(apps, schema_editor):
+    pass
+
 
 class Migration(migrations.Migration):
 
@@ -31,6 +104,13 @@ class Migration(migrations.Migration):
                 'abstract': False,
             },
         ),
+        migrations.RunPython(insert_agent_score_groups, reverse_insert_agent_score_groups),
+        migrations.AlterField(
+            model_name='agentcallscore',
+            name='metric',
+            field=models.CharField(blank=True, max_length=180),
+        ),
+        migrations.RunPython(update_agent_score_metrics, reverse_update_agent_scores),
         migrations.AlterField(
             model_name='agentcallscore',
             name='metric',
