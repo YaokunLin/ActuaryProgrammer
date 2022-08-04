@@ -77,7 +77,24 @@ def update_agent_score_metrics(apps, schema_editor):
 
 
 def reverse_update_agent_scores(apps, schema_editor):
-    pass
+    AgentCallScoreMetric = apps.get_model("calls", "AgentCallScoreMetric")
+    score_metrics = AgentCallScoreMetric.objects.all()
+    new_score_metric_to_id = { sm.metric: sm.pk for sm in score_metrics }
+
+    # find the appropriate ids
+    new_metric_id_to_old_metric = {
+        new_score_metric_to_id[AgentInteractionMetricTypes.AGENT_OVERTALK.value]: "agent_overtalk",
+        new_score_metric_to_id[AgentInteractionMetricTypes.OFFERED_APPOINTMENT_DATE_TIME.value]: "scheduling_accommodations",
+        new_score_metric_to_id[AgentInteractionMetricTypes.ASKED_REFERRING_SOURCE.value]: "referral_source",
+        new_score_metric_to_id[AgentInteractionMetricTypes.MENTIONED_PROCEDURE.value]: "procedure_explanation",
+        new_score_metric_to_id[AgentInteractionMetricTypes.ASKED_PATIENT_CONTACT_INFO.value]: "patient_demographics",
+        new_score_metric_to_id[AgentInteractionMetricTypes.MENTIONED_PRICING.value]: "payment_method", 
+        new_score_metric_to_id[AgentInteractionMetricTypes.GREETING.value]: "greeting",
+    }
+
+    AgentCallScore = apps.get_model("calls", "AgentCallScore")
+    for new_metric_id, old_metric in new_metric_id_to_old_metric.items():
+        AgentCallScore.objects.filter(metric=new_metric_id).update(metric=old_metric)
 
 
 class Migration(migrations.Migration):
