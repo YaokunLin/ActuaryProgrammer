@@ -27,3 +27,4 @@ class AgentCallScoreViewset(viewsets.ModelViewSet):
 class AgentCallScoreMetricViewset(viewsets.ModelViewSet):
     queryset = AgentCallScoreMetric.objects.all().order_by("-modified_at")
     serializer_class = AgentCallScoreMetricSerializer
+    filter_fields = ["group"]
