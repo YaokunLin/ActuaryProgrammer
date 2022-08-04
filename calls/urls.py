@@ -14,7 +14,10 @@ from calls.analytics.intents.views import (
     CallPurposeViewset,
 )
 
-from calls.analytics.interactions.views import AgentCallScoreViewset
+from calls.analytics.interactions.views import (
+    AgentCallScoreMetricViewset,
+    AgentCallScoreViewset,
+)
 
 from calls.analytics.transcripts.views import (
     CallLongestPauseViewset,
@@ -52,6 +55,7 @@ calls_app_root_router = routers.SimpleRouter()
 
 calls_app_root_router.register(r"calls", CallViewset)
 calls_app_root_router.register(r"labels", CallLabelViewset)
+calls_app_root_router.register(r"agent-call-score-metrics", AgentCallScoreMetricViewset)
 
 call_router = routers.NestedSimpleRouter(calls_app_root_router, r"calls", lookup="call")
 call_router.register(r"audio", CallAudioViewset, basename="call-audio")
