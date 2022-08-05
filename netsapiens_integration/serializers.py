@@ -44,7 +44,8 @@ class NetsapiensCdr2ExtractSerializer(serializers.ModelSerializer):
     time_start = UnixEpochDateField(required=False)
     time_answer = UnixEpochDateField(required=False)
     time_release = UnixEpochDateField(required=False)
-
+    
+    cdrr_batch_hold = UnixEpochDateField(required=False)
     cdrr_time_start = UnixEpochDateField(required=False)
     cdrr_time_answer = UnixEpochDateField(required=False)
     cdrr_time_release = UnixEpochDateField(required=False)
