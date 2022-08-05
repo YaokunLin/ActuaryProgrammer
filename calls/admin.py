@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+import calls.analytics.interactions.admin
 from .models import (
     Call,
     CallAudio,
