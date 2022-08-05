@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-import calls.analytics.interactions.admin
+import calls.analytics.interactions.admin  # import admin so it gets registered, DO NOT REMOVE
 from .models import (
     Call,
     CallAudio,
