@@ -33,7 +33,7 @@ Apply the structure of the tables to the database.
 docker-compose up migrate
 ```
 
-Add the super user with username of `admin` and password of `password`, set by .env file.
+Add the super user with username of `admin` and password of `password`, set by .env file. This can be done at any time / multiple times if needed.
 
 .env file defaults:
 ```
