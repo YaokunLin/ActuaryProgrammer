@@ -2,6 +2,7 @@ from django.contrib import admin
 
 import calls.analytics.intents.admin  # import admin so it gets registered, DO NOT REMOVE
 import calls.analytics.interactions.admin  # import admin so it gets registered, DO NOT REMOVE
+import calls.analytics.participants  # import admin so it gets registered, DO NOT REMOVE
 from .models import (
     Call,
     CallAudio,
