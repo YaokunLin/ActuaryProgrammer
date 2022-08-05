@@ -2,7 +2,7 @@
 
 ## Dependencies
 
-# TODO
+## TODO
 
 ## Docker
 
@@ -19,24 +19,25 @@ Paste the contents of this 1Password secret into the `.env` file
 See 1Password for a starter
 file: [peerlogic-api LOCAL  starter .env file](https://start.1password.com/open/i?a=P3RU52IFYBEH3GKEDF2UBYENBQ&v=wlmpasbyyncmhpjji3lfc7ra4a&i=sxjcghmtefeqvdystb2l6q7k5y&h=my.1password.com)
 
-### Docker commands:
+### Docker commands
 
 Initialize Postgres and create the peerlogic database, without tables:
 
-```
+```bash
 docker-compose up postgres
 ```
 
 Apply the structure of the tables to the database.
 
-```
+```bash
 docker-compose up migrate
 ```
 
 Add the super user with username of `admin` and password of `password`, set by .env file. This can be done at any time / multiple times if needed.
 
 .env file defaults:
-```
+
+```bash
 DJANGO_SUPERUSER_USERNAME=admin
 DJANGO_SUPERUSER_PASSWORD=password
 ```
@@ -49,10 +50,7 @@ After initial build and api and postgres are running, start it all up:
 
 `docker-compose up`
 
-
-
 <!-- TODO: Generate fixtures to play with locally) -->
-
 
 All done!
 
@@ -72,7 +70,7 @@ End all processes:
 
 Not really recommended; docker has been more tested.
 
-### Initializing, Installing, and Migrating:
+### Initializing, Installing, and Migrating
 
 First time?
 
@@ -95,18 +93,18 @@ source env/bin/activate # ./env/Scripts/activate on Windows
 python3 manage.py runserver
 ```
 
-# Postman Collection
+## Postman Collection
 
 There is a Postman Collection that can be used to validate setup and test changes. Import the following: (Peerlogic API
 Collection)[https://www.getpostman.com/collections/c1045d02c72c56abd559]
 
-# Deployment
+## Deployment
 
 CI/CD is set up for deploying to development with App Engine.
 
 See `deployment/app_engine/DEPLOYMENT.md` for deploying to another environment with App Engine.
 
-# 1Password sign-in
+## 1Password sign-in
 
 Set up your CLI tool: https://support.1password.com/command-line-getting-started/
 
@@ -126,9 +124,9 @@ eval $(op signin my)
 echo "1PASSWORD_SHORTHAND=<youroutputtedtokenhere>" >> ~/.bashrc
 ``` -->
 
-# Running Management Commands
+## Running Management Commands
 
-## Setup Proxy Access to the Environment
+### Setup Proxy Access to the Environment
 
 Creation of credentials requires us to be local / on the same network as the environment in question since we're using the ORM to update the database itself directly.
 
@@ -146,14 +144,13 @@ Creation of credentials requires us to be local / on the same network as the env
 
     Name it `peerlogic-api-dev`, `peerlogic-api-stage` or `peerlogic-api-prod` depending on which project you choose. Select us-west4a as the Compute Region/Zone.
 
-
 3. Enter the google cloud environment to access the database with cloud sql proxy
 
     ```bash
     ./devtools/cloud_sql_proxy.bash
     ```
 
-## Database Access to the Environment
+### Database Access to the Environment
 
 Google Cloud credentials are necessary to access the database. Your environment file must be setup accordingly.
 
@@ -176,7 +173,7 @@ Google Cloud credentials are necessary to access the database. Your environment 
    docker-compose -f ./environment-connect/cloudsql-docker-compose.yml up --build
    ```
 
-## Management Command - Create Netsapiens subscription
+### Management Command - Create Netsapiens subscription
 
 1. Follow above instructions under "Running Management Commands" before continuing.
 
@@ -186,14 +183,13 @@ Google Cloud credentials are necessary to access the database. Your environment 
     ./environment-connect/connect.sh dev run api python3 manage.py create_netsapiens_integration {peerlogic_root_api_url}, {voip_provider_id}, {practice_name}, {practice_voip_domain}
     ```
 
-
     NOTE: double check the peerlogic_root_api_url. It's not as easy as just swapping out "dev", "stage", and "prod" as the subdomains themselves are different!
 
     ```bash
     ./environment-connect/connect.sh dev run api python3 manage.py create_netsapiens_integration https://peerlogic-api-prod.wm.r.appspot.com drFoXEnEwrN28Gowp3CoRN "Thunderbird Dental Studio" dentaldesignstudios_thunderbird
     ```
 
-## Management Command - Create Client Credential Auth User
+### Management Command - Create Client Credential Auth User
 
 1. Follow above instructions under "Running Management Commands" before continuing.
 
