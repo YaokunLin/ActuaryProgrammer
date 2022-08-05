@@ -11,11 +11,34 @@ from .models import (
     CallPurpose,
 )
 
-admin.site.register(CallMentionedCompany)
-admin.site.register(CallMentionedInsurance)
-admin.site.register(CallMentionedProcedure)
-admin.site.register(CallMentionedProduct)
-admin.site.register(CallMentionedSymptom)
+class GenericMentionedAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "call",
+        "keyword",
+    )
+
+class CallOutcomeAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "call",
+        "call_outcome_type",
+        "call_purpose",
+    )
+
+class CallPurposeAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "call",
+        "call_purpose_type",
+        "outcome_results",
+    )
+
+admin.site.register(CallMentionedCompany, GenericMentionedAdmin)
+admin.site.register(CallMentionedInsurance, GenericMentionedAdmin)
+admin.site.register(CallMentionedProcedure, GenericMentionedAdmin)
+admin.site.register(CallMentionedProduct, GenericMentionedAdmin)
+admin.site.register(CallMentionedSymptom, GenericMentionedAdmin)
 admin.site.register(CallOutcome)
 admin.site.register(CallOutcomeReason)
-admin.site.register(CallPurpose)
+admin.site.register(CallPurpose, CallPurposeAdmin)
