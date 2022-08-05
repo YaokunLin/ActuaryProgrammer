@@ -35,6 +35,12 @@ docker-compose up migrate
 
 Add the super user with username of `admin` and password of `password`, set by .env file.
 
+.env file defaults:
+```
+DJANGO_SUPERUSER_USERNAME=admin
+DJANGO_SUPERUSER_PASSWORD=password
+```
+
 ```
 docker-compose run api python3 manage.py createsuperuser --noinput
 ```
