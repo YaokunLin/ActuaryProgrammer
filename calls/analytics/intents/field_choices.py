@@ -50,7 +50,7 @@ class CallOutcomeReasonTypes(models.TextChoices):
     INSURANCE_INCORRECT_BENEFICIARY_INFORMATION = "insurance_incorrect_beneficiary_information"
     INSURANCE_COVERAGE_EXPIRED = "insurance_coverage_expired"
     INSURANCE_COORDINATION_OF_BENEFITS = "insurance_coordination_of_benefits"
-    INSURANCE_PREAUTHORIZATION_NOT_OBTAINED = "insurance_preauthorization_not_obtained"
+    INSURANCE_PREAUTHORIZATION_NOT_OBTAINED = "insurance_preauthorization_not_obtained"  # aka pre-certification, prior-authorizations
     INSURANCE_PROCEDURE_NOT_COVERED = "insurance_procedure_not_covered"
 
 
