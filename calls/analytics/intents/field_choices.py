@@ -13,6 +13,10 @@ class CallPurposeTypes(models.TextChoices):
     BILLING = "billing"
     OTHERS = "others"  # TODO: create/refactor as noneoftheabove once we re-do the model and/or frontend
 
+    # INSURANCE RELATED
+    INSURANCE_VERIFICATION = "insurance_verification"  # eligibility verification
+    INSURANCE_CLAIM = "insurance_claim"  # anything involving claim
+
 
 class CallOutcomeTypes(models.TextChoices):
     SUCCESS = "success"
@@ -36,6 +40,18 @@ class CallOutcomeReasonTypes(models.TextChoices):
     INSURANCE_NOT_TAKEN = "insurance_not_taken"
     OTHERS = "others"  # create/refactor as noneoftheabove once we re-do the model and/or frontend
     NOT_APPLICABLE = "not_applicable"
+
+    # insurance claim denied reason types
+    INSURANCE_INCORRECT_DENTAL_CODE = "incorrect_dental_code"
+    INSURANCE_INCOMPLETE_INFORMATION_ON_CLAIM = "incomplete_information_on_claim"
+    INSURANCE_COVERAGE_LIMIT_ANNUAL = "insurance_coverage_limit_annual"
+    INSURANCE_COVERAGE_LIMIT_LIFETIME = "insurance_coverage_limit_lifetime"
+    INSURANCE_COVERAGE_TIME_LIMIT = "insurance_coverage_time_limit"
+    INSURANCE_INCORRECT_BENEFICIARY_INFORMATION = "insurance_incorrect_beneficiary_information"
+    INSURANCE_COVERAGE_EXPIRED = "insurance_coverage_expired"
+    INSURANCE_COORDINATION_OF_BENEFITS = "insurance_coordination_of_benefits"
+    INSURANCE_PREAUTHORIZATION_NOT_OBTAINED = "insurance_preauthorization_not_obtained"
+    INSURANCE_PROCEDURE_NOT_COVERED = "insurance_procedure_not_covered"
 
 
 # TODO: Revisit and redo
