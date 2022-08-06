@@ -97,7 +97,7 @@ log = logging.getLogger(__name__)
 class CallFieldChoicesView(views.APIView):
     def get(self, request, format=None):        
         result = {}
-        result["agent_interaction_metric_types"] = dict((str(y), x) for x, y in AgentInteractionMetricTypes.choices)  # retain as choices / non-dynamic for now
+        result["agent_interaction_metric_types"] = dict((str(y), x) for x, y in AgentInteractionMetricTypes.choices)  # retain as choices / non-dynamic for now, keys MUST be cast as strings here
         result["engagement_persona_types"] = dict((y, x) for x, y in EngagementPersonaTypes.choices)
         result["non_agent_engagement_persona_types"] = dict((y, x) for x, y in NonAgentEngagementPersonaTypes.choices)
         result["call_connection_types"] = dict((y, x) for x, y in CallConnectionTypes.choices)
