@@ -2,10 +2,11 @@ from django.urls import path
 from rest_framework import routers
 
 
-from .views import AdminUserViewset, ClientViewset, LoginView, PatientViewset, PracticeTelecomViewSet, PracticeViewSet, VoipProviderViewset
+from .views import AdminUserViewset, AgentViewset, ClientViewset, LoginView, PatientViewset, PracticeTelecomViewSet, PracticeViewSet, UserViewset, VoipProviderViewset
 
 router = routers.DefaultRouter()
 
+router.register(r"agents", AgentViewset)
 router.register(r"clients", ClientViewset)
 router.register(r"patients", PatientViewset)
 router.register(r"practices", PracticeViewSet, basename="practices")
