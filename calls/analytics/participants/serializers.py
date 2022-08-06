@@ -4,12 +4,16 @@ from calls.analytics.participants.models import (
     AgentAssignedCall,
     AgentEngagedWith,
 )
+from core.serializers import AgentSerializer
 
 
 class AgentAssignedCallSerializer(serializers.ModelSerializer):
+    agent = AgentSerializer(required=False)    
+
+
     class Meta:
         model = AgentAssignedCall
-        fields = "__all__"
+        fields = ["id", "agent", "call"]
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
