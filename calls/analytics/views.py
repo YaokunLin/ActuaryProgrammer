@@ -15,5 +15,5 @@ class CallAnalyticsFieldChoicesView(views.APIView):
         result["non_agent_engagement_persona_types"] = dict((y, x) for x, y in NonAgentEngagementPersonaTypes.choices)
         result["call_purpose_types"] = dict((y, x) for x, y in CallPurposeTypes.choices)
         result["call_outcome_types"] = dict((y, x) for x, y in CallOutcomeTypes.choices)
-        result["call_outcome_reason_types"] = dict((y, x) for x, y in CallOutcomeReasonTypes.choices)
+        result["call_outcome_reason_types"] = dict((str(y), x) for x, y in CallOutcomeReasonTypes.choices)  # key MUST be cast to a string
         return Response(result)
