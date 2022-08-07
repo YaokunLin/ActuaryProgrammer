@@ -13,7 +13,7 @@ from calls.analytics.participants.serializers import (
 class AgentAssignedCallViewSet(viewsets.ModelViewSet):
     queryset = AgentAssignedCall.objects.all().order_by("-modified_at")
     serializer_class = AgentAssignedCallSerializer
-    filter_fields = ["agent", "call__id"]
+    filter_fields = ["agent__id", "call__id"]
 
 
 class AgentEngagedWithViewset(viewsets.ModelViewSet):
