@@ -1,0 +1,1456 @@
+[{
+  "call_id": "7QtaVGS8eSMj92mayt4cQQ",
+  "site_id": null,
+  "callee_id": null,
+  "caller_id": null,
+  "call_start": "2022-07-26T21:11:47Z",
+  "callee_domain": null,
+  "caller_audio_url": null,
+  "callee_audio_url": null,
+  "call_end": "2022-07-26T21:12:52Z",
+  "domain": "abcdentistryforchildren",
+  "caller_domain": null,
+  "connect_duration_seconds": "32",
+  "duration_seconds": "32",
+  "progress_time_seconds": "31",
+  "who_terminated_call": "",
+  "sip_caller_number": "+14805589713",
+  "sip_callee_number": "+13122104756",
+  "sip_caller_name": "Front Office 1-Signal Butte",
+  "call_direction": "outbound",
+  "went_to_voicemail": "false",
+  "checked_voicemail": "false",
+  "call_connection": "connected",
+  "call_transcription": {
+    "call_transcription_id": "7XLWZNiV9aoY7MeNsZ4A6X",
+    "transcription_run_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "Please leave your message for. Hi. This is Lonnie with ABC Dentistry for Children. I was just calling to see if you were on your way or if you would like to reschedule your appointments are phone. Number is 480-558-9713. Thank you so much. Have a good day.",
+    "person_id": null,
+    "caller_text": "Please leave your message for.",
+    "callee_text": "Hi. This is Lonnie with ABC Dentistry for Children. I was just calling to see if you were on your way or if you would like to reschedule your appointments are phone. Number is 480-558-9713. Thank you so much. Have a good day."
+  },
+  "call_purpose": [{
+    "call_purpose_id": "gpspVZhdHFofN29WcdxhVS",
+    "purpose_run_id": "YqtjLwccR3yeP98teUXYkr",
+    "purpose": "reschedule",
+    "purpose_score": "0.50386848170701515",
+    "outcome": "failure",
+    "outcome_reason_run_id": "Wxab6ZKYzi3KTkDeajVPX4",
+    "outcome_reason": "procedure_not_offered"
+  }],
+  "call_sentiment": {
+    "call_sentiment_id": "MAGTeNLXfdwgkqwq78yp5x",
+    "sentiment_run_id": "2gAH5v6fismJRTURBk4KFn",
+    "overall_sentiment": "positive",
+    "caller_sentiment": "neutral",
+    "callee_sentiment": "positive"
+  },
+  "caller_type_info": {
+    "caller_type_id": "G9SExkJuaRXwTkSTG74yMB",
+    "caller_type_run_id": "NjHDNsuf3pXje6uccnDYJE",
+    "caller_type": "Others"
+  },
+  "call_pause": {
+    "call_id": "7QtaVGS8eSMj92mayt4cQQ",
+    "call_run_id": "NFoZSStGVqYkpNf4HpjQKg",
+    "longest_pause": null,
+    "start_time": null,
+    "end_time": null
+  },
+  "call_procedure_discussed": [{
+    "call_procedure_discussed_id": "7BNBwh6645XfwVY4RRLpVE",
+    "call_procedure_id": null,
+    "call_procedure_keyword": null,
+    "call_procedure_price_usd": null
+  }],
+  "call_insurance_discussed": [{
+    "call_insurance_discussed_id": "A9D7aWCJARbEK5stzNQKqR",
+    "call_insurance_keyword": null
+  }],
+  "call_product_discussed": [{
+    "call_product_discussed_id": "CgB7FNXUtdQCUAt2XmLzQw",
+    "call_product_keyword": null
+  }],
+  "call_company_discussed": [{
+    "call_company_discussed_id": "eBWGDykag68jQk6u6RdXNK",
+    "call_company_keyword": null
+  }],
+  "call_symptom_discussed": [{
+    "call_symptom_discussed_id": "c9MADEkB5araSUGT4dMsFB",
+    "call_symptom_keyword": null
+  }],
+  "metadata_file_uri": null,
+  "insert_timestamp": "2022-07-26T21:19:40Z",
+  "call_transcription_fragment": [{
+    "transcription_fragment_id": "",
+    "transcription_run_id": "",
+    "person_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "",
+    "sentiment_run_id": "",
+    "sentiment": "",
+    "telecom_persona_type": ""
+  }],
+  "referral_source": {
+    "referral_source_run_id": "JQcmVpZQm53rEL88pnQxPK",
+    "referral_source_type": "n/a"
+  },
+  "call_agent_interaction": [{
+    "agent_interaction_metric_run_id": "FsXXRZtHqegRdFxjcMYNb9",
+    "agent_interaction_metric_name": "scheduling_accommodations",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "d2jXmwyQX82yKBKG7nSA9P",
+    "agent_interaction_metric_name": "referral_source",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "aTA2DEfr5JnorbRQVZFCoe",
+    "agent_interaction_metric_name": "procedure_explanation",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "5qQzq9u9WLyjbNBJ6gaapd",
+    "agent_interaction_metric_name": "payment_method",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "QJ8xa7fahtubDSwefELmBz",
+    "agent_interaction_metric_name": "patient_demographics",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "LnBNZ2s9qcJkMnXoRWeM4w",
+    "agent_interaction_metric_name": "greeting",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "3EDRiKCXjNR8Advutc2dYX",
+    "agent_interaction_metric_name": "agent_overtalk",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }],
+  "caller_type": "agent",
+  "callee_type": "non_agent",
+  "non_agent_engagement_persona_info": {
+    "non_agent_engagement_persona_id": "G9SExkJuaRXwTkSTG74yMB",
+    "non_agent_engagement_persona_run_id": "NjHDNsuf3pXje6uccnDYJE",
+    "non_agent_engagement_persona_type": "Others"
+  },
+  "practice_id": "QrzVUscc327cJB6W6CKedu",
+  "new_patient_opportunity_info": null
+}, {
+  "call_id": "7QtaVGS8eSMj92mayt4cQQ",
+  "site_id": null,
+  "callee_id": null,
+  "caller_id": null,
+  "call_start": "2022-07-26T21:11:47Z",
+  "callee_domain": null,
+  "caller_audio_url": null,
+  "callee_audio_url": null,
+  "call_end": "2022-07-26T21:12:52Z",
+  "domain": "abcdentistryforchildren",
+  "caller_domain": null,
+  "connect_duration_seconds": "32",
+  "duration_seconds": "32",
+  "progress_time_seconds": "31",
+  "who_terminated_call": "",
+  "sip_caller_number": "+14805589713",
+  "sip_callee_number": "+13122104756",
+  "sip_caller_name": "Front Office 1-Signal Butte",
+  "call_direction": "outbound",
+  "went_to_voicemail": "false",
+  "checked_voicemail": "false",
+  "call_connection": "connected",
+  "call_transcription": {
+    "call_transcription_id": "7XLWZNiV9aoY7MeNsZ4A6X",
+    "transcription_run_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "Please leave your message for. Hi. This is Lonnie with ABC Dentistry for Children. I was just calling to see if you were on your way or if you would like to reschedule your appointments are phone. Number is 480-558-9713. Thank you so much. Have a good day.",
+    "person_id": null,
+    "caller_text": "Please leave your message for.",
+    "callee_text": "Hi. This is Lonnie with ABC Dentistry for Children. I was just calling to see if you were on your way or if you would like to reschedule your appointments are phone. Number is 480-558-9713. Thank you so much. Have a good day."
+  },
+  "call_purpose": [{
+    "call_purpose_id": "44TCVGpfZQwwXBSe2cxr7i",
+    "purpose_run_id": "JXCeubBR5FfNgHbLPhqKzE",
+    "purpose": "reschedule",
+    "purpose_score": "0.50386848170701515",
+    "outcome": "failure",
+    "outcome_reason_run_id": "cQByn4tG5WNyKutMeRehFF",
+    "outcome_reason": "procedure_not_offered"
+  }],
+  "call_sentiment": {
+    "call_sentiment_id": "ec6QQqBXkv6BwbjtWvsuYg",
+    "sentiment_run_id": "5W822jMj4Ks7Ebvj96KgWv",
+    "overall_sentiment": "positive",
+    "caller_sentiment": "neutral",
+    "callee_sentiment": "positive"
+  },
+  "caller_type_info": {
+    "caller_type_id": "c22p4UxcDKsqvA2v5PZpLB",
+    "caller_type_run_id": "ksry3Mk2YLE58vdxtUaGUD",
+    "caller_type": "Others"
+  },
+  "call_pause": {
+    "call_id": "7QtaVGS8eSMj92mayt4cQQ",
+    "call_run_id": "kEFPGkU3R2pgbRTp5w9geK",
+    "longest_pause": null,
+    "start_time": null,
+    "end_time": null
+  },
+  "call_procedure_discussed": [{
+    "call_procedure_discussed_id": "UiWKk8UmRnLLg5AaERSvn2",
+    "call_procedure_id": null,
+    "call_procedure_keyword": null,
+    "call_procedure_price_usd": null
+  }],
+  "call_insurance_discussed": [{
+    "call_insurance_discussed_id": "76txCzs3j3jDVNnPAwJjo2",
+    "call_insurance_keyword": null
+  }],
+  "call_product_discussed": [{
+    "call_product_discussed_id": "n2z2smzeATU9ug5AchUibd",
+    "call_product_keyword": null
+  }],
+  "call_company_discussed": [{
+    "call_company_discussed_id": "cq3VRNtDMBRsgnLB9PV9tz",
+    "call_company_keyword": null
+  }],
+  "call_symptom_discussed": [{
+    "call_symptom_discussed_id": "3At8ZHRS7UVNR7AMRFKrvB",
+    "call_symptom_keyword": null
+  }],
+  "metadata_file_uri": null,
+  "insert_timestamp": "2022-07-26T21:19:47Z",
+  "call_transcription_fragment": [{
+    "transcription_fragment_id": "",
+    "transcription_run_id": "",
+    "person_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "",
+    "sentiment_run_id": "",
+    "sentiment": "",
+    "telecom_persona_type": ""
+  }],
+  "referral_source": {
+    "referral_source_run_id": "cpHvGjtQSnp5xDoiF7JnM8",
+    "referral_source_type": "n/a"
+  },
+  "call_agent_interaction": [{
+    "agent_interaction_metric_run_id": "buACAdVsdTA7xyRMJSF7vc",
+    "agent_interaction_metric_name": "scheduling_accommodations",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "bPvvkaRWw9ajTB95Zympfu",
+    "agent_interaction_metric_name": "referral_source",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "TW57SkFS6gfD9tkpiFQYcR",
+    "agent_interaction_metric_name": "procedure_explanation",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "7XCyEXSqxviXEdpagohso5",
+    "agent_interaction_metric_name": "payment_method",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "8b784HdgodSe3ox5cHXnwh",
+    "agent_interaction_metric_name": "patient_demographics",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "RRS78KhphYCPxQasbfFNha",
+    "agent_interaction_metric_name": "greeting",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "LcWTenYSZZUZJr4vF5PCft",
+    "agent_interaction_metric_name": "agent_overtalk",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }],
+  "caller_type": "agent",
+  "callee_type": "non_agent",
+  "non_agent_engagement_persona_info": {
+    "non_agent_engagement_persona_id": "c22p4UxcDKsqvA2v5PZpLB",
+    "non_agent_engagement_persona_run_id": "ksry3Mk2YLE58vdxtUaGUD",
+    "non_agent_engagement_persona_type": "Others"
+  },
+  "practice_id": "QrzVUscc327cJB6W6CKedu",
+  "new_patient_opportunity_info": null
+}, {
+  "call_id": "7QtaVGS8eSMj92mayt4cQQ",
+  "site_id": null,
+  "callee_id": null,
+  "caller_id": null,
+  "call_start": "2022-07-26T21:11:47Z",
+  "callee_domain": null,
+  "caller_audio_url": null,
+  "callee_audio_url": null,
+  "call_end": "2022-07-26T21:12:52Z",
+  "domain": "abcdentistryforchildren",
+  "caller_domain": null,
+  "connect_duration_seconds": "32",
+  "duration_seconds": "32",
+  "progress_time_seconds": "31",
+  "who_terminated_call": "",
+  "sip_caller_number": "+14805589713",
+  "sip_callee_number": "+13122104756",
+  "sip_caller_name": "Front Office 1-Signal Butte",
+  "call_direction": "outbound",
+  "went_to_voicemail": "false",
+  "checked_voicemail": "false",
+  "call_connection": "connected",
+  "call_transcription": {
+    "call_transcription_id": "7XLWZNiV9aoY7MeNsZ4A6X",
+    "transcription_run_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "Please leave your message for. Hi. This is Lonnie with ABC Dentistry for Children. I was just calling to see if you were on your way or if you would like to reschedule your appointments are phone. Number is 480-558-9713. Thank you so much. Have a good day.",
+    "person_id": null,
+    "caller_text": "Please leave your message for.",
+    "callee_text": "Hi. This is Lonnie with ABC Dentistry for Children. I was just calling to see if you were on your way or if you would like to reschedule your appointments are phone. Number is 480-558-9713. Thank you so much. Have a good day."
+  },
+  "call_purpose": [{
+    "call_purpose_id": "T3Tca6c3GSDBLAXmy2WMRT",
+    "purpose_run_id": "nWM73fXhAyMUD95HyZQm8K",
+    "purpose": "reschedule",
+    "purpose_score": "0.50386848170701515",
+    "outcome": "failure",
+    "outcome_reason_run_id": "cmmSsozJKdLnyyojz6iAUD",
+    "outcome_reason": "procedure_not_offered"
+  }],
+  "call_sentiment": {
+    "call_sentiment_id": "hGs6WpkfgHKB4U7DwBpoHZ",
+    "sentiment_run_id": "QG3ip6APeRNCGakTzXzF8e",
+    "overall_sentiment": "positive",
+    "caller_sentiment": "neutral",
+    "callee_sentiment": "positive"
+  },
+  "caller_type_info": {
+    "caller_type_id": "o9C8ivh3oAFezwgqY9yeWJ",
+    "caller_type_run_id": "27E9oHXRw8FKcbY3P2GbRQ",
+    "caller_type": "Others"
+  },
+  "call_pause": {
+    "call_id": "7QtaVGS8eSMj92mayt4cQQ",
+    "call_run_id": "RMgnvQ29tNP4nwVENMJBUQ",
+    "longest_pause": null,
+    "start_time": null,
+    "end_time": null
+  },
+  "call_procedure_discussed": [{
+    "call_procedure_discussed_id": "Nkkfj83oAJY48LENyhNZf3",
+    "call_procedure_id": null,
+    "call_procedure_keyword": null,
+    "call_procedure_price_usd": null
+  }],
+  "call_insurance_discussed": [{
+    "call_insurance_discussed_id": "73AFNcJvzQUnfRp27j9kXT",
+    "call_insurance_keyword": null
+  }],
+  "call_product_discussed": [{
+    "call_product_discussed_id": "UtZgfuFPHc8Vq6Gfr8noUr",
+    "call_product_keyword": null
+  }],
+  "call_company_discussed": [{
+    "call_company_discussed_id": "nyDDoMCP3zUGTQZZGAa46r",
+    "call_company_keyword": null
+  }],
+  "call_symptom_discussed": [{
+    "call_symptom_discussed_id": "dH6sNmv9DpMnW5CTYCx7T9",
+    "call_symptom_keyword": null
+  }],
+  "metadata_file_uri": null,
+  "insert_timestamp": "2022-07-26T21:19:49Z",
+  "call_transcription_fragment": [{
+    "transcription_fragment_id": "",
+    "transcription_run_id": "",
+    "person_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "",
+    "sentiment_run_id": "",
+    "sentiment": "",
+    "telecom_persona_type": ""
+  }],
+  "referral_source": {
+    "referral_source_run_id": "fsffmG9S38ox64rTnLwP4t",
+    "referral_source_type": "n/a"
+  },
+  "call_agent_interaction": [{
+    "agent_interaction_metric_run_id": "6oFs9dQqehzkLqSmoLJc9j",
+    "agent_interaction_metric_name": "scheduling_accommodations",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "fKqvmxbEhSK9dk4jsa2Zxx",
+    "agent_interaction_metric_name": "referral_source",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "hZqs74PuBybPvPsfiNmABK",
+    "agent_interaction_metric_name": "procedure_explanation",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "CC84V2HNoRw5xmtKmzqPF7",
+    "agent_interaction_metric_name": "payment_method",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "HtbhfJVdnmwFfFadSGsTAp",
+    "agent_interaction_metric_name": "patient_demographics",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "hGJ3PVxKaS8mr2D8cpQWmw",
+    "agent_interaction_metric_name": "greeting",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "WBDKFNgYTbBNoEyQMJcAyf",
+    "agent_interaction_metric_name": "agent_overtalk",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }],
+  "caller_type": "agent",
+  "callee_type": "non_agent",
+  "non_agent_engagement_persona_info": {
+    "non_agent_engagement_persona_id": "o9C8ivh3oAFezwgqY9yeWJ",
+    "non_agent_engagement_persona_run_id": "27E9oHXRw8FKcbY3P2GbRQ",
+    "non_agent_engagement_persona_type": "Others"
+  },
+  "practice_id": "QrzVUscc327cJB6W6CKedu",
+  "new_patient_opportunity_info": null
+}, {
+  "call_id": "LFyVuwebaLieq6V3KBjcQM",
+  "site_id": null,
+  "callee_id": null,
+  "caller_id": null,
+  "call_start": "2022-07-26T18:33:49Z",
+  "callee_domain": null,
+  "caller_audio_url": null,
+  "callee_audio_url": null,
+  "call_end": "2022-07-26T18:34:50Z",
+  "domain": "smilecraftersaz",
+  "caller_domain": null,
+  "connect_duration_seconds": "27",
+  "duration_seconds": "27",
+  "progress_time_seconds": "31",
+  "who_terminated_call": "",
+  "sip_caller_number": "+14806081725",
+  "sip_callee_number": "+14802272565",
+  "sip_caller_name": "Check In",
+  "call_direction": "outbound",
+  "went_to_voicemail": "false",
+  "checked_voicemail": "false",
+  "call_connection": "connected",
+  "call_transcription": {
+    "call_transcription_id": "E5R6sKCVwntniF9H4a8k9g",
+    "transcription_run_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "Please leave your message for 480-227-2565. Hi David. This is Donna with smilekrafters. I was giving you a call about an appointment coming up in September. We have for you we do need to change that date unfortunate, but if you can call me back at 480-608-1725 and we\u0027ll get that taken care of for you. Thank you have a good day.",
+    "person_id": null,
+    "caller_text": "Please leave your message for 480-227-2565.",
+    "callee_text": "Hi David. This is Donna with smilekrafters. I was giving you a call about an appointment coming up in September. We have for you we do need to change that date unfortunate, but if you can call me back at 480-608-1725 and we\u0027ll get that taken care of for you. Thank you have a good day."
+  },
+  "call_purpose": [{
+    "call_purpose_id": "oFMvRKq9QeVkxQFiHerzaP",
+    "purpose_run_id": "nbMtZpP8GMdRmwHMRp7QVC",
+    "purpose": "reschedule",
+    "purpose_score": "0.620150532393649",
+    "outcome": "failure",
+    "outcome_reason_run_id": "Jq3YMdU9eUjQbkdR2RcyDD",
+    "outcome_reason": "not_enough_information_possesed_by_patient_or_agent"
+  }],
+  "call_sentiment": {
+    "call_sentiment_id": "n4XrNLKLBNRvdBeAd7DSWo",
+    "sentiment_run_id": "MRKH8TEWd2szzCQRRSTCAt",
+    "overall_sentiment": "positive",
+    "caller_sentiment": "positive",
+    "callee_sentiment": "positive"
+  },
+  "caller_type_info": {
+    "caller_type_id": "5CAsdsFiBFstAB9XHM8xrj",
+    "caller_type_run_id": "nz95VjUiry5fuUxEjfKx6A",
+    "caller_type": "ExistingPatient"
+  },
+  "call_pause": {
+    "call_id": "LFyVuwebaLieq6V3KBjcQM",
+    "call_run_id": "SB3CcwZKKTotbR9LpuHtCB",
+    "longest_pause": null,
+    "start_time": null,
+    "end_time": null
+  },
+  "call_procedure_discussed": [{
+    "call_procedure_discussed_id": "VMA4Y78kH86gcy7D8H8naR",
+    "call_procedure_id": null,
+    "call_procedure_keyword": null,
+    "call_procedure_price_usd": null
+  }],
+  "call_insurance_discussed": [{
+    "call_insurance_discussed_id": "93EuJjD7DpjdAD5NDBWcYu",
+    "call_insurance_keyword": null
+  }],
+  "call_product_discussed": [{
+    "call_product_discussed_id": "5m3SftbNtQX6UqtudAaNCc",
+    "call_product_keyword": null
+  }],
+  "call_company_discussed": [{
+    "call_company_discussed_id": "hT9VhfPdUYbmbZ5gq6GDcb",
+    "call_company_keyword": null
+  }],
+  "call_symptom_discussed": [{
+    "call_symptom_discussed_id": "GicpocD5g8bdNCe5Pm6DpW",
+    "call_symptom_keyword": null
+  }],
+  "metadata_file_uri": null,
+  "insert_timestamp": "2022-07-26T18:41:46Z",
+  "call_transcription_fragment": [{
+    "transcription_fragment_id": "",
+    "transcription_run_id": "",
+    "person_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "",
+    "sentiment_run_id": "",
+    "sentiment": "",
+    "telecom_persona_type": ""
+  }],
+  "referral_source": {
+    "referral_source_run_id": "F4y9Y9gzkztXGkc3kkzFcn",
+    "referral_source_type": "n/a"
+  },
+  "call_agent_interaction": [{
+    "agent_interaction_metric_run_id": "bP6vCYEnezzUZm4G2wCjYD",
+    "agent_interaction_metric_name": "scheduling_accommodations",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "TR6yJGVb5JxE6fWiaLuDsQ",
+    "agent_interaction_metric_name": "referral_source",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "BmPNYsumgLm6zkHmYdsZGP",
+    "agent_interaction_metric_name": "procedure_explanation",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "34xfUBt2XZYBSjuWowC4pH",
+    "agent_interaction_metric_name": "payment_method",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "Z47HLNQhbxJ9Fy8CiFJ4uA",
+    "agent_interaction_metric_name": "patient_demographics",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "EcZaAgX4E4vqnSfaqKKBZP",
+    "agent_interaction_metric_name": "greeting",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "2xZxvwErXVjE4rYc6Z5eBa",
+    "agent_interaction_metric_name": "agent_overtalk",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }],
+  "caller_type": "agent",
+  "callee_type": "non_agent",
+  "non_agent_engagement_persona_info": {
+    "non_agent_engagement_persona_id": "5CAsdsFiBFstAB9XHM8xrj",
+    "non_agent_engagement_persona_run_id": "nz95VjUiry5fuUxEjfKx6A",
+    "non_agent_engagement_persona_type": "ExistingPatient"
+  },
+  "practice_id": "gKFyccEAWCRtDZSFcAQdkw",
+  "new_patient_opportunity_info": null
+}, {
+  "call_id": "LFyVuwebaLieq6V3KBjcQM",
+  "site_id": null,
+  "callee_id": null,
+  "caller_id": null,
+  "call_start": "2022-07-26T18:33:49Z",
+  "callee_domain": null,
+  "caller_audio_url": null,
+  "callee_audio_url": null,
+  "call_end": "2022-07-26T18:34:50Z",
+  "domain": "smilecraftersaz",
+  "caller_domain": null,
+  "connect_duration_seconds": "27",
+  "duration_seconds": "27",
+  "progress_time_seconds": "31",
+  "who_terminated_call": "",
+  "sip_caller_number": "+14806081725",
+  "sip_callee_number": "+14802272565",
+  "sip_caller_name": "Check In",
+  "call_direction": "outbound",
+  "went_to_voicemail": "false",
+  "checked_voicemail": "false",
+  "call_connection": "connected",
+  "call_transcription": {
+    "call_transcription_id": "E5R6sKCVwntniF9H4a8k9g",
+    "transcription_run_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "Please leave your message for 480-227-2565. Hi David. This is Donna with smilekrafters. I was giving you a call about an appointment coming up in September. We have for you we do need to change that date unfortunate, but if you can call me back at 480-608-1725 and we\u0027ll get that taken care of for you. Thank you have a good day.",
+    "person_id": null,
+    "caller_text": "Please leave your message for 480-227-2565.",
+    "callee_text": "Hi David. This is Donna with smilekrafters. I was giving you a call about an appointment coming up in September. We have for you we do need to change that date unfortunate, but if you can call me back at 480-608-1725 and we\u0027ll get that taken care of for you. Thank you have a good day."
+  },
+  "call_purpose": [{
+    "call_purpose_id": "ARwkKVbrYGGVBuo8cvhRYm",
+    "purpose_run_id": "77bDJx89RuRhRWfJiD4TYK",
+    "purpose": "reschedule",
+    "purpose_score": "0.620150532393649",
+    "outcome": "failure",
+    "outcome_reason_run_id": "hwmZ2fJ5Yp27Wcs2SHz4ei",
+    "outcome_reason": "not_enough_information_possesed_by_patient_or_agent"
+  }],
+  "call_sentiment": {
+    "call_sentiment_id": "kKFG2JxfBaSemYRmMPRctL",
+    "sentiment_run_id": "GGEMjmH65NjjNp37PuUzjP",
+    "overall_sentiment": "positive",
+    "caller_sentiment": "positive",
+    "callee_sentiment": "positive"
+  },
+  "caller_type_info": {
+    "caller_type_id": "KF7WdGYwX5Er4oJBpVRq52",
+    "caller_type_run_id": "eiHft3ayYf4hWWEn2exaZR",
+    "caller_type": "ExistingPatient"
+  },
+  "call_pause": {
+    "call_id": "LFyVuwebaLieq6V3KBjcQM",
+    "call_run_id": "B99pfaVDvBFYMvwnbmdFYS",
+    "longest_pause": null,
+    "start_time": null,
+    "end_time": null
+  },
+  "call_procedure_discussed": [{
+    "call_procedure_discussed_id": "bvc3ZNJDH8CL6XcbmgUysn",
+    "call_procedure_id": null,
+    "call_procedure_keyword": null,
+    "call_procedure_price_usd": null
+  }],
+  "call_insurance_discussed": [{
+    "call_insurance_discussed_id": "5aZkdNuYuWJybceadtLyKN",
+    "call_insurance_keyword": null
+  }],
+  "call_product_discussed": [{
+    "call_product_discussed_id": "WCkPkaUXkvRDWn2xSfHije",
+    "call_product_keyword": null
+  }],
+  "call_company_discussed": [{
+    "call_company_discussed_id": "8fRYvB6sMFuJwxZyAenSsM",
+    "call_company_keyword": null
+  }],
+  "call_symptom_discussed": [{
+    "call_symptom_discussed_id": "gd37f3Y45BxHvnmnEhUqnx",
+    "call_symptom_keyword": null
+  }],
+  "metadata_file_uri": null,
+  "insert_timestamp": "2022-07-26T18:41:55Z",
+  "call_transcription_fragment": [{
+    "transcription_fragment_id": "",
+    "transcription_run_id": "",
+    "person_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "",
+    "sentiment_run_id": "",
+    "sentiment": "",
+    "telecom_persona_type": ""
+  }],
+  "referral_source": {
+    "referral_source_run_id": "kxr7SbzMzdgE8iknduDPXb",
+    "referral_source_type": "n/a"
+  },
+  "call_agent_interaction": [{
+    "agent_interaction_metric_run_id": "2fjVNZeUjXwDHL9XmXMay3",
+    "agent_interaction_metric_name": "scheduling_accommodations",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "4kK9so6snUTqhZcADunXgM",
+    "agent_interaction_metric_name": "referral_source",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "NszatC8YRq8d43MSCoPgVC",
+    "agent_interaction_metric_name": "procedure_explanation",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "jVapi9jHn4krixZZTo3eam",
+    "agent_interaction_metric_name": "payment_method",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "mB4JpKYpi3xtmzTkLTc4Mb",
+    "agent_interaction_metric_name": "patient_demographics",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "J2vnZrCZ83C2ro8duWznPj",
+    "agent_interaction_metric_name": "greeting",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "hsqBJn3a4mHzLajUMFVNND",
+    "agent_interaction_metric_name": "agent_overtalk",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }],
+  "caller_type": "agent",
+  "callee_type": "non_agent",
+  "non_agent_engagement_persona_info": {
+    "non_agent_engagement_persona_id": "KF7WdGYwX5Er4oJBpVRq52",
+    "non_agent_engagement_persona_run_id": "eiHft3ayYf4hWWEn2exaZR",
+    "non_agent_engagement_persona_type": "ExistingPatient"
+  },
+  "practice_id": "gKFyccEAWCRtDZSFcAQdkw",
+  "new_patient_opportunity_info": null
+}, {
+  "call_id": "LFyVuwebaLieq6V3KBjcQM",
+  "site_id": null,
+  "callee_id": null,
+  "caller_id": null,
+  "call_start": "2022-07-26T18:33:49Z",
+  "callee_domain": null,
+  "caller_audio_url": null,
+  "callee_audio_url": null,
+  "call_end": "2022-07-26T18:34:50Z",
+  "domain": "smilecraftersaz",
+  "caller_domain": null,
+  "connect_duration_seconds": "27",
+  "duration_seconds": "27",
+  "progress_time_seconds": "31",
+  "who_terminated_call": "",
+  "sip_caller_number": "+14806081725",
+  "sip_callee_number": "+14802272565",
+  "sip_caller_name": "Check In",
+  "call_direction": "outbound",
+  "went_to_voicemail": "false",
+  "checked_voicemail": "false",
+  "call_connection": "connected",
+  "call_transcription": {
+    "call_transcription_id": "E5R6sKCVwntniF9H4a8k9g",
+    "transcription_run_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "Please leave your message for 480-227-2565. Hi David. This is Donna with smilekrafters. I was giving you a call about an appointment coming up in September. We have for you we do need to change that date unfortunate, but if you can call me back at 480-608-1725 and we\u0027ll get that taken care of for you. Thank you have a good day.",
+    "person_id": null,
+    "caller_text": "Please leave your message for 480-227-2565.",
+    "callee_text": "Hi David. This is Donna with smilekrafters. I was giving you a call about an appointment coming up in September. We have for you we do need to change that date unfortunate, but if you can call me back at 480-608-1725 and we\u0027ll get that taken care of for you. Thank you have a good day."
+  },
+  "call_purpose": [{
+    "call_purpose_id": "bs3dWVdX7MhgM7EgSrHJQ9",
+    "purpose_run_id": "VvmKsheYdjekyf7VbYoZVq",
+    "purpose": "reschedule",
+    "purpose_score": "0.620150532393649",
+    "outcome": "failure",
+    "outcome_reason_run_id": "birokkLi9r7FiH2eEx7Kek",
+    "outcome_reason": "not_enough_information_possesed_by_patient_or_agent"
+  }],
+  "call_sentiment": {
+    "call_sentiment_id": "c5xiR6bwEEd6YEY4igTjGU",
+    "sentiment_run_id": "W3Dq95JYyyQ4naDJibzGUH",
+    "overall_sentiment": "positive",
+    "caller_sentiment": "positive",
+    "callee_sentiment": "positive"
+  },
+  "caller_type_info": {
+    "caller_type_id": "aKSNmXUwgMsx2M2rcfNpUk",
+    "caller_type_run_id": "fDkjZCGTQjLttbidbYGuHd",
+    "caller_type": "ExistingPatient"
+  },
+  "call_pause": {
+    "call_id": "LFyVuwebaLieq6V3KBjcQM",
+    "call_run_id": "ajQTzrjASn2ZGQxmAKUaN2",
+    "longest_pause": null,
+    "start_time": null,
+    "end_time": null
+  },
+  "call_procedure_discussed": [{
+    "call_procedure_discussed_id": "g8p7asEKgJPGTKu7pFsn5o",
+    "call_procedure_id": null,
+    "call_procedure_keyword": null,
+    "call_procedure_price_usd": null
+  }],
+  "call_insurance_discussed": [{
+    "call_insurance_discussed_id": "9KJugBwAjVZb8Ba8rASWCN",
+    "call_insurance_keyword": null
+  }],
+  "call_product_discussed": [{
+    "call_product_discussed_id": "dknxXakZ3HYmGa85uAkkPp",
+    "call_product_keyword": null
+  }],
+  "call_company_discussed": [{
+    "call_company_discussed_id": "eiZKGWMVPKEYNbuQAfVbyo",
+    "call_company_keyword": null
+  }],
+  "call_symptom_discussed": [{
+    "call_symptom_discussed_id": "bakEJQficZ8wnLtSpVrX9F",
+    "call_symptom_keyword": null
+  }],
+  "metadata_file_uri": null,
+  "insert_timestamp": "2022-07-26T18:41:57Z",
+  "call_transcription_fragment": [{
+    "transcription_fragment_id": "",
+    "transcription_run_id": "",
+    "person_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "",
+    "sentiment_run_id": "",
+    "sentiment": "",
+    "telecom_persona_type": ""
+  }],
+  "referral_source": {
+    "referral_source_run_id": "NmXwoVnDTxXoyEQpqJAzNg",
+    "referral_source_type": "n/a"
+  },
+  "call_agent_interaction": [{
+    "agent_interaction_metric_run_id": "GoznXoavbUcYWbb2aoDz8J",
+    "agent_interaction_metric_name": "scheduling_accommodations",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "GHUoNSEh9GP6EWGDdxhuJS",
+    "agent_interaction_metric_name": "referral_source",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "ipQTKCjWF3NvgWEPXqB96f",
+    "agent_interaction_metric_name": "procedure_explanation",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "ZLUaUw3vGf5MMgp3sZtDuz",
+    "agent_interaction_metric_name": "payment_method",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "9RaximNLESPYspDj64KgSt",
+    "agent_interaction_metric_name": "patient_demographics",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "NNU4zFwPTfrGBCYu7H3vJn",
+    "agent_interaction_metric_name": "greeting",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "AWYNJf6v8bUPapFDwJ3UTx",
+    "agent_interaction_metric_name": "agent_overtalk",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }],
+  "caller_type": "agent",
+  "callee_type": "non_agent",
+  "non_agent_engagement_persona_info": {
+    "non_agent_engagement_persona_id": "aKSNmXUwgMsx2M2rcfNpUk",
+    "non_agent_engagement_persona_run_id": "fDkjZCGTQjLttbidbYGuHd",
+    "non_agent_engagement_persona_type": "ExistingPatient"
+  },
+  "practice_id": "gKFyccEAWCRtDZSFcAQdkw",
+  "new_patient_opportunity_info": null
+}, {
+  "call_id": "nmqZBxfbUkSFLq4uCnDN9i",
+  "site_id": null,
+  "callee_id": null,
+  "caller_id": null,
+  "call_start": "2022-07-26T19:14:12Z",
+  "callee_domain": null,
+  "caller_audio_url": null,
+  "callee_audio_url": null,
+  "call_end": "2022-07-26T19:14:58Z",
+  "domain": "alluringsmiles",
+  "caller_domain": null,
+  "connect_duration_seconds": "41",
+  "duration_seconds": "41",
+  "progress_time_seconds": "4",
+  "who_terminated_call": "",
+  "sip_caller_number": "+14808306300",
+  "sip_callee_number": "+14803079121",
+  "sip_caller_name": "Front Desk 2",
+  "call_direction": "outbound",
+  "went_to_voicemail": "false",
+  "checked_voicemail": "false",
+  "call_connection": "connected",
+  "call_transcription": {
+    "call_transcription_id": "39J5t9L49M6wTbRZqjfHom",
+    "transcription_run_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "Thank you for calling, please. Press one to connect your call. Hello, hello. Hello Barbara. It\u0027s Anissa with the learning Smiles. How are you? I\u0027m doing fine. Thank you. Good. Hey just wanted to touch base with you to see if you wanted to move up your appointment to tomorrow, as opposed to the 22nd No, no, no. I would not, All righty. I can\u0027t. Okay, thanks. Anyway Thank you, bye-bye. by",
+    "person_id": null,
+    "caller_text": "Thank you for calling, please. Press one to connect your call. Hello, hello. I\u0027m doing fine. Thank you. No, no, no. I would not, I can\u0027t. Okay, thanks. Anyway by",
+    "callee_text": "Hello Barbara. It\u0027s Anissa with the learning Smiles. How are you? Good. Hey just wanted to touch base with you to see if you wanted to move up your appointment to tomorrow, as opposed to the 22nd All righty. Thank you, bye-bye."
+  },
+  "call_purpose": [{
+    "call_purpose_id": "FvEcQfvRzByD4agRyzamUN",
+    "purpose_run_id": "2TU89HkxMgwMFnso7s8HT6",
+    "purpose": "reschedule",
+    "purpose_score": "0.84196275815172272",
+    "outcome": "failure",
+    "outcome_reason_run_id": "ZTzMuPJBMWqCVGcq4Ssesf",
+    "outcome_reason": "procedure_not_offered"
+  }],
+  "call_sentiment": {
+    "call_sentiment_id": "XMHeTiKDx2KZqLaj52UMza",
+    "sentiment_run_id": "Q3VaC356wtaS4VTCGEqZWb",
+    "overall_sentiment": "positive",
+    "caller_sentiment": "neutral",
+    "callee_sentiment": "positive"
+  },
+  "caller_type_info": {
+    "caller_type_id": "Y8FmmyHJ6Jyz4LMuZ995EU",
+    "caller_type_run_id": "7RDHrpsTGN5efnUW6pcKpv",
+    "caller_type": "Others"
+  },
+  "call_pause": {
+    "call_id": "nmqZBxfbUkSFLq4uCnDN9i",
+    "call_run_id": "3rrFKXzhq8WGGozaVaMy85",
+    "longest_pause": null,
+    "start_time": null,
+    "end_time": null
+  },
+  "call_procedure_discussed": [{
+    "call_procedure_discussed_id": "MvGoSk32u2JMLffhW7JWVK",
+    "call_procedure_id": "D4355",
+    "call_procedure_keyword": "cleaning",
+    "call_procedure_price_usd": "184.0"
+  }],
+  "call_insurance_discussed": [{
+    "call_insurance_discussed_id": "JXhTYZQoMQXTeKMqcDakDr",
+    "call_insurance_keyword": null
+  }],
+  "call_product_discussed": [{
+    "call_product_discussed_id": "g6hdZE6QtSsi4mL7iwau2H",
+    "call_product_keyword": null
+  }],
+  "call_company_discussed": [{
+    "call_company_discussed_id": "3ZXH9bCCQHb7MV78AxQ3Sy",
+    "call_company_keyword": null
+  }],
+  "call_symptom_discussed": [{
+    "call_symptom_discussed_id": "FFLBSCJCwpZNW5ZWm7eGjh",
+    "call_symptom_keyword": null
+  }],
+  "metadata_file_uri": null,
+  "insert_timestamp": "2022-07-26T19:22:13Z",
+  "call_transcription_fragment": [{
+    "transcription_fragment_id": "",
+    "transcription_run_id": "",
+    "person_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "",
+    "sentiment_run_id": "",
+    "sentiment": "",
+    "telecom_persona_type": ""
+  }],
+  "referral_source": {
+    "referral_source_run_id": "7C6xnDykrV7AQEXhuhBL3c",
+    "referral_source_type": "n/a"
+  },
+  "call_agent_interaction": [{
+    "agent_interaction_metric_run_id": "YK4EhYSbrYTEg288h3CBkD",
+    "agent_interaction_metric_name": "scheduling_accommodations",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "PFU8K3Xv4etSTBXZj4947d",
+    "agent_interaction_metric_name": "referral_source",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "M2X3gag85xgR7GGrAUhfXm",
+    "agent_interaction_metric_name": "procedure_explanation",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "EnMfqSXQZrjFLKSDt2wpwP",
+    "agent_interaction_metric_name": "payment_method",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "5Z5tpzFDj9g6HjLfcoWgEa",
+    "agent_interaction_metric_name": "patient_demographics",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "BUjVXVcxNwtxP9s3epFg9u",
+    "agent_interaction_metric_name": "greeting",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "4mf5RRTzNzXzaA9ak766Y9",
+    "agent_interaction_metric_name": "agent_overtalk",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }],
+  "caller_type": "agent",
+  "callee_type": "non_agent",
+  "non_agent_engagement_persona_info": {
+    "non_agent_engagement_persona_id": "Y8FmmyHJ6Jyz4LMuZ995EU",
+    "non_agent_engagement_persona_run_id": "7RDHrpsTGN5efnUW6pcKpv",
+    "non_agent_engagement_persona_type": "Others"
+  },
+  "practice_id": "9tmVYaBJcXZkeRyABsks8F",
+  "new_patient_opportunity_info": null
+}, {
+  "call_id": "nmqZBxfbUkSFLq4uCnDN9i",
+  "site_id": null,
+  "callee_id": null,
+  "caller_id": null,
+  "call_start": "2022-07-26T19:14:12Z",
+  "callee_domain": null,
+  "caller_audio_url": null,
+  "callee_audio_url": null,
+  "call_end": "2022-07-26T19:14:58Z",
+  "domain": "alluringsmiles",
+  "caller_domain": null,
+  "connect_duration_seconds": "41",
+  "duration_seconds": "41",
+  "progress_time_seconds": "4",
+  "who_terminated_call": "",
+  "sip_caller_number": "+14808306300",
+  "sip_callee_number": "+14803079121",
+  "sip_caller_name": "Front Desk 2",
+  "call_direction": "outbound",
+  "went_to_voicemail": "false",
+  "checked_voicemail": "false",
+  "call_connection": "connected",
+  "call_transcription": {
+    "call_transcription_id": "39J5t9L49M6wTbRZqjfHom",
+    "transcription_run_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "Thank you for calling, please. Press one to connect your call. Hello, hello. Hello Barbara. It\u0027s Anissa with the learning Smiles. How are you? I\u0027m doing fine. Thank you. Good. Hey just wanted to touch base with you to see if you wanted to move up your appointment to tomorrow, as opposed to the 22nd No, no, no. I would not, All righty. I can\u0027t. Okay, thanks. Anyway Thank you, bye-bye. by",
+    "person_id": null,
+    "caller_text": "Thank you for calling, please. Press one to connect your call. Hello, hello. I\u0027m doing fine. Thank you. No, no, no. I would not, I can\u0027t. Okay, thanks. Anyway by",
+    "callee_text": "Hello Barbara. It\u0027s Anissa with the learning Smiles. How are you? Good. Hey just wanted to touch base with you to see if you wanted to move up your appointment to tomorrow, as opposed to the 22nd All righty. Thank you, bye-bye."
+  },
+  "call_purpose": [{
+    "call_purpose_id": "3U84WM5exAtSKksMEhfonJ",
+    "purpose_run_id": "eNrdL8abAXgfaJUKLmDUV9",
+    "purpose": "reschedule",
+    "purpose_score": "0.84196275815172272",
+    "outcome": "failure",
+    "outcome_reason_run_id": "bxytcNwEHatQH5dPAi7EtK",
+    "outcome_reason": "procedure_not_offered"
+  }],
+  "call_sentiment": {
+    "call_sentiment_id": "8B9k9iXHoC8ZS7DNJDRzb2",
+    "sentiment_run_id": "NToJobpsJSQKWC4NA2NQ9t",
+    "overall_sentiment": "positive",
+    "caller_sentiment": "neutral",
+    "callee_sentiment": "positive"
+  },
+  "caller_type_info": {
+    "caller_type_id": "FFeHrvrQgxLrYLZ4PjQTq5",
+    "caller_type_run_id": "gRJvgq55ACU3ykrtbP8Dgp",
+    "caller_type": "Others"
+  },
+  "call_pause": {
+    "call_id": "nmqZBxfbUkSFLq4uCnDN9i",
+    "call_run_id": "e7JcQiVEo6qkbtBruKprg7",
+    "longest_pause": null,
+    "start_time": null,
+    "end_time": null
+  },
+  "call_procedure_discussed": [{
+    "call_procedure_discussed_id": "SDyVce4mKtknUSED9BDzEy",
+    "call_procedure_id": "D4355",
+    "call_procedure_keyword": "cleaning",
+    "call_procedure_price_usd": "184.0"
+  }],
+  "call_insurance_discussed": [{
+    "call_insurance_discussed_id": "DmTLotKtinYfyY7t2NYEcY",
+    "call_insurance_keyword": null
+  }],
+  "call_product_discussed": [{
+    "call_product_discussed_id": "NPQegWCiqb8jGzj2MjWhgk",
+    "call_product_keyword": null
+  }],
+  "call_company_discussed": [{
+    "call_company_discussed_id": "HVyXfoTJsWTjPFiNQzDEaT",
+    "call_company_keyword": null
+  }],
+  "call_symptom_discussed": [{
+    "call_symptom_discussed_id": "ApxXBDSwXfL5DwkmAms3wo",
+    "call_symptom_keyword": null
+  }],
+  "metadata_file_uri": null,
+  "insert_timestamp": "2022-07-26T19:22:14Z",
+  "call_transcription_fragment": [{
+    "transcription_fragment_id": "",
+    "transcription_run_id": "",
+    "person_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "",
+    "sentiment_run_id": "",
+    "sentiment": "",
+    "telecom_persona_type": ""
+  }],
+  "referral_source": {
+    "referral_source_run_id": "Vaixx2LUKjJioWJPDbkiFw",
+    "referral_source_type": "n/a"
+  },
+  "call_agent_interaction": [{
+    "agent_interaction_metric_run_id": "akrvXWZLj82WBPfewvqRBq",
+    "agent_interaction_metric_name": "scheduling_accommodations",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "PdnckmZqsFfMork7n3iTn7",
+    "agent_interaction_metric_name": "referral_source",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "JkQnRWtQLXVp3Sv2HeFDMq",
+    "agent_interaction_metric_name": "procedure_explanation",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "P9vYZ8QzLcLe76oXZhSYXc",
+    "agent_interaction_metric_name": "payment_method",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "A2TbxePzAjShzMRsaeGJJ2",
+    "agent_interaction_metric_name": "patient_demographics",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "Kv9b8DBWm68a65SBWEMVXw",
+    "agent_interaction_metric_name": "greeting",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "4CTqrxLe3MQd6JNK9DE4Fk",
+    "agent_interaction_metric_name": "agent_overtalk",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }],
+  "caller_type": "agent",
+  "callee_type": "non_agent",
+  "non_agent_engagement_persona_info": {
+    "non_agent_engagement_persona_id": "FFeHrvrQgxLrYLZ4PjQTq5",
+    "non_agent_engagement_persona_run_id": "gRJvgq55ACU3ykrtbP8Dgp",
+    "non_agent_engagement_persona_type": "Others"
+  },
+  "practice_id": "9tmVYaBJcXZkeRyABsks8F",
+  "new_patient_opportunity_info": null
+}, {
+  "call_id": "nmqZBxfbUkSFLq4uCnDN9i",
+  "site_id": null,
+  "callee_id": null,
+  "caller_id": null,
+  "call_start": "2022-07-26T19:14:12Z",
+  "callee_domain": null,
+  "caller_audio_url": null,
+  "callee_audio_url": null,
+  "call_end": "2022-07-26T19:14:58Z",
+  "domain": "alluringsmiles",
+  "caller_domain": null,
+  "connect_duration_seconds": "41",
+  "duration_seconds": "41",
+  "progress_time_seconds": "4",
+  "who_terminated_call": "",
+  "sip_caller_number": "+14808306300",
+  "sip_callee_number": "+14803079121",
+  "sip_caller_name": "Front Desk 2",
+  "call_direction": "outbound",
+  "went_to_voicemail": "false",
+  "checked_voicemail": "false",
+  "call_connection": "connected",
+  "call_transcription": {
+    "call_transcription_id": "39J5t9L49M6wTbRZqjfHom",
+    "transcription_run_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "Thank you for calling, please. Press one to connect your call. Hello, hello. Hello Barbara. It\u0027s Anissa with the learning Smiles. How are you? I\u0027m doing fine. Thank you. Good. Hey just wanted to touch base with you to see if you wanted to move up your appointment to tomorrow, as opposed to the 22nd No, no, no. I would not, All righty. I can\u0027t. Okay, thanks. Anyway Thank you, bye-bye. by",
+    "person_id": null,
+    "caller_text": "Thank you for calling, please. Press one to connect your call. Hello, hello. I\u0027m doing fine. Thank you. No, no, no. I would not, I can\u0027t. Okay, thanks. Anyway by",
+    "callee_text": "Hello Barbara. It\u0027s Anissa with the learning Smiles. How are you? Good. Hey just wanted to touch base with you to see if you wanted to move up your appointment to tomorrow, as opposed to the 22nd All righty. Thank you, bye-bye."
+  },
+  "call_purpose": [{
+    "call_purpose_id": "VXEtyhvyfPmbVttF92XPaq",
+    "purpose_run_id": "GuVjSrn76Qm25YrofUS7r4",
+    "purpose": "reschedule",
+    "purpose_score": "0.84196275815172272",
+    "outcome": "failure",
+    "outcome_reason_run_id": "bmFEfuaYEyx3fBPeCviDmT",
+    "outcome_reason": "procedure_not_offered"
+  }],
+  "call_sentiment": {
+    "call_sentiment_id": "GhsiNossECSVzowvTWzCwZ",
+    "sentiment_run_id": "nkRY9xEqMHR7S4SmMR7yco",
+    "overall_sentiment": "positive",
+    "caller_sentiment": "neutral",
+    "callee_sentiment": "positive"
+  },
+  "caller_type_info": {
+    "caller_type_id": "TzP3Xxzx5tHZy7ZZ7vLrS2",
+    "caller_type_run_id": "R2miqGNVmSfDM75tH9PXdn",
+    "caller_type": "Others"
+  },
+  "call_pause": {
+    "call_id": "nmqZBxfbUkSFLq4uCnDN9i",
+    "call_run_id": "f7Wux4rud4rq3gptDgrS3p",
+    "longest_pause": null,
+    "start_time": null,
+    "end_time": null
+  },
+  "call_procedure_discussed": [{
+    "call_procedure_discussed_id": "2HJx6RHNwWAyVwiGGvsXPf",
+    "call_procedure_id": "D4355",
+    "call_procedure_keyword": "cleaning",
+    "call_procedure_price_usd": "184.0"
+  }],
+  "call_insurance_discussed": [{
+    "call_insurance_discussed_id": "UusCgasi7WH8JqGcqjSaro",
+    "call_insurance_keyword": null
+  }],
+  "call_product_discussed": [{
+    "call_product_discussed_id": "SMwvMVdmYELLwCgt8oimNn",
+    "call_product_keyword": null
+  }],
+  "call_company_discussed": [{
+    "call_company_discussed_id": "MR8bYZkdi7FY3Gx6PuTYUB",
+    "call_company_keyword": null
+  }],
+  "call_symptom_discussed": [{
+    "call_symptom_discussed_id": "amu4mbue8bFYtkhW8ZZJmU",
+    "call_symptom_keyword": null
+  }],
+  "metadata_file_uri": null,
+  "insert_timestamp": "2022-07-26T19:22:14Z",
+  "call_transcription_fragment": [{
+    "transcription_fragment_id": "",
+    "transcription_run_id": "",
+    "person_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "",
+    "sentiment_run_id": "",
+    "sentiment": "",
+    "telecom_persona_type": ""
+  }],
+  "referral_source": {
+    "referral_source_run_id": "LaUo4ijHcTe38RAfj8Zvov",
+    "referral_source_type": "n/a"
+  },
+  "call_agent_interaction": [{
+    "agent_interaction_metric_run_id": "BbKDYsRKdbiE4Bjo8Hd6HS",
+    "agent_interaction_metric_name": "scheduling_accommodations",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "iLwFQy6bdn2fut7jSA23Pj",
+    "agent_interaction_metric_name": "referral_source",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "kaXxS6VtgJkkgvchVa5XkD",
+    "agent_interaction_metric_name": "procedure_explanation",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "o7wnwvDi2y3LPZiHEzcLJ5",
+    "agent_interaction_metric_name": "payment_method",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "L98uRFWrYLHAgd5YaEsEjk",
+    "agent_interaction_metric_name": "patient_demographics",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "9NcLdRDN5kaHE8Y85ZvMqc",
+    "agent_interaction_metric_name": "greeting",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "Yevm7G3PbtEvT22NN2WntA",
+    "agent_interaction_metric_name": "agent_overtalk",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }],
+  "caller_type": "agent",
+  "callee_type": "non_agent",
+  "non_agent_engagement_persona_info": {
+    "non_agent_engagement_persona_id": "TzP3Xxzx5tHZy7ZZ7vLrS2",
+    "non_agent_engagement_persona_run_id": "R2miqGNVmSfDM75tH9PXdn",
+    "non_agent_engagement_persona_type": "Others"
+  },
+  "practice_id": "9tmVYaBJcXZkeRyABsks8F",
+  "new_patient_opportunity_info": null
+}, {
+  "call_id": "8ZfPNfMzk8S4zZVGb5nELu",
+  "site_id": null,
+  "callee_id": null,
+  "caller_id": null,
+  "call_start": "2022-07-26T17:55:59Z",
+  "callee_domain": null,
+  "caller_audio_url": null,
+  "callee_audio_url": null,
+  "call_end": "2022-07-26T18:12:08Z",
+  "domain": "dentaldesignstudios_scottsdale",
+  "caller_domain": null,
+  "connect_duration_seconds": "969",
+  "duration_seconds": "969",
+  "progress_time_seconds": "0",
+  "who_terminated_call": "",
+  "sip_caller_number": "+14807970145",
+  "sip_callee_number": "+14803820337",
+  "sip_caller_name": "HENRY DILEMA",
+  "call_direction": "inbound",
+  "went_to_voicemail": "false",
+  "checked_voicemail": "false",
+  "call_connection": "connected",
+  "call_transcription": {
+    "call_transcription_id": "UZmrQoBDaHBjApmjro8wai",
+    "transcription_run_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "Good morning Scottsdale Dental Studio. This is Joseph, I can help you. Yes. Can I talk with the lady who\u0027s been there for a while? Are you talking about l e? Yeah, Okay. is she Can there? I put you? Yeah, she\u0027s with another patient. Can I put you on a brief? Hold. Sure, no problem. Thank you so much. Give me one moment. Ma\u0027am. Okay, okay. Hi, thank you for holding this. Is Ellie. How may I assist you? Ellie. This is Chita dilemma. Hi How Cheetah, are you? I\u0027m doing good. How are you? Oh, many things happen to remember the recommended me to that the person who had the choice who did the root canal on my teeth. One second, let me go ahead and double check. Okay. I do apologize. Give me one moment. Yes, we referred you to the specialist for the root canal. Yes. To Four Peaks endo. He made three three root canal. Yes. Okay, and he charged me like almost more than $5,000. Oh, for the root canal. Yeah, Okay. yeah. So And he, he advised me to go back to the dentist except that. I, I just moved out of my son\u0027s place over in front of you guys. And so I\u0027m now in South Scottsdale but I still go there to st. Bernadette, you know, normal life. It would be I do week. So Thursday. how do we? Because I know that I still have a balance of $700 over there. Yes. so, Let me see cuz we were in the middle how of redoing your partials correct? Yes Yeah. So because he he stopped the partial because of the root canal and you know he wants to be sure that it\u0027s the right one. Okay, so I need Yeah. to schedule you so you can come back with dr. Body we can see what\u0027s going on. You know, we can treatment plant crowns on those teeth. I\u0027ll let me know how much those plans are and then we can continue. We can finish the process for the partial. Yeah, I just moved in. So it should be, you know, around a month or so. Because I\u0027m unpacking myself and and a lot of things back to my kids Oh, okay. because they were employed for a couple of years and I want them to get them out of my apartment. So Okay, this week so you want Thursday, schedule an about a month to see doctor, buddy? Yes. But can you call me how much it would cost and everything? Well, that\u0027s why I want you to let me see. How r u l I\u0027m e. doing good. How are you? Well, it\u0027s been a long time since I\u0027ve seen you Yeah, I know. So, a lot has changed her. Yep. Okay. 745. Okay, let me schedule your appointment. I will treat my plan. The crowns that are needed for those teeth. And then once I verify your plan, see what\u0027s left over. I can let you know what the cost estimate will be for those three crowns. Okay, Okay, Okay, all right. so for Doctor body in August, I have available Tuesday, the 2nd, the 9th, the 16th, the 23rd, or the 30th, which day in August, would you like to come in Thursday? Because Monday is ready, August right? Yes. Yeah, so towards the end of the month. So, I can do the 16th the 23rd or the 30th. The 23rd would be fine. The 23rd. Okay does 1:00 Yeah, work for you. do you have a earlier? I don\u0027t doctor body starts at 1:00 on Tuesdays, and that\u0027s the only day he\u0027s in, So he goes only there for one day. Yes. Yeah, he\u0027s traveling within the office is now. Oh okay yeah, so let me talk to my son and see because Okay. he he the reason that I moved because his, you know, how long does predation was stolen and we had a, Okay. you know, hard time with these with the police and everything, you know, Okay. he\u0027s dead. So, do you want to give me a call back? And let me know if that time works because if it\u0027s Yeah. later in the afternoon, I can do. So that\u0027s just the earliest. The doctor body will be in my office 1:00. 1:00. Okay, so it\u0027s on the Tuesday. Okay. yep, and Let me let me call you towards the end of the week and then in that wage I would you don\u0027t have more concrete Okay. things, Okay, perfect. okay? Thank you, bye-bye.",
+    "person_id": null,
+    "caller_text": "Good morning Scottsdale Dental Studio. This is Joseph, I can help you. Are you talking about l e? Okay. Can I put you? Yeah, she\u0027s with another patient. Can I put you on a brief? Hold. Thank you so much. Give me one moment. Ma\u0027am. Ellie. This is Chita dilemma. How are you? Oh, many things happen to remember the recommended me to that the person who had the choice who did the root canal on my teeth. Okay. He made three three root canal. Okay, and he charged me like almost more than $5,000. Yeah, yeah. So And he, he advised me to go back to the dentist except that. I, I just moved out of my son\u0027s place over in front of you guys. And so I\u0027m now in South Scottsdale but I still go there to st. Bernadette, you know, normal life. It would be I do week. So how do we? Because I know that I still have a balance of $700 over there. so, how Yes because he he stopped the partial because of the root canal and you know he wants to be sure that it\u0027s the right one. Yeah. Yeah, I just moved in. So it should be, you know, around a month or so. Because I\u0027m unpacking myself and and a lot of things back to my kids because they were employed for a couple of years and I want them to get them out of my apartment. So this week Thursday, Yes. But can you call me how much it would cost and everything? How r u l e. Yeah, I know. Yep. Okay, all right. Because Monday is ready, August right? Yeah, so towards the end of the month. The 23rd would be fine. Yeah, do you have a earlier? So he goes only there for one day. Oh okay yeah, so let me talk to my son and see because he he the reason that I moved because his, you know, how long does predation was stolen and we had a, you know, hard time with these with the police and everything, you know, he\u0027s dead. Yeah. 1:00. Okay, so it\u0027s on the Tuesday. Okay. Let me let me call you towards the end of the week and then in that wage I would you don\u0027t have more concrete things, okay?",
+    "callee_text": "Yes. Can I talk with the lady who\u0027s been there for a while? Yeah, is she there? Sure, no problem. Okay, okay. Hi, thank you for holding this. Is Ellie. How may I assist you? Hi Cheetah, I\u0027m doing good. How are you? One second, let me go ahead and double check. I do apologize. Give me one moment. Yes, we referred you to the specialist for the root canal. Yes. To Four Peaks endo. Yes. Oh, for the root canal. Okay. Thursday. Yes. Let me see cuz we were in the middle of redoing your partials correct? Yeah. So Okay, so I need to schedule you so you can come back with dr. Body we can see what\u0027s going on. You know, we can treatment plant crowns on those teeth. I\u0027ll let me know how much those plans are and then we can continue. We can finish the process for the partial. Oh, okay. Okay, so you want to schedule an about a month to see doctor, buddy? Well, that\u0027s why I want you to let me see. I\u0027m doing good. How are you? Well, it\u0027s been a long time since I\u0027ve seen you So, a lot has changed her. Okay. 745. Okay, let me schedule your appointment. I will treat my plan. The crowns that are needed for those teeth. And then once I verify your plan, see what\u0027s left over. I can let you know what the cost estimate will be for those three crowns. Okay, Okay, so for Doctor body in August, I have available Tuesday, the 2nd, the 9th, the 16th, the 23rd, or the 30th, which day in August, would you like to come in Thursday? Yes. So, I can do the 16th the 23rd or the 30th. The 23rd. Okay does 1:00 work for you. I don\u0027t doctor body starts at 1:00 on Tuesdays, and that\u0027s the only day he\u0027s in, Yes. Yeah, he\u0027s traveling within the office is now. Okay. Okay. Okay. So, do you want to give me a call back? And let me know if that time works because if it\u0027s later in the afternoon, I can do. So that\u0027s just the earliest. The doctor body will be in my office 1:00. yep, and Okay. Okay, perfect. Thank you, bye-bye."
+  },
+  "call_purpose": [{
+    "call_purpose_id": "Fb7x6nbEsBWwKzDzK8WBpP",
+    "purpose_run_id": "N8a3ZbPXU8nr6Q23bfozb9",
+    "purpose": "new_appointment",
+    "purpose_score": "0.84119866760559614",
+    "outcome": "failure",
+    "outcome_reason_run_id": "CVSSsLrvHN8TDBVAZCE2Vc",
+    "outcome_reason": "not_enough_information_possesed_by_patient_or_agent"
+  }],
+  "call_sentiment": {
+    "call_sentiment_id": "TPPwP3oVJLXjq7jzhoRsHm",
+    "sentiment_run_id": "FkTKPtKoWMXhqwwyGBaqfr",
+    "overall_sentiment": "positive",
+    "caller_sentiment": "positive",
+    "callee_sentiment": "positive"
+  },
+  "caller_type_info": {
+    "caller_type_id": "iYDbhL7H642eU7k58cgswj",
+    "caller_type_run_id": "HRjirbjS8mFoTXscXnKiLt",
+    "caller_type": "ExistingPatient"
+  },
+  "call_pause": {
+    "call_id": "8ZfPNfMzk8S4zZVGb5nELu",
+    "call_run_id": "AX5Efv5DhSrznfxQgDuf43",
+    "longest_pause": null,
+    "start_time": null,
+    "end_time": null
+  },
+  "call_procedure_discussed": [{
+    "call_procedure_discussed_id": "4KRxbuVfGGBT8wXLdLnydE",
+    "call_procedure_id": "D3460",
+    "call_procedure_keyword": "implant",
+    "call_procedure_price_usd": "315.0"
+  }, {
+    "call_procedure_discussed_id": "NY5LQeK7GJCtzZSD8YNCLo",
+    "call_procedure_id": "D2740",
+    "call_procedure_keyword": "crown",
+    "call_procedure_price_usd": "1050.0"
+  }],
+  "call_insurance_discussed": [{
+    "call_insurance_discussed_id": "AZ7YnbeNYNJDDjCDsJiCo8",
+    "call_insurance_keyword": null
+  }],
+  "call_product_discussed": [{
+    "call_product_discussed_id": "LuvUoJoquRfLbLLK39FVSb",
+    "call_product_keyword": null
+  }],
+  "call_company_discussed": [{
+    "call_company_discussed_id": "abv6NAraEqeHSm7c8jdWMk",
+    "call_company_keyword": null
+  }],
+  "call_symptom_discussed": [{
+    "call_symptom_discussed_id": "YbqDKs8p2VtGbaQSn44KpZ",
+    "call_symptom_keyword": null
+  }],
+  "metadata_file_uri": null,
+  "insert_timestamp": "2022-07-26T18:19:41Z",
+  "call_transcription_fragment": [{
+    "transcription_fragment_id": "",
+    "transcription_run_id": "",
+    "person_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "",
+    "sentiment_run_id": "",
+    "sentiment": "",
+    "telecom_persona_type": ""
+  }],
+  "referral_source": {
+    "referral_source_run_id": "DAKLELjojcUZ8WYsi6BYCi",
+    "referral_source_type": "n/a"
+  },
+  "call_agent_interaction": [{
+    "agent_interaction_metric_run_id": "oPRxAN63wTRJ7dXCaGQqbc",
+    "agent_interaction_metric_name": "scheduling_accommodations",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "hNUYpnbPmwdKSensRjBGiD",
+    "agent_interaction_metric_name": "referral_source",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "cmghfgPDqv6kk32eLSmBqa",
+    "agent_interaction_metric_name": "procedure_explanation",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "o4a3yUaHS9xk6Jf2UJbN9R",
+    "agent_interaction_metric_name": "payment_method",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "fb97m6gsYeiqvXkWt8MfKX",
+    "agent_interaction_metric_name": "patient_demographics",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "VaWJiPwmmYYHf82J4TKFKv",
+    "agent_interaction_metric_name": "greeting",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "Fa3tw7CJipBxTuqcrTUPgt",
+    "agent_interaction_metric_name": "agent_overtalk",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }],
+  "caller_type": "non_agent",
+  "callee_type": "agent",
+  "non_agent_engagement_persona_info": {
+    "non_agent_engagement_persona_id": "iYDbhL7H642eU7k58cgswj",
+    "non_agent_engagement_persona_run_id": "HRjirbjS8mFoTXscXnKiLt",
+    "non_agent_engagement_persona_type": "ExistingPatient"
+  },
+  "practice_id": "V4KMjLJLMnYasXaZuoHe5g",
+  "new_patient_opportunity_info": null
+}]

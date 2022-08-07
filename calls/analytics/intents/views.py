@@ -1,40 +1,27 @@
-from rest_framework import viewsets, views
-from rest_framework.response import Response
-
-from calls.analytics.intents.field_choices import (
-    CallOutcomeTypes,
-    CallOutcomeReasonTypes,
-    CallPurposeTypes,
-)
+from rest_framework import viewsets
+from rest_framework.generics import ListAPIView
 from calls.analytics.intents.models import (
-    CallDiscussedCompany,
-    CallDiscussedInsurance,
+    CallMentionedCompany,
+    CallMentionedInsurance,
+    CallMentionedProcedure,
+    CallMentionedProduct,
+    CallMentionedSymptom,
     CallOutcome,
     CallOutcomeReason,
-    CallDiscussedProcedure,
-    CallDiscussedProduct,
     CallPurpose,
-    CallDiscussedSymptom,
 )
 from calls.analytics.intents.serializers import (
-    CallDiscussedCompanySerializer,
-    CallDiscussedInsuranceSerializer,
+    CallMentionedCompanySerializer,
+    CallMentionedInsuranceSerializer,
+    CallMentionedProcedureKeywordOnlySerializer,
+    CallMentionedProductSerializer,
+    CallMentionedProcedureSerializer,
+    CallMentionedSymptomSerializer,
     CallOutcomeSerializer,
     CallOutcomeReasonSerializer,
-    CallDiscussedProductSerializer,
-    CallDiscussedProcedureSerializer,
     CallPurposeSerializer,
-    CallDiscussedSymptomSerializer,
 )
 
-class CallAnalyticsFieldChoicesView(views.APIView):
-
-    def get(self, request, format=None):
-        result = {}
-        result["call_purpose_types"] = dict((y, x) for x, y in CallPurposeTypes.choices)
-        result["call_outcome_types"] = dict((y, x) for x, y in CallOutcomeTypes.choices)
-        result["call_outcome_reason_types"] = dict((y, x) for x, y in CallOutcomeReasonTypes.choices)
-        return Response(result)
 
 class CallPurposeViewset(viewsets.ModelViewSet):
     queryset = CallPurpose.objects.all().order_by("-modified_at")
@@ -54,32 +41,36 @@ class CallOutcomeReasonViewset(viewsets.ModelViewSet):
     filter_fields = ["call_outcome_reason_type", "call_outcome__id", "call_outcome__call_purpose__id", "call_outcome__call_purpose__call__id"]
 
 
-class CallDiscussedCompanyViewset(viewsets.ModelViewSet):
-    queryset = CallDiscussedCompany.objects.all().order_by("-modified_at")
-    serializer_class = CallDiscussedCompanySerializer
+class CallMentionedCompanyViewset(viewsets.ModelViewSet):
+    queryset = CallMentionedCompany.objects.all().order_by("-modified_at")
+    serializer_class = CallMentionedCompanySerializer
     filter_fields = ["call__id", "keyword"]
 
 
-class CallDiscussedInsuranceViewset(viewsets.ModelViewSet):
-    queryset = CallDiscussedInsurance.objects.all().order_by("-modified_at")
-    serializer_class = CallDiscussedInsuranceSerializer
+class CallMentionedInsuranceViewset(viewsets.ModelViewSet):
+    queryset = CallMentionedInsurance.objects.all().order_by("-modified_at")
+    serializer_class = CallMentionedInsuranceSerializer
     filter_fields = ["call__id", "keyword"]
 
 
-class CallDiscussedProcedureViewset(viewsets.ModelViewSet):
-    queryset = CallDiscussedProcedure.objects.all().order_by("-modified_at")
-    serializer_class = CallDiscussedProcedureSerializer
+class CallMentionedProcedureViewset(viewsets.ModelViewSet):
+    queryset = CallMentionedProcedure.objects.all().order_by("-modified_at")
+    serializer_class = CallMentionedProcedureSerializer
     filter_fields = ["call__id", "keyword"]
 
 
-class CallDiscussedProductViewset(viewsets.ModelViewSet):
-    queryset = CallDiscussedProduct.objects.all().order_by("-modified_at")
-    serializer_class = CallDiscussedProductSerializer
+class CallMentionedProcedureDistinctView(ListAPIView):
+    queryset = CallMentionedProcedure.objects.all().distinct("keyword")
+    serializer_class = CallMentionedProcedureKeywordOnlySerializer
+
+
+class CallMentionedProductViewset(viewsets.ModelViewSet):
+    queryset = CallMentionedProduct.objects.all().order_by("-modified_at")
+    serializer_class = CallMentionedProductSerializer
     filter_fields = ["call__id", "keyword"]
 
 
-class CallDiscussedSymptomViewset(viewsets.ModelViewSet):
-    queryset = CallDiscussedSymptom.objects.all().order_by("-modified_at")
-    serializer_class = CallDiscussedSymptomSerializer
+class CallMentionedSymptomViewset(viewsets.ModelViewSet):
+    queryset = CallMentionedSymptom.objects.all().order_by("-modified_at")
+    serializer_class = CallMentionedSymptomSerializer
     filter_fields = ["call__id", "keyword"]
-

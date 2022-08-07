@@ -1,7 +1,7 @@
 from datetime import datetime
 from rest_framework import serializers
 
-from .models import Client, Patient, Practice, PracticeTelecom, User, VoipProvider
+from .models import Agent, Client, Patient, Practice, PracticeTelecom, User, VoipProvider
 
 
 class UnixEpochDateField(serializers.DateTimeField):
@@ -15,7 +15,6 @@ class UnixEpochDateField(serializers.DateTimeField):
             return None
 
     def to_internal_value(self, value: float) -> datetime:
-
         return datetime.fromtimestamp(int(value))
 
 
@@ -36,26 +35,43 @@ class PatientSerializer(serializers.ModelSerializer):
 class PracticeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Practice
-        read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
         fields = "__all__"
+        read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
 
 
 class PracticeTelecomSerializer(serializers.ModelSerializer):
     class Meta:
         model = PracticeTelecom
-        read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
         fields = "__all__"
+        read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
 
 
 class VoipProviderSerializer(serializers.ModelSerializer):
     class Meta:
         model = VoipProvider
-        read_only_fields = ["id", "created_at", "modified_by", "modified_at", "active"]
         fields = "__all__"
+        read_only_fields = ["id", "created_at", "modified_by", "modified_at", "active"]
+
+
+class InlineUserSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ["id", "name"]
+        read_only_fields = ["id", "auth0_id", "objects"]
+
+
+class AgentSerializer(serializers.ModelSerializer):
+    user = InlineUserSerializer(required=False)
+
+    class Meta:
+        model = Agent
+        fields = ["id", "practice", "user"]
+        read_only_fields = ["id", "practice", "user"]
 
 
 class AdminUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        read_only_fields = ["id", "created_at", "modified_by", "modified_at", "password"]
         fields = "__all__"
+        read_only_fields = ["id", "created_at", "modified_by", "modified_at", "password"]

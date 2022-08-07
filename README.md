@@ -2,7 +2,7 @@
 
 ## Dependencies
 
-# TODO
+## TODO
 
 ## Docker
 
@@ -19,21 +19,28 @@ Paste the contents of this 1Password secret into the `.env` file
 See 1Password for a starter
 file: [peerlogic-api LOCAL  starter .env file](https://start.1password.com/open/i?a=P3RU52IFYBEH3GKEDF2UBYENBQ&v=wlmpasbyyncmhpjji3lfc7ra4a&i=sxjcghmtefeqvdystb2l6q7k5y&h=my.1password.com)
 
-### Docker commands:
+### Docker commands
 
 Initialize Postgres and create the peerlogic database, without tables:
 
-```
+```bash
 docker-compose up postgres
 ```
 
 Apply the structure of the tables to the database.
 
-```
+```bash
 docker-compose up migrate
 ```
 
-Add the super user with username of `admin` and password of `password`, set by .env file.
+Add the super user with username of `admin` and password of `password`, set by .env file. This can be done at any time / multiple times if needed.
+
+.env file defaults:
+
+```bash
+DJANGO_SUPERUSER_USERNAME=admin
+DJANGO_SUPERUSER_PASSWORD=password
+```
 
 ```
 docker-compose run api python3 manage.py createsuperuser --noinput
@@ -43,10 +50,7 @@ After initial build and api and postgres are running, start it all up:
 
 `docker-compose up`
 
-
-
 <!-- TODO: Generate fixtures to play with locally) -->
-
 
 All done!
 
@@ -66,7 +70,7 @@ End all processes:
 
 Not really recommended; docker has been more tested.
 
-### Initializing, Installing, and Migrating:
+### Initializing, Installing, and Migrating
 
 First time?
 
@@ -89,18 +93,18 @@ source env/bin/activate # ./env/Scripts/activate on Windows
 python3 manage.py runserver
 ```
 
-# Postman Collection
+## Postman Collection
 
 There is a Postman Collection that can be used to validate setup and test changes. Import the following: (Peerlogic API
 Collection)[https://www.getpostman.com/collections/c1045d02c72c56abd559]
 
-# Deployment
+## Deployment
 
 CI/CD is set up for deploying to development with App Engine.
 
 See `deployment/app_engine/DEPLOYMENT.md` for deploying to another environment with App Engine.
 
-# 1Password sign-in
+## 1Password sign-in
 
 Set up your CLI tool: https://support.1password.com/command-line-getting-started/
 
@@ -120,15 +124,15 @@ eval $(op signin my)
 echo "1PASSWORD_SHORTHAND=<youroutputtedtokenhere>" >> ~/.bashrc
 ``` -->
 
-# Running Management Commands
+## Running Management Commands
 
-## Setup Proxy Access to the Environment
+### Setup Proxy Access to the Environment
 
 Creation of credentials requires us to be local / on the same network as the environment in question since we're using the ORM to update the database itself directly.
 
 1. Download the appropriate credentials file to access the environment via IAM. Place this somewhere that is secure and you won't forget it. You'll need to use this later.
 
-2. Create or activate the google cloud environment
+2. Create a google cloud environment
 
     Either this with the appropriate values at the prompts:
 
@@ -136,11 +140,9 @@ Creation of credentials requires us to be local / on the same network as the env
     gcloud init
     ```
 
-    Or this:
+    When it asks to pick a configuration, select `[2] Create a new configuration`.
 
-    ```bash
-    gcloud config configuration activate peerlogic-api-dev
-    ```
+    Name it `peerlogic-api-dev`, `peerlogic-api-stage` or `peerlogic-api-prod` depending on which project you choose. Select us-west4a as the Compute Region/Zone.
 
 3. Enter the google cloud environment to access the database with cloud sql proxy
 
@@ -148,72 +150,67 @@ Creation of credentials requires us to be local / on the same network as the env
     ./devtools/cloud_sql_proxy.bash
     ```
 
-## Database Access to the Environment
+### Database Access to the Environment
 
 Google Cloud credentials are necessary to access the database. Your environment file must be setup accordingly.
 
 1. Ensure you have a copy of the appropriate deployment's environment. Use Secret Manager of the appropriate environment to download a copy.
 
-2. Backup your local .env
+2. Place into the ./environment-connect/ directory the downloaded .env file with its enviromment shorthand as a suffix such as ./environment-connect/.env.dev for example.
 
-    ```bash
-    mv .env .env.local
-    ```
-
-3. Rename the environment configuration to .env so you can use it.
-
-    ```bash
-    cp .env.dev .env
-    ```
-
-4. Update the .env file to use the google credentials file.
+3. Update the .env file to use the google credentials file.
 
     ```bash
     PROJECT_ID=peerlogic-api-dev # put your env here
     GOOGLE_APPLICATION_CREDENTIALS=.credentials/peerlogic-api-dev-9d33d6f6e911.json  # THIS IS JUST AN EXAMPLE, YOURS WILL BE NAMED DIFFERENTLY.
     ```
 
+4. Change the value in ./environment-connect/cloudsql-docker-compose.yml env_file to point at your `.env.dev`.
+
 5. Build the necessary dependencies in a separate terminal window:
 
    ```bash
-   docker-compose -f ./devtools/cloudsql-docker-compose.yml up --build
+   docker-compose -f ./environment-connect/cloudsql-docker-compose.yml up --build
    ```
 
-## Management Command - Create Netsapiens subscription
+### Management Command - Create Netsapiens subscription
 
 1. Follow above instructions under "Running Management Commands" before continuing.
 
 2. Run the creation command:
 
     ```bash
-    docker-compose -f ./devtools/cloudsql-docker-compose.yml run api python3 manage.py create_netsapiens_integration {peerlogic_root_api_url}, {voip_provider_id}, {practice_name}, {practice_voip_domain}
+    ./environment-connect/connect.sh dev run api python3 manage.py create_netsapiens_integration {peerlogic_root_api_url}, {voip_provider_id}, {practice_name}, {practice_voip_domain}
     ```
-
 
     NOTE: double check the peerlogic_root_api_url. It's not as easy as just swapping out "dev", "stage", and "prod" as the subdomains themselves are different!
 
     ```bash
-    docker-compose -f ./devtools/cloudsql-docker-compose.yml run api python3 manage.py create_netsapiens_integration https://peerlogic-api-prod.wm.r.appspot.com drFoXEnEwrN28Gowp3CoRN "Thunderbird Dental Studio" dentaldesignstudios_thunderbird
+    ./environment-connect/connect.sh dev run api python3 manage.py create_netsapiens_integration https://peerlogic-api-prod.wm.r.appspot.com drFoXEnEwrN28Gowp3CoRN "Thunderbird Dental Studio" dentaldesignstudios_thunderbird
     ```
 
-## Management Command - Create Client Credential Auth User
+### Management Command - Create Client Credential Auth User
 
 1. Follow above instructions under "Running Management Commands" before continuing.
 
-2. Create a client credential / application at https://peerlogic-api-{rest-of-appspot-baseurl}/oauth/applications/. Take note of the client ID and Secret on the form and add it to 1Password before clicking Save.
+2. Create a client credential / application at https://peerlogic-api-{rest-of-appspot-baseurl}/oauth/applications/.
+
+2.a. Take note of the client ID and Secret on the form and add it to 1Password before clicking Save.
+
+2.b. Client type is "Confidential". Authorization grant type is "Client credentials". Algorithm is "No OIDC Support".
    *NOTE: The moment you click the Save button you will no longer have access to the client secret.*
    *NOTE: For Client type, select Public. Otherwise you will have a bad time.*
 
 3. Run the creation command:
 
     ```bash
-    docker-compose -f ./devtools/cloudsql-docker-compose.yml run api python3 manage.py create_auth0_client_credential_user {name}, {client_id}
+    ./environment-connect/connect.sh dev run api python3 manage.py create_auth0_client_credential_user {name} {client_id}
     ```
 
     example:
 
     ```bash
-    docker-compose -f ./devtools/cloudsql-docker-compose.yml run api python3 manage.py create_auth0_client_credential_user auth0 NAWAyL0aOx6mw0kzLXXccSTKiSPJ4JqvuLE33qeX
+    ./environment-connect/connect.sh dev run api python3 manage.py create_auth0_client_credential_user auth0 NAWAyL0aOx6mw0kzLXXccSTKiSPJ4JqvuLE33qeX
     ```
 
     Take note of the id.

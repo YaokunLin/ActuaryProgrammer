@@ -4,7 +4,6 @@ from django.conf import settings
 from django.db import transaction
 from django.http import (
     HttpRequest,
-    HttpResponseBadRequest,
 )
 from django.utils import timezone
 from django.utils.translation import ugettext as _
@@ -13,7 +12,6 @@ from rest_framework import viewsets
 from rest_framework.exceptions import (
     APIException,
     AuthenticationFailed,
-    NotAuthenticated,
     ParseError,
     PermissionDenied,
 )
@@ -29,7 +27,7 @@ from core.exceptions import (
     ServiceUnavailableError,
 )
 from core.models import Agent, Client, Patient, Practice, PracticeTelecom, User, VoipProvider
-from core.serializers import AdminUserSerializer, ClientSerializer, PatientSerializer, PracticeSerializer, PracticeTelecomSerializer, VoipProviderSerializer
+from core.serializers import AdminUserSerializer, AgentSerializer, ClientSerializer, PatientSerializer, PracticeSerializer, PracticeTelecomSerializer, VoipProviderSerializer
 from core.setup_user_and_practice import create_agent, create_user_telecom, save_user_activity_and_token, setup_practice, setup_user, update_user_on_refresh
 
 
@@ -293,7 +291,22 @@ class VoipProviderViewset(viewsets.ModelViewSet):
     filterset_fields = ["company_name"]
 
 
+class AgentViewset(viewsets.ModelViewSet):
+    queryset = Agent.objects.all().order_by("-practice").select_related("user")
+    serializer_class = AgentSerializer
+
+    filterset_fields = ["practice"]
+
+
+class UserViewset(viewsets.ModelViewSet):
+    queryset = Agent.objects.all().order_by("-practice")
+    serializer_class = AgentSerializer
+
+
 class AdminUserViewset(viewsets.ModelViewSet):
+    """
+    Used by Auth0 for user creation. Not for any other use.
+    """
     queryset = User.objects.all().order_by("-modified_at")
     permission_classes = [TokenHasReadWriteScope]
     serializer_class = AdminUserSerializer

@@ -1,0 +1,1503 @@
+[{
+  "call_id": "N2BiswBk8rD8muUp32mWzP",
+  "site_id": null,
+  "callee_id": null,
+  "caller_id": null,
+  "call_start": "2022-07-25T17:53:25Z",
+  "callee_domain": null,
+  "caller_audio_url": null,
+  "callee_audio_url": null,
+  "call_end": "2022-07-25T17:55:30Z",
+  "domain": "dentaldesignstudios_hatcher",
+  "caller_domain": null,
+  "connect_duration_seconds": "125",
+  "duration_seconds": "125",
+  "progress_time_seconds": "3",
+  "who_terminated_call": "",
+  "sip_caller_number": "+16025185248",
+  "sip_callee_number": "+16029069868",
+  "sip_caller_name": "CYNTIA GARCIAPE",
+  "call_direction": "inbound",
+  "went_to_voicemail": "false",
+  "checked_voicemail": "false",
+  "call_connection": "connected",
+  "call_transcription": {
+    "call_transcription_id": "6Zic3dLVAN5VBrcQSMmo2v",
+    "transcription_run_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "Good morning, thank you for calling Hatcher, Dental. This is Abby. How can I help you? Hi, I wanted to make an appointment. Okay, have we seen in the office before? Yes. Okay. And what did you need to be seen for I will, I\u0027m going to need an extraction cuz a crown. I\u0027d like messed up. So it\u0027s been hurting a lot. What\u0027s So your I first think and it\u0027s last big name? enough to extract Lisa. It\u0027s l, i z e t t e. And your last Basket name. basket. and you said we\u0027ve seen you before, Yeah. Vasquez Were has you double under object. a different last name? I know it\u0027s c a z though. Not not with the nest. Okay. A z g u e, z. What\u0027s your date of birth? 5583. Okay. And are you still with Mercury Insurance? Yes. Let\u0027s see. We could see you tomorrow morning at 9 or something in the afternoon like 1:30. No, tomorrow morning is fine. all right, so tomorrow then at 9 a.m. Okay. Sounds good. I\u0027ll be there. Thank you. right, I\u0027ll get your welcome. Bye-bye.",
+    "person_id": null,
+    "caller_text": "Good morning, thank you for calling Hatcher, Dental. This is Abby. How can I help you? Okay, have we seen in the office before? Okay. And what did you need to be seen for What\u0027s your first and last name? And your last name. and you said we\u0027ve seen you before, Were you under a different last name? Okay. What\u0027s your date of birth? Okay. And are you still with Mercury Insurance? Let\u0027s see. We could see you tomorrow morning at 9 or something in the afternoon like 1:30. all right, so tomorrow then at 9 a.m. All right, I\u0027ll get your welcome. Bye-bye.",
+    "callee_text": "Hi, I wanted to make an appointment. Yes. I will, I\u0027m going to need an extraction cuz a crown. I\u0027d like messed up. So it\u0027s been hurting a lot. So I think it\u0027s big enough to extract Lisa. It\u0027s l, i z e t t e. Basket basket. Yeah. Vasquez has double object. I know it\u0027s c a z though. Not not with the nest. A z g u e, z. 5583. Yes. No, tomorrow morning is fine. Okay. Sounds good. I\u0027ll be there. Thank you."
+  },
+  "call_purpose": [{
+    "call_purpose_id": "4nvs9dgYxrBcc3Z4sdZiyf",
+    "purpose_run_id": "ceCa9SaVBRFxfqVYkF2Yjv",
+    "purpose": "new_appointment",
+    "purpose_score": "0.98725614308984577",
+    "outcome": "success",
+    "outcome_reason_run_id": "",
+    "outcome_reason": "n/a"
+  }],
+  "call_sentiment": {
+    "call_sentiment_id": "B4RmkuqXwgJFNx7kQid7x2",
+    "sentiment_run_id": "3GRNdzyuvU8vyVQDTvY4mw",
+    "overall_sentiment": "positive",
+    "caller_sentiment": "positive",
+    "callee_sentiment": "positive"
+  },
+  "caller_type_info": {
+    "caller_type_id": "HcFpoZN4ySAMdmTWqRWwmi",
+    "caller_type_run_id": "X3x4xkfpXuXuLhqpr6Fjru",
+    "caller_type": "ExistingPatient"
+  },
+  "call_pause": {
+    "call_id": "N2BiswBk8rD8muUp32mWzP",
+    "call_run_id": "AfnftgSpYhN8k9xDcMXCjL",
+    "longest_pause": null,
+    "start_time": null,
+    "end_time": null
+  },
+  "call_procedure_discussed": [{
+    "call_procedure_discussed_id": "kooj49njKAqJCV5jQxhVe7",
+    "call_procedure_id": "D2740",
+    "call_procedure_keyword": "crown",
+    "call_procedure_price_usd": "1050.0"
+  }, {
+    "call_procedure_discussed_id": "Y5LmvQbY3G8zAuS2ZStiXU",
+    "call_procedure_id": "D7240",
+    "call_procedure_keyword": "extraction",
+    "call_procedure_price_usd": "237.0"
+  }],
+  "call_insurance_discussed": [{
+    "call_insurance_discussed_id": "ixBgDtwPDWeT4VfPgdNVue",
+    "call_insurance_keyword": null
+  }],
+  "call_product_discussed": [{
+    "call_product_discussed_id": "m4QzYQxeJuT2B6KedUkob3",
+    "call_product_keyword": null
+  }],
+  "call_company_discussed": [{
+    "call_company_discussed_id": "BtqXhLnEjYkS255nLZCq39",
+    "call_company_keyword": null
+  }],
+  "call_symptom_discussed": [{
+    "call_symptom_discussed_id": "9MrVuhPVx7VeSwLacSRjcS",
+    "call_symptom_keyword": null
+  }],
+  "metadata_file_uri": null,
+  "insert_timestamp": "2022-07-25T18:02:49Z",
+  "call_transcription_fragment": [{
+    "transcription_fragment_id": "",
+    "transcription_run_id": "",
+    "person_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "",
+    "sentiment_run_id": "",
+    "sentiment": "",
+    "telecom_persona_type": ""
+  }],
+  "referral_source": {
+    "referral_source_run_id": "cS8AMiPTGVSV2TghHYCTmZ",
+    "referral_source_type": "n/a"
+  },
+  "call_agent_interaction": [{
+    "agent_interaction_metric_run_id": "aXH87zdB8bxwbUEuPdGRgn",
+    "agent_interaction_metric_name": "scheduling_accommodations",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "86rgeT2ZxtF669J2QBqJia",
+    "agent_interaction_metric_name": "referral_source",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "MoTtUbyJjnMmuUh66NEMMQ",
+    "agent_interaction_metric_name": "procedure_explanation",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "B6ZCpyeWUh8R5ZTQBd2ebC",
+    "agent_interaction_metric_name": "payment_method",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "NybpZq29YRUyQZHSTo652U",
+    "agent_interaction_metric_name": "patient_demographics",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "JhKtumTHAVf4fG3a9DGEAA",
+    "agent_interaction_metric_name": "greeting",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "5xvMhUkLQ6dvWzGQasjinW",
+    "agent_interaction_metric_name": "agent_overtalk",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }],
+  "caller_type": "non_agent",
+  "callee_type": "agent",
+  "non_agent_engagement_persona_info": {
+    "non_agent_engagement_persona_id": "HcFpoZN4ySAMdmTWqRWwmi",
+    "non_agent_engagement_persona_run_id": "X3x4xkfpXuXuLhqpr6Fjru",
+    "non_agent_engagement_persona_type": "ExistingPatient"
+  },
+  "practice_id": "PrgPmtXDEygKg2KzvEE9gE",
+  "new_patient_opportunity_info": null
+}, {
+  "call_id": "N2BiswBk8rD8muUp32mWzP",
+  "site_id": null,
+  "callee_id": null,
+  "caller_id": null,
+  "call_start": "2022-07-25T17:53:25Z",
+  "callee_domain": null,
+  "caller_audio_url": null,
+  "callee_audio_url": null,
+  "call_end": "2022-07-25T17:55:30Z",
+  "domain": "dentaldesignstudios_hatcher",
+  "caller_domain": null,
+  "connect_duration_seconds": "125",
+  "duration_seconds": "125",
+  "progress_time_seconds": "3",
+  "who_terminated_call": "",
+  "sip_caller_number": "+16025185248",
+  "sip_callee_number": "+16029069868",
+  "sip_caller_name": "CYNTIA GARCIAPE",
+  "call_direction": "inbound",
+  "went_to_voicemail": "false",
+  "checked_voicemail": "false",
+  "call_connection": "connected",
+  "call_transcription": {
+    "call_transcription_id": "6Zic3dLVAN5VBrcQSMmo2v",
+    "transcription_run_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "Good morning, thank you for calling Hatcher, Dental. This is Abby. How can I help you? Hi, I wanted to make an appointment. Okay, have we seen in the office before? Yes. Okay. And what did you need to be seen for I will, I\u0027m going to need an extraction cuz a crown. I\u0027d like messed up. So it\u0027s been hurting a lot. What\u0027s So your I first think and it\u0027s last big name? enough to extract Lisa. It\u0027s l, i z e t t e. And your last Basket name. basket. and you said we\u0027ve seen you before, Yeah. Vasquez Were has you double under object. a different last name? I know it\u0027s c a z though. Not not with the nest. Okay. A z g u e, z. What\u0027s your date of birth? 5583. Okay. And are you still with Mercury Insurance? Yes. Let\u0027s see. We could see you tomorrow morning at 9 or something in the afternoon like 1:30. No, tomorrow morning is fine. all right, so tomorrow then at 9 a.m. Okay. Sounds good. I\u0027ll be there. Thank you. right, I\u0027ll get your welcome. Bye-bye.",
+    "person_id": null,
+    "caller_text": "Good morning, thank you for calling Hatcher, Dental. This is Abby. How can I help you? Okay, have we seen in the office before? Okay. And what did you need to be seen for What\u0027s your first and last name? And your last name. and you said we\u0027ve seen you before, Were you under a different last name? Okay. What\u0027s your date of birth? Okay. And are you still with Mercury Insurance? Let\u0027s see. We could see you tomorrow morning at 9 or something in the afternoon like 1:30. all right, so tomorrow then at 9 a.m. All right, I\u0027ll get your welcome. Bye-bye.",
+    "callee_text": "Hi, I wanted to make an appointment. Yes. I will, I\u0027m going to need an extraction cuz a crown. I\u0027d like messed up. So it\u0027s been hurting a lot. So I think it\u0027s big enough to extract Lisa. It\u0027s l, i z e t t e. Basket basket. Yeah. Vasquez has double object. I know it\u0027s c a z though. Not not with the nest. A z g u e, z. 5583. Yes. No, tomorrow morning is fine. Okay. Sounds good. I\u0027ll be there. Thank you."
+  },
+  "call_purpose": [{
+    "call_purpose_id": "4nvs9dgYxrBcc3Z4sdZiyf",
+    "purpose_run_id": "ceCa9SaVBRFxfqVYkF2Yjv",
+    "purpose": "new_appointment",
+    "purpose_score": "0.98725614308984577",
+    "outcome": "success",
+    "outcome_reason_run_id": "",
+    "outcome_reason": "n/a"
+  }],
+  "call_sentiment": {
+    "call_sentiment_id": "B4RmkuqXwgJFNx7kQid7x2",
+    "sentiment_run_id": "3GRNdzyuvU8vyVQDTvY4mw",
+    "overall_sentiment": "positive",
+    "caller_sentiment": "positive",
+    "callee_sentiment": "positive"
+  },
+  "caller_type_info": {
+    "caller_type_id": "HcFpoZN4ySAMdmTWqRWwmi",
+    "caller_type_run_id": "X3x4xkfpXuXuLhqpr6Fjru",
+    "caller_type": "ExistingPatient"
+  },
+  "call_pause": {
+    "call_id": "N2BiswBk8rD8muUp32mWzP",
+    "call_run_id": "AfnftgSpYhN8k9xDcMXCjL",
+    "longest_pause": null,
+    "start_time": null,
+    "end_time": null
+  },
+  "call_procedure_discussed": [{
+    "call_procedure_discussed_id": "kooj49njKAqJCV5jQxhVe7",
+    "call_procedure_id": "D2740",
+    "call_procedure_keyword": "crown",
+    "call_procedure_price_usd": "1050.0"
+  }, {
+    "call_procedure_discussed_id": "Y5LmvQbY3G8zAuS2ZStiXU",
+    "call_procedure_id": "D7240",
+    "call_procedure_keyword": "extraction",
+    "call_procedure_price_usd": "237.0"
+  }],
+  "call_insurance_discussed": [{
+    "call_insurance_discussed_id": "ixBgDtwPDWeT4VfPgdNVue",
+    "call_insurance_keyword": null
+  }],
+  "call_product_discussed": [{
+    "call_product_discussed_id": "m4QzYQxeJuT2B6KedUkob3",
+    "call_product_keyword": null
+  }],
+  "call_company_discussed": [{
+    "call_company_discussed_id": "BtqXhLnEjYkS255nLZCq39",
+    "call_company_keyword": null
+  }],
+  "call_symptom_discussed": [{
+    "call_symptom_discussed_id": "9MrVuhPVx7VeSwLacSRjcS",
+    "call_symptom_keyword": null
+  }],
+  "metadata_file_uri": null,
+  "insert_timestamp": "2022-07-25T18:02:49Z",
+  "call_transcription_fragment": [{
+    "transcription_fragment_id": "",
+    "transcription_run_id": "",
+    "person_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "",
+    "sentiment_run_id": "",
+    "sentiment": "",
+    "telecom_persona_type": ""
+  }],
+  "referral_source": {
+    "referral_source_run_id": "cS8AMiPTGVSV2TghHYCTmZ",
+    "referral_source_type": "n/a"
+  },
+  "call_agent_interaction": [{
+    "agent_interaction_metric_run_id": "aXH87zdB8bxwbUEuPdGRgn",
+    "agent_interaction_metric_name": "scheduling_accommodations",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "86rgeT2ZxtF669J2QBqJia",
+    "agent_interaction_metric_name": "referral_source",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "MoTtUbyJjnMmuUh66NEMMQ",
+    "agent_interaction_metric_name": "procedure_explanation",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "B6ZCpyeWUh8R5ZTQBd2ebC",
+    "agent_interaction_metric_name": "payment_method",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "NybpZq29YRUyQZHSTo652U",
+    "agent_interaction_metric_name": "patient_demographics",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "JhKtumTHAVf4fG3a9DGEAA",
+    "agent_interaction_metric_name": "greeting",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "5xvMhUkLQ6dvWzGQasjinW",
+    "agent_interaction_metric_name": "agent_overtalk",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }],
+  "caller_type": "non_agent",
+  "callee_type": "agent",
+  "non_agent_engagement_persona_info": {
+    "non_agent_engagement_persona_id": "HcFpoZN4ySAMdmTWqRWwmi",
+    "non_agent_engagement_persona_run_id": "X3x4xkfpXuXuLhqpr6Fjru",
+    "non_agent_engagement_persona_type": "ExistingPatient"
+  },
+  "practice_id": "PrgPmtXDEygKg2KzvEE9gE",
+  "new_patient_opportunity_info": null
+}, {
+  "call_id": "N2BiswBk8rD8muUp32mWzP",
+  "site_id": null,
+  "callee_id": null,
+  "caller_id": null,
+  "call_start": "2022-07-25T17:53:25Z",
+  "callee_domain": null,
+  "caller_audio_url": null,
+  "callee_audio_url": null,
+  "call_end": "2022-07-25T17:55:30Z",
+  "domain": "dentaldesignstudios_hatcher",
+  "caller_domain": null,
+  "connect_duration_seconds": "125",
+  "duration_seconds": "125",
+  "progress_time_seconds": "3",
+  "who_terminated_call": "",
+  "sip_caller_number": "+16025185248",
+  "sip_callee_number": "+16029069868",
+  "sip_caller_name": "CYNTIA GARCIAPE",
+  "call_direction": "inbound",
+  "went_to_voicemail": "false",
+  "checked_voicemail": "false",
+  "call_connection": "connected",
+  "call_transcription": {
+    "call_transcription_id": "6Zic3dLVAN5VBrcQSMmo2v",
+    "transcription_run_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "Good morning, thank you for calling Hatcher, Dental. This is Abby. How can I help you? Hi, I wanted to make an appointment. Okay, have we seen in the office before? Yes. Okay. And what did you need to be seen for I will, I\u0027m going to need an extraction cuz a crown. I\u0027d like messed up. So it\u0027s been hurting a lot. What\u0027s So your I first think and it\u0027s last big name? enough to extract Lisa. It\u0027s l, i z e t t e. And your last Basket name. basket. and you said we\u0027ve seen you before, Yeah. Vasquez Were has you double under object. a different last name? I know it\u0027s c a z though. Not not with the nest. Okay. A z g u e, z. What\u0027s your date of birth? 5583. Okay. And are you still with Mercury Insurance? Yes. Let\u0027s see. We could see you tomorrow morning at 9 or something in the afternoon like 1:30. No, tomorrow morning is fine. all right, so tomorrow then at 9 a.m. Okay. Sounds good. I\u0027ll be there. Thank you. right, I\u0027ll get your welcome. Bye-bye.",
+    "person_id": null,
+    "caller_text": "Good morning, thank you for calling Hatcher, Dental. This is Abby. How can I help you? Okay, have we seen in the office before? Okay. And what did you need to be seen for What\u0027s your first and last name? And your last name. and you said we\u0027ve seen you before, Were you under a different last name? Okay. What\u0027s your date of birth? Okay. And are you still with Mercury Insurance? Let\u0027s see. We could see you tomorrow morning at 9 or something in the afternoon like 1:30. all right, so tomorrow then at 9 a.m. All right, I\u0027ll get your welcome. Bye-bye.",
+    "callee_text": "Hi, I wanted to make an appointment. Yes. I will, I\u0027m going to need an extraction cuz a crown. I\u0027d like messed up. So it\u0027s been hurting a lot. So I think it\u0027s big enough to extract Lisa. It\u0027s l, i z e t t e. Basket basket. Yeah. Vasquez has double object. I know it\u0027s c a z though. Not not with the nest. A z g u e, z. 5583. Yes. No, tomorrow morning is fine. Okay. Sounds good. I\u0027ll be there. Thank you."
+  },
+  "call_purpose": [{
+    "call_purpose_id": "DQ3yWBxAe4azTKVzrWyDmw",
+    "purpose_run_id": "frsnTDGTbaeEdCSP9VFt9o",
+    "purpose": "new_appointment",
+    "purpose_score": "0.98725614308984577",
+    "outcome": "success",
+    "outcome_reason_run_id": "",
+    "outcome_reason": "n/a"
+  }],
+  "call_sentiment": {
+    "call_sentiment_id": "4QurGWMLCqKc7ZeJj48nU3",
+    "sentiment_run_id": "ctF8iwJ4BUxTWFUiw2qP3N",
+    "overall_sentiment": "positive",
+    "caller_sentiment": "positive",
+    "callee_sentiment": "positive"
+  },
+  "caller_type_info": {
+    "caller_type_id": "3kbPtyD8uArEekgzpEnUrQ",
+    "caller_type_run_id": "fGmVoBiyMkdwRAxmCnM2yi",
+    "caller_type": "ExistingPatient"
+  },
+  "call_pause": {
+    "call_id": "N2BiswBk8rD8muUp32mWzP",
+    "call_run_id": "HRsEMTGiHzuws4jMkexxY3",
+    "longest_pause": null,
+    "start_time": null,
+    "end_time": null
+  },
+  "call_procedure_discussed": [{
+    "call_procedure_discussed_id": "e5aiUGY5gbgRUf3DyQxVXj",
+    "call_procedure_id": "D2740",
+    "call_procedure_keyword": "crown",
+    "call_procedure_price_usd": "1050.0"
+  }, {
+    "call_procedure_discussed_id": "beGaeccS4u45NMQPfG2C7S",
+    "call_procedure_id": "D7240",
+    "call_procedure_keyword": "extraction",
+    "call_procedure_price_usd": "237.0"
+  }],
+  "call_insurance_discussed": [{
+    "call_insurance_discussed_id": "GrSB4SPbgC3LiAtUkGTYR2",
+    "call_insurance_keyword": null
+  }],
+  "call_product_discussed": [{
+    "call_product_discussed_id": "TXyhfMVG6gwgxjH4JXVhix",
+    "call_product_keyword": null
+  }],
+  "call_company_discussed": [{
+    "call_company_discussed_id": "52BhmUWd28JXpGDJho4Qcw",
+    "call_company_keyword": null
+  }],
+  "call_symptom_discussed": [{
+    "call_symptom_discussed_id": "aFUUciT5PJsmNRS9jx9rfC",
+    "call_symptom_keyword": null
+  }],
+  "metadata_file_uri": null,
+  "insert_timestamp": "2022-07-25T18:02:50Z",
+  "call_transcription_fragment": [{
+    "transcription_fragment_id": "",
+    "transcription_run_id": "",
+    "person_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "",
+    "sentiment_run_id": "",
+    "sentiment": "",
+    "telecom_persona_type": ""
+  }],
+  "referral_source": {
+    "referral_source_run_id": "2SLVr785o9CPPTxkFGkAPq",
+    "referral_source_type": "n/a"
+  },
+  "call_agent_interaction": [{
+    "agent_interaction_metric_run_id": "D8VMd5vhU9kA5XtoJTmtbT",
+    "agent_interaction_metric_name": "scheduling_accommodations",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "LukNqTkG8MC3bio9eVWcWQ",
+    "agent_interaction_metric_name": "referral_source",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "TzhBCJ5UMYxjUk3mx5R3pg",
+    "agent_interaction_metric_name": "procedure_explanation",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "E65CF3T7SnTbgEwsMv2idx",
+    "agent_interaction_metric_name": "payment_method",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "7p4e8gjwVKzwiQxVMhfoCU",
+    "agent_interaction_metric_name": "patient_demographics",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "6CNmdKTZwuaXnvF2UETsHD",
+    "agent_interaction_metric_name": "greeting",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "doSt3hqv5HE4P6rvkox7pf",
+    "agent_interaction_metric_name": "agent_overtalk",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }],
+  "caller_type": "non_agent",
+  "callee_type": "agent",
+  "non_agent_engagement_persona_info": {
+    "non_agent_engagement_persona_id": "3kbPtyD8uArEekgzpEnUrQ",
+    "non_agent_engagement_persona_run_id": "fGmVoBiyMkdwRAxmCnM2yi",
+    "non_agent_engagement_persona_type": "ExistingPatient"
+  },
+  "practice_id": "PrgPmtXDEygKg2KzvEE9gE",
+  "new_patient_opportunity_info": null
+}, {
+  "call_id": "N2BiswBk8rD8muUp32mWzP",
+  "site_id": null,
+  "callee_id": null,
+  "caller_id": null,
+  "call_start": "2022-07-25T17:53:25Z",
+  "callee_domain": null,
+  "caller_audio_url": null,
+  "callee_audio_url": null,
+  "call_end": "2022-07-25T17:55:30Z",
+  "domain": "dentaldesignstudios_hatcher",
+  "caller_domain": null,
+  "connect_duration_seconds": "125",
+  "duration_seconds": "125",
+  "progress_time_seconds": "3",
+  "who_terminated_call": "",
+  "sip_caller_number": "+16025185248",
+  "sip_callee_number": "+16029069868",
+  "sip_caller_name": "CYNTIA GARCIAPE",
+  "call_direction": "inbound",
+  "went_to_voicemail": "false",
+  "checked_voicemail": "false",
+  "call_connection": "connected",
+  "call_transcription": {
+    "call_transcription_id": "6Zic3dLVAN5VBrcQSMmo2v",
+    "transcription_run_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "Good morning, thank you for calling Hatcher, Dental. This is Abby. How can I help you? Hi, I wanted to make an appointment. Okay, have we seen in the office before? Yes. Okay. And what did you need to be seen for I will, I\u0027m going to need an extraction cuz a crown. I\u0027d like messed up. So it\u0027s been hurting a lot. What\u0027s So your I first think and it\u0027s last big name? enough to extract Lisa. It\u0027s l, i z e t t e. And your last Basket name. basket. and you said we\u0027ve seen you before, Yeah. Vasquez Were has you double under object. a different last name? I know it\u0027s c a z though. Not not with the nest. Okay. A z g u e, z. What\u0027s your date of birth? 5583. Okay. And are you still with Mercury Insurance? Yes. Let\u0027s see. We could see you tomorrow morning at 9 or something in the afternoon like 1:30. No, tomorrow morning is fine. all right, so tomorrow then at 9 a.m. Okay. Sounds good. I\u0027ll be there. Thank you. right, I\u0027ll get your welcome. Bye-bye.",
+    "person_id": null,
+    "caller_text": "Good morning, thank you for calling Hatcher, Dental. This is Abby. How can I help you? Okay, have we seen in the office before? Okay. And what did you need to be seen for What\u0027s your first and last name? And your last name. and you said we\u0027ve seen you before, Were you under a different last name? Okay. What\u0027s your date of birth? Okay. And are you still with Mercury Insurance? Let\u0027s see. We could see you tomorrow morning at 9 or something in the afternoon like 1:30. all right, so tomorrow then at 9 a.m. All right, I\u0027ll get your welcome. Bye-bye.",
+    "callee_text": "Hi, I wanted to make an appointment. Yes. I will, I\u0027m going to need an extraction cuz a crown. I\u0027d like messed up. So it\u0027s been hurting a lot. So I think it\u0027s big enough to extract Lisa. It\u0027s l, i z e t t e. Basket basket. Yeah. Vasquez has double object. I know it\u0027s c a z though. Not not with the nest. A z g u e, z. 5583. Yes. No, tomorrow morning is fine. Okay. Sounds good. I\u0027ll be there. Thank you."
+  },
+  "call_purpose": [{
+    "call_purpose_id": "DQ3yWBxAe4azTKVzrWyDmw",
+    "purpose_run_id": "frsnTDGTbaeEdCSP9VFt9o",
+    "purpose": "new_appointment",
+    "purpose_score": "0.98725614308984577",
+    "outcome": "success",
+    "outcome_reason_run_id": "",
+    "outcome_reason": "n/a"
+  }],
+  "call_sentiment": {
+    "call_sentiment_id": "4QurGWMLCqKc7ZeJj48nU3",
+    "sentiment_run_id": "ctF8iwJ4BUxTWFUiw2qP3N",
+    "overall_sentiment": "positive",
+    "caller_sentiment": "positive",
+    "callee_sentiment": "positive"
+  },
+  "caller_type_info": {
+    "caller_type_id": "3kbPtyD8uArEekgzpEnUrQ",
+    "caller_type_run_id": "fGmVoBiyMkdwRAxmCnM2yi",
+    "caller_type": "ExistingPatient"
+  },
+  "call_pause": {
+    "call_id": "N2BiswBk8rD8muUp32mWzP",
+    "call_run_id": "HRsEMTGiHzuws4jMkexxY3",
+    "longest_pause": null,
+    "start_time": null,
+    "end_time": null
+  },
+  "call_procedure_discussed": [{
+    "call_procedure_discussed_id": "e5aiUGY5gbgRUf3DyQxVXj",
+    "call_procedure_id": "D2740",
+    "call_procedure_keyword": "crown",
+    "call_procedure_price_usd": "1050.0"
+  }, {
+    "call_procedure_discussed_id": "beGaeccS4u45NMQPfG2C7S",
+    "call_procedure_id": "D7240",
+    "call_procedure_keyword": "extraction",
+    "call_procedure_price_usd": "237.0"
+  }],
+  "call_insurance_discussed": [{
+    "call_insurance_discussed_id": "GrSB4SPbgC3LiAtUkGTYR2",
+    "call_insurance_keyword": null
+  }],
+  "call_product_discussed": [{
+    "call_product_discussed_id": "TXyhfMVG6gwgxjH4JXVhix",
+    "call_product_keyword": null
+  }],
+  "call_company_discussed": [{
+    "call_company_discussed_id": "52BhmUWd28JXpGDJho4Qcw",
+    "call_company_keyword": null
+  }],
+  "call_symptom_discussed": [{
+    "call_symptom_discussed_id": "aFUUciT5PJsmNRS9jx9rfC",
+    "call_symptom_keyword": null
+  }],
+  "metadata_file_uri": null,
+  "insert_timestamp": "2022-07-25T18:02:50Z",
+  "call_transcription_fragment": [{
+    "transcription_fragment_id": "",
+    "transcription_run_id": "",
+    "person_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "",
+    "sentiment_run_id": "",
+    "sentiment": "",
+    "telecom_persona_type": ""
+  }],
+  "referral_source": {
+    "referral_source_run_id": "2SLVr785o9CPPTxkFGkAPq",
+    "referral_source_type": "n/a"
+  },
+  "call_agent_interaction": [{
+    "agent_interaction_metric_run_id": "D8VMd5vhU9kA5XtoJTmtbT",
+    "agent_interaction_metric_name": "scheduling_accommodations",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "LukNqTkG8MC3bio9eVWcWQ",
+    "agent_interaction_metric_name": "referral_source",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "TzhBCJ5UMYxjUk3mx5R3pg",
+    "agent_interaction_metric_name": "procedure_explanation",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "E65CF3T7SnTbgEwsMv2idx",
+    "agent_interaction_metric_name": "payment_method",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "7p4e8gjwVKzwiQxVMhfoCU",
+    "agent_interaction_metric_name": "patient_demographics",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "6CNmdKTZwuaXnvF2UETsHD",
+    "agent_interaction_metric_name": "greeting",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "doSt3hqv5HE4P6rvkox7pf",
+    "agent_interaction_metric_name": "agent_overtalk",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }],
+  "caller_type": "non_agent",
+  "callee_type": "agent",
+  "non_agent_engagement_persona_info": {
+    "non_agent_engagement_persona_id": "3kbPtyD8uArEekgzpEnUrQ",
+    "non_agent_engagement_persona_run_id": "fGmVoBiyMkdwRAxmCnM2yi",
+    "non_agent_engagement_persona_type": "ExistingPatient"
+  },
+  "practice_id": "PrgPmtXDEygKg2KzvEE9gE",
+  "new_patient_opportunity_info": null
+}, {
+  "call_id": "T2YmESARhkAFUGLgwFjrsq",
+  "site_id": null,
+  "callee_id": null,
+  "caller_id": null,
+  "call_start": "2022-07-25T17:56:01Z",
+  "callee_domain": null,
+  "caller_audio_url": null,
+  "callee_audio_url": null,
+  "call_end": "2022-07-25T17:57:53Z",
+  "domain": "pleasantdental-peoria",
+  "caller_domain": null,
+  "connect_duration_seconds": "112",
+  "duration_seconds": "112",
+  "progress_time_seconds": "5",
+  "who_terminated_call": "",
+  "sip_caller_number": "+16236328290",
+  "sip_callee_number": "+16232952005",
+  "sip_caller_name": "BOGARD,MICHELLE",
+  "call_direction": "inbound",
+  "went_to_voicemail": "false",
+  "checked_voicemail": "false",
+  "call_connection": "connected",
+  "call_transcription": {
+    "call_transcription_id": "nKcErbBdoGBK5x8atKre6u",
+    "transcription_run_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "Pleasant Dental Care. This is Tyler. How can I help you? Yes, this is Michelle Bogart. I have an appointment for tomorrow at 5:30 Oh, okay. I was wondering, can you move it to 2, Wednesday? 5:30 Let me take a look for you. Okay. Okay. Yeah. So we can move you to you\u0027d want to do Wednesday at 5:30 perfect. Yeah, about 5:30 I was wondering now. Remember when I paid the $200, for the, I guess the plan off. I\u0027m sorry. I don\u0027t know if you remember when I paid $200 for a plan to smile plan, I Oh okay. Yes to smile was Club. hoping. Yeah, I was hoping not to renew that because I don\u0027t have any money off. Well, that\u0027s okay. but, We won\u0027t you know we won\u0027t charge you an out-of-pocket for further cleaning. Don\u0027t worry about that Okay, but I was wondering also, if you guys, is that a wage. appointment that I just made for Wednesday? Is that covered though? Yeah, Hello so for the cleaning appointment, ma\u0027am. we won\u0027t charge you any out-of-pocket for that one. Don\u0027t worry about it. And then, you know, next time you come in, if you want to renew the small Club then then we\u0027re totally okay with that wage. Oh, okay. Yeah. All right, I was just wondering. So, I\u0027ll All right, see you Wednesday then. no problem. We will see you Wednesday. You have a good Okay, rest of your day. you too All right. bye-bye. Bye-bye.",
+    "person_id": null,
+    "caller_text": "Pleasant Dental Care. This is Tyler. How can I help you? Oh, okay. Let me take a look for you. Okay. Yeah. So we can move you to you\u0027d want to do Wednesday at 5:30 perfect. I\u0027m sorry. Oh okay. Yes to smile Club. Well, that\u0027s okay. We won\u0027t you know we won\u0027t charge you an out-of-pocket for further cleaning. Don\u0027t worry about that wage. Yeah, so for the cleaning appointment, we won\u0027t charge you any out-of-pocket for that one. Don\u0027t worry about it. And then, you know, next time you come in, if you want to renew the small Club then then we\u0027re totally okay with that wage. Yeah. All right, no problem. We will see you Wednesday. You have a good rest of your day. All right. Bye-bye.",
+    "callee_text": "Yes, this is Michelle Bogart. I have an appointment for tomorrow at 5:30 I was wondering, can you move it to 2, Wednesday? 5:30 Okay. Yeah, about 5:30 I was wondering now. Remember when I paid the $200, for the, I guess the plan off. I don\u0027t know if you remember when I paid $200 for a plan to smile plan, I was hoping. Yeah, I was hoping not to renew that because I don\u0027t have any money off. but, Okay, but I was wondering also, if you guys, is that a appointment that I just made for Wednesday? Is that covered though? Hello ma\u0027am. Oh, okay. All right, I was just wondering. So, I\u0027ll see you Wednesday then. Okay, you too bye-bye."
+  },
+  "call_purpose": [],
+  "call_sentiment": {
+    "call_sentiment_id": "TpHqjtzGFdTWKk3eKFjcta",
+    "sentiment_run_id": "KcJHi2UfPsPzz979Np4YHz",
+    "overall_sentiment": "positive",
+    "caller_sentiment": "positive",
+    "callee_sentiment": "positive"
+  },
+  "caller_type_info": {
+    "caller_type_id": "HuHsqPPwHsH6MToKfihn7X",
+    "caller_type_run_id": "hWpkuvvBQN6sXtnkuPUCEE",
+    "caller_type": "ExistingPatient"
+  },
+  "call_pause": {
+    "call_id": "T2YmESARhkAFUGLgwFjrsq",
+    "call_run_id": "UaZWRBxLCgVGZTn7HoEHt2",
+    "longest_pause": null,
+    "start_time": null,
+    "end_time": null
+  },
+  "call_procedure_discussed": [{
+    "call_procedure_discussed_id": "H7QNtoqrSGKF57dWfmiVQZ",
+    "call_procedure_id": "D4355",
+    "call_procedure_keyword": "cleaning",
+    "call_procedure_price_usd": "184.0"
+  }],
+  "call_insurance_discussed": [{
+    "call_insurance_discussed_id": "GqYX2gwymCdytpHdyzccdg",
+    "call_insurance_keyword": null
+  }],
+  "call_product_discussed": [{
+    "call_product_discussed_id": "VDpLYm9wRyMfhSRUo4eosQ",
+    "call_product_keyword": null
+  }],
+  "call_company_discussed": [{
+    "call_company_discussed_id": "a7gzsc2GN9VenYVnkgv963",
+    "call_company_keyword": null
+  }],
+  "call_symptom_discussed": [{
+    "call_symptom_discussed_id": "GU9W6gbkpynnTHYY8Ryd3o",
+    "call_symptom_keyword": null
+  }],
+  "metadata_file_uri": null,
+  "insert_timestamp": "2022-07-25T18:03:53Z",
+  "call_transcription_fragment": [{
+    "transcription_fragment_id": "",
+    "transcription_run_id": "",
+    "person_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "",
+    "sentiment_run_id": "",
+    "sentiment": "",
+    "telecom_persona_type": ""
+  }],
+  "referral_source": {
+    "referral_source_run_id": "3xVRaWMvoRUKsLpVULcrhQ",
+    "referral_source_type": "n/a"
+  },
+  "call_agent_interaction": [{
+    "agent_interaction_metric_run_id": "bdbHDnWHCFnF5GRPeHLgXT",
+    "agent_interaction_metric_name": "scheduling_accommodations",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "TcNb6hXLHoCtQiLdwfX7Wb",
+    "agent_interaction_metric_name": "referral_source",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "2MHpYJRYjoGmxwJpfu4qwk",
+    "agent_interaction_metric_name": "procedure_explanation",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "ehU58LxfYfhzZjeBM2JRVY",
+    "agent_interaction_metric_name": "payment_method",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "CZ4ar7KDHVCeBWxRwiMTP2",
+    "agent_interaction_metric_name": "patient_demographics",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "Z6JqdoTE5fSEYuopSmiMXT",
+    "agent_interaction_metric_name": "greeting",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "ZmXfUManq9vKdzeF22zuDw",
+    "agent_interaction_metric_name": "agent_overtalk",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }],
+  "caller_type": "non_agent",
+  "callee_type": "agent",
+  "non_agent_engagement_persona_info": {
+    "non_agent_engagement_persona_id": "HuHsqPPwHsH6MToKfihn7X",
+    "non_agent_engagement_persona_run_id": "hWpkuvvBQN6sXtnkuPUCEE",
+    "non_agent_engagement_persona_type": "ExistingPatient"
+  },
+  "practice_id": "4zCMasUoYmCdrwMGBfdkdv",
+  "new_patient_opportunity_info": null
+}, {
+  "call_id": "Z3rV4HXVYikdyugr5wtvBG",
+  "site_id": null,
+  "callee_id": null,
+  "caller_id": null,
+  "call_start": "2022-07-25T17:58:31Z",
+  "callee_domain": null,
+  "caller_audio_url": null,
+  "callee_audio_url": null,
+  "call_end": "2022-07-25T17:58:46Z",
+  "domain": "dentaldesignstudios_smile",
+  "caller_domain": null,
+  "connect_duration_seconds": "13",
+  "duration_seconds": "13",
+  "progress_time_seconds": "2",
+  "who_terminated_call": "",
+  "sip_caller_number": "+16027891131",
+  "sip_callee_number": "+18004875553",
+  "sip_caller_name": "Admin 4",
+  "call_direction": "outbound",
+  "went_to_voicemail": "false",
+  "checked_voicemail": "false",
+  "call_connection": "connected",
+  "call_transcription": {
+    "call_transcription_id": "GP9ztn9qMxZtCF4MfahSj5",
+    "transcription_run_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "We\u0027re Emeritus proud to say we\u0027re in the business of fulfilling life, but espanyol opening we are currently experiencing long. Wait times we apologize for the inconvenience for a patient-specific enhance.",
+    "person_id": null,
+    "caller_text": "We\u0027re Emeritus proud to say we\u0027re in the business of fulfilling life, but espanyol opening we are currently experiencing long. Wait times we apologize for the inconvenience for a patient-specific enhance.",
+    "callee_text": ""
+  },
+  "call_purpose": [{
+    "call_purpose_id": "f7ZtZMk3kX8gMLBW7E68XV",
+    "purpose_run_id": "Dr6H4GJfZBbbSMrsiBJsYE",
+    "purpose": "others",
+    "purpose_score": "0.7702612474502315",
+    "outcome": "",
+    "outcome_reason_run_id": "",
+    "outcome_reason": "n/a"
+  }],
+  "call_sentiment": {
+    "call_sentiment_id": "8rhUSFiocEiLHjKtt8gArV",
+    "sentiment_run_id": "VSUAQyMrQHbSGp6s43cqys",
+    "overall_sentiment": "positive",
+    "caller_sentiment": "positive",
+    "callee_sentiment": "n/a"
+  },
+  "caller_type_info": {
+    "caller_type_id": "X9cqQAfq5XAy2icRR6Z8Qb",
+    "caller_type_run_id": "",
+    "caller_type": "ContractorVendor"
+  },
+  "call_pause": {
+    "call_id": "Z3rV4HXVYikdyugr5wtvBG",
+    "call_run_id": "bpDg7RwZnUWwMe4yRkK2bw",
+    "longest_pause": null,
+    "start_time": null,
+    "end_time": null
+  },
+  "call_procedure_discussed": [{
+    "call_procedure_discussed_id": "XfEe4yD9nkk63v4mcq9VCV",
+    "call_procedure_id": "D2140",
+    "call_procedure_keyword": "filling",
+    "call_procedure_price_usd": "129.0"
+  }],
+  "call_insurance_discussed": [{
+    "call_insurance_discussed_id": "F9Hjsw6ZyoGASuEvq6iAnQ",
+    "call_insurance_keyword": null
+  }],
+  "call_product_discussed": [{
+    "call_product_discussed_id": "52Lc8vvsiLBCUNpWAQyr2Y",
+    "call_product_keyword": null
+  }],
+  "call_company_discussed": [{
+    "call_company_discussed_id": "Aobb2thBKfKecucL7A8eGW",
+    "call_company_keyword": null
+  }],
+  "call_symptom_discussed": [{
+    "call_symptom_discussed_id": "KPVoq36ijzwhcypuiKEr4s",
+    "call_symptom_keyword": null
+  }],
+  "metadata_file_uri": null,
+  "insert_timestamp": "2022-07-25T18:05:53Z",
+  "call_transcription_fragment": [{
+    "transcription_fragment_id": "",
+    "transcription_run_id": "",
+    "person_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "",
+    "sentiment_run_id": "",
+    "sentiment": "",
+    "telecom_persona_type": ""
+  }],
+  "referral_source": {
+    "referral_source_run_id": "NfHaSxCtJbmwNAvPUiNHiA",
+    "referral_source_type": "n/a"
+  },
+  "call_agent_interaction": [{
+    "agent_interaction_metric_run_id": "S6xd5UJN45iGGTNHvBKvxZ",
+    "agent_interaction_metric_name": "scheduling_accommodations",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "Ye2n2jiv84nPCu3hnCrR9Y",
+    "agent_interaction_metric_name": "referral_source",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "dCwNdsVQRDWFVbbGqqyjoc",
+    "agent_interaction_metric_name": "procedure_explanation",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "JpzamFLJXrZ5c8MZTvL2J3",
+    "agent_interaction_metric_name": "payment_method",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "KXw2ad8axs73DfS6Cw9YNp",
+    "agent_interaction_metric_name": "patient_demographics",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "dHaTvpK8WRa6YWWZCZxDz9",
+    "agent_interaction_metric_name": "greeting",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "8pPzqKZVPRyHNUtYmunjfR",
+    "agent_interaction_metric_name": "agent_overtalk",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }],
+  "caller_type": "agent",
+  "callee_type": "non_agent",
+  "non_agent_engagement_persona_info": {
+    "non_agent_engagement_persona_id": "X9cqQAfq5XAy2icRR6Z8Qb",
+    "non_agent_engagement_persona_run_id": "",
+    "non_agent_engagement_persona_type": "ContractorVendor"
+  },
+  "practice_id": "WnRQYPmx3ZfJyi4tuFTz4q",
+  "new_patient_opportunity_info": null
+}, {
+  "call_id": "8R4gXFhmnxZi6vuJ4zbraJ",
+  "site_id": null,
+  "callee_id": null,
+  "caller_id": null,
+  "call_start": "2022-07-25T17:54:48Z",
+  "callee_domain": null,
+  "caller_audio_url": null,
+  "callee_audio_url": null,
+  "call_end": "2022-07-25T18:00:39Z",
+  "domain": "implantpathway",
+  "caller_domain": null,
+  "connect_duration_seconds": "271",
+  "duration_seconds": "351",
+  "progress_time_seconds": "3",
+  "who_terminated_call": "",
+  "sip_caller_number": "+18157611010",
+  "sip_callee_number": "+14806642270",
+  "sip_caller_name": "WIRELESS CALLER",
+  "call_direction": "inbound",
+  "went_to_voicemail": "false",
+  "checked_voicemail": "false",
+  "call_connection": "connected",
+  "call_transcription": {
+    "call_transcription_id": "fpo3idya4hyuJSrBgiERwb",
+    "transcription_run_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "Hello. Thank you for calling New Horizon Dental Center. My name is Priscilla. How can I help you? Hey Priscilla, my mom and I have appointments tomorrow that I\u0027m going to. I\u0027m going to have to reschedule both of them because my mom is still out of town. Okay, can I get the last We name? have the same last name kolodziej and it\u0027s going to be Lydia Impala. 1 second. Get into that. What times are your appointments at? Let me see. Helps me. Find them a little. Oh, I think Hold I got on, let me check the text message. You guys sent. I have Paula at 1 p.m. okay. I got that one. and, Let me see if I can find the other one. And do you know what mom\u0027s thing was? What is she getting done that? I\u0027m moving back because we\u0027re we\u0027re trying to I think we just both lost track of what month is. We both have appointments with you guys and she\u0027s been out of town for about a month. Did you see her name was Lydia. Okay. Lydia. Yeah. Is that spelled l e? Okay, Adia. Okay, Yes, local. Yeah, yes. okay, let\u0027s Yeah. see what she\u0027s getting done and her appointment Thursday 8:30 a.m. I\u0027m not So sure. it Yeah, I\u0027m not sure says if she\u0027s second stage surgery Department. second stage surgery. Let me see. That\u0027s really really quick. Let me see your appointment given to make was one person. I just forget if she was having an implant procedure or if we were just like if she was getting her permanent tooth, I lose track because we\u0027ve both had stuff done. Okay, yeah, let me double-check. Cuz the notes are little confusing. I am still quite new, so I get a little confused Oh, with you\u0027re the okay. way. They, Any they work honestly, think? you can you can get back to me later. It\u0027s not like Okay. something I need to know. Now, cuz Mom\u0027s gone for another like week and half. But Okay. really, I just wanted to move both of our appointments. Probably like two weeks, if that\u0027s possible. Okay. Yeah, I do believe she\u0027s getting sick and say surgery. I\u0027m just confused cuz in the note, there\u0027s a question mark. So I\u0027m not sure if they have already done second stage, or if they\u0027re trying And, to you see know, when when I talked to how her, she\u0027ll also remind me. So I may be asking too much, you know, Oh no, of you\u0027re you totally and I\u0027m fine about that. know, of course. Okay. And so you do want to reschedule for about 2 weeks out, Yeah. Yeah. Okay. And would you guys like to remain on the same day or if you can, because we drive together and we have a long drive and we like to commute together, but if we can\u0027t, I understand that, you know, Okay. Okay, cool. Yeah, let me put you on a quick hold. Just so I can get a little bit of help. I\u0027m You\u0027re still fine. learning Take to your schedule. time. Yeah, thank you so much. Give me one sec. You\u0027re welcome. Okay. Hi Paula right Yes. okay, thank you for holding. I\u0027m actually just going to take a number down if that\u0027s okay and give you a little call back within a few minutes just cuz I\u0027m going to need help with the rescheduling and You\u0027re fine, you\u0027re fine and I can be later on in the day or tomorrow honestly doesn\u0027t matter cuz we got time but I just didn\u0027t want to leave them hanging for tomorrow cuz no. Mom\u0027s gone and we were supposed to come back either. So I would just rather reschedule both of ours. No, of course, I really appreciate that. Can I get a phone number as well to callback? Sure, 815-761-1010. Okay, awesome. I\u0027ll most likely give you a call back a little bit later. Okay. Super, thank All you so much right. Yeah. Thank and it\u0027s you not so much a rush. Thanks. and thank you for the heads up. Have a good day. Oh, you\u0027re welcome. Thank you so much. Have a good rest of your day. Thank you. Bye-bye.",
+    "person_id": null,
+    "caller_text": "Hello. Thank you for calling New Horizon Dental Center. My name is Priscilla. How can I help you? Okay, can I get the last name? 1 second. Get into that. What times are your appointments at? Helps me. Find them a little. Oh, I think I got I have Paula at 1 p.m. okay. I got that one. and, Let me see if I can find the other one. Did you see her name was Lydia. Okay. Is that spelled l e? Okay, Adia. Okay, okay, let\u0027s see what she\u0027s getting done and her appointment Thursday 8:30 a.m. So it says second stage surgery Department. Let me see. That\u0027s really really quick. Let me see your appointment given to make was one person. Okay, yeah, let me double-check. Cuz the notes are little confusing. I am still quite new, so I get a little confused with the way. They, they work think? Okay. Okay. Okay. Yeah, I do believe she\u0027s getting sick and say surgery. I\u0027m just confused cuz in the note, there\u0027s a question mark. So I\u0027m not sure if they have already done second stage, or if they\u0027re trying to see how long Oh no, you\u0027re totally fine know, of course. Okay. And so you do want to reschedule for about 2 weeks out, Okay. And would you guys like to remain on the same day or Okay. Okay, cool. Yeah, let me put you on a quick hold. Just so I can get a little bit of help. I\u0027m still learning how to schedule. Yeah, thank you so much. Give me one sec. Okay. Hi Paula right okay, thank you for holding. I\u0027m actually just going to take a number down if that\u0027s okay and give you a little call back within a few minutes just cuz I\u0027m going to need help with the rescheduling and no. No, of course, I really appreciate that. Can I get a phone number as well to callback? Okay, awesome. I\u0027ll most likely give you a call back a little bit later. All right. Yeah. Thank you so much and thank you for the heads up. Have a good day. Thank you. Bye-bye.",
+    "callee_text": "Hey Priscilla, my mom and I have appointments tomorrow that I\u0027m going to. I\u0027m going to have to reschedule both of them because my mom is still out of town. We have the same last name kolodziej and it\u0027s going to be Lydia Impala. Let me see. Hold on, let me check the text message. You guys sent. And do you know what mom\u0027s thing was? What is she getting done that? I\u0027m moving back because we\u0027re we\u0027re trying to I think we just both lost track of what month is. We both have appointments with you guys and she\u0027s been out of town for about a month. Lydia. Yeah. Yes, local. Yeah, yes. Yeah. I\u0027m not sure. Yeah, I\u0027m not sure if she\u0027s second stage surgery. I just forget if she was having an implant procedure or if we were just like if she was getting her permanent tooth, I lose track because we\u0027ve both had stuff done. Oh, you\u0027re okay. Any honestly, you can you can get back to me later. It\u0027s not like something I need to know. Now, cuz Mom\u0027s gone for another like week and half. But really, I just wanted to move both of our appointments. Probably like two weeks, if that\u0027s possible. And, you know, when when I talked to her, she\u0027ll also remind me. So I may be asking too much, you know, of you and I\u0027m sorry about that. Yeah. Yeah. if you can, because we drive together and we have a long drive and we like to commute together, but if we can\u0027t, I understand that, you know, You\u0027re fine. Take your time. You\u0027re welcome. Yes. You\u0027re fine, you\u0027re fine and I can be later on in the day or tomorrow honestly doesn\u0027t matter cuz we got time but I just didn\u0027t want to leave them hanging for tomorrow cuz Mom\u0027s gone and we were supposed to come back either. So I would just rather reschedule both of ours. Sure, 815-761-1010. Okay. Super, thank you so much and it\u0027s not a rush. Thanks. Oh, you\u0027re welcome. Thank you so much. Have a good rest of your day."
+  },
+  "call_purpose": [{
+    "call_purpose_id": "m658pEZWvAZPvVogfxvuDe",
+    "purpose_run_id": "VkvTgwYiNGniewyg5P2pUM",
+    "purpose": "reschedule",
+    "purpose_score": "0.88535495726620572",
+    "outcome": "success",
+    "outcome_reason_run_id": "",
+    "outcome_reason": "n/a"
+  }],
+  "call_sentiment": {
+    "call_sentiment_id": "mbCoCo6ka9fkYgMe2oBz76",
+    "sentiment_run_id": "2VRj7PRE4UZ5Vry2gKdcmx",
+    "overall_sentiment": "positive",
+    "caller_sentiment": "positive",
+    "callee_sentiment": "positive"
+  },
+  "caller_type_info": {
+    "caller_type_id": "dUpeu9WY97YpdrjxjTSFXr",
+    "caller_type_run_id": "iwQbtNcfKnhGUuiCt8KYeq",
+    "caller_type": "ExistingPatient"
+  },
+  "call_pause": {
+    "call_id": "8R4gXFhmnxZi6vuJ4zbraJ",
+    "call_run_id": "mQkqTVC4xWKBNuQ4thcPPh",
+    "longest_pause": null,
+    "start_time": null,
+    "end_time": null
+  },
+  "call_procedure_discussed": [{
+    "call_procedure_discussed_id": "XatuLWnqoNG3nnmaWU7D3N",
+    "call_procedure_id": "D3460",
+    "call_procedure_keyword": "implant",
+    "call_procedure_price_usd": "315.0"
+  }, {
+    "call_procedure_discussed_id": "fWSPCHrFhJLSMp7wcpBgGY",
+    "call_procedure_id": "D4355",
+    "call_procedure_keyword": "cleaning",
+    "call_procedure_price_usd": "184.0"
+  }, {
+    "call_procedure_discussed_id": "bijmAZQPDLCgLmYPExvMBK",
+    "call_procedure_id": "D0150",
+    "call_procedure_keyword": "exam",
+    "call_procedure_price_usd": "75.0"
+  }],
+  "call_insurance_discussed": [{
+    "call_insurance_discussed_id": "Tm78P87vJ4Qq6uqTLpxEFn",
+    "call_insurance_keyword": null
+  }],
+  "call_product_discussed": [{
+    "call_product_discussed_id": "5LN2osLRnDUqCuYE7aeDNt",
+    "call_product_keyword": null
+  }],
+  "call_company_discussed": [{
+    "call_company_discussed_id": "gLFMV8Zut24BHj8wQRgS9X",
+    "call_company_keyword": null
+  }],
+  "call_symptom_discussed": [{
+    "call_symptom_discussed_id": "4Qgm3NAz8XhfiJpMvoFfw9",
+    "call_symptom_keyword": null
+  }],
+  "metadata_file_uri": null,
+  "insert_timestamp": "2022-07-25T18:07:03Z",
+  "call_transcription_fragment": [{
+    "transcription_fragment_id": "",
+    "transcription_run_id": "",
+    "person_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "",
+    "sentiment_run_id": "",
+    "sentiment": "",
+    "telecom_persona_type": ""
+  }],
+  "referral_source": {
+    "referral_source_run_id": "5Ssk3MesCapsbjFHsbER56",
+    "referral_source_type": "n/a"
+  },
+  "call_agent_interaction": [{
+    "agent_interaction_metric_run_id": "V6XfvaDRw7KYVJapeyjnip",
+    "agent_interaction_metric_name": "scheduling_accommodations",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "JyXVqnF24ABqLjVL7KB9po",
+    "agent_interaction_metric_name": "referral_source",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "9pbKDemWBGtJiQ5rHxsRGt",
+    "agent_interaction_metric_name": "procedure_explanation",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "KsL9gotDFzsC27aaARfTJZ",
+    "agent_interaction_metric_name": "payment_method",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "m4HwQjaGc9wAEFJnqYvwku",
+    "agent_interaction_metric_name": "patient_demographics",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "kePUQporX7QVyNGrAPwNay",
+    "agent_interaction_metric_name": "greeting",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "Pvy76s2h2PmWLCAn8ouCKo",
+    "agent_interaction_metric_name": "agent_overtalk",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }],
+  "caller_type": "non_agent",
+  "callee_type": "agent",
+  "non_agent_engagement_persona_info": {
+    "non_agent_engagement_persona_id": "dUpeu9WY97YpdrjxjTSFXr",
+    "non_agent_engagement_persona_run_id": "iwQbtNcfKnhGUuiCt8KYeq",
+    "non_agent_engagement_persona_type": "ExistingPatient"
+  },
+  "practice_id": "RNmBAAqod3aj4q3fRBgA89",
+  "new_patient_opportunity_info": null
+}, {
+  "call_id": "8R4gXFhmnxZi6vuJ4zbraJ",
+  "site_id": null,
+  "callee_id": null,
+  "caller_id": null,
+  "call_start": "2022-07-25T17:54:48Z",
+  "callee_domain": null,
+  "caller_audio_url": null,
+  "callee_audio_url": null,
+  "call_end": "2022-07-25T18:00:39Z",
+  "domain": "implantpathway",
+  "caller_domain": null,
+  "connect_duration_seconds": "271",
+  "duration_seconds": "351",
+  "progress_time_seconds": "3",
+  "who_terminated_call": "",
+  "sip_caller_number": "+18157611010",
+  "sip_callee_number": "+14806642270",
+  "sip_caller_name": "WIRELESS CALLER",
+  "call_direction": "inbound",
+  "went_to_voicemail": "false",
+  "checked_voicemail": "false",
+  "call_connection": "connected",
+  "call_transcription": {
+    "call_transcription_id": "fpo3idya4hyuJSrBgiERwb",
+    "transcription_run_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "Hello. Thank you for calling New Horizon Dental Center. My name is Priscilla. How can I help you? Hey Priscilla, my mom and I have appointments tomorrow that I\u0027m going to. I\u0027m going to have to reschedule both of them because my mom is still out of town. Okay, can I get the last We name? have the same last name kolodziej and it\u0027s going to be Lydia Impala. 1 second. Get into that. What times are your appointments at? Let me see. Helps me. Find them a little. Oh, I think Hold I got on, let me check the text message. You guys sent. I have Paula at 1 p.m. okay. I got that one. and, Let me see if I can find the other one. And do you know what mom\u0027s thing was? What is she getting done that? I\u0027m moving back because we\u0027re we\u0027re trying to I think we just both lost track of what month is. We both have appointments with you guys and she\u0027s been out of town for about a month. Did you see her name was Lydia. Okay. Lydia. Yeah. Is that spelled l e? Okay, Adia. Okay, Yes, local. Yeah, yes. okay, let\u0027s Yeah. see what she\u0027s getting done and her appointment Thursday 8:30 a.m. I\u0027m not So sure. it Yeah, I\u0027m not sure says if she\u0027s second stage surgery Department. second stage surgery. Let me see. That\u0027s really really quick. Let me see your appointment given to make was one person. I just forget if she was having an implant procedure or if we were just like if she was getting her permanent tooth, I lose track because we\u0027ve both had stuff done. Okay, yeah, let me double-check. Cuz the notes are little confusing. I am still quite new, so I get a little confused Oh, with you\u0027re the okay. way. They, Any they work honestly, think? you can you can get back to me later. It\u0027s not like Okay. something I need to know. Now, cuz Mom\u0027s gone for another like week and half. But Okay. really, I just wanted to move both of our appointments. Probably like two weeks, if that\u0027s possible. Okay. Yeah, I do believe she\u0027s getting sick and say surgery. I\u0027m just confused cuz in the note, there\u0027s a question mark. So I\u0027m not sure if they have already done second stage, or if they\u0027re trying And, to you see know, when when I talked to how her, she\u0027ll also remind me. So I may be asking too much, you know, Oh no, of you\u0027re you totally and I\u0027m fine about that. know, of course. Okay. And so you do want to reschedule for about 2 weeks out, Yeah. Yeah. Okay. And would you guys like to remain on the same day or if you can, because we drive together and we have a long drive and we like to commute together, but if we can\u0027t, I understand that, you know, Okay. Okay, cool. Yeah, let me put you on a quick hold. Just so I can get a little bit of help. I\u0027m You\u0027re still fine. learning Take to your schedule. time. Yeah, thank you so much. Give me one sec. You\u0027re welcome. Okay. Hi Paula right Yes. okay, thank you for holding. I\u0027m actually just going to take a number down if that\u0027s okay and give you a little call back within a few minutes just cuz I\u0027m going to need help with the rescheduling and You\u0027re fine, you\u0027re fine and I can be later on in the day or tomorrow honestly doesn\u0027t matter cuz we got time but I just didn\u0027t want to leave them hanging for tomorrow cuz no. Mom\u0027s gone and we were supposed to come back either. So I would just rather reschedule both of ours. No, of course, I really appreciate that. Can I get a phone number as well to callback? Sure, 815-761-1010. Okay, awesome. I\u0027ll most likely give you a call back a little bit later. Okay. Super, thank All you so much right. Yeah. Thank and it\u0027s you not so much a rush. Thanks. and thank you for the heads up. Have a good day. Oh, you\u0027re welcome. Thank you so much. Have a good rest of your day. Thank you. Bye-bye.",
+    "person_id": null,
+    "caller_text": "Hello. Thank you for calling New Horizon Dental Center. My name is Priscilla. How can I help you? Okay, can I get the last name? 1 second. Get into that. What times are your appointments at? Helps me. Find them a little. Oh, I think I got I have Paula at 1 p.m. okay. I got that one. and, Let me see if I can find the other one. Did you see her name was Lydia. Okay. Is that spelled l e? Okay, Adia. Okay, okay, let\u0027s see what she\u0027s getting done and her appointment Thursday 8:30 a.m. So it says second stage surgery Department. Let me see. That\u0027s really really quick. Let me see your appointment given to make was one person. Okay, yeah, let me double-check. Cuz the notes are little confusing. I am still quite new, so I get a little confused with the way. They, they work think? Okay. Okay. Okay. Yeah, I do believe she\u0027s getting sick and say surgery. I\u0027m just confused cuz in the note, there\u0027s a question mark. So I\u0027m not sure if they have already done second stage, or if they\u0027re trying to see how long Oh no, you\u0027re totally fine know, of course. Okay. And so you do want to reschedule for about 2 weeks out, Okay. And would you guys like to remain on the same day or Okay. Okay, cool. Yeah, let me put you on a quick hold. Just so I can get a little bit of help. I\u0027m still learning how to schedule. Yeah, thank you so much. Give me one sec. Okay. Hi Paula right okay, thank you for holding. I\u0027m actually just going to take a number down if that\u0027s okay and give you a little call back within a few minutes just cuz I\u0027m going to need help with the rescheduling and no. No, of course, I really appreciate that. Can I get a phone number as well to callback? Okay, awesome. I\u0027ll most likely give you a call back a little bit later. All right. Yeah. Thank you so much and thank you for the heads up. Have a good day. Thank you. Bye-bye.",
+    "callee_text": "Hey Priscilla, my mom and I have appointments tomorrow that I\u0027m going to. I\u0027m going to have to reschedule both of them because my mom is still out of town. We have the same last name kolodziej and it\u0027s going to be Lydia Impala. Let me see. Hold on, let me check the text message. You guys sent. And do you know what mom\u0027s thing was? What is she getting done that? I\u0027m moving back because we\u0027re we\u0027re trying to I think we just both lost track of what month is. We both have appointments with you guys and she\u0027s been out of town for about a month. Lydia. Yeah. Yes, local. Yeah, yes. Yeah. I\u0027m not sure. Yeah, I\u0027m not sure if she\u0027s second stage surgery. I just forget if she was having an implant procedure or if we were just like if she was getting her permanent tooth, I lose track because we\u0027ve both had stuff done. Oh, you\u0027re okay. Any honestly, you can you can get back to me later. It\u0027s not like something I need to know. Now, cuz Mom\u0027s gone for another like week and half. But really, I just wanted to move both of our appointments. Probably like two weeks, if that\u0027s possible. And, you know, when when I talked to her, she\u0027ll also remind me. So I may be asking too much, you know, of you and I\u0027m sorry about that. Yeah. Yeah. if you can, because we drive together and we have a long drive and we like to commute together, but if we can\u0027t, I understand that, you know, You\u0027re fine. Take your time. You\u0027re welcome. Yes. You\u0027re fine, you\u0027re fine and I can be later on in the day or tomorrow honestly doesn\u0027t matter cuz we got time but I just didn\u0027t want to leave them hanging for tomorrow cuz Mom\u0027s gone and we were supposed to come back either. So I would just rather reschedule both of ours. Sure, 815-761-1010. Okay. Super, thank you so much and it\u0027s not a rush. Thanks. Oh, you\u0027re welcome. Thank you so much. Have a good rest of your day."
+  },
+  "call_purpose": [{
+    "call_purpose_id": "m658pEZWvAZPvVogfxvuDe",
+    "purpose_run_id": "VkvTgwYiNGniewyg5P2pUM",
+    "purpose": "reschedule",
+    "purpose_score": "0.88535495726620572",
+    "outcome": "success",
+    "outcome_reason_run_id": "",
+    "outcome_reason": "n/a"
+  }],
+  "call_sentiment": {
+    "call_sentiment_id": "mbCoCo6ka9fkYgMe2oBz76",
+    "sentiment_run_id": "2VRj7PRE4UZ5Vry2gKdcmx",
+    "overall_sentiment": "positive",
+    "caller_sentiment": "positive",
+    "callee_sentiment": "positive"
+  },
+  "caller_type_info": {
+    "caller_type_id": "dUpeu9WY97YpdrjxjTSFXr",
+    "caller_type_run_id": "iwQbtNcfKnhGUuiCt8KYeq",
+    "caller_type": "ExistingPatient"
+  },
+  "call_pause": {
+    "call_id": "8R4gXFhmnxZi6vuJ4zbraJ",
+    "call_run_id": "mQkqTVC4xWKBNuQ4thcPPh",
+    "longest_pause": null,
+    "start_time": null,
+    "end_time": null
+  },
+  "call_procedure_discussed": [{
+    "call_procedure_discussed_id": "XatuLWnqoNG3nnmaWU7D3N",
+    "call_procedure_id": "D3460",
+    "call_procedure_keyword": "implant",
+    "call_procedure_price_usd": "315.0"
+  }, {
+    "call_procedure_discussed_id": "fWSPCHrFhJLSMp7wcpBgGY",
+    "call_procedure_id": "D4355",
+    "call_procedure_keyword": "cleaning",
+    "call_procedure_price_usd": "184.0"
+  }, {
+    "call_procedure_discussed_id": "bijmAZQPDLCgLmYPExvMBK",
+    "call_procedure_id": "D0150",
+    "call_procedure_keyword": "exam",
+    "call_procedure_price_usd": "75.0"
+  }],
+  "call_insurance_discussed": [{
+    "call_insurance_discussed_id": "Tm78P87vJ4Qq6uqTLpxEFn",
+    "call_insurance_keyword": null
+  }],
+  "call_product_discussed": [{
+    "call_product_discussed_id": "5LN2osLRnDUqCuYE7aeDNt",
+    "call_product_keyword": null
+  }],
+  "call_company_discussed": [{
+    "call_company_discussed_id": "gLFMV8Zut24BHj8wQRgS9X",
+    "call_company_keyword": null
+  }],
+  "call_symptom_discussed": [{
+    "call_symptom_discussed_id": "4Qgm3NAz8XhfiJpMvoFfw9",
+    "call_symptom_keyword": null
+  }],
+  "metadata_file_uri": null,
+  "insert_timestamp": "2022-07-25T18:07:03Z",
+  "call_transcription_fragment": [{
+    "transcription_fragment_id": "",
+    "transcription_run_id": "",
+    "person_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "",
+    "sentiment_run_id": "",
+    "sentiment": "",
+    "telecom_persona_type": ""
+  }],
+  "referral_source": {
+    "referral_source_run_id": "5Ssk3MesCapsbjFHsbER56",
+    "referral_source_type": "n/a"
+  },
+  "call_agent_interaction": [{
+    "agent_interaction_metric_run_id": "V6XfvaDRw7KYVJapeyjnip",
+    "agent_interaction_metric_name": "scheduling_accommodations",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "JyXVqnF24ABqLjVL7KB9po",
+    "agent_interaction_metric_name": "referral_source",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "9pbKDemWBGtJiQ5rHxsRGt",
+    "agent_interaction_metric_name": "procedure_explanation",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "KsL9gotDFzsC27aaARfTJZ",
+    "agent_interaction_metric_name": "payment_method",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "m4HwQjaGc9wAEFJnqYvwku",
+    "agent_interaction_metric_name": "patient_demographics",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "kePUQporX7QVyNGrAPwNay",
+    "agent_interaction_metric_name": "greeting",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "Pvy76s2h2PmWLCAn8ouCKo",
+    "agent_interaction_metric_name": "agent_overtalk",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }],
+  "caller_type": "non_agent",
+  "callee_type": "agent",
+  "non_agent_engagement_persona_info": {
+    "non_agent_engagement_persona_id": "dUpeu9WY97YpdrjxjTSFXr",
+    "non_agent_engagement_persona_run_id": "iwQbtNcfKnhGUuiCt8KYeq",
+    "non_agent_engagement_persona_type": "ExistingPatient"
+  },
+  "practice_id": "RNmBAAqod3aj4q3fRBgA89",
+  "new_patient_opportunity_info": null
+}, {
+  "call_id": "8R4gXFhmnxZi6vuJ4zbraJ",
+  "site_id": null,
+  "callee_id": null,
+  "caller_id": null,
+  "call_start": "2022-07-25T17:54:48Z",
+  "callee_domain": null,
+  "caller_audio_url": null,
+  "callee_audio_url": null,
+  "call_end": "2022-07-25T18:00:39Z",
+  "domain": "implantpathway",
+  "caller_domain": null,
+  "connect_duration_seconds": "271",
+  "duration_seconds": "351",
+  "progress_time_seconds": "3",
+  "who_terminated_call": "",
+  "sip_caller_number": "+18157611010",
+  "sip_callee_number": "+14806642270",
+  "sip_caller_name": "WIRELESS CALLER",
+  "call_direction": "inbound",
+  "went_to_voicemail": "false",
+  "checked_voicemail": "false",
+  "call_connection": "connected",
+  "call_transcription": {
+    "call_transcription_id": "fpo3idya4hyuJSrBgiERwb",
+    "transcription_run_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "Hello. Thank you for calling New Horizon Dental Center. My name is Priscilla. How can I help you? Hey Priscilla, my mom and I have appointments tomorrow that I\u0027m going to. I\u0027m going to have to reschedule both of them because my mom is still out of town. Okay, can I get the last We name? have the same last name kolodziej and it\u0027s going to be Lydia Impala. 1 second. Get into that. What times are your appointments at? Let me see. Helps me. Find them a little. Oh, I think Hold I got on, let me check the text message. You guys sent. I have Paula at 1 p.m. okay. I got that one. and, Let me see if I can find the other one. And do you know what mom\u0027s thing was? What is she getting done that? I\u0027m moving back because we\u0027re we\u0027re trying to I think we just both lost track of what month is. We both have appointments with you guys and she\u0027s been out of town for about a month. Did you see her name was Lydia. Okay. Lydia. Yeah. Is that spelled l e? Okay, Adia. Okay, Yes, local. Yeah, yes. okay, let\u0027s Yeah. see what she\u0027s getting done and her appointment Thursday 8:30 a.m. I\u0027m not So sure. it Yeah, I\u0027m not sure says if she\u0027s second stage surgery Department. second stage surgery. Let me see. That\u0027s really really quick. Let me see your appointment given to make was one person. I just forget if she was having an implant procedure or if we were just like if she was getting her permanent tooth, I lose track because we\u0027ve both had stuff done. Okay, yeah, let me double-check. Cuz the notes are little confusing. I am still quite new, so I get a little confused Oh, with you\u0027re the okay. way. They, Any they work honestly, think? you can you can get back to me later. It\u0027s not like Okay. something I need to know. Now, cuz Mom\u0027s gone for another like week and half. But Okay. really, I just wanted to move both of our appointments. Probably like two weeks, if that\u0027s possible. Okay. Yeah, I do believe she\u0027s getting sick and say surgery. I\u0027m just confused cuz in the note, there\u0027s a question mark. So I\u0027m not sure if they have already done second stage, or if they\u0027re trying And, to you see know, when when I talked to how her, she\u0027ll also remind me. So I may be asking too much, you know, Oh no, of you\u0027re you totally and I\u0027m fine about that. know, of course. Okay. And so you do want to reschedule for about 2 weeks out, Yeah. Yeah. Okay. And would you guys like to remain on the same day or if you can, because we drive together and we have a long drive and we like to commute together, but if we can\u0027t, I understand that, you know, Okay. Okay, cool. Yeah, let me put you on a quick hold. Just so I can get a little bit of help. I\u0027m You\u0027re still fine. learning Take to your schedule. time. Yeah, thank you so much. Give me one sec. You\u0027re welcome. Okay. Hi Paula right Yes. okay, thank you for holding. I\u0027m actually just going to take a number down if that\u0027s okay and give you a little call back within a few minutes just cuz I\u0027m going to need help with the rescheduling and You\u0027re fine, you\u0027re fine and I can be later on in the day or tomorrow honestly doesn\u0027t matter cuz we got time but I just didn\u0027t want to leave them hanging for tomorrow cuz no. Mom\u0027s gone and we were supposed to come back either. So I would just rather reschedule both of ours. No, of course, I really appreciate that. Can I get a phone number as well to callback? Sure, 815-761-1010. Okay, awesome. I\u0027ll most likely give you a call back a little bit later. Okay. Super, thank All you so much right. Yeah. Thank and it\u0027s you not so much a rush. Thanks. and thank you for the heads up. Have a good day. Oh, you\u0027re welcome. Thank you so much. Have a good rest of your day. Thank you. Bye-bye.",
+    "person_id": null,
+    "caller_text": "Hello. Thank you for calling New Horizon Dental Center. My name is Priscilla. How can I help you? Okay, can I get the last name? 1 second. Get into that. What times are your appointments at? Helps me. Find them a little. Oh, I think I got I have Paula at 1 p.m. okay. I got that one. and, Let me see if I can find the other one. Did you see her name was Lydia. Okay. Is that spelled l e? Okay, Adia. Okay, okay, let\u0027s see what she\u0027s getting done and her appointment Thursday 8:30 a.m. So it says second stage surgery Department. Let me see. That\u0027s really really quick. Let me see your appointment given to make was one person. Okay, yeah, let me double-check. Cuz the notes are little confusing. I am still quite new, so I get a little confused with the way. They, they work think? Okay. Okay. Okay. Yeah, I do believe she\u0027s getting sick and say surgery. I\u0027m just confused cuz in the note, there\u0027s a question mark. So I\u0027m not sure if they have already done second stage, or if they\u0027re trying to see how long Oh no, you\u0027re totally fine know, of course. Okay. And so you do want to reschedule for about 2 weeks out, Okay. And would you guys like to remain on the same day or Okay. Okay, cool. Yeah, let me put you on a quick hold. Just so I can get a little bit of help. I\u0027m still learning how to schedule. Yeah, thank you so much. Give me one sec. Okay. Hi Paula right okay, thank you for holding. I\u0027m actually just going to take a number down if that\u0027s okay and give you a little call back within a few minutes just cuz I\u0027m going to need help with the rescheduling and no. No, of course, I really appreciate that. Can I get a phone number as well to callback? Okay, awesome. I\u0027ll most likely give you a call back a little bit later. All right. Yeah. Thank you so much and thank you for the heads up. Have a good day. Thank you. Bye-bye.",
+    "callee_text": "Hey Priscilla, my mom and I have appointments tomorrow that I\u0027m going to. I\u0027m going to have to reschedule both of them because my mom is still out of town. We have the same last name kolodziej and it\u0027s going to be Lydia Impala. Let me see. Hold on, let me check the text message. You guys sent. And do you know what mom\u0027s thing was? What is she getting done that? I\u0027m moving back because we\u0027re we\u0027re trying to I think we just both lost track of what month is. We both have appointments with you guys and she\u0027s been out of town for about a month. Lydia. Yeah. Yes, local. Yeah, yes. Yeah. I\u0027m not sure. Yeah, I\u0027m not sure if she\u0027s second stage surgery. I just forget if she was having an implant procedure or if we were just like if she was getting her permanent tooth, I lose track because we\u0027ve both had stuff done. Oh, you\u0027re okay. Any honestly, you can you can get back to me later. It\u0027s not like something I need to know. Now, cuz Mom\u0027s gone for another like week and half. But really, I just wanted to move both of our appointments. Probably like two weeks, if that\u0027s possible. And, you know, when when I talked to her, she\u0027ll also remind me. So I may be asking too much, you know, of you and I\u0027m sorry about that. Yeah. Yeah. if you can, because we drive together and we have a long drive and we like to commute together, but if we can\u0027t, I understand that, you know, You\u0027re fine. Take your time. You\u0027re welcome. Yes. You\u0027re fine, you\u0027re fine and I can be later on in the day or tomorrow honestly doesn\u0027t matter cuz we got time but I just didn\u0027t want to leave them hanging for tomorrow cuz Mom\u0027s gone and we were supposed to come back either. So I would just rather reschedule both of ours. Sure, 815-761-1010. Okay. Super, thank you so much and it\u0027s not a rush. Thanks. Oh, you\u0027re welcome. Thank you so much. Have a good rest of your day."
+  },
+  "call_purpose": [{
+    "call_purpose_id": "m658pEZWvAZPvVogfxvuDe",
+    "purpose_run_id": "VkvTgwYiNGniewyg5P2pUM",
+    "purpose": "reschedule",
+    "purpose_score": "0.88535495726620572",
+    "outcome": "success",
+    "outcome_reason_run_id": "",
+    "outcome_reason": "n/a"
+  }],
+  "call_sentiment": {
+    "call_sentiment_id": "mbCoCo6ka9fkYgMe2oBz76",
+    "sentiment_run_id": "2VRj7PRE4UZ5Vry2gKdcmx",
+    "overall_sentiment": "positive",
+    "caller_sentiment": "positive",
+    "callee_sentiment": "positive"
+  },
+  "caller_type_info": {
+    "caller_type_id": "dUpeu9WY97YpdrjxjTSFXr",
+    "caller_type_run_id": "iwQbtNcfKnhGUuiCt8KYeq",
+    "caller_type": "ExistingPatient"
+  },
+  "call_pause": {
+    "call_id": "8R4gXFhmnxZi6vuJ4zbraJ",
+    "call_run_id": "mQkqTVC4xWKBNuQ4thcPPh",
+    "longest_pause": null,
+    "start_time": null,
+    "end_time": null
+  },
+  "call_procedure_discussed": [{
+    "call_procedure_discussed_id": "XatuLWnqoNG3nnmaWU7D3N",
+    "call_procedure_id": "D3460",
+    "call_procedure_keyword": "implant",
+    "call_procedure_price_usd": "315.0"
+  }, {
+    "call_procedure_discussed_id": "fWSPCHrFhJLSMp7wcpBgGY",
+    "call_procedure_id": "D4355",
+    "call_procedure_keyword": "cleaning",
+    "call_procedure_price_usd": "184.0"
+  }, {
+    "call_procedure_discussed_id": "bijmAZQPDLCgLmYPExvMBK",
+    "call_procedure_id": "D0150",
+    "call_procedure_keyword": "exam",
+    "call_procedure_price_usd": "75.0"
+  }],
+  "call_insurance_discussed": [{
+    "call_insurance_discussed_id": "Tm78P87vJ4Qq6uqTLpxEFn",
+    "call_insurance_keyword": null
+  }],
+  "call_product_discussed": [{
+    "call_product_discussed_id": "5LN2osLRnDUqCuYE7aeDNt",
+    "call_product_keyword": null
+  }],
+  "call_company_discussed": [{
+    "call_company_discussed_id": "gLFMV8Zut24BHj8wQRgS9X",
+    "call_company_keyword": null
+  }],
+  "call_symptom_discussed": [{
+    "call_symptom_discussed_id": "4Qgm3NAz8XhfiJpMvoFfw9",
+    "call_symptom_keyword": null
+  }],
+  "metadata_file_uri": null,
+  "insert_timestamp": "2022-07-25T18:07:03Z",
+  "call_transcription_fragment": [{
+    "transcription_fragment_id": "",
+    "transcription_run_id": "",
+    "person_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "",
+    "sentiment_run_id": "",
+    "sentiment": "",
+    "telecom_persona_type": ""
+  }],
+  "referral_source": {
+    "referral_source_run_id": "5Ssk3MesCapsbjFHsbER56",
+    "referral_source_type": "n/a"
+  },
+  "call_agent_interaction": [{
+    "agent_interaction_metric_run_id": "V6XfvaDRw7KYVJapeyjnip",
+    "agent_interaction_metric_name": "scheduling_accommodations",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "JyXVqnF24ABqLjVL7KB9po",
+    "agent_interaction_metric_name": "referral_source",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "9pbKDemWBGtJiQ5rHxsRGt",
+    "agent_interaction_metric_name": "procedure_explanation",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "KsL9gotDFzsC27aaARfTJZ",
+    "agent_interaction_metric_name": "payment_method",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "m4HwQjaGc9wAEFJnqYvwku",
+    "agent_interaction_metric_name": "patient_demographics",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "kePUQporX7QVyNGrAPwNay",
+    "agent_interaction_metric_name": "greeting",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "Pvy76s2h2PmWLCAn8ouCKo",
+    "agent_interaction_metric_name": "agent_overtalk",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }],
+  "caller_type": "non_agent",
+  "callee_type": "agent",
+  "non_agent_engagement_persona_info": {
+    "non_agent_engagement_persona_id": "dUpeu9WY97YpdrjxjTSFXr",
+    "non_agent_engagement_persona_run_id": "iwQbtNcfKnhGUuiCt8KYeq",
+    "non_agent_engagement_persona_type": "ExistingPatient"
+  },
+  "practice_id": "RNmBAAqod3aj4q3fRBgA89",
+  "new_patient_opportunity_info": null
+}, {
+  "call_id": "8R4gXFhmnxZi6vuJ4zbraJ",
+  "site_id": null,
+  "callee_id": null,
+  "caller_id": null,
+  "call_start": "2022-07-25T17:54:48Z",
+  "callee_domain": null,
+  "caller_audio_url": null,
+  "callee_audio_url": null,
+  "call_end": "2022-07-25T18:00:39Z",
+  "domain": "implantpathway",
+  "caller_domain": null,
+  "connect_duration_seconds": "271",
+  "duration_seconds": "351",
+  "progress_time_seconds": "3",
+  "who_terminated_call": "",
+  "sip_caller_number": "+18157611010",
+  "sip_callee_number": "+14806642270",
+  "sip_caller_name": "WIRELESS CALLER",
+  "call_direction": "inbound",
+  "went_to_voicemail": "false",
+  "checked_voicemail": "false",
+  "call_connection": "connected",
+  "call_transcription": {
+    "call_transcription_id": "fpo3idya4hyuJSrBgiERwb",
+    "transcription_run_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "Hello. Thank you for calling New Horizon Dental Center. My name is Priscilla. How can I help you? Hey Priscilla, my mom and I have appointments tomorrow that I\u0027m going to. I\u0027m going to have to reschedule both of them because my mom is still out of town. Okay, can I get the last We name? have the same last name kolodziej and it\u0027s going to be Lydia Impala. 1 second. Get into that. What times are your appointments at? Let me see. Helps me. Find them a little. Oh, I think Hold I got on, let me check the text message. You guys sent. I have Paula at 1 p.m. okay. I got that one. and, Let me see if I can find the other one. And do you know what mom\u0027s thing was? What is she getting done that? I\u0027m moving back because we\u0027re we\u0027re trying to I think we just both lost track of what month is. We both have appointments with you guys and she\u0027s been out of town for about a month. Did you see her name was Lydia. Okay. Lydia. Yeah. Is that spelled l e? Okay, Adia. Okay, Yes, local. Yeah, yes. okay, let\u0027s Yeah. see what she\u0027s getting done and her appointment Thursday 8:30 a.m. I\u0027m not So sure. it Yeah, I\u0027m not sure says if she\u0027s second stage surgery Department. second stage surgery. Let me see. That\u0027s really really quick. Let me see your appointment given to make was one person. I just forget if she was having an implant procedure or if we were just like if she was getting her permanent tooth, I lose track because we\u0027ve both had stuff done. Okay, yeah, let me double-check. Cuz the notes are little confusing. I am still quite new, so I get a little confused Oh, with you\u0027re the okay. way. They, Any they work honestly, think? you can you can get back to me later. It\u0027s not like Okay. something I need to know. Now, cuz Mom\u0027s gone for another like week and half. But Okay. really, I just wanted to move both of our appointments. Probably like two weeks, if that\u0027s possible. Okay. Yeah, I do believe she\u0027s getting sick and say surgery. I\u0027m just confused cuz in the note, there\u0027s a question mark. So I\u0027m not sure if they have already done second stage, or if they\u0027re trying And, to you see know, when when I talked to how her, she\u0027ll also remind me. So I may be asking too much, you know, Oh no, of you\u0027re you totally and I\u0027m fine about that. know, of course. Okay. And so you do want to reschedule for about 2 weeks out, Yeah. Yeah. Okay. And would you guys like to remain on the same day or if you can, because we drive together and we have a long drive and we like to commute together, but if we can\u0027t, I understand that, you know, Okay. Okay, cool. Yeah, let me put you on a quick hold. Just so I can get a little bit of help. I\u0027m You\u0027re still fine. learning Take to your schedule. time. Yeah, thank you so much. Give me one sec. You\u0027re welcome. Okay. Hi Paula right Yes. okay, thank you for holding. I\u0027m actually just going to take a number down if that\u0027s okay and give you a little call back within a few minutes just cuz I\u0027m going to need help with the rescheduling and You\u0027re fine, you\u0027re fine and I can be later on in the day or tomorrow honestly doesn\u0027t matter cuz we got time but I just didn\u0027t want to leave them hanging for tomorrow cuz no. Mom\u0027s gone and we were supposed to come back either. So I would just rather reschedule both of ours. No, of course, I really appreciate that. Can I get a phone number as well to callback? Sure, 815-761-1010. Okay, awesome. I\u0027ll most likely give you a call back a little bit later. Okay. Super, thank All you so much right. Yeah. Thank and it\u0027s you not so much a rush. Thanks. and thank you for the heads up. Have a good day. Oh, you\u0027re welcome. Thank you so much. Have a good rest of your day. Thank you. Bye-bye.",
+    "person_id": null,
+    "caller_text": "Hello. Thank you for calling New Horizon Dental Center. My name is Priscilla. How can I help you? Okay, can I get the last name? 1 second. Get into that. What times are your appointments at? Helps me. Find them a little. Oh, I think I got I have Paula at 1 p.m. okay. I got that one. and, Let me see if I can find the other one. Did you see her name was Lydia. Okay. Is that spelled l e? Okay, Adia. Okay, okay, let\u0027s see what she\u0027s getting done and her appointment Thursday 8:30 a.m. So it says second stage surgery Department. Let me see. That\u0027s really really quick. Let me see your appointment given to make was one person. Okay, yeah, let me double-check. Cuz the notes are little confusing. I am still quite new, so I get a little confused with the way. They, they work think? Okay. Okay. Okay. Yeah, I do believe she\u0027s getting sick and say surgery. I\u0027m just confused cuz in the note, there\u0027s a question mark. So I\u0027m not sure if they have already done second stage, or if they\u0027re trying to see how long Oh no, you\u0027re totally fine know, of course. Okay. And so you do want to reschedule for about 2 weeks out, Okay. And would you guys like to remain on the same day or Okay. Okay, cool. Yeah, let me put you on a quick hold. Just so I can get a little bit of help. I\u0027m still learning how to schedule. Yeah, thank you so much. Give me one sec. Okay. Hi Paula right okay, thank you for holding. I\u0027m actually just going to take a number down if that\u0027s okay and give you a little call back within a few minutes just cuz I\u0027m going to need help with the rescheduling and no. No, of course, I really appreciate that. Can I get a phone number as well to callback? Okay, awesome. I\u0027ll most likely give you a call back a little bit later. All right. Yeah. Thank you so much and thank you for the heads up. Have a good day. Thank you. Bye-bye.",
+    "callee_text": "Hey Priscilla, my mom and I have appointments tomorrow that I\u0027m going to. I\u0027m going to have to reschedule both of them because my mom is still out of town. We have the same last name kolodziej and it\u0027s going to be Lydia Impala. Let me see. Hold on, let me check the text message. You guys sent. And do you know what mom\u0027s thing was? What is she getting done that? I\u0027m moving back because we\u0027re we\u0027re trying to I think we just both lost track of what month is. We both have appointments with you guys and she\u0027s been out of town for about a month. Lydia. Yeah. Yes, local. Yeah, yes. Yeah. I\u0027m not sure. Yeah, I\u0027m not sure if she\u0027s second stage surgery. I just forget if she was having an implant procedure or if we were just like if she was getting her permanent tooth, I lose track because we\u0027ve both had stuff done. Oh, you\u0027re okay. Any honestly, you can you can get back to me later. It\u0027s not like something I need to know. Now, cuz Mom\u0027s gone for another like week and half. But really, I just wanted to move both of our appointments. Probably like two weeks, if that\u0027s possible. And, you know, when when I talked to her, she\u0027ll also remind me. So I may be asking too much, you know, of you and I\u0027m sorry about that. Yeah. Yeah. if you can, because we drive together and we have a long drive and we like to commute together, but if we can\u0027t, I understand that, you know, You\u0027re fine. Take your time. You\u0027re welcome. Yes. You\u0027re fine, you\u0027re fine and I can be later on in the day or tomorrow honestly doesn\u0027t matter cuz we got time but I just didn\u0027t want to leave them hanging for tomorrow cuz Mom\u0027s gone and we were supposed to come back either. So I would just rather reschedule both of ours. Sure, 815-761-1010. Okay. Super, thank you so much and it\u0027s not a rush. Thanks. Oh, you\u0027re welcome. Thank you so much. Have a good rest of your day."
+  },
+  "call_purpose": [{
+    "call_purpose_id": "6XJQbVdpVz2XMjBQP2Qvuh",
+    "purpose_run_id": "em9bBdkQ5SeDbvDh3JCDTc",
+    "purpose": "reschedule",
+    "purpose_score": "0.88535495726620572",
+    "outcome": "success",
+    "outcome_reason_run_id": "",
+    "outcome_reason": "n/a"
+  }],
+  "call_sentiment": {
+    "call_sentiment_id": "9yAGknH3QQfuaFE7sQWe46",
+    "sentiment_run_id": "FteCobYzLChnCw78YxGstw",
+    "overall_sentiment": "positive",
+    "caller_sentiment": "positive",
+    "callee_sentiment": "positive"
+  },
+  "caller_type_info": {
+    "caller_type_id": "CXaRmCsqww6ddRkGVXqdkx",
+    "caller_type_run_id": "PRxYHHkxBFDGivW4bQqxFb",
+    "caller_type": "ExistingPatient"
+  },
+  "call_pause": {
+    "call_id": "8R4gXFhmnxZi6vuJ4zbraJ",
+    "call_run_id": "K2KcpwfUbuQmoyk4vSUNLF",
+    "longest_pause": null,
+    "start_time": null,
+    "end_time": null
+  },
+  "call_procedure_discussed": [{
+    "call_procedure_discussed_id": "mCFhDs3mC7RaxZ5UDM4a6G",
+    "call_procedure_id": "D3460",
+    "call_procedure_keyword": "implant",
+    "call_procedure_price_usd": "315.0"
+  }, {
+    "call_procedure_discussed_id": "VWT7fougYMcLfTLuzc7AmU",
+    "call_procedure_id": "D4355",
+    "call_procedure_keyword": "cleaning",
+    "call_procedure_price_usd": "184.0"
+  }, {
+    "call_procedure_discussed_id": "koV9EvuqNTGYtDeP2GM3qe",
+    "call_procedure_id": "D0150",
+    "call_procedure_keyword": "exam",
+    "call_procedure_price_usd": "75.0"
+  }],
+  "call_insurance_discussed": [{
+    "call_insurance_discussed_id": "bHJ6xBXVFM9s3TUzAy9vtV",
+    "call_insurance_keyword": null
+  }],
+  "call_product_discussed": [{
+    "call_product_discussed_id": "kjMq95NFGEyWUqccREcumC",
+    "call_product_keyword": null
+  }],
+  "call_company_discussed": [{
+    "call_company_discussed_id": "EKgDnpBoEu36WLoHE5BPJ2",
+    "call_company_keyword": null
+  }],
+  "call_symptom_discussed": [{
+    "call_symptom_discussed_id": "abQov67HPo7sddJaJLR9hF",
+    "call_symptom_keyword": null
+  }],
+  "metadata_file_uri": null,
+  "insert_timestamp": "2022-07-25T18:07:09Z",
+  "call_transcription_fragment": [{
+    "transcription_fragment_id": "",
+    "transcription_run_id": "",
+    "person_id": "",
+    "time_start": null,
+    "time_end": null,
+    "text": "",
+    "sentiment_run_id": "",
+    "sentiment": "",
+    "telecom_persona_type": ""
+  }],
+  "referral_source": {
+    "referral_source_run_id": "6e9ZsVoKmGbC9egKy9fqiY",
+    "referral_source_type": "n/a"
+  },
+  "call_agent_interaction": [{
+    "agent_interaction_metric_run_id": "nxNvBm84BgYWFHgrogR9Ss",
+    "agent_interaction_metric_name": "scheduling_accommodations",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "VupLM2NFXWQgfqxZgsE4MF",
+    "agent_interaction_metric_name": "referral_source",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "mLCFca6bXsMUFXq6NGX6Ja",
+    "agent_interaction_metric_name": "procedure_explanation",
+    "agent_interaction_metric_value": "n/a",
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "RmNtfQDzesPRUZqxCYP6Hz",
+    "agent_interaction_metric_name": "payment_method",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "hsb2i4NrVN9LL3Jq2HeARd",
+    "agent_interaction_metric_name": "patient_demographics",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "Eo3Eo5M4SH9WbyJvDxYzGa",
+    "agent_interaction_metric_name": "greeting",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }, {
+    "agent_interaction_metric_run_id": "XSe688t4zagmw6Td7qtTed",
+    "agent_interaction_metric_name": "agent_overtalk",
+    "agent_interaction_metric_value": null,
+    "agent_interaction_metric_score": "0.0"
+  }],
+  "caller_type": "non_agent",
+  "callee_type": "agent",
+  "non_agent_engagement_persona_info": {
+    "non_agent_engagement_persona_id": "CXaRmCsqww6ddRkGVXqdkx",
+    "non_agent_engagement_persona_run_id": "PRxYHHkxBFDGivW4bQqxFb",
+    "non_agent_engagement_persona_type": "ExistingPatient"
+  },
+  "practice_id": "RNmBAAqod3aj4q3fRBgA89",
+  "new_patient_opportunity_info": null
+}]

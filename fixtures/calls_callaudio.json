@@ -1,0 +1,81 @@
+[
+{
+    "model": "core.practice",
+    "pk": "KheSQgTE8V6Fbbt5NSmPay",
+    "fields": {
+        "created_at": "2022-05-31T19:48:38.721Z",
+        "modified_at": "2022-05-31T19:48:38.721Z",
+        "created_by": null,
+        "modified_by": null,
+        "name": "75th Avenue Dental Studio",
+        "industry": "dentistry_general",
+        "active": true
+    }
+},
+{
+    "model": "calls.call",
+    "pk": "L82F3CYSVhTshXphUAKSs7",
+    "fields": {
+        "created_at": "2022-07-05T20:00:36.927Z",
+        "modified_at": "2022-07-05T20:00:36.927Z",
+        "created_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+        "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+        "call_start_time": "2022-07-05T19:54:57Z",
+        "call_end_time": "2022-07-05T20:00:33Z",
+        "duration_seconds": "00:05:36",
+        "connect_duration_seconds": "00:05:36",
+        "progress_time_seconds": "00:00:03",
+        "call_direction": "inbound",
+        "practice": "KheSQgTE8V6Fbbt5NSmPay",
+        "caller_id": null,
+        "callee_id": null,
+        "sip_caller_number": "+17086904201",
+        "sip_caller_name": "EWING DEONARIC",
+        "sip_callee_number": "+16238490053",
+        "sip_callee_name": "sip:103@dentaldesignstudios_75thavenue",
+        "checked_voicemail": false,
+        "went_to_voicemail": false,
+        "call_connection": "connected",
+        "who_terminated_call": "",
+        "referral_source": "",
+        "caller_type": "non_agent",
+        "callee_type": "agent"
+    }
+},
+{
+    "model": "core.user",
+    "pk": "Ujk4AKoCfxrcGyMzkHDrbw",
+    "fields": {
+        "last_login": "2022-07-07T23:13:35.013Z",
+        "is_superuser": false,
+        "username": "6000@Peerlogic",
+        "first_name": "",
+        "last_name": "",
+        "email": "r-and-d@peerlogic.com",
+        "is_staff": true,
+        "is_active": true,
+        "date_joined": "2021-12-17T00:58:50Z",
+        "created_at": "2021-12-17T00:58:50.930Z",
+        "modified_at": "2022-07-07T23:13:35.014Z",
+        "created_by": null,
+        "modified_by": null,
+        "name": "API User",
+        "password": "",
+        "auth0_id": "",
+        "user_permissions": []
+    }
+},
+{
+    "model": "calls.callaudio",
+    "pk": "mCHXcnfKxvGXFx7dpEmq9A",
+    "fields": {
+        "created_at": "2022-07-05T20:07:44.600Z",
+        "modified_at": "2022-07-05T20:07:46.546Z",
+        "created_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+        "modified_by": "Ujk4AKoCfxrcGyMzkHDrbw",
+        "call": "L82F3CYSVhTshXphUAKSs7",
+        "mime_type": "audio/WAV",
+        "status": "uploaded"
+    }
+}
+]

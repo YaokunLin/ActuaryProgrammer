@@ -192,7 +192,7 @@ class NetsapiensCdr2Extract(AuditTrailModel):
     cdrr_time_answer = models.DateTimeField(null=True)  # REDUNDANT: "time_answer": "1642816610"
     cdrr_time_release = models.DateTimeField(null=True)  # REDUNDANT: "time_release": "1642816660"
     cdrr_time_talking = models.DurationField(null=True)  # "time_talking": "50" for this segment / partial
-    cdrr_time_holding = models.DurationField(null=True)  # e.g. "0"
+    cdrr_time_holding = models.DurationField(null=True)  # e.g. "0"  Time holding on this segment
     cdrr_duration = models.DurationField(null=True)  # e.g. "50" for this segment / partial
     cdrr_time_insert = models.DateTimeField(null=True)  # e.g.
     cdrr_time_disp = models.DateTimeField(null=True)  # e.g.
@@ -225,7 +225,7 @@ class NetsapiensCdr2Extract(AuditTrailModel):
     cdrr_term_logi_uri = models.CharField(max_length=127, blank=True, null=True)  # e.g. "sip:16232952005@pleasantdental-peoria", length modified 2022-06-24 to fix 63 char error in prod
     cdrr_batch_tim_beg = models.IntegerField(max_length=16, null=True)  # e.g. "1642816606"  The same across all cdr partials for a call, matches time_start
     cdrr_batch_tim_ans = models.IntegerField(max_length=16, null=True)  # e.g. "1642816606"  The same across all cdr partials for a call, matches time_start?
-    cdrr_batch_hold = models.IntegerField(max_length=15, null=True)  # e.g. "0"
+    cdrr_batch_hold = models.IntegerField(max_length=15, null=True)  # e.g. "0"  Aggregate hold time so far
     cdrr_batch_dura = models.IntegerField(max_length=15, null=True)  # e.g. "54"  Matches the duration at root
     cdrr_orig_id = models.CharField(max_length=127, blank=True, null=True)  # e.g. "4807984575", length modified 2022-06-24 to fix 63 char error in prod
     cdrr_term_id = models.CharField(max_length=127, blank=True, null=True)  # e.g. "6232952005", length modified 2022-06-24 to fix 63 char error in prod
