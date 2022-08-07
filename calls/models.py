@@ -203,6 +203,12 @@ class CallLabel(AuditTrailModel):
     label = models.CharField(max_length=255, db_index=True)
 
 
+class CallNote(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    call = models.ForeignKey("Call", on_delete=models.CASCADE, related_name="notes")
+    note = models.CharField(max_length=255)
+    
+
 class TelecomCallerNameInfo(AuditTrailModel):
     phone_number = PhoneNumberField(primary_key=True)
     caller_name = models.CharField(max_length=255, blank=True, null=False, default="", db_index=True)
