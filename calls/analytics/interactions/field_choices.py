@@ -39,6 +39,13 @@ class AgentInteractionMetricTypes(models.TextChoices):
     OFFERED_APPOINTMENT_DATE_TIME = "offered_appointment_date_time", _("Offered Appointment Date / Time")
     BOOKED_APPOINTMENT = "booked_appointment", _("Booked the Appointment")  # TODO evaluate whether to keep this since it's a metric elsewhere / separate from agents specifically
 
+    # Outbound
+    ASKED_INSURANCE = "asked_insurance", _("Asked about / verified insurance")
+    ASKED_BILLS = "asked_bills", _("Asked about outstanding bills / balances")
+    CALL_LENGTH = "call_length", _("Off the phone quickly")
+    ASKED_APPOINTMENT = "asked_appointment", _("Asked about appointment")
+    CONFIRM_APPOINTMENT = "confirm_appointment", _("Confirmed / retained appointment")
+
 
 class AgentInteractionOvertalkMetricTypes(models.TextChoices):
     NONE = "none"
