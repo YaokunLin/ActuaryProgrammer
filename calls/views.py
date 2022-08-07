@@ -75,6 +75,7 @@ from .models import (
     CallPartial,
     CallTranscript,
     CallTranscriptPartial,
+    CallNote,
     TelecomCallerNameInfo,
 )
 from .serializers import (
@@ -82,6 +83,7 @@ from .serializers import (
     CallAudioPartialSerializer,
     CallAudioSerializer,
     CallLabelSerializer,
+    CallNoteSerializer,
     CallPartialSerializer,
     CallSerializer,
     CallTranscriptPartialReadOnlySerializer,
@@ -537,6 +539,16 @@ class CallPartialViewset(viewsets.ModelViewSet):
 class CallLabelViewset(viewsets.ModelViewSet):
     queryset = CallLabel.objects.all().order_by("-created_at")
     serializer_class = CallLabelSerializer
+    filter_fields = ["call__id"]
+
+
+class CallNoteViewSet(viewsets.ModelViewSet):
+    queryset = CallNote.objects.all().order_by("created_at")
+    serializer_class = CallNoteSerializer
+    filter_fields = ["call__id"]
+
+    def get_queryset(self):
+        return super().get_queryset().filter(call=self.kwargs.get("call_pk"))
 
 
 class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):

@@ -3,7 +3,7 @@ import logging
 from django_countries.serializers import CountryFieldMixin
 from rest_framework import serializers
 
-from .models import Call, CallAudio, CallAudioPartial, CallLabel, CallPartial, CallTranscript, CallTranscriptPartial, TelecomCallerNameInfo
+from .models import Call, CallAudio, CallAudioPartial, CallLabel, CallNote, CallPartial, CallTranscript, CallTranscriptPartial, TelecomCallerNameInfo
 from calls.inline_serializers import (
     InlineAgentEngagedWithSerializer,
     InlineCallMentionedProductSerializer,
@@ -43,6 +43,14 @@ class CallSerializer(serializers.ModelSerializer):
         model = Call
         fields = "__all__"
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "domain", "latest_audio_signed_url", "latest_transcript_signed_url"]
+
+
+class CallNoteSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = CallNote
+        fields = "__all__"
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
 class CallTranscriptSerializer(serializers.ModelSerializer):

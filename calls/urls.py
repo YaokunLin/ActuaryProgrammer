@@ -40,6 +40,7 @@ from calls.views import (
     CallAudioViewset,
     CallFieldChoicesView,
     CallLabelViewset,
+    CallNoteViewSet,
     CallPartialViewset,
     CallTranscriptPartialViewset,
     CallTranscriptViewset,
@@ -65,6 +66,7 @@ call_router.register(r"partials", CallPartialViewset, basename="call-partials")
 call_router.register(r"transcripts", CallTranscriptViewset, basename="call-transcripts")
 call_router.register(r"agent-call-scores", AgentCallScoreViewset, basename="agent-call-scores")
 call_router.register(r"agent-engaged-with", AgentEngagedWithViewset, basename="call-agent-engaged-with")
+call_router.register(r"call-notes", CallNoteViewSet,basename="call-notes")
 call_router.register(r"mentioned-companies", CallMentionedCompanyViewset, basename="call-mentioned-companies")
 call_router.register(r"mentioned-insurances", CallMentionedInsuranceViewset, basename="call-mentioned-insurances")
 call_router.register(r"mentioned-procedures", CallMentionedProcedureViewset, basename="call-mentioned-procedures")
