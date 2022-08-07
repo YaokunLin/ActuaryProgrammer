@@ -43,13 +43,6 @@ from calls.twilio_etl import (
     get_caller_name_info_from_twilio,
     update_telecom_caller_name_info_with_twilio_data_for_valid_sections,
 )
-from calls.analytics.interactions.field_choices import (
-    AgentInteractionMetricTypes,
-)
-from calls.analytics.participants.field_choices import (
-    EngagementPersonaTypes,
-    NonAgentEngagementPersonaTypes,
-)
 from core.models import Agent
 from .field_choices import (
     AudioCodecType,
@@ -100,9 +93,6 @@ log = logging.getLogger(__name__)
 class CallFieldChoicesView(views.APIView):
     def get(self, request, format=None):        
         result = {}
-        result["agent_interaction_metric_types"] = dict((str(y), x) for x, y in AgentInteractionMetricTypes.choices)  # retain as choices / non-dynamic for now, keys MUST be cast as strings here
-        result["engagement_persona_types"] = dict((y, x) for x, y in EngagementPersonaTypes.choices)
-        result["non_agent_engagement_persona_types"] = dict((y, x) for x, y in NonAgentEngagementPersonaTypes.choices)
         result["call_connection_types"] = dict((y, x) for x, y in CallConnectionTypes.choices)
         result["call_direction_types"] = dict((y, x) for x, y in CallDirectionTypes.choices)
         result["telecom_persona_types"] = dict((y, x) for x, y in TelecomPersonaTypes.choices)
