@@ -53,20 +53,20 @@ class VoipProviderSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_at", "modified_by", "modified_at", "active"]
 
 
-class UserSerializer(serializers.ModelSerializer):
+class InlineUserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = "__all__"
+        fields = ["id", "name"]
         read_only_fields = ["id", "auth0_id", "objects"]
 
 
 class AgentSerializer(serializers.ModelSerializer):
-    user = UserSerializer(required=False)
+    user = InlineUserSerializer(required=False)
 
     class Meta:
         model = Agent
-        fields = ["id", "practice", "user", "user"]
+        fields = ["id", "practice", "user"]
         read_only_fields = ["id", "practice", "user"]
 
 

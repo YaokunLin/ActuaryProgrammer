@@ -27,6 +27,7 @@ from calls.analytics.transcripts.views import (
 )
 
 from calls.analytics.participants.views import (
+    AgentAssignedCallViewSet,
     AgentEngagedWithViewset,
 )
 
@@ -56,6 +57,7 @@ calls_app_root_router = routers.SimpleRouter()
 calls_app_root_router.register(r"calls", CallViewset)
 calls_app_root_router.register(r"labels", CallLabelViewset)
 calls_app_root_router.register(r"agent-call-score-metrics", AgentCallScoreMetricViewset)
+calls_app_root_router.register(r"agent-assigned-call", AgentAssignedCallViewSet, basename="agent-assigned-call")
 
 call_router = routers.NestedSimpleRouter(calls_app_root_router, r"calls", lookup="call")
 call_router.register(r"audio", CallAudioViewset, basename="call-audio")

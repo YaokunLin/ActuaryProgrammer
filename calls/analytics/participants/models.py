@@ -1,9 +1,15 @@
 from django.db import models
 from django_extensions.db.fields import ShortUUIDField
 
-from core.abstract_models import AuditTrailModel
 
 from calls.analytics.participants.field_choices import NonAgentEngagementPersonaTypes
+from core.abstract_models import AuditTrailModel
+from core.models import Agent
+
+class AgentAssignedCall(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    agent = models.ForeignKey(Agent, on_delete=models.CASCADE, related_name="assigned_calls")
+    call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="Call assigned to agent", related_name="assigned_agent") 
 
 
 class AgentEngagedWith(AuditTrailModel):
