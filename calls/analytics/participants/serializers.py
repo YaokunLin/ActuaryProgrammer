@@ -8,7 +8,7 @@ from core.serializers import AgentSerializer
 
 
 class AgentAssignedCallSerializer(serializers.ModelSerializer):
-    agent = AgentSerializer(required=False)    
+    agent = AgentSerializer(required=False)
 
 
     class Meta:

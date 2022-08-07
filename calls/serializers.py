@@ -3,14 +3,16 @@ import logging
 from django_countries.serializers import CountryFieldMixin
 from rest_framework import serializers
 
+from .models import Call, CallAudio, CallAudioPartial, CallLabel, CallPartial, CallTranscript, CallTranscriptPartial, TelecomCallerNameInfo
 from calls.inline_serializers import (
     InlineAgentEngagedWithSerializer,
     InlineCallMentionedProductSerializer,
     InlineCallPurposeSerializer,
     InlineCallSentimentSerializer,
 )
-
-from .models import Call, CallAudio, CallAudioPartial, CallLabel, CallPartial, CallTranscript, CallTranscriptPartial, TelecomCallerNameInfo
+from calls.analytics.participants.serializers import (
+    AgentAssignedCallSerializer,
+)
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -19,6 +21,10 @@ log = logging.getLogger(__name__)
 class CallSerializer(serializers.ModelSerializer):
     # TODO: fix multiple agent_engaged_with with same type value
     engaged_in_calls = InlineAgentEngagedWithSerializer(many=True, read_only=True)
+
+    # TODO: this should not be many-many definitionally but only works when that is set to True
+    assigned_agent = AgentAssignedCallSerializer(many=True, required=False)
+
     # TODO: fix both urls (LISTEN)
     latest_audio_signed_url = serializers.CharField(allow_null=True, required=False)
     latest_transcript_signed_url = serializers.CharField(allow_null=True, required=False)
