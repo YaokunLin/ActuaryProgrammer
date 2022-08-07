@@ -83,7 +83,8 @@ from .serializers import (
     CallAudioPartialSerializer,
     CallAudioSerializer,
     CallLabelSerializer,
-    CallNoteSerializer,
+    CallNoteReadSerializer,
+    CallNoteWriteSerializer,
     CallPartialSerializer,
     CallSerializer,
     CallTranscriptPartialReadOnlySerializer,
@@ -544,7 +545,16 @@ class CallLabelViewset(viewsets.ModelViewSet):
 
 class CallNoteViewSet(viewsets.ModelViewSet):
     queryset = CallNote.objects.all().order_by("created_at")
-    serializer_class = CallNoteSerializer
+    serializer_class_read = CallNoteReadSerializer
+    serializer_class_write = CallNoteWriteSerializer
+
+    def get_serializer_class(self):
+        if self.action in ["create", "update", "partial_update"]:
+            return self.serializer_class_write
+
+        return self.serializer_class_read    
+
+
     filter_fields = ["call__id"]
 
     def get_queryset(self):

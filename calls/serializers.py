@@ -45,11 +45,24 @@ class CallSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "domain", "latest_audio_signed_url", "latest_transcript_signed_url"]
 
 
-class CallNoteSerializer(serializers.ModelSerializer):
+class CallNoteReadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CallNote
         fields = "__all__"
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
+
+
+class CallNoteWriteSerializer(serializers.ModelSerializer):
+
+    def create(self, validated_data):
+        call = Call.objects.get(pk=self.context["view"].kwargs["call_pk"])
+        validated_data["call"] = call
+        return CallNote.objects.create(**validated_data)
+
+    class Meta:
+        model = CallNote
+        fields = ["note"]
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
