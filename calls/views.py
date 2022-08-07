@@ -555,7 +555,6 @@ class CallNoteViewSet(viewsets.ModelViewSet):
 
         return self.serializer_class_read    
 
-
     def get_queryset(self):
         return super().get_queryset().filter(call=self.kwargs.get("call_pk"))
 
