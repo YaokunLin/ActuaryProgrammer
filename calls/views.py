@@ -547,6 +547,7 @@ class CallNoteViewSet(viewsets.ModelViewSet):
     queryset = CallNote.objects.all().order_by("created_at")
     serializer_class_read = CallNoteReadSerializer
     serializer_class_write = CallNoteWriteSerializer
+    filter_fields = ["call__id"]
 
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
@@ -554,8 +555,6 @@ class CallNoteViewSet(viewsets.ModelViewSet):
 
         return self.serializer_class_read    
 
-
-    filter_fields = ["call__id"]
 
     def get_queryset(self):
         return super().get_queryset().filter(call=self.kwargs.get("call_pk"))
