@@ -14,6 +14,7 @@ class CallsFilter(filters.FilterSet):
             "id": ["exact"], # for demo purposes
             "call_start_time": ["gte", "exact"],
             "call_end_time": ["lte", "exact"],
+            "practice__id": ["exact"],
             "engaged_in_calls__non_agent_engagement_persona_type": ["exact"],
             "call_direction": ["exact"],
             "call_purposes__call_purpose_type": ["exact"],
