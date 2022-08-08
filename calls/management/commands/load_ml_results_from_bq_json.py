@@ -123,8 +123,6 @@ class Command(BaseCommand):
 
         defaults.update(bq_call)
 
-        print(defaults)
-
         peerlogic_api_call, created = Call.objects.update_or_create(pk=call_id, defaults=defaults)
         if created:
             self.stdout.write(self.style.SUCCESS(f"Created call with pk='{peerlogic_api_call.pk}'"))
