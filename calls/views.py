@@ -256,7 +256,9 @@ class CallTranscriptViewset(viewsets.ModelViewSet):
     queryset = CallTranscript.objects.all().order_by("-modified_at")
     serializer_class = CallTranscriptSerializer
     filter_fields = ["call", "mime_type", "status", "transcript_type", "speech_to_text_model_type"]
+    search_fields = ["transcript_text_full"]
     parser_classes = (JSONParser, FormParser, MultiPartParser)
+
 
     def get_queryset(self):
         return super().get_queryset().filter(call=self.kwargs.get("call_pk"))
