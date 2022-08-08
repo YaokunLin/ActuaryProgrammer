@@ -11,6 +11,7 @@ class CallsFilter(filters.FilterSet):
     class Meta:
         model = Call
         fields = {
+            "id": ["exact"], # for demo purposes
             "call_start_time": ["gte", "exact"],
             "call_end_time": ["lte", "exact"],
             "engaged_in_calls__non_agent_engagement_persona_type": ["exact"],
