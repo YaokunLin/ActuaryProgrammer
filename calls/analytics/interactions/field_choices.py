@@ -48,6 +48,16 @@ class AgentInteractionMetricTypes(models.TextChoices):
     ASKED_APPOINTMENT = "asked_appointment", _("Asked about appointment")
     CONFIRM_APPOINTMENT = "confirm_appointment", _("Confirmed / retained appointment")
 
+    # Outbound - Insurance
+    PROVIDED_PATIENT_NAME = "provided_patient_name", _("Provided patient name")
+    PROVIDED_PATIENT_INSURANCE_IDS = "provided_patient_insurance_ids", _("Provided patient insurance ids ")
+    PROVIDED_PATIENT_DATE_OF_BIRTH = "provided_patient_date_of_birth", _("Provided patient date of birth")
+    PROVIDED_SOCIAL_SECURITY_NUMBER = "provided_social_security_number", _("Provided Social Security Number")
+    ASKED_POLICY_ACTIVE = "asked_policy_active", _("Asked policy active / effective date")
+    ASKED_POLICY_EXPIRATION_DATE = "asked_policy_expiration_date", _("Asked policy expiration date")
+    ASKED_AUTHORIZATION_REQUIREMENTS = "asked_authorization_requirements", _("Asked authorization requirements")
+
+
 
 class AgentInteractionOvertalkMetricTypes(models.TextChoices):
     NONE = "none"
