@@ -36,16 +36,10 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("month", type=str, help="month string is <YYYY-MM>")
-        parser.add_argument("practice_id", type=str)
+        parser.add_argument("--practice-id", type=str)
         parser.add_argument("--starting-blobname", type=str, help="format is <YYYY-MM/000000000002.json>")
 
     def handle(self, *args, **options):
-        self.stdout.write(f"Going to database to obtain practice object for practice_id='{options['practice_id']}")
-        try:
-            practice = Practice.objects.get(pk=options["practice_id"])
-        except Practice.DoesNotExist:
-            self.stderr.write(f"Practice practice_id='{options['practice_id']}' does not exist! Exiting.")
-            exit(2)
 
         month = options["month"]
         starting_blobname = options["starting_blobname"]
@@ -78,10 +72,20 @@ class Command(BaseCommand):
                     self.stdout.write(f"Getting or creating call with bq_call['call_id']='{bq_call['call_id']}'")
                     self.stdout.write(f"Progress made so far: file_name='{file_name}', line number {line_count} of unknown amount of lines.'")
 
-                    self.load_call_and_analytics_dict(bq_call, practice)
+                    self.load_call_and_analytics_dict(bq_call, options)
 
-    def load_call_and_analytics_dict(self, bq_call: Dict, practice: Practice) -> None:
+    def load_call_and_analytics_dict(self, bq_call: Dict, options: Dict) -> None:
         call_id = bq_call.pop("call_id")
+
+        practice_override_id = options.get("practice_id")
+        if not practice_override_id:
+            practice_id = bq_call.pop("practice_id")
+        else:
+            practice_id = practice_override_id
+            del bq_call["practice_id"]
+
+        practice = self._get_practice_from_practice_id(practice_id)
+
         defaults = {}
         defaults.update(
             {
@@ -114,7 +118,6 @@ class Command(BaseCommand):
         del bq_call["call_pause"]  # TODO: Implement when we're determining longest pause again
         del bq_call["call_transcription"]
         del bq_call["call_transcription_fragment"]
-        del bq_call["practice_id"]
         del bq_call["insert_timestamp"]
         # del bq_call["site_id"]
 
@@ -126,7 +129,7 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(f"Updated and working with Peerlogic Call {peerlogic_api_call.pk}"))
 
-        self._load_agent_call_scores(call_agent_interactions, peerlogic_api_call)
+        # self._load_agent_call_scores are garbage - removed
         self._load_call_sentiment(call_sentiment, peerlogic_api_call)
         self._load_call_purposes_and_outcomes_with_outcome_reasons(call_purpose, peerlogic_api_call)
         self._load_non_agent_engagement_persona_info(non_agent_engagement_persona_info, peerlogic_api_call)
@@ -136,6 +139,16 @@ class Command(BaseCommand):
         self._load_procedure_mentioned(call_procedure_mentioned, peerlogic_api_call)
         self._load_product_mentioned(call_product_mentioned, peerlogic_api_call)
         self._load_symptom_mentioned(call_symptom_mentioned, peerlogic_api_call)
+
+    def _get_practice_from_practice_id(self, practice_id: str) -> Practice:
+        self.stdout.write(f"Going to database to obtain practice object for practice_id='{practice_id}")
+        try:
+            practice = Practice.objects.get(pk=practice_id)
+        except Practice.DoesNotExist:
+            self.stderr.write(f"Practice practice_id='{practice_id}' does not exist! Exiting.")
+            exit(2)
+
+        return practice
 
     def _load_agent_call_scores(self, call_agent_interactions, call):
 

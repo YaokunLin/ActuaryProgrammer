@@ -14,6 +14,7 @@ class CallPurposeTypes(models.TextChoices):
     OTHERS = "others"  # TODO: create/refactor as noneoftheabove once we re-do the model and/or frontend
 
     # INSURANCE RELATED
+    INSURANCE_AUTHORIZATION = "insurance_authorization"  # authorize a patient to be seen or a procedure to be performed
     INSURANCE_VERIFICATION = "insurance_verification"  # eligibility verification
     INSURANCE_CLAIM = "insurance_claim"  # anything involving claim
 

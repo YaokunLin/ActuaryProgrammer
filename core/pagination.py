@@ -29,7 +29,7 @@ class IncludePageSizePagination(PageNumberPagination):
         response = Response(
             {
                 "meta": {
-                    "page": self.request.query_params.get(self.page_query_param, 1),
+                    "page": int(self.request.query_params.get(self.page_query_param, 1)),
                     "page_total": self.page.paginator.num_pages,
                     "page_size": self.get_page_size(self.request),
                     "results_total": self.page.paginator.count,
