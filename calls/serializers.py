@@ -68,6 +68,7 @@ class CallNoteWriteSerializer(serializers.ModelSerializer):
 
 class CallTranscriptSerializer(serializers.ModelSerializer):
     signed_url = serializers.CharField(required=False)
+    
 
     class Meta:
         model = CallTranscript

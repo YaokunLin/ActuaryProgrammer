@@ -259,7 +259,6 @@ class CallTranscriptViewset(viewsets.ModelViewSet):
     search_fields = ["transcript_text_full"]
     parser_classes = (JSONParser, FormParser, MultiPartParser)
 
-
     def get_queryset(self):
         return super().get_queryset().filter(call=self.kwargs.get("call_pk"))
 

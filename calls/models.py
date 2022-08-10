@@ -111,7 +111,7 @@ class CallTranscript(AuditTrailModel):
     call = models.ForeignKey(Call, on_delete=models.CASCADE)
     publish_event_on_patch = models.BooleanField(default=False)
     mime_type = models.CharField(choices=SupportedTranscriptMimeTypes.choices, max_length=180, default=SupportedTranscriptMimeTypes.TEXT_PLAIN)
-    transcript_text_full = pg_search.SearchVectorField(null=True) 
+    #transcript_text_full = models.CharField() #pg_search.SearchVectorField(null=True) 
     transcript_type = models.CharField(choices=TranscriptTypes.choices, max_length=80, default=TranscriptTypes.FULL_TEXT)
     speech_to_text_model_type = models.CharField(choices=SpeechToTextModelTypes.choices, max_length=80, default=SpeechToTextModelTypes.GOOGLE)
     status = models.CharField(
@@ -140,8 +140,8 @@ class CallTranscript(AuditTrailModel):
     def signed_url(self) -> Optional[str]:
         return get_signed_url(filename=self.file_basename, bucket_name=self.BUCKET_NAME)
 
-    class Meta:
-        indexes = [GinIndex(fields=["transcript_text_full"])]
+    # class Meta:
+    #     indexes = [GinIndex(fields=["transcript_text_full"])]
 
 
 class CallPartial(AuditTrailModel):
