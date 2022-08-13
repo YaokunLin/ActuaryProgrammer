@@ -72,7 +72,11 @@ class CallTranscriptSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CallTranscript
-        fields = "__all__"
+        fields = [
+            "id", "call", "publish_event_on_patch", "mime_type", "transcript_type", "transcript_text", "speech_to_text_model_type",
+            "raw_call_transcript_model_run_id", "call_transcript_model_run", "created_by", "created_at", "modified_by", "modified_at",
+            "signed_url"
+        ]
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "signed_url"]
 
 
