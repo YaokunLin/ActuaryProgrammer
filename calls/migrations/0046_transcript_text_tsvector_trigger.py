@@ -34,25 +34,8 @@ class Migration(migrations.Migration):
               ON film;
             '''
         ),
-
-        # migrations.RunSQL(
-        #     sql='''
-        #       CREATE TRIGGER vector_column_trigger
-        #       BEFORE INSERT OR UPDATE OF title, description, vector_column
-        #       ON film
-        #       FOR EACH ROW EXECUTE PROCEDURE
-        #       tsvector_update_trigger(
-        #         vector_column, 'pg_catalog.english', title, description
-        #       );
-
-        #       UPDATE film SET vector_column = NULL;
-        #     ''',
-
-        #     reverse_sql = '''
-        #       DROP TRIGGER IF EXISTS vector_column_trigger
-        #       ON film;
-        #     '''
-        # ),
+        # THE BELOW IS THE PREFERRED WAY TO DO IT BUT COULD ONLY POSSIBLY WORK IF ALTER COLUMN WERE AN OPERATION WE COULD
+        # PERFORM.
         # migrations.RunSQL(
         #     sql='''
         #       ALTER TABLE calltranscript ADD COLUMN transcript_text_tsvector SET DATA TYPE tsvector GENERATED ALWAYS AS (
