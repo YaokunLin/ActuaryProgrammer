@@ -26,15 +26,4 @@ class Migration(migrations.Migration):
             name='transcript_text_tsvector',
             field=django.contrib.postgres.search.SearchVectorField(null=True),
         ),
-        # migrations.RunSQL(
-        #     sql='''
-        #       ALTER TABLE calls_calltranscript ADD COLUMN transcript_text_tsvector tsvector GENERATED ALWAYS AS (
-        #         setweight(to_tsvector('english', coalesce(transcript_text, '')), 'A')
-        #       ) STORED;
-        #     ''',
-        #     reverse_sql = '''
-        #       ALTER TABLE calls_calltranscript DROP COLUMN transcript_text_tsvector;
-        #     '''
-        # ),
-        
     ]
