@@ -106,6 +106,7 @@ class CallAudio(AuditTrailModel):
 
 
 class CallTranscriptManager(models.Manager):
+    # This is not currently used by the RESTful frontend but should be adapted at some point in the future
     search_vectors = (
         SearchVector("transcript_text_tsvector", weight="A", config="english")  # use "+" to add additional vectors
     )

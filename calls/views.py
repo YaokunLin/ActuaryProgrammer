@@ -260,10 +260,9 @@ class CallTranscriptViewset(viewsets.ModelViewSet):
     serializer_class = CallTranscriptSerializer
     filter_fields = ["call", "mime_type", "status", "transcript_type", "speech_to_text_model_type"]
     filter_backends = (DjangoFilterBackend, CallTranscriptsSearchFilter, OrderingFilter, )
-    parser_classes = (JSONParser, FormParser, MultiPartParser)
-
     filterset_class = CallTranscriptsFilter
-
+    parser_classes = (JSONParser, FormParser, MultiPartParser)
+    
     def get_queryset(self):
         queryset = super().get_queryset() \
             .filter(call=self.kwargs.get("call_pk"))
