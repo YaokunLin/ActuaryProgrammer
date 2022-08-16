@@ -1,6 +1,7 @@
 from django_filters import rest_framework as filters
+from rest_framework.filters import BaseFilterBackend
 
-from calls.models import Call
+from calls.models import Call, CallTranscript
 
 
 class CallsFilter(filters.FilterSet):
@@ -22,4 +23,26 @@ class CallsFilter(filters.FilterSet):
             "call_purposes__outcome_results__outcome_reason_results__call_outcome_reason_type": ["exact"],
             "call_sentiments__overall_sentiment_score": ["exact"],
             "mentioned_procedures__keyword": ["exact"],
+        }
+
+class CallTranscriptsSearchFilter(BaseFilterBackend):
+    """Query Articles on the basis of `search` query param."""
+
+    def filter_queryset(self, request, queryset, view):
+        search_term = request.query_params.get("search", None)
+        if search_term:
+            # We use the computed ts_searchvector directly to speed up the search.
+            # We use filter and not "search" here
+            return queryset.filter(transcript_text_tsvector=search_term)
+
+        return queryset
+
+class CallTranscriptsFilter(filters.FilterSet):
+    class Meta:
+        model = CallTranscript
+        fields = {
+            "mime_type": ["exact"],
+            "status": ["exact"],
+            "speech_to_text_model_type": ["exact"],
+            "call__id": ["exact"],
         }

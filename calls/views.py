@@ -34,7 +34,7 @@ from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 
 from twilio.base.exceptions import TwilioException
-from calls.filters import CallsFilter
+from calls.filters import CallTranscriptsFilter, CallTranscriptsSearchFilter, CallsFilter
 from calls.publishers import publish_call_audio_partial_saved, publish_call_audio_saved, publish_call_transcript_saved
 
 from core.file_upload import FileToUpload
@@ -252,15 +252,30 @@ class CallAudioViewset(viewsets.ModelViewSet):
         return Response(status=status.HTTP_200_OK, data=call_audio_serializer.data)
 
 
+        
 class CallTranscriptViewset(viewsets.ModelViewSet):
     queryset = CallTranscript.objects.all().order_by("-modified_at")
     serializer_class = CallTranscriptSerializer
     filter_fields = ["call", "mime_type", "status", "transcript_type", "speech_to_text_model_type"]
-    search_fields = ["transcript_text_tsvector"]
+    filter_backends = [CallTranscriptsSearchFilter]
+    search_fields = ["@transcript_text_tsvector"]
     parser_classes = (JSONParser, FormParser, MultiPartParser)
 
+    filterset_class = CallTranscriptsFilter
+
     def get_queryset(self):
-        return super().get_queryset().filter(call=self.kwargs.get("call_pk"))
+        queryset = super().get_queryset() \
+            .filter(call=self.kwargs.get("call_pk"))
+        
+        import urllib.parse
+        search_term = self.request.query_params.get("search", None)
+        if search_term:
+            search_term = urllib.parse.unquote(search_term)
+            # We use the computed `search_vector` directly
+            # to speed up the search.
+            return queryset.filter(transcript_text_tsvector=search_term)
+
+        return queryset
 
     def update(self, request, pk=None):
         # TODO: Implement

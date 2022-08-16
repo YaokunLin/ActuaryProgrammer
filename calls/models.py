@@ -5,7 +5,7 @@ from typing import Optional
 from core.abstract_models import AuditTrailModel
 from django.conf import settings
 from django.contrib.postgres.indexes import GinIndex
-from django.contrib.postgres.search import SearchVectorField
+from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector, SearchVectorField
 from django.db import models
 from django_countries.fields import CountryField
 from django_extensions.db.fields import ShortUUIDField
@@ -105,7 +105,27 @@ class CallAudio(AuditTrailModel):
     #     return copy_file(old_name=filename, new_name=self.id, bucket_name=self.BUCKET_NAME)
 
 
+class CallTranscriptManager(models.Manager):
+    search_vectors = (
+        SearchVector("transcript_text_tsvector", weight="A", config="english")  # use "+" to add additional vectors
+    )
+
+    def search(self, text):
+        print("calltranscriptionmanager search")
+        search_query = SearchQuery(text, config="english")
+        search_rank = SearchRank(CallTranscriptManager.search_vectors, search_query)
+        return self.get_queryset().annotate(
+            search=CallTranscriptManager.search_vectors
+        ).filter(
+            search=search_query
+        ).annotate(
+            rank=search_rank
+        ).order_by('-rank')
+
+
 class CallTranscript(AuditTrailModel):
+    objects = CallTranscriptManager()
+    
     BUCKET_NAME: str = settings.BUCKET_NAME_CALL_TRANSCRIPT
     id = ShortUUIDField(primary_key=True, editable=False)
     call = models.ForeignKey(Call, on_delete=models.CASCADE)
