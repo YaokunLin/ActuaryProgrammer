@@ -12,7 +12,7 @@ class CallsFilter(filters.FilterSet):
     class Meta:
         model = Call
         fields = {
-            "id": ["exact"], # for demo purposes
+            "id": ["exact"],  # for demo purposes
             "call_start_time": ["gte", "exact"],
             "call_end_time": ["lte", "exact"],
             "practice__id": ["exact"],
@@ -25,6 +25,7 @@ class CallsFilter(filters.FilterSet):
             "mentioned_procedures__keyword": ["exact"],
         }
 
+
 class CallTranscriptsSearchFilter(BaseFilterBackend):
     """Query Transcripts on the basis of `search` query param."""
 
@@ -36,6 +37,7 @@ class CallTranscriptsSearchFilter(BaseFilterBackend):
             return queryset.filter(transcript_text_tsvector=search_term)
 
         return queryset
+
 
 class CallTranscriptsFilter(filters.FilterSet):
     class Meta:
