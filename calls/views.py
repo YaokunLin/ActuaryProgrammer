@@ -2,31 +2,18 @@ import logging
 import re
 from typing import Dict, List, Union
 
-
 from django.conf import settings
 from django.db import DatabaseError, transaction
-from django.db.models import (
-    Case,
-    Count,
-    Exists,
-    ExpressionWrapper,
-    F,
-    FloatField,
-    OuterRef,
-    Q,
-    Subquery,
-    Sum,
-    TextField,
-    Value as V,
-    When
-)
+from django.db.models import Case, Count, Exists, ExpressionWrapper, F, FloatField, OuterRef, Q, Subquery, Sum, TextField, Value as V, When
 from django.db.models.expressions import Case, RawSQL, When
 from django.db.models.functions import Coalesce, Concat
 from django.http import Http404, HttpResponseBadRequest
+from django_filters.rest_framework import DjangoFilterBackend  # brought in for a backend filter override
 from google.api_core.exceptions import PermissionDenied
 from phonenumber_field.modelfields import to_python as to_phone_number
 from rest_framework import status, views, viewsets
 from rest_framework.decorators import action
+from rest_framework.filters import OrderingFilter  # brought in for a backend filter override
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import SAFE_METHODS
@@ -34,7 +21,7 @@ from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 
 from twilio.base.exceptions import TwilioException
-from calls.filters import CallsFilter
+from calls.filters import CallTranscriptsFilter, CallTranscriptsSearchFilter, CallsFilter
 from calls.publishers import publish_call_audio_partial_saved, publish_call_audio_saved, publish_call_transcript_saved
 
 from core.file_upload import FileToUpload
@@ -44,6 +31,7 @@ from calls.twilio_etl import (
     update_telecom_caller_name_info_with_twilio_data_for_valid_sections,
 )
 from core.models import Agent
+from peerlogic.settings import REST_FRAMEWORK
 from .field_choices import (
     AudioCodecType,
     CallAudioFileStatusTypes,
@@ -91,7 +79,7 @@ log = logging.getLogger(__name__)
 
 
 class CallFieldChoicesView(views.APIView):
-    def get(self, request, format=None):        
+    def get(self, request, format=None):
         result = {}
         result["call_connection_types"] = dict((y, x) for x, y in CallConnectionTypes.choices)
         result["call_direction_types"] = dict((y, x) for x, y in CallDirectionTypes.choices)
@@ -125,7 +113,9 @@ class CallViewset(viewsets.ModelViewSet):
             practice_ids = Agent.objects.filter(user=self.request.user.id).values("practice_id")
             query_set = Call.objects.filter(practice__id__in=practice_ids)
 
-        query_set.select_related("engaged_in_calls").select_related("call_purposes__outcome_results__outcome_reason_results").select_related("call_sentiments").select_related("assigned_agent")
+        query_set.select_related("engaged_in_calls").select_related("call_purposes__outcome_results__outcome_reason_results").select_related(
+            "call_sentiments"
+        ).select_related("assigned_agent")
         # TODO: Figure out total_value annotation below
 
         return query_set.order_by("-call_start_time")
@@ -256,10 +246,17 @@ class CallTranscriptViewset(viewsets.ModelViewSet):
     queryset = CallTranscript.objects.all().order_by("-modified_at")
     serializer_class = CallTranscriptSerializer
     filter_fields = ["call", "mime_type", "status", "transcript_type", "speech_to_text_model_type"]
+    filter_backends = (
+        DjangoFilterBackend,
+        CallTranscriptsSearchFilter,
+        OrderingFilter,
+    )  # note: these must be kept up to date with settings.py values!
+    filterset_class = CallTranscriptsFilter
     parser_classes = (JSONParser, FormParser, MultiPartParser)
 
     def get_queryset(self):
-        return super().get_queryset().filter(call=self.kwargs.get("call_pk"))
+        queryset = super().get_queryset().filter(call=self.kwargs.get("call_pk"))
+        return queryset
 
     def update(self, request, pk=None):
         # TODO: Implement
@@ -543,7 +540,7 @@ class CallNoteViewSet(viewsets.ModelViewSet):
         if self.action in ["create", "update", "partial_update"]:
             return self.serializer_class_write
 
-        return self.serializer_class_read    
+        return self.serializer_class_read
 
     def get_queryset(self):
         return super().get_queryset().filter(call=self.kwargs.get("call_pk"))
