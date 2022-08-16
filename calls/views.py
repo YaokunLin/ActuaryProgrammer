@@ -2,7 +2,6 @@ import logging
 import re
 from typing import Dict, List, Union
 
-
 from django.conf import settings
 from django.db import DatabaseError, transaction
 from django.db.models import (
@@ -23,10 +22,12 @@ from django.db.models import (
 from django.db.models.expressions import Case, RawSQL, When
 from django.db.models.functions import Coalesce, Concat
 from django.http import Http404, HttpResponseBadRequest
+from django_filters.rest_framework import DjangoFilterBackend  # brought in for a backend filter override
 from google.api_core.exceptions import PermissionDenied
 from phonenumber_field.modelfields import to_python as to_phone_number
 from rest_framework import status, views, viewsets
 from rest_framework.decorators import action
+from rest_framework.filters import OrderingFilter  # brought in for a backend filter override
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import SAFE_METHODS
@@ -44,6 +45,7 @@ from calls.twilio_etl import (
     update_telecom_caller_name_info_with_twilio_data_for_valid_sections,
 )
 from core.models import Agent
+from peerlogic.settings import REST_FRAMEWORK
 from .field_choices import (
     AudioCodecType,
     CallAudioFileStatusTypes,
@@ -257,8 +259,7 @@ class CallTranscriptViewset(viewsets.ModelViewSet):
     queryset = CallTranscript.objects.all().order_by("-modified_at")
     serializer_class = CallTranscriptSerializer
     filter_fields = ["call", "mime_type", "status", "transcript_type", "speech_to_text_model_type"]
-    filter_backends = [CallTranscriptsSearchFilter]
-    search_fields = ["@transcript_text_tsvector"]
+    filter_backends = (DjangoFilterBackend, CallTranscriptsSearchFilter, OrderingFilter, )
     parser_classes = (JSONParser, FormParser, MultiPartParser)
 
     filterset_class = CallTranscriptsFilter
@@ -266,14 +267,6 @@ class CallTranscriptViewset(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset() \
             .filter(call=self.kwargs.get("call_pk"))
-        
-        import urllib.parse
-        search_term = self.request.query_params.get("search", None)
-        if search_term:
-            search_term = urllib.parse.unquote(search_term)
-            # We use the computed `search_vector` directly
-            # to speed up the search.
-            return queryset.filter(transcript_text_tsvector=search_term)
 
         return queryset
 
