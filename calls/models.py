@@ -107,6 +107,7 @@ class CallAudio(AuditTrailModel):
 
 class CallTranscriptManager(models.Manager):
     # This is not currently used by the RESTful frontend but should be adapted at some point in the future
+    # See: https://pganalyze.com/blog/full-text-search-django-postgres for great examples on how to use this
     search_vectors = (
         SearchVector("transcript_text_tsvector", weight="A", config="english")  # use "+" to add additional vectors
     )
