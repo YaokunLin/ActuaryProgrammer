@@ -112,7 +112,6 @@ class CallTranscriptManager(models.Manager):
     )
 
     def search(self, text):
-        print("calltranscriptionmanager search")
         search_query = SearchQuery(text, config="english")
         search_rank = SearchRank(CallTranscriptManager.search_vectors, search_query)
         return self.get_queryset().annotate(

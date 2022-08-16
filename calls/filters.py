@@ -26,13 +26,13 @@ class CallsFilter(filters.FilterSet):
         }
 
 class CallTranscriptsSearchFilter(BaseFilterBackend):
-    """Query Articles on the basis of `search` query param."""
+    """Query Transcripts on the basis of `search` query param."""
 
     def filter_queryset(self, request, queryset, view):
         search_term = request.query_params.get("search", None)
         if search_term:
-            # We use the computed ts_searchvector directly to speed up the search.
-            # We use filter and not "search" here
+            # Use the computed ts_vector directly to speed up the search.
+            # Use filter and not "search" here
             return queryset.filter(transcript_text_tsvector=search_term)
 
         return queryset
