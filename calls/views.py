@@ -264,9 +264,7 @@ class CallTranscriptViewset(viewsets.ModelViewSet):
     parser_classes = (JSONParser, FormParser, MultiPartParser)
     
     def get_queryset(self):
-        queryset = super().get_queryset() \
-            .filter(call=self.kwargs.get("call_pk"))
-
+        queryset = super().get_queryset().filter(call=self.kwargs.get("call_pk"))
         return queryset
 
     def update(self, request, pk=None):
