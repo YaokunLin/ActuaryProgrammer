@@ -262,7 +262,7 @@ class CallTranscriptViewset(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend, CallTranscriptsSearchFilter, OrderingFilter, )  # note: these must be kept up to date with settings.py values!
     filterset_class = CallTranscriptsFilter
     parser_classes = (JSONParser, FormParser, MultiPartParser)
-    
+
     def get_queryset(self):
         queryset = super().get_queryset().filter(call=self.kwargs.get("call_pk"))
         return queryset
