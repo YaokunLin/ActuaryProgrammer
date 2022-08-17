@@ -6,17 +6,19 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     def update_practice_with_practice_telecom(apps, schema_editor):
-        # We can't import the Call model directly as it may be a newer
-        Call = apps.get_model("calls", "Call")
-        Practice = apps.get_model("core", "Practice")
-        peerlogic_practice = Practice.objects.get_or_create(name="Peerlogic")
-        for call in Call.objects.all():
-            practice_telecom = call.practice_telecom
-            if practice_telecom is not None:
-                call.practice = practice_telecom.practice
-            else:
-                call.practice = peerlogic_practice
-            call.save()
+        # commented out because fixtures takes care of this.
+        pass
+        # # We can't import the Call model directly as it may be a newer
+        # Call = apps.get_model("calls", "Call")
+        # Practice = apps.get_model("core", "Practice")
+        # peerlogic_practice = Practice.objects.get_or_create(name="Peerlogic")
+        # for call in Call.objects.all():
+        #     practice_telecom = call.practice_telecom
+        #     if practice_telecom is not None:
+        #         call.practice = practice_telecom.practice
+        #     else:
+        #         call.practice = peerlogic_practice
+        #     call.save()
 
     dependencies = [
         ("calls", "0009_calls_associated_with_mandatory_practice_step_1_add_column"),

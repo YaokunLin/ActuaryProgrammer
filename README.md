@@ -50,7 +50,21 @@ After initial build and api and postgres are running, start it all up:
 
 `docker-compose up`
 
-<!-- TODO: Generate fixtures to play with locally) -->
+Now it's time to [load data into your local database](fixtures/README.md)
+
+Then, associate your Auth0 User by navigating to the [admin](http://localhost:8000/admin/core/user/). Use your credentials of admin and password set above:
+
+Find your user with @peerlogic.com.
+![alt text](docs/auth_setup_1.png "Find your user in the list")
+
+If you're not listed, Add a new user and give your information.
+
+Otherwise, click on your User's ID to edit your information
+
+* Ensure is_staff or is_superuser is set to True.
+* Grab your Auth0 user id (copy the entire thing including the `auth0|` prefix) and add or update it in your user.
+
+Save it.
 
 All done!
 
