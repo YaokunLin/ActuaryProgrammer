@@ -336,7 +336,7 @@ REST_FRAMEWORK = {
         "django_filters.rest_framework.DjangoFilterBackend",
         "rest_framework.filters.SearchFilter",
         "rest_framework.filters.OrderingFilter",
-    ], # note: CallTranscriptViewset's filtering should probably be updated when this list is updated
+    ], # note: CallViewset and CallTranscriptViewset's filtering should probably be updated when this list is updated
     "PAGE_SIZE": 50,
 }
 
