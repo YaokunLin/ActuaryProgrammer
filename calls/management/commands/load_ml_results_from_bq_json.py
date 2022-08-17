@@ -417,6 +417,7 @@ class Command(BaseCommand):
         defaults = {"raw_non_agent_engagement_persona_model_run_id": non_agent_engagement_persona_info["non_agent_engagement_persona_run_id"]}
 
         self.stdout.write(f"Updating or creating Agent Engaged With with non_agent_engagement_persona_type='{non_agent_engagement_persona_type}'.")
+        created = None
         try:
             peerlogic_api_agent_engaged_with, created = AgentEngagedWith.objects.update_or_create(
                 call=call,
