@@ -245,12 +245,36 @@ class Command(BaseCommand):
                 continue
 
             self.stdout.write(f"Updating or creating Call Mentioned Procedure with keyword='{keyword}'.")
+            created = None
+            try:
+                peerlogic_api_call_mentioned_procedure, created = CallMentionedProcedure.objects.update_or_create(call=call, keyword=keyword)
+            except CallMentionedProcedure.MultipleObjectsReturned as mor:
+                self.stdout.write(f"Multiple call mentioned procedures returned with keyword='{keyword}'")
+                print(mor)  # can't use self.stdout.write with an exception message
+                self.stdout.write("Deduplicating call mentioned procedures.")
+                call_mentioned_procedures_final_count = self._dedupe_procedure_mentioned(call)
+                self.stdout.write(f"Final number of call mentioned procedures: '{call_mentioned_procedures_final_count}'")
 
-            peerlogic_api_call_mentioned_procedure, created = CallMentionedProcedure.objects.update_or_create(call=call, keyword=keyword)
             if created:
                 self.stdout.write(self.style.SUCCESS(f"Created call mentioned procedure with pk='{peerlogic_api_call_mentioned_procedure.pk}'"))
             else:
                 self.stdout.write(f"Not creating - Found existing call mentioned procedure with pk={peerlogic_api_call_mentioned_procedure.pk}")
+
+    def _dedupe_procedure_mentioned(self, call: Call) -> int:
+        """
+        This will go away, this is just for fixing duplicate call_procedure_mentioned that
+        were added in the past.
+        """
+
+        unique_procedure_keyword_mentioneds = set()
+        for mentioned_procedure in call.mentioned_procedures.order_by("-modified_at").iterator():
+            keyword = mentioned_procedure.keyword
+            if keyword and keyword not in unique_procedure_keyword_mentioneds:
+                unique_procedure_keyword_mentioneds.add(keyword)
+            else:
+                mentioned_procedure.delete()
+
+        return len(call.mentioned_procedures.order_by("-modified_at"))
 
     def _load_symptom_mentioned(self, call_symptom_mentioned: Dict, call: Call) -> None:
 
@@ -390,6 +414,7 @@ class Command(BaseCommand):
         defaults = {"raw_non_agent_engagement_persona_model_run_id": non_agent_engagement_persona_info["non_agent_engagement_persona_run_id"]}
 
         self.stdout.write(f"Updating or creating Agent Engaged With with non_agent_engagement_persona_type='{non_agent_engagement_persona_type}'.")
+        created = None
         try:
             peerlogic_api_agent_engaged_with, created = AgentEngagedWith.objects.update_or_create(
                 call=call,
