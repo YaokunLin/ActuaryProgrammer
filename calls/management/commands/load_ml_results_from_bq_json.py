@@ -257,7 +257,7 @@ class Command(BaseCommand):
                 self.stdout.write("Deduplicating call mentioned procedures.")
                 call_mentioned_procedures_final_count = self._dedupe_procedure_mentioned(call)
                 self.stdout.write(f"Final number of call mentioned procedures: '{call_mentioned_procedures_final_count}'")
-                exit(2)
+
             if created:
                 self.stdout.write(self.style.SUCCESS(f"Created call mentioned procedure with pk='{peerlogic_api_call_mentioned_procedure.pk}'"))
             else:
