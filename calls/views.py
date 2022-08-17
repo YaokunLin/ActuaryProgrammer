@@ -21,7 +21,12 @@ from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 
 from twilio.base.exceptions import TwilioException
-from calls.filters import CallTranscriptsFilter, CallTranscriptsSearchFilter, CallsFilter
+from calls.filters import (
+    CallsFilter,
+    CallSearchFilter,
+    CallTranscriptsFilter,
+    CallTranscriptsSearchFilter,
+)
 from calls.publishers import publish_call_audio_partial_saved, publish_call_audio_saved, publish_call_transcript_saved
 
 from core.file_upload import FileToUpload
@@ -102,8 +107,13 @@ class CallViewset(viewsets.ModelViewSet):
     serializer_class = CallSerializer
     filterset_class = CallsFilter
 
-    def get_queryset(self):
+    filter_backends = (
+        DjangoFilterBackend,
+        CallSearchFilter,
+        OrderingFilter,
+    )  # note: these must be kept up to date with settings.py values!
 
+    def get_queryset(self):
         query_set = Call.objects.none()
 
         if self.request.user.is_staff or self.request.user.is_superuser:
