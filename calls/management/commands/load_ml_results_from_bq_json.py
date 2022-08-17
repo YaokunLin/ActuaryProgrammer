@@ -163,11 +163,8 @@ class Command(BaseCommand):
         # Taking the last agent_engaged_with
         last_agent_engaged_with = call.engaged_in_calls.order_by("-modified_at").first()
 
-        for agent_engaged_with in call.engaged_in_calls.order_by("-modified_at").iterator():
-            if last_agent_engaged_with.non_agent_engagement_persona_type == agent_engaged_with.non_agent_engagement_persona_type:
-                agent_engaged_with.delete()
-
-        last_agent_engaged_with.save()
+        for agent_engaged_with in call.engaged_in_calls.exclude(pk=last_agent_engaged_with.pk).order_by("-modified_at").iterator():
+            agent_engaged_with.delete()
 
         return len(call.engaged_in_calls.order_by("-modified_at"))
 
