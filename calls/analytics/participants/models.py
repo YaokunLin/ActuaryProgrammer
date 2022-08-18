@@ -14,6 +14,7 @@ class AgentAssignedCall(AuditTrailModel):
 
 class AgentEngagedWith(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
+    # TODO: rename this related name 'engaged_in_calls' to something that makes more sense
     call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="The call engaged with", related_name="engaged_in_calls")
     non_agent_engagement_persona_type = models.CharField(choices=NonAgentEngagementPersonaTypes.choices, max_length=50, blank=True)
     raw_non_agent_engagement_persona_model_run_id = models.CharField(max_length=22)

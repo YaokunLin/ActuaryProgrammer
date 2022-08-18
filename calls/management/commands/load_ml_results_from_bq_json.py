@@ -114,11 +114,11 @@ class Command(BaseCommand):
 
         # Not necessary
         del bq_call["caller_type_info"]  # TODO: remove from schema, deprecated
-        del bq_call["domain"]  # TODO: remove from schema, deprecated
         del bq_call["call_pause"]  # TODO: Implement when we're determining longest pause again
         del bq_call["call_transcription"]
         del bq_call["call_transcription_fragment"]
         del bq_call["insert_timestamp"]
+        del bq_call["domain"]  # TODO: remove from all extracts
         # del bq_call["site_id"]
 
         defaults.update(bq_call)
@@ -133,6 +133,7 @@ class Command(BaseCommand):
         self._load_call_sentiment(call_sentiment, peerlogic_api_call)
         self._load_call_purposes_and_outcomes_with_outcome_reasons(call_purpose, peerlogic_api_call)
         self._load_non_agent_engagement_persona_info(non_agent_engagement_persona_info, peerlogic_api_call)
+
         # Mentioned
         self._load_company_mentioned(call_company_mentioned, peerlogic_api_call)
         self._load_insurance_mentioned(call_insurance_mentioned, peerlogic_api_call)
@@ -150,7 +151,24 @@ class Command(BaseCommand):
 
         return practice
 
-    def _load_agent_call_scores(self, call_agent_interactions, call):
+    def _dedupe_non_agent_engagement_persona_info(self, call: Call) -> int:
+        """
+        This will go away, this is just for fixing duplicate non_agent_engagement_persona_types that
+        were added in the past.
+
+        See _load_non_agent_engagement_persona_info for examples of non_agent_engagement_persona_types.
+        """
+        # TODO: rename this engaged_in_calls relative name to something that makes more sense
+
+        # Taking the last agent_engaged_with
+        last_agent_engaged_with = call.engaged_in_calls.order_by("-modified_at").first()
+
+        for agent_engaged_with in call.engaged_in_calls.exclude(pk=last_agent_engaged_with.pk).order_by("-modified_at").iterator():
+            agent_engaged_with.delete()
+
+        return len(call.engaged_in_calls.order_by("-modified_at"))
+
+    def _load_agent_call_scores(self, call_agent_interactions, call: Call):
 
         for interaction in call_agent_interactions:
             metric = interaction["agent_interaction_metric_name"]
@@ -164,7 +182,7 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(f"Not creating - Found existing agent call score with pk={peerlogic_api_agent_call_score.pk}")
 
-    def _load_call_sentiment(self, call_sentiment, call):
+    def _load_call_sentiment(self, call_sentiment, call: Call):
         BQ_TO_PEERLOGIC_API_SENTIMENT_TYPE_MAP = {
             "positive": SentimentTypes.POSITIVE,
             "negative": SentimentTypes.NEGATIVE,
@@ -226,14 +244,37 @@ class Command(BaseCommand):
             if not keyword:
                 continue
 
-            self.stdout.write(f"Getting or creating Call Mentioned Procedure with keyword='{keyword}'.")
-            peerlogic_api_call_mentioned_procedure, created = CallMentionedProcedure.objects.get_or_create(
-                pk=procedure["call_procedure_discussed_id"], call=call, keyword=keyword
-            )
+            self.stdout.write(f"Updating or creating Call Mentioned Procedure with keyword='{keyword}'.")
+            created = None
+            try:
+                peerlogic_api_call_mentioned_procedure, created = CallMentionedProcedure.objects.update_or_create(call=call, keyword=keyword)
+            except CallMentionedProcedure.MultipleObjectsReturned as mor:
+                self.stdout.write(f"Multiple call mentioned procedures returned with keyword='{keyword}'")
+                print(mor)  # can't use self.stdout.write with an exception message
+                self.stdout.write("Deduplicating call mentioned procedures.")
+                call_mentioned_procedures_final_count = self._dedupe_procedure_mentioned(call)
+                self.stdout.write(f"Final number of call mentioned procedures: '{call_mentioned_procedures_final_count}'")
+
             if created:
                 self.stdout.write(self.style.SUCCESS(f"Created call mentioned procedure with pk='{peerlogic_api_call_mentioned_procedure.pk}'"))
             else:
                 self.stdout.write(f"Not creating - Found existing call mentioned procedure with pk={peerlogic_api_call_mentioned_procedure.pk}")
+
+    def _dedupe_procedure_mentioned(self, call: Call) -> int:
+        """
+        This will go away, this is just for fixing duplicate call_procedure_mentioned that
+        were added in the past.
+        """
+
+        unique_procedure_keyword_mentioneds = set()
+        for mentioned_procedure in call.mentioned_procedures.order_by("-modified_at").iterator():
+            keyword = mentioned_procedure.keyword
+            if keyword and keyword not in unique_procedure_keyword_mentioneds:
+                unique_procedure_keyword_mentioneds.add(keyword)
+            else:
+                mentioned_procedure.delete()
+
+        return len(call.mentioned_procedures.order_by("-modified_at"))
 
     def _load_symptom_mentioned(self, call_symptom_mentioned: Dict, call: Call) -> None:
 
@@ -372,13 +413,20 @@ class Command(BaseCommand):
 
         defaults = {"raw_non_agent_engagement_persona_model_run_id": non_agent_engagement_persona_info["non_agent_engagement_persona_run_id"]}
 
-        self.stdout.write(f"Getting or creating Agent Engaged With with non_agent_engagement_persona_type='{non_agent_engagement_persona_type}'.")
-        peerlogic_api_agent_engaged_with, created = AgentEngagedWith.objects.get_or_create(
-            pk=non_agent_engagement_persona_info["non_agent_engagement_persona_id"],
-            call=call,
-            non_agent_engagement_persona_type=non_agent_engagement_persona_type,
-            defaults=defaults,
-        )
+        self.stdout.write(f"Updating or creating Agent Engaged With with non_agent_engagement_persona_type='{non_agent_engagement_persona_type}'.")
+        created = None
+        try:
+            peerlogic_api_agent_engaged_with, created = AgentEngagedWith.objects.update_or_create(
+                call=call,
+                non_agent_engagement_persona_type=non_agent_engagement_persona_type,
+                defaults=defaults,
+            )
+        except AgentEngagedWith.MultipleObjectsReturned as mor:
+            self.stdout.write(f"Multiple agent engaged withs returned with non_agent_engagement_persona_type='{non_agent_engagement_persona_type}'")
+            print(mor)  # can't use self.stdout.write with an exception message
+            self.stdout.write("Deduplicating agent engaged withs.")
+            self._dedupe_non_agent_engagement_persona_info(call)
+
         if created:
             self.stdout.write(self.style.SUCCESS(f"Created agent engaged with, with pk='{peerlogic_api_agent_engaged_with.pk}'"))
         else:
