@@ -17,7 +17,7 @@ class AgentEngagedWith(AuditTrailModel):
     # TODO: rename this related name 'engaged_in_calls' to something that makes more sense
     call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="The call engaged with", related_name="engaged_in_calls")
     non_agent_engagement_persona_type = models.CharField(choices=NonAgentEngagementPersonaTypes.choices, max_length=50, blank=True)
-    raw_non_agent_engagement_persona_model_run_id = models.CharField(max_length=22)
+    raw_non_agent_engagement_persona_model_run_id = models.CharField(max_length=22, blank=True) # Blankable - Sometimes we determine type via CNAM. Also to decouple this.
     non_agent_engagement_persona_model_run = models.ForeignKey(
         "ml.MLModelResultHistory",
         on_delete=models.SET_NULL,
