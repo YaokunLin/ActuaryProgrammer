@@ -173,6 +173,10 @@ Google Cloud credentials are necessary to access the database. Your environment 
    docker-compose -f ./environment-connect/cloudsql-docker-compose.yml up --build
    ```
 
+6. You can now connect as a server via ./environment-connect/connect.sh dev up, and remember to still run the ./devtools/cloud_sql_proxy.bash as explained in the previous section.
+
+In fact, you can run any docker commands after `./environment-connect/connect.sh dev`!
+
 ### Management Command - Create Netsapiens subscription
 
 1. Follow above instructions under "Running Management Commands" before continuing.
