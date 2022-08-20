@@ -269,7 +269,7 @@ class CallTranscriptViewset(viewsets.ModelViewSet):
         return queryset
 
     def update(self, request, pk=None, call_pk=None):
-        data = request.data
+        data = dict(request.data)
         data["call"] = call_pk
         call_transcript_serializer = CallTranscriptSerializer(data=data)
         call_transcript_serializer_is_valid = call_transcript_serializer.is_valid()
