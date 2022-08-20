@@ -268,9 +268,17 @@ class CallTranscriptViewset(viewsets.ModelViewSet):
         queryset = super().get_queryset().filter(call=self.kwargs.get("call_pk"))
         return queryset
 
-    def update(self, request, pk=None):
-        # TODO: Implement
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    def update(self, request, pk=None, call_pk=None):
+        data = dict(request.data)
+        data["call"] = call_pk
+        call_transcript_serializer = CallTranscriptSerializer(data=data)
+        call_transcript_serializer_is_valid = call_transcript_serializer.is_valid()
+        if not call_transcript_serializer_is_valid:
+            return Response(call_transcript_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # Update the record in the database
+        call_transcript_serializer.save()
+        return Response(status=status.HTTP_200_OK, data=call_transcript_serializer.data)
 
     def data_is_valid(self, files: List) -> Union[FileToUpload, Dict]:
         if len(files) != 1:
