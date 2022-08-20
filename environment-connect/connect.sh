@@ -18,4 +18,4 @@ OUTPUT_FILENAME=$(echo $COMMAND| tr -dc '[:alnum:]\n\r' | tr '[:upper:]' '[:lowe
 gcloud config configurations activate peerlogic-api-$ENVIRONMENT
 
 # TODO: supply env-file, haven't gotten it to work yet. See above step 2
-docker-compose -f ./environment-connect/cloudsql-docker-compose.yml run api $COMMAND 2>&1 | tee ./environment-connect/logs/$OUTPUT_FILENAME.txt
+docker-compose -f ./environment-connect/cloudsql-docker-compose.yml $COMMAND 2>&1 | tee ./environment-connect/logs/$OUTPUT_FILENAME.txt
