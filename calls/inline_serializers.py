@@ -2,7 +2,16 @@ import logging
 
 from rest_framework import serializers
 
-from calls.analytics.intents.models import CallMentionedProcedure, CallOutcome, CallOutcomeReason, CallPurpose
+from calls.analytics.intents.models import (
+    CallMentionedCompany,
+    CallMentionedInsurance,
+    CallMentionedProcedure,
+    CallMentionedProduct,
+    CallMentionedSymptom,
+    CallOutcome,
+    CallOutcomeReason,
+    CallPurpose
+)
 from calls.analytics.participants.models import AgentEngagedWith
 from calls.analytics.transcripts.models import CallSentiment
 
@@ -49,8 +58,37 @@ class InlineAgentEngagedWithSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "non_agent_engagement_persona_type"]
 
 
-class InlineCallMentionedProductSerializer(serializers.ModelSerializer):
+class InlineCallMentionedCompanySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CallMentionedCompany
+        fields = ["id", "keyword"]
+        read_only_fields = ["id", "keyword"]
+
+
+class InlineCallMentionedInsuranceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CallMentionedInsurance
+        fields = ["id", "keyword"]
+        read_only_fields = ["id", "keyword"]
+
+
+class InlineCallMentionedProcedureSerializer(serializers.ModelSerializer):
     class Meta:
         model = CallMentionedProcedure
         fields = ["id", "keyword"]
         read_only_fields = ["id", "keyword"]
+
+
+class InlineCallMentionedProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CallMentionedProduct
+        fields = ["id", "keyword"]
+        read_only_fields = ["id", "keyword"]
+
+
+class InlineCallMentionedSymptomSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CallMentionedSymptom
+        fields = ["id", "keyword"]
+        read_only_fields = ["id", "keyword"]
+

@@ -3,10 +3,24 @@ import logging
 from django_countries.serializers import CountryFieldMixin
 from rest_framework import serializers
 
-from .models import Call, CallAudio, CallAudioPartial, CallLabel, CallNote, CallPartial, CallTranscript, CallTranscriptPartial, TelecomCallerNameInfo
+from .models import (
+    Call,
+    CallAudio,
+    CallAudioPartial,
+    CallLabel,
+    CallNote,
+    CallPartial,
+    CallTranscript,
+    CallTranscriptPartial,
+    TelecomCallerNameInfo,
+)
 from calls.inline_serializers import (
     InlineAgentEngagedWithSerializer,
+    InlineCallMentionedCompanySerializer,
+    InlineCallMentionedInsuranceSerializer,
+    InlineCallMentionedProcedureSerializer,
     InlineCallMentionedProductSerializer,
+    InlineCallMentionedSymptomSerializer,
     InlineCallPurposeSerializer,
     InlineCallSentimentSerializer,
 )
@@ -31,7 +45,14 @@ class CallSerializer(serializers.ModelSerializer):
     # TODO: fix multiple call_purposes with same type value
     call_purposes = InlineCallPurposeSerializer(many=True, read_only=True)
     # Include outcome and outcome reasons
-    mentioned_procedures = InlineCallMentionedProductSerializer(many=True, read_only=True)
+
+    # mentioned, inline
+    mentioned_companies = InlineCallMentionedCompanySerializer(many=True, read_only=True)
+    mentioned_insurances = InlineCallMentionedInsuranceSerializer(many=True, read_only=True)
+    mentioned_procedures = InlineCallMentionedProcedureSerializer(many=True, read_only=True)
+    mentioned_products = InlineCallMentionedProductSerializer(many=True, read_only=True)
+    mentioned_symptoms = InlineCallMentionedSymptomSerializer(many=True, read_only=True)
+
     call_sentiments = InlineCallSentimentSerializer(many=True, read_only=True)
 
     # TODO: Value calculations
