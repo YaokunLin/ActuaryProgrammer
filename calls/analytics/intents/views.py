@@ -41,27 +41,44 @@ class CallOutcomeReasonViewset(viewsets.ModelViewSet):
     filter_fields = ["call_outcome_reason_type", "call_outcome__id", "call_outcome__call_purpose__id", "call_outcome__call_purpose__call__id"]
 
 
+#
+# Mentioned Viewsets
+#
+
 class CallMentionedCompanyViewset(viewsets.ModelViewSet):
     queryset = CallMentionedCompany.objects.all().order_by("-modified_at")
     serializer_class = CallMentionedCompanySerializer
     filter_fields = ["call__id", "keyword"]
 
+    def get_queryset(self):
+        queryset = super().get_queryset().filter(call=self.kwargs.get("call_pk"))
+        return queryset
 
 class CallMentionedInsuranceViewset(viewsets.ModelViewSet):
     queryset = CallMentionedInsurance.objects.all().order_by("-modified_at")
     serializer_class = CallMentionedInsuranceSerializer
     filter_fields = ["call__id", "keyword"]
 
+    def get_queryset(self):
+        queryset = super().get_queryset().filter(call=self.kwargs.get("call_pk"))
+        return queryset
 
 class CallMentionedProcedureViewset(viewsets.ModelViewSet):
     queryset = CallMentionedProcedure.objects.all().order_by("-modified_at")
     serializer_class = CallMentionedProcedureSerializer
     filter_fields = ["call__id", "keyword"]
 
+    def get_queryset(self):
+        queryset = super().get_queryset().filter(call=self.kwargs.get("call_pk"))
+        return queryset
 
 class CallMentionedProcedureDistinctView(ListAPIView):
     queryset = CallMentionedProcedure.objects.all().distinct("keyword")
     serializer_class = CallMentionedProcedureKeywordOnlySerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset().filter(call=self.kwargs.get("call_pk"))
+        return queryset
 
 
 class CallMentionedProductViewset(viewsets.ModelViewSet):
@@ -69,8 +86,16 @@ class CallMentionedProductViewset(viewsets.ModelViewSet):
     serializer_class = CallMentionedProductSerializer
     filter_fields = ["call__id", "keyword"]
 
+    def get_queryset(self):
+        queryset = super().get_queryset().filter(call=self.kwargs.get("call_pk"))
+        return queryset
+
 
 class CallMentionedSymptomViewset(viewsets.ModelViewSet):
     queryset = CallMentionedSymptom.objects.all().order_by("-modified_at")
     serializer_class = CallMentionedSymptomSerializer
     filter_fields = ["call__id", "keyword"]
+
+    def get_queryset(self):
+        queryset = super().get_queryset().filter(call=self.kwargs.get("call_pk"))
+        return queryset
