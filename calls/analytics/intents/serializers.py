@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from calls.models import Call
+from calls.serializers import CallNestedRouterBaseWriteSerializerMixin
 from calls.analytics.intents.models import (
     CallMentionedCompany,
     CallMentionedInsurance,
@@ -37,14 +37,6 @@ class CallOutcomeReasonSerializer(serializers.ModelSerializer):
 #
 # Mentioned
 #
-
-class CallNestedRouterBaseWriteSerializerMixin(object):
-
-    def create(self, validated_data):
-        call = Call.objects.get(pk=self.context["view"].kwargs["call_pk"])
-        validated_data["call"] = call
-        return self.Meta.model.objects.create(**validated_data)
-
 
 class CallMentionedCompanyReadSerializer(serializers.ModelSerializer):
 

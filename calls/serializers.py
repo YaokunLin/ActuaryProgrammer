@@ -66,6 +66,15 @@ class CallSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "domain", "latest_audio_signed_url", "latest_transcript_signed_url"]
 
 
+class CallNestedRouterBaseWriteSerializerMixin(object):
+
+    def create(self, validated_data):
+        call = Call.objects.get(pk=self.context["view"].kwargs["call_pk"])
+        validated_data["call"] = call
+        return self.Meta.model.objects.create(**validated_data)
+
+
+
 class CallNoteReadSerializer(serializers.ModelSerializer):
 
     class Meta:
