@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from calls.models import Call
 from calls.analytics.intents.models import (
     CallMentionedCompany,
     CallMentionedInsurance,
@@ -33,24 +34,63 @@ class CallOutcomeReasonSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
-class CallMentionedCompanySerializer(serializers.ModelSerializer):
+#
+# Mentioned
+#
+
+class CallNestedRouterBaseWriteSerializerMixin(object):
+
+    def create(self, validated_data):
+        call = Call.objects.get(pk=self.context["view"].kwargs["call_pk"])
+        validated_data["call"] = call
+        return self.Meta.model.objects.create(**validated_data)
+
+
+class CallMentionedCompanyReadSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = CallMentionedCompany
         fields = "__all__"
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
-class CallMentionedInsuranceSerializer(serializers.ModelSerializer):
+class CallMentionedCompanyWriteSerializer(CallNestedRouterBaseWriteSerializerMixin, serializers.ModelSerializer):
+
+    class Meta:
+        model = CallMentionedCompany
+        fields = ("id", "keyword")
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
+
+
+class CallMentionedInsuranceReadSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = CallMentionedInsurance
         fields = "__all__"
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
-class CallMentionedProcedureSerializer(serializers.ModelSerializer):
+class CallMentionedInsuranceWriteSerializer(CallNestedRouterBaseWriteSerializerMixin, serializers.ModelSerializer):
+
+    class Meta:
+        model = CallMentionedInsurance
+        fields = ("id", "keyword")
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
+
+
+class CallMentionedProcedureReadSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = CallMentionedProcedure
         fields = "__all__"
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
+
+
+class CallMentionedProcedureWriteSerializer(CallNestedRouterBaseWriteSerializerMixin, serializers.ModelSerializer):
+
+    class Meta:
+        model = CallMentionedProcedure
+        fields = ("id", "keyword")
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
@@ -61,15 +101,33 @@ class CallMentionedProcedureKeywordOnlySerializer(serializers.ModelSerializer):
         read_only_fields = ["keyword"]
 
 
-class CallMentionedProductSerializer(serializers.ModelSerializer):
+class CallMentionedProductReadSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = CallMentionedProduct
         fields = "__all__"
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
-class CallMentionedSymptomSerializer(serializers.ModelSerializer):
+class CallMentionedProductWriteSerializer(CallNestedRouterBaseWriteSerializerMixin, serializers.ModelSerializer):
+
+    class Meta:
+        model = CallMentionedProduct
+        fields = ("id", "keyword")
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
+
+
+class CallMentionedSymptomReadSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = CallMentionedSymptom
         fields = "__all__"
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
+
+
+class CallMentionedSymptomWriteSerializer(CallNestedRouterBaseWriteSerializerMixin, serializers.ModelSerializer):
+
+    class Meta:
+        model = CallMentionedSymptom
+        fields = ("id", "keyword")
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
