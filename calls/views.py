@@ -271,7 +271,11 @@ class CallTranscriptViewset(viewsets.ModelViewSet):
     def update(self, request, pk=None, call_pk=None):
         data = dict(request.data)
         data["call"] = call_pk
-        call_transcript_serializer = CallTranscriptSerializer(data=data)
+        try:
+            call_transcript = CallTranscript.objects.get(pk=pk)
+        except CallTranscript.DoesNotExist:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data={"id": f"No call transcript with id={pk}."})
+        call_transcript_serializer = CallTranscriptSerializer(call_transcript, data=data)
         call_transcript_serializer_is_valid = call_transcript_serializer.is_valid()
         if not call_transcript_serializer_is_valid:
             return Response(call_transcript_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
