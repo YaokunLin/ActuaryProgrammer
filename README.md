@@ -124,7 +124,7 @@ eval $(op signin my)
 echo "1PASSWORD_SHORTHAND=<youroutputtedtokenhere>" >> ~/.bashrc
 ``` -->
 
-## Running Management Commands
+## Running Against Other Environments / Running Management Commands Against Other Environments
 
 ### Setup Proxy Access to the Environment
 
@@ -175,7 +175,23 @@ Google Cloud credentials are necessary to access the database. Your environment 
 
 6. You can now connect as a server via ./environment-connect/connect.sh dev up, and remember to still run the ./devtools/cloud_sql_proxy.bash as explained in the previous section.
 
-In fact, you can run any docker commands after `./environment-connect/connect.sh dev`!
+    In fact, you can run any docker commands after `./environment-connect/connect.sh dev`!
+
+7. Allow some amount of time for the API to connect to the remote database. We've seen problems with the gunicorn workers timing out and dying.
+
+    Error seen from clients trying to connect to peerlogic-api:
+
+    ```bash
+    "raise ConnectionError(err, request=request) requests.exceptions.ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))"
+    ```
+
+    Error seen from peerlogic-api side:
+
+    ```bash
+    api_1  | [2022-08-20 22:01:53 +0000] [7] [CRITICAL] WORKER TIMEOUT (pid:20)
+    api_1  | [2022-08-20 22:01:53 +0000] [20] [INFO] Worker exiting (pid: 20)
+    api_1  | [2022-08-20 22:01:53 +0000] [25] [INFO] Booting worker with pid: 25
+    ```
 
 ### Management Command - Create Netsapiens subscription
 
@@ -223,3 +239,20 @@ In fact, you can run any docker commands after `./environment-connect/connect.sh
     In the Secret manager you will need to update AUTH0_MACHINE_CLIENT_ID and AUTH0_MACHINE_USER_ID so the mapping can be used when authenticating with client credentials for admin endpoints, like `/api/users`.
 
 5. [Update the Auth0 Custom Action secrets](https://manage.auth0.com/dashboard/us/dev-ea57un9z/actions/library) for `PEERLOGIC_API_CLIENT_ID` `PEERLOGIC_API_CLIENT_SECRET` for the application.
+
+
+## Troubleshooting
+
+1. Problems with login / authentication endpoint / connecting to Netsapiens.
+
+    Error:
+
+    ```bash
+    requests.exceptions.ConnectionError: HTTPSConnectionPool(host=‘core1-phx.peerlogic.com’, port=443): Max retries exceeded with url: /ns-api/oauth2/token/ (Caused by NewConnectionError(‘<urllib3.connection.HTTPSConnection object at 0x7f0f89abedd0>: Failed to establish a new connection: [Errno 110] Connection timed out’))
+    ```
+
+    Potential solutions:
+
+    1. Restart Docker.
+    2. Update Docker.
+    3. Restart your computer.
