@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from calls.serializers import CallNestedRouterBaseWriteSerializerMixin
 from calls.analytics.transcripts.models import (
     CallLongestPause,
     CallSentiment,
@@ -8,10 +9,19 @@ from calls.analytics.transcripts.models import (
 )
 
 
-class CallSentimentSerializer(serializers.ModelSerializer):
+class CallSentimentReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = CallSentiment
         fields = "__all__"
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
+
+
+
+class CallSentimentWriteSerializer(CallNestedRouterBaseWriteSerializerMixin, serializers.ModelSerializer):
+
+    class Meta:
+        model = CallSentiment
+        fields = ("id", "overall_sentiment_score", "caller_sentiment_score", "callee_sentiment_score", "raw_call_sentiment_model_run_id", "call_sentiment_model_run")
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 

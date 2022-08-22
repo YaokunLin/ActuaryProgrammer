@@ -8,7 +8,8 @@ from calls.analytics.transcripts.models import (
 )
 from calls.analytics.transcripts.serializers import (
     CallLongestPauseSerializer,
-    CallSentimentSerializer,
+    CallSentimentReadSerializer,
+    CallSentimentWriteSerializer,
     CallTranscriptFragmentSerializer,
     CallTranscriptFragmentSentimentSerializer,
 )
@@ -16,8 +17,19 @@ from calls.analytics.transcripts.serializers import (
 
 class CallSentimentViewset(viewsets.ModelViewSet):
     queryset = CallSentiment.objects.all().order_by("-modified_at")
-    serializer_class = CallSentimentSerializer
     filter_fields = ["call__id", "overall_sentiment_score", "caller_sentiment_score", "callee_sentiment_score"]
+
+    serializer_class_read = CallSentimentReadSerializer
+    serializer_class_write = CallSentimentWriteSerializer
+
+    def get_serializer_class(self):
+        if self.action in ["create", "update", "partial_update"]:
+            return self.serializer_class_write
+
+        return self.serializer_class_read
+
+    def get_queryset(self):
+        return super().get_queryset().filter(call=self.kwargs.get("call_pk"))
 
 
 class CallTranscriptFragmentViewset(viewsets.ModelViewSet):

@@ -11,12 +11,17 @@ from calls.analytics.intents.models import (
     CallPurpose,
 )
 from calls.analytics.intents.serializers import (
-    CallMentionedCompanySerializer,
-    CallMentionedInsuranceSerializer,
+    CallMentionedCompanyReadSerializer,
+    CallMentionedCompanyWriteSerializer,
+    CallMentionedInsuranceReadSerializer,
+    CallMentionedInsuranceWriteSerializer,
     CallMentionedProcedureKeywordOnlySerializer,
-    CallMentionedProductSerializer,
-    CallMentionedProcedureSerializer,
-    CallMentionedSymptomSerializer,
+    CallMentionedProcedureReadSerializer,
+    CallMentionedProcedureWriteSerializer,
+    CallMentionedProductReadSerializer,
+    CallMentionedProductWriteSerializer,
+    CallMentionedSymptomReadSerializer,
+    CallMentionedSymptomWriteSerializer,
     CallOutcomeSerializer,
     CallOutcomeReasonSerializer,
     CallPurposeSerializer,
@@ -47,8 +52,16 @@ class CallOutcomeReasonViewset(viewsets.ModelViewSet):
 
 class CallMentionedCompanyViewset(viewsets.ModelViewSet):
     queryset = CallMentionedCompany.objects.all().order_by("-modified_at")
-    serializer_class = CallMentionedCompanySerializer
     filter_fields = ["call__id", "keyword"]
+
+    serializer_class_read = CallMentionedCompanyReadSerializer
+    serializer_class_write = CallMentionedCompanyWriteSerializer
+
+    def get_serializer_class(self):
+        if self.action in ["create", "update", "partial_update"]:
+            return self.serializer_class_write
+
+        return self.serializer_class_read
 
     def get_queryset(self):
         queryset = super().get_queryset().filter(call=self.kwargs.get("call_pk"))
@@ -56,8 +69,16 @@ class CallMentionedCompanyViewset(viewsets.ModelViewSet):
 
 class CallMentionedInsuranceViewset(viewsets.ModelViewSet):
     queryset = CallMentionedInsurance.objects.all().order_by("-modified_at")
-    serializer_class = CallMentionedInsuranceSerializer
     filter_fields = ["call__id", "keyword"]
+
+    serializer_class_read = CallMentionedInsuranceReadSerializer
+    serializer_class_write = CallMentionedInsuranceWriteSerializer
+
+    def get_serializer_class(self):
+        if self.action in ["create", "update", "partial_update"]:
+            return self.serializer_class_write
+
+        return self.serializer_class_read
 
     def get_queryset(self):
         queryset = super().get_queryset().filter(call=self.kwargs.get("call_pk"))
@@ -65,8 +86,16 @@ class CallMentionedInsuranceViewset(viewsets.ModelViewSet):
 
 class CallMentionedProcedureViewset(viewsets.ModelViewSet):
     queryset = CallMentionedProcedure.objects.all().order_by("-modified_at")
-    serializer_class = CallMentionedProcedureSerializer
     filter_fields = ["call__id", "keyword"]
+
+    serializer_class_read = CallMentionedProcedureReadSerializer
+    serializer_class_write = CallMentionedProcedureWriteSerializer
+
+    def get_serializer_class(self):
+        if self.action in ["create", "update", "partial_update"]:
+            return self.serializer_class_write
+
+        return self.serializer_class_read
 
     def get_queryset(self):
         queryset = super().get_queryset().filter(call=self.kwargs.get("call_pk"))
@@ -76,15 +105,19 @@ class CallMentionedProcedureDistinctView(ListAPIView):
     queryset = CallMentionedProcedure.objects.all().distinct("keyword")
     serializer_class = CallMentionedProcedureKeywordOnlySerializer
 
-    def get_queryset(self):
-        queryset = super().get_queryset().filter(call=self.kwargs.get("call_pk"))
-        return queryset
-
 
 class CallMentionedProductViewset(viewsets.ModelViewSet):
     queryset = CallMentionedProduct.objects.all().order_by("-modified_at")
-    serializer_class = CallMentionedProductSerializer
     filter_fields = ["call__id", "keyword"]
+
+    serializer_class_read = CallMentionedProductReadSerializer
+    serializer_class_write = CallMentionedProductWriteSerializer
+
+    def get_serializer_class(self):
+        if self.action in ["create", "update", "partial_update"]:
+            return self.serializer_class_write
+
+        return self.serializer_class_read
 
     def get_queryset(self):
         queryset = super().get_queryset().filter(call=self.kwargs.get("call_pk"))
@@ -93,8 +126,16 @@ class CallMentionedProductViewset(viewsets.ModelViewSet):
 
 class CallMentionedSymptomViewset(viewsets.ModelViewSet):
     queryset = CallMentionedSymptom.objects.all().order_by("-modified_at")
-    serializer_class = CallMentionedSymptomSerializer
     filter_fields = ["call__id", "keyword"]
+
+    serializer_class_read = CallMentionedSymptomReadSerializer
+    serializer_class_write = CallMentionedSymptomWriteSerializer
+
+    def get_serializer_class(self):
+        if self.action in ["create", "update", "partial_update"]:
+            return self.serializer_class_write
+
+        return self.serializer_class_read
 
     def get_queryset(self):
         queryset = super().get_queryset().filter(call=self.kwargs.get("call_pk"))
