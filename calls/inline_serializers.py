@@ -47,7 +47,7 @@ class InlineCallPurposeSerializer(serializers.ModelSerializer):
 class InlineCallSentimentSerializer(serializers.ModelSerializer):
     class Meta:
         model = CallSentiment
-        fields = ["id", "overall_sentiment_score", "caller_sentiment_score", "caller_sentiment_score"]
+        fields = ["id", "overall_sentiment_score", "caller_sentiment_score", "callee_sentiment_score"]
         read_only_fields = ["id", "overall_sentiment_score", "caller_sentiment_score", "caller_sentiment_score"]
 
 

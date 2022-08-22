@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from calls.serializers import CallNestedRouterBaseWriteSerializerMixin
 from calls.analytics.intents.models import (
     CallMentionedCompany,
     CallMentionedInsurance,
@@ -33,24 +34,55 @@ class CallOutcomeReasonSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
-class CallMentionedCompanySerializer(serializers.ModelSerializer):
+#
+# Mentioned
+#
+
+class CallMentionedCompanyReadSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = CallMentionedCompany
         fields = "__all__"
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
-class CallMentionedInsuranceSerializer(serializers.ModelSerializer):
+class CallMentionedCompanyWriteSerializer(CallNestedRouterBaseWriteSerializerMixin, serializers.ModelSerializer):
+
     class Meta:
-        model = CallMentionedInsurance
-        fields = "__all__"
+        model = CallMentionedCompany
+        fields = ("id", "keyword", "created_by", "created_at", "modified_by", "modified_at")  # call is supplied by the viewset
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
-class CallMentionedProcedureSerializer(serializers.ModelSerializer):
+class CallMentionedInsuranceReadSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = CallMentionedInsurance
+        fields = "__all__"
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]  # not needed for read-only but this keeps us safe from mistakes
+
+
+class CallMentionedInsuranceWriteSerializer(CallNestedRouterBaseWriteSerializerMixin, serializers.ModelSerializer):
+
+    class Meta:
+        model = CallMentionedInsurance
+        fields = ("id", "keyword", "created_by", "created_at", "modified_by", "modified_at")  # call is supplied by the viewset
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
+
+
+class CallMentionedProcedureReadSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = CallMentionedProcedure
         fields = "__all__"
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]  # not needed for read-only but this keeps us safe from mistakes
+
+
+class CallMentionedProcedureWriteSerializer(CallNestedRouterBaseWriteSerializerMixin, serializers.ModelSerializer):
+
+    class Meta:
+        model = CallMentionedProcedure
+        fields = ("id", "keyword", "created_by", "created_at", "modified_by", "modified_at")  # call is supplied by the viewset
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
@@ -61,15 +93,33 @@ class CallMentionedProcedureKeywordOnlySerializer(serializers.ModelSerializer):
         read_only_fields = ["keyword"]
 
 
-class CallMentionedProductSerializer(serializers.ModelSerializer):
+class CallMentionedProductReadSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = CallMentionedProduct
         fields = "__all__"
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]  # not needed for read-only but this keeps us safe from mistakes
+
+
+class CallMentionedProductWriteSerializer(CallNestedRouterBaseWriteSerializerMixin, serializers.ModelSerializer):
+
+    class Meta:
+        model = CallMentionedProduct
+        fields = ("id", "keyword", "created_by", "created_at", "modified_by", "modified_at")  # call is supplied by the viewset
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
-class CallMentionedSymptomSerializer(serializers.ModelSerializer):
+class CallMentionedSymptomReadSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = CallMentionedSymptom
         fields = "__all__"
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]  # not needed for read-only but this keeps us safe from mistakes
+
+
+class CallMentionedSymptomWriteSerializer(CallNestedRouterBaseWriteSerializerMixin, serializers.ModelSerializer):
+
+    class Meta:
+        model = CallMentionedSymptom
+        fields = ("id", "keyword", "created_by", "created_at", "modified_by", "modified_at")  # call is supplied by the viewset
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
