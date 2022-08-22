@@ -18,7 +18,7 @@ class CallSentiment(AuditTrailModel):
     overall_sentiment_score = models.CharField(choices=SentimentTypes.choices, max_length=50)
     caller_sentiment_score = models.CharField(choices=SentimentTypes.choices, max_length=50)
     callee_sentiment_score = models.CharField(choices=SentimentTypes.choices, max_length=50)
-    raw_call_sentiment_model_run_id = models.CharField(max_length=22)
+    raw_call_sentiment_model_run_id = models.CharField(max_length=22, blank=True)  # blankable when model isn't run and score is determined programmatically
     call_sentiment_model_run = models.ForeignKey(
         "ml.MLModelResultHistory",
         on_delete=models.SET_NULL,
