@@ -50,7 +50,7 @@ class CallMentionedCompanyWriteSerializer(CallNestedRouterBaseWriteSerializerMix
 
     class Meta:
         model = CallMentionedCompany
-        fields = ("id", "keyword")
+        fields = ("id", "keyword", "created_by", "created_at", "modified_by", "modified_at")  # call is supplied by the viewset
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
@@ -66,7 +66,7 @@ class CallMentionedInsuranceWriteSerializer(CallNestedRouterBaseWriteSerializerM
 
     class Meta:
         model = CallMentionedInsurance
-        fields = ("id", "keyword")
+        fields = ("id", "keyword", "created_by", "created_at", "modified_by", "modified_at")  # call is supplied by the viewset
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
@@ -82,7 +82,7 @@ class CallMentionedProcedureWriteSerializer(CallNestedRouterBaseWriteSerializerM
 
     class Meta:
         model = CallMentionedProcedure
-        fields = ("id", "keyword")
+        fields = ("id", "keyword", "created_by", "created_at", "modified_by", "modified_at")  # call is supplied by the viewset
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
@@ -105,7 +105,7 @@ class CallMentionedProductWriteSerializer(CallNestedRouterBaseWriteSerializerMix
 
     class Meta:
         model = CallMentionedProduct
-        fields = ("id", "keyword")
+        fields = ("id", "keyword", "created_by", "created_at", "modified_by", "modified_at")  # call is supplied by the viewset
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
@@ -121,5 +121,5 @@ class CallMentionedSymptomWriteSerializer(CallNestedRouterBaseWriteSerializerMix
 
     class Meta:
         model = CallMentionedSymptom
-        fields = ("id", "keyword")
+        fields = ("id", "keyword", "created_by", "created_at", "modified_by", "modified_at")  # call is supplied by the viewset
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
