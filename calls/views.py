@@ -274,7 +274,13 @@ class CallTranscriptViewset(viewsets.ModelViewSet):
         try:
             call_transcript = CallTranscript.objects.get(pk=pk)
         except CallTranscript.DoesNotExist:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data={"id": f"No call transcript with id={pk}."})
+            return Response(status=status.HTTP_404_NOT_FOUND, data={"id": f"No call transcript with id={pk}."})
+
+        try:
+            Call.objects.get(pk=call_pk)
+        except Call.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND, data={"id": f"No call transcript with call__id={pk}."})
+
         call_transcript_serializer = CallTranscriptSerializer(call_transcript, data=data)
         call_transcript_serializer_is_valid = call_transcript_serializer.is_valid()
         if not call_transcript_serializer_is_valid:
