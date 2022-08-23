@@ -15,8 +15,6 @@ def call_date_validation(query_data: Dict) -> Dict:
     errors = {}
     if "call_start_time_after" in query_data.keys():
         call_start_time_after = query_data["call_start_time_after"]
-        print("call_start_time_after")
-        print(call_start_time_after)
 
     if "call_start_time_before" in query_data.keys():
         call_start_time_before = query_data["call_start_time_before"]
