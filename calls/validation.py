@@ -33,9 +33,9 @@ def call_date_validation(query_data: Dict) -> Dict:
     dates = validate_dates(call_start_time_after, call_start_time_before)
 
     if len(dates) != 2:
-        internal_msg = f"Programmer error: Could not find one or more valid date filters configured or otherwise. dates='{dates}'"
         external_msg = f"Server error: Please contact r-and-d@peerlogic.com for assistance."
         errors["call_start_time_filters"] = external_msg
+        internal_msg = f"Programmer error: Could not find one or more valid date filters configured or otherwise. dates='{dates}'"
         log.error(internal_msg)
 
     return {"dates": dates, "errors": errors}
