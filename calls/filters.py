@@ -56,8 +56,9 @@ class CallTranscriptsFilter(filters.FilterSet):
     class Meta:
         model = CallTranscript
         fields = {
-            "mime_type": ["exact"],
-            "status": ["exact"],
-            "speech_to_text_model_type": ["exact"],
             "call__id": ["exact"],
+            "mime_type": ["exact"],
+            "speech_to_text_model_type": ["exact"],
+            "status": ["exact"],
+            "transcript_type": ["exact"],
         }
