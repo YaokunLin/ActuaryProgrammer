@@ -1,5 +1,4 @@
 import logging
-from pprint import pprint
 from rest_framework import status, views
 from rest_framework.response import Response
 
