@@ -16,7 +16,6 @@ def validate_date_format(date=None):
             time.strptime(date, "%Y-%m-%d")
     except Exception as e:
         errorDateFormatMessage = json.dumps({"Message": "Invalid date format. " + str(e)})
-        log.error(errorDateFormatMessage)
         raise Exception(errorDateFormatMessage)
 
 
