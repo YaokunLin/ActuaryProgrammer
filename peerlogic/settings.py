@@ -85,6 +85,10 @@ PEERLOGIC_PRACTICE_TELECOM_ID = os.getenv("PEERLOGIC_PRACTICE_TELECOM_ID", "N8UB
 PEERLOGIC_NETSAPIENS_API_CREDENTIALS_ID = os.getenv("PEERLOGIC_NETSAPIENS_API_CREDENTIALS_ID", "FMMfbRH2KtK26GsmfDvm69")
 IS_STAFF_TELECOM_DOMAIN = os.getenv("IS_STAFF_TELECOM_DOMAIN", "Peerlogic")
 
+# Query parameter restrictions
+DATE_RANGE_DEFAULT_IN_DAYS = int(os.getenv("DATE_RANGE_DEFAULT_IN_DAYS", 7))
+
+
 # Bandwidth
 BANDWIDTH_APPLICATION_ID = os.getenv("BANDWIDTH_APPLICATION_ID")
 BANDWIDTH_MESSAGING_URI = os.getenv("BANDWIDTH_MESSAGING_URI")
@@ -336,7 +340,7 @@ REST_FRAMEWORK = {
         "django_filters.rest_framework.DjangoFilterBackend",
         "rest_framework.filters.SearchFilter",
         "rest_framework.filters.OrderingFilter",
-    ], # note: CallViewset and CallTranscriptViewset's filtering should probably be updated when this list is updated
+    ],  # note: CallViewset and CallTranscriptViewset's filtering should probably be updated when this list is updated
     "PAGE_SIZE": 50,
 }
 
