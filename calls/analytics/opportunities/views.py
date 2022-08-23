@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 
 
 class NewPatientWinbacksView(views.APIView):
-    DISPLAY_TO_LOOKUP_FILTER_MAP = {"call_start_time__gte": "call_start_time_after", "call_start_time__lte": "call_start_time_before"}
+    QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME = {"call_start_time__gte": "call_start_time_after", "call_start_time__lte": "call_start_time_before"}
 
     def get(self, request, format=None):
         # date filters
@@ -67,8 +67,8 @@ class NewPatientWinbacksView(views.APIView):
 
         # display syntactic sugar
         display_filters = {
-            self.DISPLAY_TO_LOOKUP_FILTER_MAP["call_start_time__gte"]: call_start_time__gte,
-            self.DISPLAY_TO_LOOKUP_FILTER_MAP["call_start_time__lte"]: call_start_time__lte,
+            self.QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME["call_start_time__gte"]: call_start_time__gte,
+            self.QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME["call_start_time__lte"]: call_start_time__lte,
         }
 
         return Response({"filters": display_filters, "results": aggregates})

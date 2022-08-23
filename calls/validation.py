@@ -33,7 +33,7 @@ def call_date_validation(query_data: Dict) -> Dict:
     dates = validate_dates(call_start_time_after, call_start_time_before)
 
     if len(dates) != 2:
-        msg = f"We must have 2 dates to filter calls by. This should not happen! dates='{dates}'"
+        msg = f"Could not find one or more valid date filters. dates='{dates}'"
         errors["call_start_time_filters"] = msg
         log.error(msg)
 
