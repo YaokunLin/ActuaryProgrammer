@@ -19,6 +19,8 @@ from calls.analytics.interactions.views import (
     AgentCallScoreViewset,
 )
 
+from calls.analytics.opportunities.views import NewPatientWinbacksView
+
 from calls.analytics.transcripts.views import (
     CallLongestPauseViewset,
     CallSentimentViewset,
@@ -90,13 +92,20 @@ call_partials_router.register(r"transcripts", CallTranscriptPartialViewset, base
 calls_app_root_router.register(r"telecom-caller-name-info", TelecomCallerNameInfoViewSet, basename="telecom-caller-name-info")
 
 urlpatterns = [
+    # Field choices
     path(r"call-analytics-field-choices", CallAnalyticsFieldChoicesView.as_view(), name="call-analytics-field-choices"),
     path(r"call-field-choices", CallFieldChoicesView.as_view(), name="call-field-choices"),
+    # Call Audio Partials (root)
     path(r"audio-partials/<pk>/", GetCallAudioPartial.as_view(), name="audio-partial"),
     path(r"audio-partials/", GetCallAudioPartials.as_view(), name="audio-partials"),
+    # Call Transctipt Partials (root)
     path(r"transcript-partials/<pk>/", GetCallTranscriptPartial.as_view(), name="transcript-partial"),
     path(r"transcript-partials/", GetCallTranscriptPartials.as_view(), name="transcript-partials"),
+    # Distinct views
     path(r"mentioned-procedures/", CallMentionedProcedureDistinctView.as_view(), name="mentioned-procedures"),
+    # Call Aggregates
+    path(r"calls/aggregates/new-patient-winback-opportunities/", NewPatientWinbacksView.as_view(), name="new-patient-winback-opportunities"),
+    # Routers
     path(r"", include(calls_app_root_router.urls)),
     path(r"", include(call_router.urls)),
     path(r"", include(call_partials_router.urls)),
