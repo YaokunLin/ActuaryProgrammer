@@ -12,7 +12,7 @@ from calls.analytics.participants.field_choices import NonAgentEngagementPersona
 from calls.models import (
     Call,
 )
-from calls.validation import call_date_validation
+from calls.validation import validate_call_dates
 from core.models import Agent
 
 
@@ -20,7 +20,7 @@ from core.models import Agent
 log = logging.getLogger(__name__)
 
 
-def practice_id_validation(request):
+def authorize_and_validate_practice_id(request):
     practice__id = request.query_params.get("practice__id")
 
     if not practice__id:
@@ -42,8 +42,8 @@ class NewPatientWinbacksView(views.APIView):
 
     def get(self, request, format=None):
         practice__id = request.query_params.get("practice__id")
-        valid_practice, practice_errors = practice_id_validation(request=request)
-        dates_info = call_date_validation(query_data=request.query_params)
+        valid_practice, practice_errors = authorize_and_validate_practice_id(request=request)
+        dates_info = validate_call_dates(query_data=request.query_params)
         dates_errors = dates_info.get("errors")
 
         errors = {}
