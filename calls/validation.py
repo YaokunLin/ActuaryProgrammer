@@ -8,7 +8,7 @@ from core.validation import validate_date_format, validate_dates
 log = logging.getLogger(__name__)
 
 
-def call_date_validation(query_data: Dict) -> Dict:
+def validate_call_dates(query_data: Dict) -> Dict:
     """Check if the input dates are of the format YYYY-MM-DD"""
     call_start_time_after = None
     call_start_time_before = None
