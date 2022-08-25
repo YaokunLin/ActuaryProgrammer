@@ -1,9 +1,5 @@
 from django.core.management.base import BaseCommand
 
-from django.db.models import (
-    Q
-)
-
 from google.api_core.exceptions import PermissionDenied
 from oauth2_provider.models import (
     get_application_model,
@@ -24,7 +20,6 @@ class Command(BaseCommand):
         parser.add_argument("--practice-id", type=str)
         parser.add_argument("--no-op", type=str, help="show output but don't reprocess")
 
-
     def handle(self, *args, **options):
         start_date = options.get("start_date")
         end_date = options.get("end_date")
@@ -32,15 +27,12 @@ class Command(BaseCommand):
         no_op = options.get("no_op")
 
         if call_id:
-          self.reprocess_audio_for_call(call_id=call_id, no_op=no_op)
-          return
+            self.reprocess_audio_for_call(call_id=call_id, no_op=no_op)
+            return
 
         practice_id = options.get("practice_id")
 
-
         # TODO: make practice id truly optional for code that follows
-
-
 
         calls = Call.objects.filter(call_start_time__gte=start_date, call_start_time__lte=end_date, practice__id=practice_id)
         call_partials = CallPartial.objects.filter(call__id__in=calls.values("pk"))
@@ -50,23 +42,28 @@ class Command(BaseCommand):
         print(f"Call Audio partials count: {call_audio_partials.count()}")
 
         for call_audio_partial in call_audio_partials.iterator():
-          call_partial_pk = call_audio_partial.call_partial.pk
-          call_pk = call_audio_partial.call_partial.call.pk
-          self.publish_call_audio_partial_saved(call_id=call_pk, call_partial_id=call_partial_pk, audio_partial_id=call_audio_partial, no_op=no_op)
+            call_partial_pk = call_audio_partial.call_partial.pk
+            call_pk = call_audio_partial.call_partial.call.pk
+            self.publish_call_audio_partial_saved(call_id=call_pk, call_partial_id=call_partial_pk, audio_partial_id=call_audio_partial, no_op=no_op)
 
     def publish_call_audio_partial_saved(self, call_id, call_partial_id, audio_partial_id, no_op: bool):
         try:
             if no_op:
-                self.stdout.write(f"No-op, just printing out what we would republish: Call audio partial ready event for: call_id='{call_id}' partial_id='{call_partial_id}' call_audio_partial_id='{audio_partial_id}'")
+                self.stdout.write(
+                    f"No-op, just printing out what we would republish: Call audio partial ready event for: call_id='{call_id}' partial_id='{call_partial_id}' call_audio_partial_id='{audio_partial_id}'"
+                )
                 return
 
-            self.stdout.write(f"Republishing call audio partial ready event for: call_id='{call_id}' partial_id='{call_partial_id}' call_audio_partial_id='{audio_partial_id}'")
+            self.stdout.write(
+                f"Republishing call audio partial ready event for: call_id='{call_id}' partial_id='{call_partial_id}' call_audio_partial_id='{audio_partial_id}'"
+            )
             publish_call_audio_partial_saved(call_id=call_id, partial_id=call_partial_id, audio_partial_id=audio_partial_id)
-            self.stdout.write(f"Republished call audio partial ready event for call_id='{call_id}' partial_id='{call_partial_id}' call_audio_partial_id='{audio_partial_id}'")
+            self.stdout.write(
+                f"Republished call audio partial ready event for call_id='{call_id}' partial_id='{call_partial_id}' call_audio_partial_id='{audio_partial_id}'"
+            )
         except PermissionDenied:
             message = "Must add role 'roles/pubsub.publisher'. Exiting."
             self.stdout.write(message)
-
 
     def reprocess_audio_for_call(self, call_id: str, no_op: bool):
         call = Call.objects.get(pk=call_id)
@@ -74,11 +71,10 @@ class Command(BaseCommand):
         call_pk = call.pk
         call_partials = CallPartial.objects.filter(call__id=call.pk)
         call_audio_partials = CallAudioPartial.objects.filter(call_partial_id__in=call_partials.values("pk")).select_related("call_partial__call")
-        
+
         print(f"Call Partials count for call {call.pk}: {call_partials.count()}")
         print(f"Call Audio partials count for call {call.pk}: {call_audio_partials.count()}")
 
         for call_audio_partial in call_audio_partials.iterator():
             call_partial_pk = call_audio_partial.call_partial.pk
             publish_call_audio_partial_saved(call_pk, call_partial_pk, call_audio_partial.pk)
-            
