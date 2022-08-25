@@ -57,11 +57,12 @@ class Command(BaseCommand):
     def publish_call_audio_partial_saved(self, call_id, call_partial_id, audio_partial_id, no_op: bool):
         try:
             if no_op:
-              self.stdout.write(f"No-op, just printing out what we would republish: Call audio partial ready event for: call_id='{call_id}' partial_id='{call_partial_id}' call_audio_partial_id='{audio_partial_id}'")
-            else:
-              self.stdout.write(f"Republishing call audio partial ready event for: call_id='{call_id}' partial_id='{call_partial_id}' call_audio_partial_id='{audio_partial_id}'")
-              publish_call_audio_partial_saved(call_id=call_id, partial_id=call_partial_id, audio_partial_id=audio_partial_id)
-              self.stdout.write(f"Republished call audio partial ready event for call_id='{call_id}' partial_id='{call_partial_id}' call_audio_partial_id='{audio_partial_id}'")
+                self.stdout.write(f"No-op, just printing out what we would republish: Call audio partial ready event for: call_id='{call_id}' partial_id='{call_partial_id}' call_audio_partial_id='{audio_partial_id}'")
+                return
+
+            self.stdout.write(f"Republishing call audio partial ready event for: call_id='{call_id}' partial_id='{call_partial_id}' call_audio_partial_id='{audio_partial_id}'")
+            publish_call_audio_partial_saved(call_id=call_id, partial_id=call_partial_id, audio_partial_id=audio_partial_id)
+            self.stdout.write(f"Republished call audio partial ready event for call_id='{call_id}' partial_id='{call_partial_id}' call_audio_partial_id='{audio_partial_id}'")
         except PermissionDenied:
             message = "Must add role 'roles/pubsub.publisher'. Exiting."
             self.stdout.write(message)
@@ -78,6 +79,6 @@ class Command(BaseCommand):
         print(f"Call Audio partials count for call {call.pk}: {call_audio_partials.count()}")
 
         for call_audio_partial in call_audio_partials.iterator():
-          call_partial_pk = call_audio_partial.call_partial.pk
-          publish_call_audio_partial_saved(call_pk, call_partial_pk, call_audio_partial.pk)
+            call_partial_pk = call_audio_partial.call_partial.pk
+            publish_call_audio_partial_saved(call_pk, call_partial_pk, call_audio_partial.pk)
             
