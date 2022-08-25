@@ -1,4 +1,5 @@
 import logging
+from django.db.models import Avg, Count, Q, Sum
 from rest_framework import status, views
 from rest_framework.response import Response
 
@@ -36,6 +37,63 @@ def authorize_and_validate_practice_id(request):
 
     return True, None
 
+
+class CallMetricsView(views.APIView):
+
+    def get(self, request, format=None):
+        practice__id = request.query_params.get("practice__id")
+        valid_practice, practice_errors = authorize_and_validate_practice_id(request=request)
+        dates_info = validate_call_dates(query_data=request.query_params)
+        dates_errors = dates_info.get("errors")
+
+        errors = {}
+        if practice_errors:
+            errors.update(practice_errors)
+        if dates_errors:
+            errors.update(dates_errors)
+        if errors:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data=errors)
+
+        # practice filter
+        practice_filter = {}
+        if valid_practice and practice__id:
+            practice_filter = {"practice__id": practice__id}
+
+        # date filters
+        dates = dates_info.get("dates")
+        call_start_time__gte = dates[0]
+        call_start_time__lte = dates[1]
+        dates_filter = {"call_start_time__gte": call_start_time__gte, "call_start_time__lte": call_start_time__lte}
+
+        # Get call counts
+        count_analytics = Call.objects.filter(
+            call_direction=CallDirectionTypes.OUTBOUND,
+            **dates_filter,
+            **practice_filter,
+        ).aggregate(
+            call_count=Count("id"),
+            call_connected_total=Count("call_connection", filter=Q(call_connection="connected")),
+            call_seconds_total=Sum("duration_seconds"),
+            call_seconds_average=Avg("duration_seconds"),
+        )
+
+        # Get sentiment counts
+        call_sentiment_analytics_qs = Call.objects.filter(
+            call_direction=CallDirectionTypes.OUTBOUND,
+            **dates_filter,
+            **practice_filter,
+        ).values(
+            "call_sentiments__caller_sentiment_score"
+        ).annotate(
+            call_sentiment_count=Count("call_sentiments__caller_sentiment_score")
+        )
+
+        count_analytics["call_sentiment_counts"] = {
+            sentiment_row["call_sentiments__caller_sentiment_score"]: sentiment_row["call_sentiment_count"] 
+            for sentiment_row in call_sentiment_analytics_qs
+        }
+
+        return Response({"results": count_analytics})
 
 class NewPatientWinbacksView(views.APIView):
     QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME = {"call_start_time__gte": "call_start_time_after", "call_start_time__lte": "call_start_time_before"}
