@@ -65,10 +65,13 @@ class CallMetricsView(views.APIView):
         call_start_time__lte = dates[1]
         dates_filter = {"call_start_time__gte": call_start_time__gte, "call_start_time__lte": call_start_time__lte}
 
+        # set re-usable filters
         filters = Q(call_direction=CallDirectionTypes.OUTBOUND) & Q(**dates_filter) & Q(**practice_filter)
 
-        # Get call counts
+        # set re-usable filtered queryset
         calls_qs = Call.objects.filter(filters)
+
+        # get call counts
         count_analytics = calls_qs.aggregate(
             call_count=Count("id"),
             call_connected_total=Count("call_connection", filter=Q(call_connection="connected")),
@@ -82,7 +85,6 @@ class CallMetricsView(views.APIView):
         ).annotate(
             call_sentiment_count=Count("call_sentiments__caller_sentiment_score")
         )
-
         count_analytics["call_sentiment_counts"] = {
             sentiment_row["call_sentiments__caller_sentiment_score"]: sentiment_row["call_sentiment_count"] 
             for sentiment_row in call_sentiment_analytics_qs
