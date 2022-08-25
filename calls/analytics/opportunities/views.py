@@ -68,9 +68,8 @@ class CallMetricsView(views.APIView):
         filters = Q(call_direction=CallDirectionTypes.OUTBOUND) & Q(**dates_filter) & Q(**practice_filter)
 
         # Get call counts
-        count_analytics = Call.objects.filter(
-            filters
-        ).aggregate(
+        calls_qs = Call.objects.filter(filters)
+        count_analytics = calls_qs.aggregate(
             call_count=Count("id"),
             call_connected_total=Count("call_connection", filter=Q(call_connection="connected")),
             call_seconds_total=Sum("duration_seconds"),
@@ -78,9 +77,7 @@ class CallMetricsView(views.APIView):
         )
 
         # Get sentiment counts
-        call_sentiment_analytics_qs = Call.objects.filter(
-            filters
-        ).values(
+        call_sentiment_analytics_qs = calls_qs.values(
             "call_sentiments__caller_sentiment_score"
         ).annotate(
             call_sentiment_count=Count("call_sentiments__caller_sentiment_score")
@@ -90,9 +87,6 @@ class CallMetricsView(views.APIView):
             sentiment_row["call_sentiments__caller_sentiment_score"]: sentiment_row["call_sentiment_count"] 
             for sentiment_row in call_sentiment_analytics_qs
         }
-
-
-
 
         return Response({"results": count_analytics})
 
