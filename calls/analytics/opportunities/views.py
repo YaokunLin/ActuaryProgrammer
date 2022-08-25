@@ -65,11 +65,11 @@ class CallMetricsView(views.APIView):
         call_start_time__lte = dates[1]
         dates_filter = {"call_start_time__gte": call_start_time__gte, "call_start_time__lte": call_start_time__lte}
 
+        filters = Q(call_direction=CallDirectionTypes.OUTBOUND) & Q(**dates_filter) & Q(**practice_filter)
+
         # Get call counts
         count_analytics = Call.objects.filter(
-            call_direction=CallDirectionTypes.OUTBOUND,
-            **dates_filter,
-            **practice_filter,
+            filters
         ).aggregate(
             call_count=Count("id"),
             call_connected_total=Count("call_connection", filter=Q(call_connection="connected")),
@@ -79,9 +79,7 @@ class CallMetricsView(views.APIView):
 
         # Get sentiment counts
         call_sentiment_analytics_qs = Call.objects.filter(
-            call_direction=CallDirectionTypes.OUTBOUND,
-            **dates_filter,
-            **practice_filter,
+            filters
         ).values(
             "call_sentiments__caller_sentiment_score"
         ).annotate(
@@ -93,7 +91,11 @@ class CallMetricsView(views.APIView):
             for sentiment_row in call_sentiment_analytics_qs
         }
 
+
+
+
         return Response({"results": count_analytics})
+
 
 class NewPatientWinbacksView(views.APIView):
     QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME = {"call_start_time__gte": "call_start_time_after", "call_start_time__lte": "call_start_time_before"}
