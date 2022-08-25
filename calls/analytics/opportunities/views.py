@@ -1,15 +1,21 @@
 import logging
-from django.db.models import Avg, Count, Q, Sum
+from typing import Dict
+
+from django.db.models import (
+    Avg,
+    Count,
+    Q,
+    QuerySet,
+    Sum,
+)
 from rest_framework import status, views
 from rest_framework.response import Response
-
 
 from calls.field_choices import (
     CallDirectionTypes,
 )
 from calls.analytics.intents.field_choices import CallOutcomeTypes
 from calls.analytics.participants.field_choices import NonAgentEngagementPersonaTypes
-
 from calls.models import (
     Call,
 )
@@ -71,26 +77,33 @@ class CallMetricsView(views.APIView):
         # set re-usable filtered queryset
         calls_qs = Call.objects.filter(filters)
 
-        # get call counts
-        count_analytics = calls_qs.aggregate(
-            call_count=Count("id"),
-            call_connected_total=Count("call_connection", filter=Q(call_connection="connected")),
-            call_seconds_total=Sum("duration_seconds"),
-            call_seconds_average=Avg("duration_seconds"),
-        )
-
-        # Get sentiment counts
-        call_sentiment_analytics_qs = calls_qs.values(
-            "call_sentiments__caller_sentiment_score"
-        ).annotate(
-            call_sentiment_count=Count("call_sentiments__caller_sentiment_score")
-        )
-        count_analytics["call_sentiment_counts"] = {
-            sentiment_row["call_sentiments__caller_sentiment_score"]: sentiment_row["call_sentiment_count"] 
-            for sentiment_row in call_sentiment_analytics_qs
-        }
+        # perform analytics
+        count_analytics = get_call_counts_from_qs(calls_qs)
 
         return Response({"results": count_analytics})
+
+
+def get_call_counts_from_qs(calls_qs: QuerySet) -> Dict:
+    # get call counts
+    count_analytics = calls_qs.aggregate(
+        call_count=Count("id"),
+        call_connected_total=Count("call_connection", filter=Q(call_connection="connected")),
+        call_seconds_total=Sum("duration_seconds"),
+        call_seconds_average=Avg("duration_seconds"),
+    )
+
+    # Get sentiment counts
+    call_sentiment_analytics_qs = calls_qs.values(
+        "call_sentiments__caller_sentiment_score"
+    ).annotate(
+        call_sentiment_count=Count("call_sentiments__caller_sentiment_score")
+    )
+    count_analytics["call_sentiment_counts"] = {
+        sentiment_row["call_sentiments__caller_sentiment_score"]: sentiment_row["call_sentiment_count"]
+        for sentiment_row in call_sentiment_analytics_qs
+    }
+
+    return count_analytics
 
 
 class NewPatientWinbacksView(views.APIView):
