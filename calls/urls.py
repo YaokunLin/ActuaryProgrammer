@@ -1,7 +1,6 @@
 from django.urls import include, path
 from rest_framework_nested import routers
 
-
 from calls.analytics.intents.views import (
     CallMentionedCompanyViewset,
     CallMentionedInsuranceViewset,
@@ -13,30 +12,27 @@ from calls.analytics.intents.views import (
     CallOutcomeViewset,
     CallPurposeViewset,
 )
-
 from calls.analytics.interactions.views import (
     AgentCallScoreMetricViewset,
     AgentCallScoreViewset,
 )
-
-from calls.analytics.opportunities.views import NewPatientWinbacksView
-
+from calls.analytics.opportunities.views import (
+    CallMetricsView,
+    NewPatientWinbacksView
+)
+from calls.analytics.participants.views import (
+    AgentAssignedCallViewSet,
+    AgentEngagedWithViewset,
+)
 from calls.analytics.transcripts.views import (
     CallLongestPauseViewset,
     CallSentimentViewset,
     CallTranscriptFragmentSentimentViewset,
     CallTranscriptFragmentViewset,
 )
-
-from calls.analytics.participants.views import (
-    AgentAssignedCallViewSet,
-    AgentEngagedWithViewset,
-)
-
 from calls.analytics.views import (
     CallAnalyticsFieldChoicesView,
 )
-
 from calls.views import (
     CallAudioPartialViewset,
     CallAudioViewset,
@@ -105,6 +101,7 @@ urlpatterns = [
     path(r"mentioned-procedures/", CallMentionedProcedureDistinctView.as_view(), name="mentioned-procedures"),
     # Call Aggregates
     path(r"calls/aggregates/new-patient-winback-opportunities/", NewPatientWinbacksView.as_view(), name="new-patient-winback-opportunities"),
+    path(r"calls/aggregates/outbound-call-counts/", CallMetricsView.as_view(), name="outbound-call-counts"),
     # Routers
     path(r"", include(calls_app_root_router.urls)),
     path(r"", include(call_router.urls)),
