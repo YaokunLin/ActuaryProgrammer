@@ -61,7 +61,7 @@ class Command(BaseCommand):
         for call_audio_partial in call_audio_partials.iterator():
             call_partial_pk = call_audio_partial.call_partial.pk
             call_pk = call_audio_partial.call_partial.call.pk
-            self.publish_call_audio_partial_saved(call_id=call_pk, call_partial_id=call_partial_pk, audio_partial_id=call_audio_partial, no_op=no_op)
+            self.publish_call_audio_partial_saved(call_id=call_pk, call_partial_id=call_partial_pk, audio_partial_id=call_audio_partial.pk, no_op=no_op)
 
     def publish_call_audio_partial_saved(self, call_id, call_partial_id, audio_partial_id, no_op: bool):
         global peerlogic_api_client
