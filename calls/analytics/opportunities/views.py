@@ -71,16 +71,34 @@ class CallMetricsView(views.APIView):
         call_start_time__lte = dates[1]
         dates_filter = {"call_start_time__gte": call_start_time__gte, "call_start_time__lte": call_start_time__lte}
 
-        # set re-usable filters
-        filters = Q(call_direction=CallDirectionTypes.OUTBOUND) & Q(**dates_filter) & Q(**practice_filter)
+        analytics = get_call_counts_for_outbound(dates_filter=dates_filter, practice_filter=practice_filter)
 
-        # set re-usable filtered queryset
-        calls_qs = Call.objects.filter(filters)
 
-        # perform analytics
-        count_analytics = get_call_counts_from_qs(calls_qs)
+        log.info(analytics)
+        return Response({"results": analytics})
 
-        return Response({"results": count_analytics})
+
+def get_call_counts_for_outbound(dates_filter, practice_filter):
+    analytics = {}
+
+    # set re-usable filters
+    filters = Q(call_direction=CallDirectionTypes.OUTBOUND) & Q(**dates_filter) & Q(**practice_filter)
+
+    # set re-usable filtered queryset
+    calls_qs = Call.objects.filter(filters)
+
+    # perform call counts
+    count_analytics = get_call_counts_from_qs(calls_qs)
+    analytics["call_overall"] = count_analytics
+
+    # call counts per phone number
+    analytics["call_per_user"] = {}
+    analytics["call_per_user"]["calls"] = calls_qs.values("sip_caller_number").annotate(count=Count("id")).order_by("-count")
+    analytics["call_per_user"]["call_connected_total"] = calls_qs.values("sip_caller_number").filter(call_connection="connected").annotate(count=Count("id")).order_by("-count")
+    analytics["call_per_user"]["call_seconds_total"] = calls_qs.values("sip_caller_number").annotate(call_seconds_total=Sum("duration_seconds")).order_by("-call_seconds_total")
+    analytics["call_per_user"]["call_seconds_average"] = calls_qs.values("sip_caller_number").annotate(call_seconds_average=Avg("duration_seconds")).order_by("-call_seconds_average")
+
+    return analytics
 
 
 def get_call_counts_from_qs(calls_qs: QuerySet) -> Dict:
@@ -174,3 +192,11 @@ class NewPatientWinbacksView(views.APIView):
         }
 
         return Response({"filters": display_filters, "results": aggregates})
+
+if __name__ == "__main__":
+
+    practice_filter = {"practice__id": "595HFaVZjjjCXfbMBbXzcd"}
+    dates_filter = {"call_start_time__gte": "2022-07-05", "call_start_time__lte": "2022-08-16"}
+
+    counts = get_call_counts_for_outbound(dates_filter=dates_filter, practice_filter=practice_filter)
+    print(counts)
