@@ -92,18 +92,38 @@ def get_call_counts_for_outbound(dates_filter, practice_filter):
 
     # call counts per caller (agent) phone number
     analytics["calls_per_user"] = {}
-    analytics["calls_per_user"]["calls"] = calls_qs.values("sip_caller_number").annotate(count=Count("id")).order_by("-count")
+    analytics["calls_per_user"]["call_total"] = calls_qs.values("sip_caller_number").annotate(count=Count("id")).order_by("-count")
     analytics["calls_per_user"]["call_connected_total"] = calls_qs.values("sip_caller_number").filter(call_connection="connected").annotate(count=Count("id")).order_by("-count")
     analytics["calls_per_user"]["call_seconds_total"] = calls_qs.values("sip_caller_number").annotate(call_seconds_total=Sum("duration_seconds")).order_by("-call_seconds_total")
     analytics["calls_per_user"]["call_seconds_average"] = calls_qs.values("sip_caller_number").annotate(call_seconds_average=Avg("duration_seconds")).order_by("-call_seconds_average")
-    analytics["calls_per_user"]["call_seconds_per_date_and_hour"] = calls_qs.values("sip_caller_number")\
+
+    # call count per caller (agent) phone number over time
+    analytics["calls_per_user_by_date_and_hour"] = {}
+    analytics["calls_per_user_by_date_and_hour"]["call_total_per_date_and_hour"] = calls_qs.values("sip_caller_number")\
+        .annotate(call_date_hour=TruncHour("call_start_time"))\
+        .values("sip_caller_number", "call_date_hour")\
+        .annotate(call_total=Count("id"))\
+        .values("sip_caller_number", "call_date_hour", "call_total")\
+        .order_by("sip_caller_number", "call_date_hour")
+    analytics["calls_per_user_by_date_and_hour"]["call_connect_total_per_date_and_hour"] = calls_qs.values("sip_caller_number")\
+        .filter(call_connection="connected")\
+        .annotate(call_date_hour=TruncHour("call_start_time"))\
+        .values("sip_caller_number", "call_date_hour")\
+        .annotate(call_total=Count("id"))\
+        .values("sip_caller_number", "call_date_hour", "call_total")\
+        .order_by("sip_caller_number", "call_date_hour")
+    analytics["calls_per_user_by_date_and_hour"]["call_seconds_total_per_date_and_hour"] = calls_qs.values("sip_caller_number")\
         .annotate(call_date_hour=TruncHour("call_start_time"))\
         .values("sip_caller_number", "call_date_hour")\
         .annotate(call_seconds_total=Sum("duration_seconds"))\
-        .values("sip_caller_number", "call_date_hour","call_seconds_total")\
+        .values("sip_caller_number", "call_date_hour", "call_seconds_total")\
         .order_by("sip_caller_number", "call_date_hour")
-
-    log.info(analytics["call_per_user"]["call_seconds_per_hour"].query)
+    analytics["calls_per_user_by_date_and_hour"]["call_seconds_average_per_date_and_hour"] = calls_qs.values("sip_caller_number")\
+        .annotate(call_date_hour=TruncHour("call_start_time"))\
+        .values("sip_caller_number", "call_date_hour")\
+        .annotate(call_seconds_average=Avg("duration_seconds"))\
+        .values("sip_caller_number", "call_date_hour", "call_seconds_average")\
+        .order_by("sip_caller_number", "call_date_hour")
 
     return analytics
 
@@ -111,7 +131,7 @@ def get_call_counts_for_outbound(dates_filter, practice_filter):
 def get_call_counts_from_qs(calls_qs: QuerySet) -> Dict:
     # get call counts
     count_analytics = calls_qs.aggregate(
-        call_count=Count("id"),
+        call_total=Count("id"),
         call_connected_total=Count("call_connection", filter=Q(call_connection="connected")),
         call_seconds_total=Sum("duration_seconds"),
         call_seconds_average=Avg("duration_seconds"),
