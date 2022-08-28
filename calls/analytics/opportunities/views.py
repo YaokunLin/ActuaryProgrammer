@@ -8,6 +8,7 @@ from django.db.models import (
     QuerySet,
     Sum,
 )
+from django.db.models.functions import Trunc, TruncHour
 from rest_framework import status, views
 from rest_framework.response import Response
 
@@ -73,8 +74,6 @@ class CallMetricsView(views.APIView):
 
         analytics = get_call_counts_for_outbound(dates_filter=dates_filter, practice_filter=practice_filter)
 
-
-        log.info(analytics)
         return Response({"results": analytics})
 
 
@@ -89,14 +88,22 @@ def get_call_counts_for_outbound(dates_filter, practice_filter):
 
     # perform call counts
     count_analytics = get_call_counts_from_qs(calls_qs)
-    analytics["call_overall"] = count_analytics
+    analytics["calls_overall"] = count_analytics
 
-    # call counts per phone number
-    analytics["call_per_user"] = {}
-    analytics["call_per_user"]["calls"] = calls_qs.values("sip_caller_number").annotate(count=Count("id")).order_by("-count")
-    analytics["call_per_user"]["call_connected_total"] = calls_qs.values("sip_caller_number").filter(call_connection="connected").annotate(count=Count("id")).order_by("-count")
-    analytics["call_per_user"]["call_seconds_total"] = calls_qs.values("sip_caller_number").annotate(call_seconds_total=Sum("duration_seconds")).order_by("-call_seconds_total")
-    analytics["call_per_user"]["call_seconds_average"] = calls_qs.values("sip_caller_number").annotate(call_seconds_average=Avg("duration_seconds")).order_by("-call_seconds_average")
+    # call counts per caller (agent) phone number
+    analytics["calls_per_user"] = {}
+    analytics["calls_per_user"]["calls"] = calls_qs.values("sip_caller_number").annotate(count=Count("id")).order_by("-count")
+    analytics["calls_per_user"]["call_connected_total"] = calls_qs.values("sip_caller_number").filter(call_connection="connected").annotate(count=Count("id")).order_by("-count")
+    analytics["calls_per_user"]["call_seconds_total"] = calls_qs.values("sip_caller_number").annotate(call_seconds_total=Sum("duration_seconds")).order_by("-call_seconds_total")
+    analytics["calls_per_user"]["call_seconds_average"] = calls_qs.values("sip_caller_number").annotate(call_seconds_average=Avg("duration_seconds")).order_by("-call_seconds_average")
+    analytics["calls_per_user"]["call_seconds_per_date_and_hour"] = calls_qs.values("sip_caller_number")\
+        .annotate(call_date_hour=TruncHour("call_start_time"))\
+        .values("sip_caller_number", "call_date_hour")\
+        .annotate(call_seconds_total=Sum("duration_seconds"))\
+        .values("sip_caller_number", "call_date_hour","call_seconds_total")\
+        .order_by("sip_caller_number", "call_date_hour")
+
+    log.info(analytics["call_per_user"]["call_seconds_per_hour"].query)
 
     return analytics
 
