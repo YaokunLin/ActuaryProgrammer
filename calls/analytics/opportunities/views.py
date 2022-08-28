@@ -96,6 +96,11 @@ def get_call_counts_for_outbound(dates_filter, practice_filter):
     analytics["calls_per_user"]["call_connected_total"] = calls_qs.values("sip_caller_number").filter(call_connection="connected").annotate(count=Count("id")).order_by("-count")
     analytics["calls_per_user"]["call_seconds_total"] = calls_qs.values("sip_caller_number").annotate(call_seconds_total=Sum("duration_seconds")).order_by("-call_seconds_total")
     analytics["calls_per_user"]["call_seconds_average"] = calls_qs.values("sip_caller_number").annotate(call_seconds_average=Avg("duration_seconds")).order_by("-call_seconds_average")
+    analytics["calls_per_user"]["call_sentiment_counts"] = calls_qs.values("sip_caller_number")\
+        .values("sip_caller_number", "call_sentiments__caller_sentiment_score")\
+        .annotate(call_sentiment_count=Count("call_sentiments__caller_sentiment_score"))\
+        .values("sip_caller_number", "call_sentiments__caller_sentiment_score", "call_sentiment_count")\
+        .order_by("sip_caller_number")
 
     # call count per caller (agent) phone number over time
     analytics["calls_per_user_by_date_and_hour"] = {}
@@ -137,18 +142,25 @@ def get_call_counts_from_qs(calls_qs: QuerySet) -> Dict:
         call_seconds_average=Avg("duration_seconds"),
     )
 
+    count_analytics["call_sentiment_counts"] = get_call_sentiments_from_qs(calls_qs)
+
+    return count_analytics
+
+
+def get_call_sentiments_from_qs(calls_qs: QuerySet) -> Dict:
     # Get sentiment counts
     call_sentiment_analytics_qs = calls_qs.values(
         "call_sentiments__caller_sentiment_score"
     ).annotate(
         call_sentiment_count=Count("call_sentiments__caller_sentiment_score")
     )
-    count_analytics["call_sentiment_counts"] = {
+
+    call_sentiment_counts = {
         sentiment_row["call_sentiments__caller_sentiment_score"]: sentiment_row["call_sentiment_count"]
         for sentiment_row in call_sentiment_analytics_qs
     }
 
-    return count_analytics
+    return call_sentiment_counts
 
 
 class NewPatientWinbacksView(views.APIView):
