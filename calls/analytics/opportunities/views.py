@@ -96,6 +96,8 @@ def get_call_counts_for_outbound(dates_filter, practice_filter):
     # call count per caller (agent) phone number over time
     analytics["calls_per_user_by_date_and_hour"] = calculate_per_user_time_series_call_counts(calls_qs)
 
+    analytics["non_agent_engagement_types"] = calculate_outbound_call_non_agent_engagement_type_counts(calls_qs)
+
     return analytics
 
 #
@@ -128,6 +130,12 @@ def calculate_call_sentiments(calls_qs: QuerySet) -> Dict:
     }
 
     return call_sentiment_counts
+
+
+def calculate_outbound_call_non_agent_engagement_type_counts(calls_qs: QuerySet) -> Dict:
+    return calls_qs.values("engaged_in_calls__non_agent_engagement_persona_type")\
+        .annotate(non_agent_engagement_type_count=Count("engaged_in_calls__non_agent_engagement_persona_type"))\
+
 
 #
 # Call Counts - Per User
