@@ -87,8 +87,8 @@ def get_call_counts_for_outbound(dates_filter, practice_filter):
     calls_qs = Call.objects.filter(filters)
 
     # perform call counts
-    count_analytics = get_call_counts_from_qs(calls_qs)
-    analytics["calls_overall"] = count_analytics
+    analytics["calls_overall"] = calculate_call_counts(calls_qs)
+    analytics["calls_overall"]["call_sentiment_counts"] = calculate_call_sentiments(calls_qs)
 
     # call counts per caller (agent) phone number
     analytics["calls_per_user"] = {}
@@ -140,7 +140,7 @@ def get_call_counts_for_outbound(dates_filter, practice_filter):
     return analytics
 
 
-def get_call_counts_from_qs(calls_qs: QuerySet) -> Dict:
+def calculate_call_counts(calls_qs: QuerySet) -> Dict:
     # get call counts
     count_analytics = calls_qs.aggregate(
         call_total=Count("id"),
@@ -149,12 +149,10 @@ def get_call_counts_from_qs(calls_qs: QuerySet) -> Dict:
         call_seconds_average=Avg("duration_seconds"),
     )
 
-    count_analytics["call_sentiment_counts"] = get_call_sentiments_from_qs(calls_qs)
-
     return count_analytics
 
 
-def get_call_sentiments_from_qs(calls_qs: QuerySet) -> Dict:
+def calculate_call_sentiments(calls_qs: QuerySet) -> Dict:
     # Get sentiment counts
     call_sentiment_analytics_qs = calls_qs.values(
         "call_sentiments__caller_sentiment_score"
