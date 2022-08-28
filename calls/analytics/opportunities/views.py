@@ -91,54 +91,16 @@ def get_call_counts_for_outbound(dates_filter, practice_filter):
     analytics["calls_overall"]["call_sentiment_counts"] = calculate_call_sentiments(calls_qs)
 
     # call counts per caller (agent) phone number
-    analytics["calls_per_user"] = {}
-    analytics["calls_per_user"]["call_total"] = calls_qs.values("sip_caller_number").annotate(count=Count("id")).order_by("-count")
-    analytics["calls_per_user"]["call_connected_total"] = calls_qs.values("sip_caller_number").filter(call_connection="connected").annotate(count=Count("id")).order_by("-count")
-    analytics["calls_per_user"]["call_seconds_total"] = calls_qs.values("sip_caller_number").annotate(call_seconds_total=Sum("duration_seconds")).order_by("-call_seconds_total")
-    analytics["calls_per_user"]["call_seconds_average"] = calls_qs.values("sip_caller_number").annotate(call_seconds_average=Avg("duration_seconds")).order_by("-call_seconds_average")
-    analytics["calls_per_user"]["call_sentiment_counts"] = calls_qs.values("sip_caller_number")\
-        .values("sip_caller_number", "call_sentiments__caller_sentiment_score")\
-        .annotate(call_sentiment_count=Count("call_sentiments__caller_sentiment_score"))\
-        .values("sip_caller_number", "call_sentiments__caller_sentiment_score", "call_sentiment_count")\
-        .order_by("sip_caller_number")
+    analytics["calls_per_user"] = calculate_per_user_call_counts(calls_qs)
 
     # call count per caller (agent) phone number over time
-    analytics["calls_per_user_by_date_and_hour"] = {}
-    analytics["calls_per_user_by_date_and_hour"]["call_total_per_date_and_hour"] = calls_qs.values("sip_caller_number")\
-        .annotate(call_date_hour=TruncHour("call_start_time"))\
-        .values("sip_caller_number", "call_date_hour")\
-        .annotate(call_total=Count("id"))\
-        .values("sip_caller_number", "call_date_hour", "call_total")\
-        .order_by("sip_caller_number", "call_date_hour")
-    analytics["calls_per_user_by_date_and_hour"]["call_connect_total_per_date_and_hour"] = calls_qs.values("sip_caller_number")\
-        .filter(call_connection="connected")\
-        .annotate(call_date_hour=TruncHour("call_start_time"))\
-        .values("sip_caller_number", "call_date_hour")\
-        .annotate(call_total=Count("id"))\
-        .values("sip_caller_number", "call_date_hour", "call_total")\
-        .order_by("sip_caller_number", "call_date_hour")
-    analytics["calls_per_user_by_date_and_hour"]["call_seconds_total_per_date_and_hour"] = calls_qs.values("sip_caller_number")\
-        .annotate(call_date_hour=TruncHour("call_start_time"))\
-        .values("sip_caller_number", "call_date_hour")\
-        .annotate(call_seconds_total=Sum("duration_seconds"))\
-        .values("sip_caller_number", "call_date_hour", "call_seconds_total")\
-        .order_by("sip_caller_number", "call_date_hour")
-    analytics["calls_per_user_by_date_and_hour"]["call_seconds_average_per_date_and_hour"] = calls_qs.values("sip_caller_number")\
-        .annotate(call_date_hour=TruncHour("call_start_time"))\
-        .values("sip_caller_number", "call_date_hour")\
-        .annotate(call_seconds_average=Avg("duration_seconds"))\
-        .values("sip_caller_number", "call_date_hour", "call_seconds_average")\
-        .order_by("sip_caller_number", "call_date_hour")
-    analytics["calls_per_user_by_date_and_hour"]["call_sentiment_counts_per_date_and_hour"] = calls_qs.values("sip_caller_number")\
-        .annotate(call_date_hour=TruncHour("call_start_time"))\
-        .values("sip_caller_number", "call_date_hour", "call_sentiments__caller_sentiment_score")\
-        .annotate(call_sentiment_count=Count("call_sentiments__caller_sentiment_score"))\
-        .values("sip_caller_number", "call_date_hour", "call_sentiments__caller_sentiment_score", "call_sentiment_count")\
-        .order_by("sip_caller_number", "call_date_hour")
-        
+    analytics["calls_per_user_by_date_and_hour"] = calculate_per_user_time_series_call_counts(calls_qs)
 
     return analytics
 
+#
+# Overall Call Counts
+#
 
 def calculate_call_counts(calls_qs: QuerySet) -> Dict:
     # get call counts
@@ -167,6 +129,65 @@ def calculate_call_sentiments(calls_qs: QuerySet) -> Dict:
 
     return call_sentiment_counts
 
+#
+# Call Counts - Per User
+#
+
+def calculate_per_user_call_counts(calls_qs: QuerySet) -> Dict:
+    analytics = {}
+
+    analytics["call_total"] = calls_qs.values("sip_caller_number").annotate(count=Count("id")).order_by("-count")
+    analytics["call_connected_total"] = calls_qs.values("sip_caller_number").filter(call_connection="connected").annotate(count=Count("id")).order_by("-count")
+    analytics["call_seconds_total"] = calls_qs.values("sip_caller_number").annotate(call_seconds_total=Sum("duration_seconds")).order_by("-call_seconds_total")
+    analytics["call_seconds_average"] = calls_qs.values("sip_caller_number").annotate(call_seconds_average=Avg("duration_seconds")).order_by("-call_seconds_average")
+    analytics["call_sentiment_counts"] = calls_qs.values("sip_caller_number")\
+        .values("sip_caller_number", "call_sentiments__caller_sentiment_score")\
+        .annotate(call_sentiment_count=Count("call_sentiments__caller_sentiment_score"))\
+        .values("sip_caller_number", "call_sentiments__caller_sentiment_score", "call_sentiment_count")\
+        .order_by("sip_caller_number")
+
+    return analytics
+
+#
+# Call Counts - Per User Time Series
+#
+
+def calculate_per_user_time_series_call_counts(calls_qs: QuerySet) -> Dict:
+    analytics = {}
+
+    analytics["calls_total"] = calls_qs.values("sip_caller_number")\
+        .annotate(call_date_hour=TruncHour("call_start_time"))\
+        .values("sip_caller_number", "call_date_hour")\
+        .annotate(call_total=Count("id"))\
+        .values("sip_caller_number", "call_date_hour", "call_total")\
+        .order_by("sip_caller_number", "call_date_hour")
+    analytics["call_connected_total"] = calls_qs.values("sip_caller_number")\
+        .filter(call_connection="connected")\
+        .annotate(call_date_hour=TruncHour("call_start_time"))\
+        .values("sip_caller_number", "call_date_hour")\
+        .annotate(call_total=Count("id"))\
+        .values("sip_caller_number", "call_date_hour", "call_total")\
+        .order_by("sip_caller_number", "call_date_hour")
+    analytics["call_seconds_total"] = calls_qs.values("sip_caller_number")\
+        .annotate(call_date_hour=TruncHour("call_start_time"))\
+        .values("sip_caller_number", "call_date_hour")\
+        .annotate(call_seconds_total=Sum("duration_seconds"))\
+        .values("sip_caller_number", "call_date_hour", "call_seconds_total")\
+        .order_by("sip_caller_number", "call_date_hour")
+    analytics["call_seconds_average"] = calls_qs.values("sip_caller_number")\
+        .annotate(call_date_hour=TruncHour("call_start_time"))\
+        .values("sip_caller_number", "call_date_hour")\
+        .annotate(call_seconds_average=Avg("duration_seconds"))\
+        .values("sip_caller_number", "call_date_hour", "call_seconds_average")\
+        .order_by("sip_caller_number", "call_date_hour")
+    analytics["call_sentiment_counts"] = calls_qs.values("sip_caller_number")\
+        .annotate(call_date_hour=TruncHour("call_start_time"))\
+        .values("sip_caller_number", "call_date_hour", "call_sentiments__caller_sentiment_score")\
+        .annotate(call_sentiment_count=Count("call_sentiments__caller_sentiment_score"))\
+        .values("sip_caller_number", "call_date_hour", "call_sentiments__caller_sentiment_score", "call_sentiment_count")\
+        .order_by("sip_caller_number", "call_date_hour")
+    
+    return analytics
 
 class NewPatientWinbacksView(views.APIView):
     QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME = {"call_start_time__gte": "call_start_time_after", "call_start_time__lte": "call_start_time_before"}
