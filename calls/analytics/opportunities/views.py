@@ -129,6 +129,13 @@ def get_call_counts_for_outbound(dates_filter, practice_filter):
         .annotate(call_seconds_average=Avg("duration_seconds"))\
         .values("sip_caller_number", "call_date_hour", "call_seconds_average")\
         .order_by("sip_caller_number", "call_date_hour")
+    analytics["calls_per_user_by_date_and_hour"]["call_sentiment_counts_per_date_and_hour"] = calls_qs.values("sip_caller_number")\
+        .annotate(call_date_hour=TruncHour("call_start_time"))\
+        .values("sip_caller_number", "call_date_hour", "call_sentiments__caller_sentiment_score")\
+        .annotate(call_sentiment_count=Count("call_sentiments__caller_sentiment_score"))\
+        .values("sip_caller_number", "call_date_hour", "call_sentiments__caller_sentiment_score", "call_sentiment_count")\
+        .order_by("sip_caller_number", "call_date_hour")
+        
 
     return analytics
 
