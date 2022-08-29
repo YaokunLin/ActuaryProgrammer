@@ -1,5 +1,8 @@
 import logging
-from typing import Dict
+from typing import (
+    Dict,
+    List,
+)
 
 from django.db.models import (
     Avg,
@@ -145,9 +148,17 @@ def calculate_per_user_call_counts(calls_qs: QuerySet) -> Dict:
     analytics = {}
 
     analytics["call_total"] = calls_qs.values("sip_caller_number").annotate(count=Count("id")).order_by("-count")
+    analytics["call_total"] = convert_count_results(analytics["call_total"], "sip_caller_number", "count")
+
     analytics["call_connected_total"] = calls_qs.values("sip_caller_number").filter(call_connection="connected").annotate(count=Count("id")).order_by("-count")
+    analytics["call_connected_total"] = convert_count_results(analytics["call_connected_total"], "sip_caller_number", "count")
+
     analytics["call_seconds_total"] = calls_qs.values("sip_caller_number").annotate(call_seconds_total=Sum("duration_seconds")).order_by("-call_seconds_total")
+    analytics["call_seconds_total"] = convert_count_results(analytics["call_seconds_total"], "sip_caller_number", "call_seconds_total")
+
     analytics["call_seconds_average"] = calls_qs.values("sip_caller_number").annotate(call_seconds_average=Avg("duration_seconds")).order_by("-call_seconds_average")
+    analytics["call_seconds_average"] = convert_count_results(analytics["call_seconds_average"], "sip_caller_number", "call_seconds_average")
+
     analytics["call_sentiment_counts"] = calls_qs.values("sip_caller_number")\
         .values("sip_caller_number", "call_sentiments__caller_sentiment_score")\
         .annotate(call_sentiment_count=Count("call_sentiments__caller_sentiment_score"))\
@@ -196,6 +207,46 @@ def calculate_per_user_time_series_call_counts(calls_qs: QuerySet) -> Dict:
         .order_by("sip_caller_number", "call_date_hour")
     
     return analytics
+
+
+def convert_count_results(qs: QuerySet, key_with_value_for_key: str, key_with_value_for_values: str) -> Dict:
+    """
+    Convert results from a standard QS result of:
+        [{column_name_1: value_1, column_name_2: value_2}]
+        to:
+        [{"value_1": "value_2"}]
+    """
+    result = []
+
+    for item_dict in qs:
+        new_dict = create_dict_from_key_values(item_dict, key_with_value_for_key, key_with_value_for_values)
+        result.append(new_dict)
+
+    return merge_list_of_dicts_to_dict(result)
+
+
+def create_dict_from_key_values(d: Dict, key_with_value_for_key: str, key_with_value_for_value: str) -> Dict:
+    """
+    Create a new dictionary by using the keys specified to create a new key: value pair. Used typically for QS modification:
+        {column_name_1: value_1, column_name_2: value_2}
+        to:
+        {"value_1": "value_2"}
+    """
+    return {d[key_with_value_for_key] : d[key_with_value_for_value]}
+
+
+def merge_list_of_dicts_to_dict(l: List[Dict]) -> Dict:
+    """
+    Merges dictionaries together. Doesn't care about stomping on keys that already exist.
+    """
+    dict_new = {}
+    for dict_sub in l:
+        dict_new.update(dict_sub)
+
+    return dict_new
+
+
+
 
 class NewPatientWinbacksView(views.APIView):
     QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME = {"call_start_time__gte": "call_start_time_after", "call_start_time__lte": "call_start_time_before"}
