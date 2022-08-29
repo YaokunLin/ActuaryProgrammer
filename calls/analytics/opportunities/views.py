@@ -1,3 +1,4 @@
+from collections import defaultdict
 import logging
 from typing import (
     Dict,
@@ -169,6 +170,8 @@ def calculate_per_user_call_counts(calls_qs: QuerySet) -> Dict:
         .annotate(call_sentiment_count=Count("call_sentiments__caller_sentiment_score"))\
         .values("sip_caller_number", "call_sentiments__caller_sentiment_score", "call_sentiment_count")\
         .order_by("sip_caller_number")
+    analytics["call_sentiment_counts"] = create_group_of_list_of_dicts_by_key(analytics["call_sentiment_counts"], "sip_caller_number")
+    #analytics["call_sentiment_counts"] = convert_count_results()
 
     return analytics
 
@@ -221,7 +224,7 @@ def calculate_per_user_time_series_call_counts(calls_qs: QuerySet) -> Dict:
 
 def create_group_of_list_of_dicts_by_key(qs: QuerySet, key_to_group_by: str) -> List[Dict]:
     """
-    Pulls up a value from a list of dictionaries to create a higher-level grouping.
+    Pulls up a value from a list of dictionaries to create a higher-level grouping. This is a destructive / mutative operation.
         Input, QS result of:
         [
             {"grouping": "a", "col1": "val_a", "col2": "val"},
@@ -243,7 +246,13 @@ def create_group_of_list_of_dicts_by_key(qs: QuerySet, key_to_group_by: str) -> 
             ]
         ]
     """
-    pass
+    grouping_dict = defaultdict(list)
+
+    for d in qs:
+        grouping = d.pop(key_to_group_by)
+        grouping_dict[grouping].append(d)
+
+    return grouping_dict
 
 
 def convert_count_results(qs: QuerySet, key_with_value_for_key: str, key_with_value_for_values: str) -> Dict:
