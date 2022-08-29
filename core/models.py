@@ -133,7 +133,10 @@ class Practice(AuditTrailModel):
 
 class PracticeGroup(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
-    name = models.CharField(_("name"), max_length=150, unique=True)
+    name = models.CharField(_("name"), max_length=150)
+
+    def __str__(self):
+        return f"{self.id} - {self.name}"
 
 
 class Agent(AuditTrailModel):
