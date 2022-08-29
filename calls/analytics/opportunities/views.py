@@ -171,7 +171,15 @@ def calculate_per_user_call_counts(calls_qs: QuerySet) -> Dict:
         .values("sip_caller_number", "call_sentiments__caller_sentiment_score", "call_sentiment_count")\
         .order_by("sip_caller_number")
     analytics["call_sentiment_counts"] = create_group_of_list_of_dicts_by_key(analytics["call_sentiment_counts"], "sip_caller_number")
-    #analytics["call_sentiment_counts"] = convert_count_results()
+
+    call_sentiment_counts_regrouped = {}
+    for grouping, value_list in analytics["call_sentiment_counts"].items():
+        log.info(grouping)
+        log.info(value_list)
+        call_sentiment_counts_regrouped[grouping] = convert_count_results(value_list, "call_sentiments__caller_sentiment_score", "call_sentiment_count")
+        log.info(call_sentiment_counts_regrouped[grouping])
+
+    analytics["call_sentiment_counts"] = call_sentiment_counts_regrouped
 
     return analytics
 
