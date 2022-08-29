@@ -147,19 +147,24 @@ def calculate_outbound_call_non_agent_engagement_type_counts(calls_qs: QuerySet)
 def calculate_per_user_call_counts(calls_qs: QuerySet) -> Dict:
     analytics = {}
 
-    analytics["call_total"] = calls_qs.values("sip_caller_number").annotate(count=Count("id")).order_by("-count")
+    # group by caller_number
+    calls_qs = calls_qs.values("sip_caller_number")
+
+    # calculate and convert
+
+    analytics["call_total"] = calls_qs.annotate(count=Count("id")).order_by("-count")
     analytics["call_total"] = convert_count_results(analytics["call_total"], "sip_caller_number", "count")
 
-    analytics["call_connected_total"] = calls_qs.values("sip_caller_number").filter(call_connection="connected").annotate(count=Count("id")).order_by("-count")
+    analytics["call_connected_total"] = calls_qs.filter(call_connection="connected").annotate(count=Count("id")).order_by("-count")
     analytics["call_connected_total"] = convert_count_results(analytics["call_connected_total"], "sip_caller_number", "count")
 
-    analytics["call_seconds_total"] = calls_qs.values("sip_caller_number").annotate(call_seconds_total=Sum("duration_seconds")).order_by("-call_seconds_total")
+    analytics["call_seconds_total"] = calls_qs.annotate(call_seconds_total=Sum("duration_seconds")).order_by("-call_seconds_total")
     analytics["call_seconds_total"] = convert_count_results(analytics["call_seconds_total"], "sip_caller_number", "call_seconds_total")
 
-    analytics["call_seconds_average"] = calls_qs.values("sip_caller_number").annotate(call_seconds_average=Avg("duration_seconds")).order_by("-call_seconds_average")
+    analytics["call_seconds_average"] = calls_qs.annotate(call_seconds_average=Avg("duration_seconds")).order_by("-call_seconds_average")
     analytics["call_seconds_average"] = convert_count_results(analytics["call_seconds_average"], "sip_caller_number", "call_seconds_average")
 
-    analytics["call_sentiment_counts"] = calls_qs.values("sip_caller_number")\
+    analytics["call_sentiment_counts"] = calls_qs\
         .values("sip_caller_number", "call_sentiments__caller_sentiment_score")\
         .annotate(call_sentiment_count=Count("call_sentiments__caller_sentiment_score"))\
         .values("sip_caller_number", "call_sentiments__caller_sentiment_score", "call_sentiment_count")\
@@ -174,32 +179,37 @@ def calculate_per_user_call_counts(calls_qs: QuerySet) -> Dict:
 def calculate_per_user_time_series_call_counts(calls_qs: QuerySet) -> Dict:
     analytics = {}
 
-    analytics["calls_total"] = calls_qs.values("sip_caller_number")\
+    # group by caller_number
+    calls_qs = calls_qs.values("sip_caller_number")
+
+    # calculate
+
+    analytics["calls_total"] = calls_qs\
         .annotate(call_date_hour=TruncHour("call_start_time"))\
         .values("sip_caller_number", "call_date_hour")\
         .annotate(call_total=Count("id"))\
         .values("sip_caller_number", "call_date_hour", "call_total")\
         .order_by("sip_caller_number", "call_date_hour")
-    analytics["call_connected_total"] = calls_qs.values("sip_caller_number")\
+    analytics["call_connected_total"] = calls_qs\
         .filter(call_connection="connected")\
         .annotate(call_date_hour=TruncHour("call_start_time"))\
         .values("sip_caller_number", "call_date_hour")\
         .annotate(call_total=Count("id"))\
         .values("sip_caller_number", "call_date_hour", "call_total")\
         .order_by("sip_caller_number", "call_date_hour")
-    analytics["call_seconds_total"] = calls_qs.values("sip_caller_number")\
+    analytics["call_seconds_total"] = calls_qs\
         .annotate(call_date_hour=TruncHour("call_start_time"))\
         .values("sip_caller_number", "call_date_hour")\
         .annotate(call_seconds_total=Sum("duration_seconds"))\
         .values("sip_caller_number", "call_date_hour", "call_seconds_total")\
         .order_by("sip_caller_number", "call_date_hour")
-    analytics["call_seconds_average"] = calls_qs.values("sip_caller_number")\
+    analytics["call_seconds_average"] = calls_qs\
         .annotate(call_date_hour=TruncHour("call_start_time"))\
         .values("sip_caller_number", "call_date_hour")\
         .annotate(call_seconds_average=Avg("duration_seconds"))\
         .values("sip_caller_number", "call_date_hour", "call_seconds_average")\
         .order_by("sip_caller_number", "call_date_hour")
-    analytics["call_sentiment_counts"] = calls_qs.values("sip_caller_number")\
+    analytics["call_sentiment_counts"] = calls_qs\
         .annotate(call_date_hour=TruncHour("call_start_time"))\
         .values("sip_caller_number", "call_date_hour", "call_sentiments__caller_sentiment_score")\
         .annotate(call_sentiment_count=Count("call_sentiments__caller_sentiment_score"))\
@@ -244,8 +254,6 @@ def merge_list_of_dicts_to_dict(l: List[Dict]) -> Dict:
         dict_new.update(dict_sub)
 
     return dict_new
-
-
 
 
 class NewPatientWinbacksView(views.APIView):
