@@ -219,12 +219,45 @@ def calculate_per_user_time_series_call_counts(calls_qs: QuerySet) -> Dict:
     return analytics
 
 
+def create_group_of_list_of_dicts_by_key(qs: QuerySet, key_to_group_by: str) -> List[Dict]:
+    """
+    Pulls up a value from a list of dictionaries to create a higher-level grouping.
+        Input, QS result of:
+        [
+            {"grouping": "a", "col1": "val_a", "col2": "val"},
+            {"grouping": "a", "col1": "val_b", "col2": "val"},
+            {"grouping": "a", "col1": "val_c", "col2": "val"},
+            {"grouping": "b", "col1": "val_a", "col2": "val"},
+            {"grouping": "b", "col1": "val_b", "col2": "val"},
+        ]
+        to:
+        [
+            "a": [
+                {"col1": "val_a", "col2": "val"},
+                {"col1": "val_b", "col2": "val"},
+                {"col1": "val_c", "col2": "val"}
+            ],
+            "b": [
+                {"col1": "val_a", "col2": "val"},
+                {"col1": "val_b", "col2": "val"}
+            ]
+        ]
+    """
+    pass
+
+
 def convert_count_results(qs: QuerySet, key_with_value_for_key: str, key_with_value_for_values: str) -> Dict:
     """
     Convert results from a standard QS result of:
-        [{column_name_1: value_1, column_name_2: value_2}]
+        [
+            {column_name_1: value_1, column_name_2: value_2},
+            {column_name_1: value_1b, column_name_2: value_2b},
+        ]
         to:
-        [{"value_1": "value_2"}]
+        {
+            "value_1": "value_2"
+            "value_1b": "value_2b"
+        }
     """
     result = []
 
