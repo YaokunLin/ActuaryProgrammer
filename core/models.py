@@ -113,6 +113,8 @@ class Practice(AuditTrailModel):
         null=True, blank=False, default=False
     )  # practices are active or inactive based upon whether we've approved their submission and whether they're paid up
 
+    practice_group = models.ForeignKey("PracticeGroup", null=True, on_delete=models.SET_NULL)
+
     objects = PracticeManager()
 
     class Meta:
@@ -127,6 +129,11 @@ class Practice(AuditTrailModel):
         return (self.name,)
 
     objects = PracticeManager()
+
+
+class PracticeGroup(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    name = models.CharField(_("name"), max_length=150, unique=True)
 
 
 class Agent(AuditTrailModel):
