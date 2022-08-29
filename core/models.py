@@ -113,7 +113,7 @@ class Practice(AuditTrailModel):
         null=True, blank=False, default=False
     )  # practices are active or inactive based upon whether we've approved their submission and whether they're paid up
 
-    practice_group = models.ForeignKey("PracticeGroup", null=True, on_delete=models.SET_NULL)
+    practice_group = models.ForeignKey("PracticeGroup", null=True, blank=True, on_delete=models.SET_NULL)
 
     objects = PracticeManager()
 
