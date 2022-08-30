@@ -22,7 +22,7 @@ log = logging.getLogger(__name__)
 def get_validated_practice_id(request: Request) -> Tuple[Optional[str], Optional[Dict[str, str]]]:
     param_name = "practice__id"
     practice_id = request.query_params.get(param_name)
-    invalid_error = {param_name: f"Invalid f{param_name}='{practice_id}'"}
+    invalid_error = {param_name: f"Invalid {param_name}='{practice_id}'"}
 
     if not practice_id:
         return None, None
@@ -118,8 +118,10 @@ def get_call_counts_for_outbound(
     # call counts per caller (agent) phone number
     analytics["calls_per_user"] = calculate_per_user_call_counts(calls_qs)
 
+    analytics["calls_per_practice"] = calculate_per_practice_call_counts(calls_qs)
+
     # call count per caller (agent) phone number over time
-    analytics["calls_per_user_by_date_and_hour"] = calculate_per_user_time_series_call_counts(calls_qs)
+    analytics["calls_per_user_by_date_and_hour"] = calculate_call_counts_per_user_time_series(calls_qs)
 
     analytics["non_agent_engagement_types"] = calculate_outbound_call_non_agent_engagement_type_counts(calls_qs)
 
@@ -129,8 +131,6 @@ def get_call_counts_for_outbound(
 #
 # Overall Call Counts
 #
-
-
 def calculate_call_counts(calls_qs: QuerySet) -> Dict:
     # get call counts
     count_analytics = calls_qs.aggregate(
@@ -162,38 +162,33 @@ def calculate_outbound_call_non_agent_engagement_type_counts(calls_qs: QuerySet)
     )
 
 
-#
-# Call Counts - Per User
-#
-
-
-def calculate_per_user_call_counts(calls_qs: QuerySet) -> Dict:
+def _calculate_call_counts_per_field(calls_qs: QuerySet, field_name: str) -> Dict:
     analytics = {}
 
-    # group by caller_number
-    calls_qs = calls_qs.values("sip_caller_number")
+    # group by practice_id
+    calls_qs = calls_qs.values(field_name)
 
     # calculate and convert
 
     analytics["call_total"] = calls_qs.annotate(count=Count("id")).order_by("-count")
-    analytics["call_total"] = convert_count_results(analytics["call_total"], "sip_caller_number", "count")
+    analytics["call_total"] = convert_count_results(analytics["call_total"], field_name, "count")
 
     analytics["call_connected_total"] = calls_qs.filter(call_connection="connected").annotate(count=Count("id")).order_by("-count")
-    analytics["call_connected_total"] = convert_count_results(analytics["call_connected_total"], "sip_caller_number", "count")
+    analytics["call_connected_total"] = convert_count_results(analytics["call_connected_total"], field_name, "count")
 
     analytics["call_seconds_total"] = calls_qs.annotate(call_seconds_total=Sum("duration_seconds")).order_by("-call_seconds_total")
-    analytics["call_seconds_total"] = convert_count_results(analytics["call_seconds_total"], "sip_caller_number", "call_seconds_total")
+    analytics["call_seconds_total"] = convert_count_results(analytics["call_seconds_total"], field_name, "call_seconds_total")
 
     analytics["call_seconds_average"] = calls_qs.annotate(call_seconds_average=Avg("duration_seconds")).order_by("-call_seconds_average")
-    analytics["call_seconds_average"] = convert_count_results(analytics["call_seconds_average"], "sip_caller_number", "call_seconds_average")
+    analytics["call_seconds_average"] = convert_count_results(analytics["call_seconds_average"], field_name, "call_seconds_average")
 
     analytics["call_sentiment_counts"] = (
-        calls_qs.values("sip_caller_number", "call_sentiments__caller_sentiment_score")
+        calls_qs.values(field_name, "call_sentiments__caller_sentiment_score")
         .annotate(call_sentiment_count=Count("call_sentiments__caller_sentiment_score"))
-        .values("sip_caller_number", "call_sentiments__caller_sentiment_score", "call_sentiment_count")
-        .order_by("sip_caller_number")
+        .values(field_name, "call_sentiments__caller_sentiment_score", "call_sentiment_count")
+        .order_by(field_name)
     )
-    analytics["call_sentiment_counts"] = create_group_of_list_of_dicts_by_key(analytics["call_sentiment_counts"], "sip_caller_number")
+    analytics["call_sentiment_counts"] = create_group_of_list_of_dicts_by_key(analytics["call_sentiment_counts"], field_name)
 
     call_sentiment_counts_regrouped = {}
     for grouping, value_list in analytics["call_sentiment_counts"].items():
@@ -207,57 +202,67 @@ def calculate_per_user_call_counts(calls_qs: QuerySet) -> Dict:
     return analytics
 
 
-#
-# Call Counts - Per User Time Series
-#
+def calculate_per_practice_call_counts(calls_qs: QuerySet) -> Dict:
+    return _calculate_call_counts_per_field(calls_qs, "practice_id")
 
 
-def calculate_per_user_time_series_call_counts(calls_qs: QuerySet) -> Dict:
+def calculate_per_user_call_counts(calls_qs: QuerySet) -> Dict:
+    return _calculate_call_counts_per_field(calls_qs, "sip_caller_number")
+
+
+#
+# Call Counts - Per Field Time Series
+#
+def _calculate_call_counts_per_field_time_series(calls_qs: QuerySet, field_name: str) -> Dict:
     analytics = {}
 
     # group by caller_number
-    calls_qs = calls_qs.values("sip_caller_number")
+    calls_qs = calls_qs.values(field_name)
 
     # calculate
 
     analytics["calls_total"] = (
         calls_qs.annotate(call_date_hour=TruncHour("call_start_time"))
-        .values("sip_caller_number", "call_date_hour")
+        .values(field_name, "call_date_hour")
         .annotate(call_total=Count("id"))
-        .values("sip_caller_number", "call_date_hour", "call_total")
-        .order_by("sip_caller_number", "call_date_hour")
+        .values(field_name, "call_date_hour", "call_total")
+        .order_by(field_name, "call_date_hour")
     )
     analytics["call_connected_total"] = (
         calls_qs.filter(call_connection="connected")
         .annotate(call_date_hour=TruncHour("call_start_time"))
-        .values("sip_caller_number", "call_date_hour")
+        .values(field_name, "call_date_hour")
         .annotate(call_total=Count("id"))
-        .values("sip_caller_number", "call_date_hour", "call_total")
-        .order_by("sip_caller_number", "call_date_hour")
+        .values(field_name, "call_date_hour", "call_total")
+        .order_by(field_name, "call_date_hour")
     )
     analytics["call_seconds_total"] = (
         calls_qs.annotate(call_date_hour=TruncHour("call_start_time"))
-        .values("sip_caller_number", "call_date_hour")
+        .values(field_name, "call_date_hour")
         .annotate(call_seconds_total=Sum("duration_seconds"))
-        .values("sip_caller_number", "call_date_hour", "call_seconds_total")
-        .order_by("sip_caller_number", "call_date_hour")
+        .values(field_name, "call_date_hour", "call_seconds_total")
+        .order_by(field_name, "call_date_hour")
     )
     analytics["call_seconds_average"] = (
         calls_qs.annotate(call_date_hour=TruncHour("call_start_time"))
-        .values("sip_caller_number", "call_date_hour")
+        .values(field_name, "call_date_hour")
         .annotate(call_seconds_average=Avg("duration_seconds"))
-        .values("sip_caller_number", "call_date_hour", "call_seconds_average")
-        .order_by("sip_caller_number", "call_date_hour")
+        .values(field_name, "call_date_hour", "call_seconds_average")
+        .order_by(field_name, "call_date_hour")
     )
     analytics["call_sentiment_counts"] = (
         calls_qs.annotate(call_date_hour=TruncHour("call_start_time"))
-        .values("sip_caller_number", "call_date_hour", "call_sentiments__caller_sentiment_score")
+        .values(field_name, "call_date_hour", "call_sentiments__caller_sentiment_score")
         .annotate(call_sentiment_count=Count("call_sentiments__caller_sentiment_score"))
-        .values("sip_caller_number", "call_date_hour", "call_sentiments__caller_sentiment_score", "call_sentiment_count")
-        .order_by("sip_caller_number", "call_date_hour")
+        .values(field_name, "call_date_hour", "call_sentiments__caller_sentiment_score", "call_sentiment_count")
+        .order_by(field_name, "call_date_hour")
     )
 
     return analytics
+
+
+def calculate_call_counts_per_user_time_series(calls_qs: QuerySet) -> Dict:
+    return _calculate_call_counts_per_field_time_series(calls_qs, "sip_caller_number")
 
 
 def create_group_of_list_of_dicts_by_key(qs: QuerySet, key_to_group_by: str) -> List[Dict]:
