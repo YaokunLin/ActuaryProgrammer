@@ -95,13 +95,16 @@ class CallMetricsView(views.APIView):
         call_start_time__lte = dates[1]
         dates_filter = {"call_start_time__gte": call_start_time__gte, "call_start_time__lte": call_start_time__lte}
 
-        analytics = get_call_counts_for_outbound(dates_filter, practice_filter, practice_group_filter)
+        analytics = get_call_counts_for_outbound(dates_filter, practice_filter, practice_group_filter, bool(practice_group_filter))
 
         return Response({"results": analytics})
 
 
 def get_call_counts_for_outbound(
-    dates_filter: Optional[Dict[str, str]], practice_filter: Optional[Dict[str, str]], practice_group_filter: Optional[Dict[str, str]]
+    dates_filter: Optional[Dict[str, str]],
+    practice_filter: Optional[Dict[str, str]],
+    practice_group_filter: Optional[Dict[str, str]],
+    breakdown_per_practice_id: bool,
 ) -> Dict[str, Any]:
     analytics = {}
 
@@ -118,16 +121,17 @@ def get_call_counts_for_outbound(
     # call counts per caller (agent) phone number
     analytics["calls_per_user"] = calculate_per_user_call_counts(calls_qs)
 
-    # call counts per practice
-    analytics["calls_per_practice"] = calculate_per_practice_call_counts(calls_qs)
-
     # call counts per caller (agent) phone number over time
     analytics["calls_per_user_by_date_and_hour"] = calculate_call_counts_per_user_time_series(calls_qs)
 
-    # call counts per practice over time
-    analytics["calls_per_practice_by_date_and_hour"] = calculate_call_counts_per_practice_time_series(calls_qs)
-
     analytics["non_agent_engagement_types"] = calculate_outbound_call_non_agent_engagement_type_counts(calls_qs)
+
+    if breakdown_per_practice_id:
+        # TODO Kyle: More to come
+        # call counts per practice
+        analytics["calls_per_practice"] = calculate_per_practice_call_counts(calls_qs)
+        # call counts per practice over time
+        analytics["calls_per_practice_by_date_and_hour"] = calculate_call_counts_per_practice_time_series(calls_qs)
 
     return analytics
 
@@ -472,5 +476,5 @@ if __name__ == "__main__":
     practice_filter = {"practice__id": "595HFaVZjjjCXfbMBbXzcd"}
     dates_filter = {"call_start_time__gte": "2022-07-05", "call_start_time__lte": "2022-08-16"}
 
-    counts = get_call_counts_for_outbound(dates_filter=dates_filter, practice_filter=practice_filter)
+    counts = get_call_counts_for_outbound(dates_filter, practice_filter, {}, False)
     print(counts)
