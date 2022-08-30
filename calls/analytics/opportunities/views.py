@@ -25,7 +25,7 @@ def get_validated_practice_id(request: Request) -> Tuple[Optional[str], Optional
     invalid_error = {param_name: f"Invalid f{param_name}='{practice_id}'"}
 
     if not practice_id:
-        return None, {param_name: "Must include practice id for call analytics."}  # TODO Kyle: Figure if actually out required
+        return None, None
 
     if request.user.is_staff or request.user.is_superuser:
         if Practice.objects.filter(id=practice_id).exists():
@@ -46,7 +46,7 @@ def get_validated_practice_group_id(request: Request) -> Tuple[Optional[str], Op
     invalid_error = {param_name: f"Invalid f{param_name}='{practice_group_id}'"}
 
     if not practice_group_id:
-        return None, {param_name: "Must include practice group id for call analytics."}  # TODO Kyle: Figure if actually out required
+        return None, None
 
     if request.user.is_staff or request.user.is_superuser:
         if PracticeGroup.objects.filter(id=practice_group_id).exists():
@@ -54,7 +54,7 @@ def get_validated_practice_group_id(request: Request) -> Tuple[Optional[str], Op
         return None, invalid_error
 
     # Can see any practice's resources if you are an assigned agent to a practice
-    allowed_practice_group_ids = Agent.objects.filter(user=request.user).values("practice__practice_group__id", flat=True)
+    allowed_practice_group_ids = Agent.objects.filter(user=request.user).values_list("practice__practice_group__id", flat=True)
     if practice_group_id not in allowed_practice_group_ids:
         return None, {param_name: f"Invalid {param_name}='{practice_group_id}'"}
 
@@ -73,11 +73,11 @@ class CallMetricsView(views.APIView):
             errors.update(practice_errors)
         if practice_group_errors:
             errors.update(practice_group_errors)
-        if dates_errors:
-            errors.update(dates_errors)
-        if bool(valid_practice_id) == bool(valid_practice_group_id):
+        if not practice_errors and not practice_group_errors and bool(valid_practice_id) == bool(valid_practice_group_id):
             error_message = "practice__id or practice__group_id must be provided, but not both."
             errors.update({"practice__id": error_message, "practice__group_id": error_message})
+        if dates_errors:
+            errors.update(dates_errors)
         if errors:
             return Response(status=status.HTTP_400_BAD_REQUEST, data=errors)
 
@@ -87,7 +87,7 @@ class CallMetricsView(views.APIView):
 
         practice_group_filter = {}
         if valid_practice_group_id:
-            practice_group_filter = {"practice_group__id": valid_practice_group_id}
+            practice_group_filter = {"practice__practice_group__id": valid_practice_group_id}
 
         # date filters
         dates = dates_info.get("dates")
