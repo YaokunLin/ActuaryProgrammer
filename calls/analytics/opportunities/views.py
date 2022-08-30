@@ -2,7 +2,7 @@ import logging
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Tuple, cast
 
-from django.db.models import Avg, Count, Q, QuerySet, Sum
+from django.db.models import Avg, Count, F, Q, QuerySet, Sum
 from django.db.models.functions import Trunc, TruncHour
 from rest_framework import status, views
 from rest_framework.request import Request
@@ -87,7 +87,7 @@ class CallMetricsView(views.APIView):
 
         practice_group_filter = {}
         if valid_practice_group_id:
-            practice_group_filter = {"practice__practice_group__id": valid_practice_group_id}
+            practice_group_filter = {"practice__practice_group_id": valid_practice_group_id}
 
         # date filters
         dates = dates_info.get("dates")
@@ -95,7 +95,7 @@ class CallMetricsView(views.APIView):
         call_start_time__lte = dates[1]
         dates_filter = {"call_start_time__gte": call_start_time__gte, "call_start_time__lte": call_start_time__lte}
 
-        analytics = get_call_counts_for_outbound(dates_filter, practice_filter, practice_group_filter, bool(practice_group_filter))
+        analytics = get_call_counts_for_outbound(dates_filter, practice_filter, practice_group_filter)
 
         return Response({"results": analytics})
 
@@ -104,7 +104,6 @@ def get_call_counts_for_outbound(
     dates_filter: Optional[Dict[str, str]],
     practice_filter: Optional[Dict[str, str]],
     practice_group_filter: Optional[Dict[str, str]],
-    breakdown_per_practice_id: bool,
 ) -> Dict[str, Any]:
     analytics = {}
 
@@ -126,15 +125,23 @@ def get_call_counts_for_outbound(
 
     analytics["non_agent_engagement_types"] = calculate_outbound_call_non_agent_engagement_type_counts(calls_qs)
 
-    if breakdown_per_practice_id:
+    if practice_group_filter:
+        practice_group_id = practice_group_filter.get("practice__practice_group_id")
         # TODO Kyle: More to come
         #  Should this be calls_per_user_per_practice, actually?
         #    calls_per_user_per_practice_by_date_and_hour?
         #    etc.
-        # call counts per practice
-        analytics["calls_per_practice"] = calculate_per_practice_call_counts(calls_qs)
-        # call counts per practice over time
-        analytics["calls_per_practice_by_date_and_hour"] = calculate_call_counts_per_practice_time_series(calls_qs)
+        per_practice_averages = {}
+        call_sentiment_counts = {}
+        num_practices = Practice.objects.filter(practice_group_id=practice_group_id).count()
+        per_practice_averages["call_total"] = analytics["calls_overall"]["call_total"] / num_practices
+        per_practice_averages["call_connected_total"] = analytics["calls_overall"]["call_connected_total"] / num_practices
+        per_practice_averages.update(calculate_call_count_durations_averages_per_practice(calls_qs))
+        call_sentiment_counts["not_applicable"] = analytics["calls_overall"]["call_sentiment_counts"]["not_applicable"] / num_practices
+        call_sentiment_counts["positivte"] = analytics["calls_overall"]["call_sentiment_counts"]["positive"] / num_practices
+        call_sentiment_counts["neutral"] = analytics["calls_overall"]["call_sentiment_counts"]["neutral"] / num_practices
+        per_practice_averages["call_sentiment_counts"] = call_sentiment_counts
+        analytics["per_practice_averages"] = per_practice_averages
 
     return analytics
 
@@ -152,6 +159,17 @@ def calculate_call_counts(calls_qs: QuerySet) -> Dict:
     )
 
     return count_analytics
+
+
+def calculate_call_count_durations_averages_per_practice(calls_qs: QuerySet) -> Dict:
+    call_seconds_total = (
+        calls_qs.values("practice_id").annotate(sum_duration_sec=Sum("duration_seconds")).aggregate(Avg("sum_duration_sec"))["sum_duration_sec__avg"]
+    )
+    call_seconds_average = (
+        calls_qs.values("practice_id").annotate(avg_duration_sec=Avg("duration_seconds")).aggregate(Avg("avg_duration_sec"))["avg_duration_sec__avg"]
+    )
+
+    return {"call_seconds_total": call_seconds_total, "call_seconds_average": call_seconds_average}
 
 
 def calculate_call_sentiments(calls_qs: QuerySet) -> Dict:
@@ -270,10 +288,6 @@ def _calculate_call_counts_per_field_time_series(calls_qs: QuerySet, field_name:
     )
 
     return analytics
-
-
-def calculate_call_counts_per_practice_time_series(calls_qs: QuerySet) -> Dict:
-    return _calculate_call_counts_per_field_time_series(calls_qs, "practice_id")
 
 
 def calculate_call_counts_per_user_time_series(calls_qs: QuerySet) -> Dict:
@@ -430,16 +444,15 @@ class NewPatientWinbacksView(views.APIView):
         aggregates["winback_opportunities_open"] = aggregates.get("winback_opportunities_total", 0) - aggregates.get("winback_opportunities_attempted", 0)
 
         if practice_group_filter:
-            aggregates["new_patient_opportunities_total_per_practice"] = self.get_winback_opportunities_breakdown_per_practice(new_patient_opportunities_qs)
-            aggregates["winback_opportunities_total_per_practice"] = self.get_winback_opportunities_breakdown_per_practice(winback_opportunities_total_qs)
-            aggregates["winback_opportunities_won_per_practice"] = self.get_winback_opportunities_breakdown_per_practice(winback_opportunities_won_qs)
-            aggregates["winback_opportunities_lost_per_practice"] = self.get_winback_opportunities_breakdown_per_practice(winback_opportunities_lost_qs)
-            aggregates["winback_opportunities_attempted_per_practice"] = self.get_attempted_winback_opportunities_per_practice(
-                aggregates["winback_opportunities_won_per_practice"], aggregates["winback_opportunities_lost_per_practice"]
-            )
-            aggregates["winback_opportunities_open_per_practice"] = self.get_open_winback_opportunities_per_practice(
-                aggregates["winback_opportunities_won_per_practice"], aggregates["winback_opportunities_lost_per_practice"]
-            )
+            per_practice_averages = {}
+            num_practices = Practice.objects.filter(practice_group_id=valid_practice_group_id).count()
+            per_practice_averages["new_patient_opportunities"] = aggregates["new_patient_opportunities_total"] / num_practices
+            per_practice_averages["winback_opportunities_total"] = aggregates["winback_opportunities_total"] / num_practices
+            per_practice_averages["winback_opportunities_won"] = aggregates["winback_opportunities_won"] / num_practices
+            per_practice_averages["winback_opportunities_lost"] = aggregates["winback_opportunities_lost"] / num_practices
+            per_practice_averages["winback_opportunities_attempted"] = aggregates["winback_opportunities_attempted"] / num_practices
+            per_practice_averages["winback_opportunities_open"] = aggregates["winback_opportunities_open"] / num_practices
+            aggregates["per_practice_averages"] = per_practice_averages
 
         # display syntactic sugar
         display_filters = {
@@ -449,35 +462,11 @@ class NewPatientWinbacksView(views.APIView):
 
         return Response({"filters": display_filters, "results": aggregates})
 
-    @staticmethod
-    def get_attempted_winback_opportunities_per_practice(won_opportunities_per_practice: Dict, lost_opportunities_per_practice: Dict) -> Dict:
-        attempted_opportunities_per_practice = {}
-        for practice_id in won_opportunities_per_practice:
-            attempted_opportunities_per_practice[practice_id] = won_opportunities_per_practice.get(practice_id, 0) + lost_opportunities_per_practice.get(
-                practice_id, 0
-            )
-        return attempted_opportunities_per_practice
-
-    @staticmethod
-    def get_open_winback_opportunities_per_practice(total_opportunities_per_practice: Dict, attempted_opportunities_per_practice: Dict) -> Dict:
-        open_opportunities_per_practice = {}
-        for practice_id in total_opportunities_per_practice:
-            open_opportunities_per_practice[practice_id] = total_opportunities_per_practice.get(practice_id, 0) - attempted_opportunities_per_practice.get(
-                practice_id, 0
-            )
-        return open_opportunities_per_practice
-
-    @staticmethod
-    def get_winback_opportunities_breakdown_per_practice(qs: QuerySet) -> Dict:
-        new_patient_opportunities_qs = qs.values("practice_id")
-        qs = new_patient_opportunities_qs.annotate(count=Count("id")).order_by("-count")
-        return convert_count_results(qs, "practice_id", "count")
-
 
 if __name__ == "__main__":
 
     practice_filter = {"practice__id": "595HFaVZjjjCXfbMBbXzcd"}
     dates_filter = {"call_start_time__gte": "2022-07-05", "call_start_time__lte": "2022-08-16"}
 
-    counts = get_call_counts_for_outbound(dates_filter, practice_filter, {}, False)
+    counts = get_call_counts_for_outbound(dates_filter, practice_filter, {})
     print(counts)
