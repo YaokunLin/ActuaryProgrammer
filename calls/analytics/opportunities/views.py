@@ -1,74 +1,93 @@
-from collections import defaultdict
 import logging
-from typing import (
-    Dict,
-    List,
-)
+from collections import defaultdict
+from typing import Any, Dict, List, Optional, Tuple
 
-from django.db.models import (
-    Avg,
-    Count,
-    Q,
-    QuerySet,
-    Sum,
-)
+from django.db.models import Avg, Count, Q, QuerySet, Sum
 from django.db.models.functions import Trunc, TruncHour
 from rest_framework import status, views
+from rest_framework.request import Request
 from rest_framework.response import Response
 
-from calls.field_choices import (
-    CallDirectionTypes,
-)
 from calls.analytics.intents.field_choices import CallOutcomeTypes
 from calls.analytics.participants.field_choices import NonAgentEngagementPersonaTypes
-from calls.models import (
-    Call,
-)
+from calls.field_choices import CallDirectionTypes
+from calls.models import Call
 from calls.validation import validate_call_dates
-from core.models import Agent
-
+from core.models import Agent, Practice, PracticeGroup
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
 
 
-def authorize_and_validate_practice_id(request):
-    practice__id = request.query_params.get("practice__id")
+def get_validated_practice_id(request: Request) -> Tuple[Optional[str], Optional[Dict[str, str]]]:
+    param_name = "practice__id"
+    practice_id = request.query_params.get(param_name)
+    invalid_error = {param_name: f"Invalid f{param_name}='{practice_id}'"}
 
-    if not practice__id:
-        return False, {"practice__id": "Must include practice id for call analytics."}
+    if not practice_id:
+        return None, {param_name: "Must include practice id for call analytics."}  # TODO Kyle: Figure if actually out required
 
     if request.user.is_staff or request.user.is_superuser:
-        return True, None
+        if Practice.objects.filter(id=practice_id).exists():
+            return practice_id, None
+        return None, invalid_error
 
     # Can see any practice's resources if you are an assigned agent to a practice
-    allowed_practice_ids = Agent.objects.filter(user=request.user).values_list("practice__id", flat=True)
-    if practice__id not in allowed_practice_ids:
-        return False, {"practice__id": f"Not allowed to see resources with practice__id='{practice__id}'"}
+    allowed_practice_ids = Agent.objects.filter(user=request.user).values_list(param_name, flat=True)
+    if practice_id not in allowed_practice_ids:
+        return None, invalid_error
 
-    return True, None
+    return practice_id, None
+
+
+def get_validated_practice_group_id(request: Request) -> Tuple[Optional[str], Optional[Dict[str, str]]]:
+    param_name = "practice_group__id"
+    practice_group_id = request.query_params.get(param_name)
+    invalid_error = {param_name: f"Invalid f{param_name}='{practice_group_id}'"}
+
+    if not practice_group_id:
+        return None, {param_name: "Must include practice group id for call analytics."}  # TODO Kyle: Figure if actually out required
+
+    if request.user.is_staff or request.user.is_superuser:
+        if PracticeGroup.objects.filter(id=practice_group_id).exists():
+            return practice_group_id, None
+        return None, invalid_error
+
+    # Can see any practice's resources if you are an assigned agent to a practice
+    allowed_practice_group_ids = Agent.objects.filter(user=request.user).values("practice__practice_group__id", flat=True)
+    if practice_group_id not in allowed_practice_group_ids:
+        return None, {param_name: f"Invalid {param_name}='{practice_group_id}'"}
+
+    return practice_group_id, None
 
 
 class CallMetricsView(views.APIView):
-
     def get(self, request, format=None):
-        practice__id = request.query_params.get("practice__id")
-        valid_practice, practice_errors = authorize_and_validate_practice_id(request=request)
+        valid_practice_id, practice_errors = get_validated_practice_id(request=request)
+        valid_practice_group_id, practice_group_errors = get_validated_practice_group_id(request=request)
         dates_info = validate_call_dates(query_data=request.query_params)
         dates_errors = dates_info.get("errors")
 
         errors = {}
         if practice_errors:
             errors.update(practice_errors)
+        if practice_group_errors:
+            errors.update(practice_group_errors)
         if dates_errors:
             errors.update(dates_errors)
+        if bool(valid_practice_id) == bool(valid_practice_group_id):
+            error_message = "practice__id or practice__group_id must be provided, but not both."
+            errors.update({"practice__id": error_message, "practice__group_id": error_message})
         if errors:
             return Response(status=status.HTTP_400_BAD_REQUEST, data=errors)
 
-        # practice filter
         practice_filter = {}
-        if valid_practice and practice__id:
-            practice_filter = {"practice__id": practice__id}
+        if valid_practice_id:
+            practice_filter = {"practice__id": valid_practice_id}
+
+        practice_group_filter = {}
+        if valid_practice_group_id:
+            practice_group_filter = {"practice_group__id": valid_practice_group_id}
 
         # date filters
         dates = dates_info.get("dates")
@@ -76,16 +95,18 @@ class CallMetricsView(views.APIView):
         call_start_time__lte = dates[1]
         dates_filter = {"call_start_time__gte": call_start_time__gte, "call_start_time__lte": call_start_time__lte}
 
-        analytics = get_call_counts_for_outbound(dates_filter=dates_filter, practice_filter=practice_filter)
+        analytics = get_call_counts_for_outbound(dates_filter, practice_filter, practice_group_filter)
 
         return Response({"results": analytics})
 
 
-def get_call_counts_for_outbound(dates_filter, practice_filter):
+def get_call_counts_for_outbound(
+    dates_filter: Optional[Dict[str, str]], practice_filter: Optional[Dict[str, str]], practice_group_filter: Optional[Dict[str, str]]
+) -> Dict[str, Any]:
     analytics = {}
 
     # set re-usable filters
-    filters = Q(call_direction=CallDirectionTypes.OUTBOUND) & Q(**dates_filter) & Q(**practice_filter)
+    filters = Q(call_direction=CallDirectionTypes.OUTBOUND) & Q(**dates_filter) & Q(**practice_filter) & Q(**practice_group_filter)
 
     # set re-usable filtered queryset
     calls_qs = Call.objects.filter(filters)
@@ -104,9 +125,11 @@ def get_call_counts_for_outbound(dates_filter, practice_filter):
 
     return analytics
 
+
 #
 # Overall Call Counts
 #
+
 
 def calculate_call_counts(calls_qs: QuerySet) -> Dict:
     # get call counts
@@ -122,28 +145,27 @@ def calculate_call_counts(calls_qs: QuerySet) -> Dict:
 
 def calculate_call_sentiments(calls_qs: QuerySet) -> Dict:
     # Get sentiment counts
-    call_sentiment_analytics_qs = calls_qs.values(
-        "call_sentiments__caller_sentiment_score"
-    ).annotate(
+    call_sentiment_analytics_qs = calls_qs.values("call_sentiments__caller_sentiment_score").annotate(
         call_sentiment_count=Count("call_sentiments__caller_sentiment_score")
     )
 
     call_sentiment_counts = {
-        sentiment_row["call_sentiments__caller_sentiment_score"]: sentiment_row["call_sentiment_count"]
-        for sentiment_row in call_sentiment_analytics_qs
+        sentiment_row["call_sentiments__caller_sentiment_score"]: sentiment_row["call_sentiment_count"] for sentiment_row in call_sentiment_analytics_qs
     }
 
     return call_sentiment_counts
 
 
 def calculate_outbound_call_non_agent_engagement_type_counts(calls_qs: QuerySet) -> Dict:
-    return calls_qs.values("engaged_in_calls__non_agent_engagement_persona_type")\
-        .annotate(non_agent_engagement_type_count=Count("engaged_in_calls__non_agent_engagement_persona_type"))\
+    return calls_qs.values("engaged_in_calls__non_agent_engagement_persona_type").annotate(
+        non_agent_engagement_type_count=Count("engaged_in_calls__non_agent_engagement_persona_type")
+    )
 
 
 #
 # Call Counts - Per User
 #
+
 
 def calculate_per_user_call_counts(calls_qs: QuerySet) -> Dict:
     analytics = {}
@@ -165,11 +187,12 @@ def calculate_per_user_call_counts(calls_qs: QuerySet) -> Dict:
     analytics["call_seconds_average"] = calls_qs.annotate(call_seconds_average=Avg("duration_seconds")).order_by("-call_seconds_average")
     analytics["call_seconds_average"] = convert_count_results(analytics["call_seconds_average"], "sip_caller_number", "call_seconds_average")
 
-    analytics["call_sentiment_counts"] = calls_qs\
-        .values("sip_caller_number", "call_sentiments__caller_sentiment_score")\
-        .annotate(call_sentiment_count=Count("call_sentiments__caller_sentiment_score"))\
-        .values("sip_caller_number", "call_sentiments__caller_sentiment_score", "call_sentiment_count")\
+    analytics["call_sentiment_counts"] = (
+        calls_qs.values("sip_caller_number", "call_sentiments__caller_sentiment_score")
+        .annotate(call_sentiment_count=Count("call_sentiments__caller_sentiment_score"))
+        .values("sip_caller_number", "call_sentiments__caller_sentiment_score", "call_sentiment_count")
         .order_by("sip_caller_number")
+    )
     analytics["call_sentiment_counts"] = create_group_of_list_of_dicts_by_key(analytics["call_sentiment_counts"], "sip_caller_number")
 
     call_sentiment_counts_regrouped = {}
@@ -183,9 +206,11 @@ def calculate_per_user_call_counts(calls_qs: QuerySet) -> Dict:
 
     return analytics
 
+
 #
 # Call Counts - Per User Time Series
 #
+
 
 def calculate_per_user_time_series_call_counts(calls_qs: QuerySet) -> Dict:
     analytics = {}
@@ -195,38 +220,43 @@ def calculate_per_user_time_series_call_counts(calls_qs: QuerySet) -> Dict:
 
     # calculate
 
-    analytics["calls_total"] = calls_qs\
-        .annotate(call_date_hour=TruncHour("call_start_time"))\
-        .values("sip_caller_number", "call_date_hour")\
-        .annotate(call_total=Count("id"))\
-        .values("sip_caller_number", "call_date_hour", "call_total")\
+    analytics["calls_total"] = (
+        calls_qs.annotate(call_date_hour=TruncHour("call_start_time"))
+        .values("sip_caller_number", "call_date_hour")
+        .annotate(call_total=Count("id"))
+        .values("sip_caller_number", "call_date_hour", "call_total")
         .order_by("sip_caller_number", "call_date_hour")
-    analytics["call_connected_total"] = calls_qs\
-        .filter(call_connection="connected")\
-        .annotate(call_date_hour=TruncHour("call_start_time"))\
-        .values("sip_caller_number", "call_date_hour")\
-        .annotate(call_total=Count("id"))\
-        .values("sip_caller_number", "call_date_hour", "call_total")\
+    )
+    analytics["call_connected_total"] = (
+        calls_qs.filter(call_connection="connected")
+        .annotate(call_date_hour=TruncHour("call_start_time"))
+        .values("sip_caller_number", "call_date_hour")
+        .annotate(call_total=Count("id"))
+        .values("sip_caller_number", "call_date_hour", "call_total")
         .order_by("sip_caller_number", "call_date_hour")
-    analytics["call_seconds_total"] = calls_qs\
-        .annotate(call_date_hour=TruncHour("call_start_time"))\
-        .values("sip_caller_number", "call_date_hour")\
-        .annotate(call_seconds_total=Sum("duration_seconds"))\
-        .values("sip_caller_number", "call_date_hour", "call_seconds_total")\
+    )
+    analytics["call_seconds_total"] = (
+        calls_qs.annotate(call_date_hour=TruncHour("call_start_time"))
+        .values("sip_caller_number", "call_date_hour")
+        .annotate(call_seconds_total=Sum("duration_seconds"))
+        .values("sip_caller_number", "call_date_hour", "call_seconds_total")
         .order_by("sip_caller_number", "call_date_hour")
-    analytics["call_seconds_average"] = calls_qs\
-        .annotate(call_date_hour=TruncHour("call_start_time"))\
-        .values("sip_caller_number", "call_date_hour")\
-        .annotate(call_seconds_average=Avg("duration_seconds"))\
-        .values("sip_caller_number", "call_date_hour", "call_seconds_average")\
+    )
+    analytics["call_seconds_average"] = (
+        calls_qs.annotate(call_date_hour=TruncHour("call_start_time"))
+        .values("sip_caller_number", "call_date_hour")
+        .annotate(call_seconds_average=Avg("duration_seconds"))
+        .values("sip_caller_number", "call_date_hour", "call_seconds_average")
         .order_by("sip_caller_number", "call_date_hour")
-    analytics["call_sentiment_counts"] = calls_qs\
-        .annotate(call_date_hour=TruncHour("call_start_time"))\
-        .values("sip_caller_number", "call_date_hour", "call_sentiments__caller_sentiment_score")\
-        .annotate(call_sentiment_count=Count("call_sentiments__caller_sentiment_score"))\
-        .values("sip_caller_number", "call_date_hour", "call_sentiments__caller_sentiment_score", "call_sentiment_count")\
+    )
+    analytics["call_sentiment_counts"] = (
+        calls_qs.annotate(call_date_hour=TruncHour("call_start_time"))
+        .values("sip_caller_number", "call_date_hour", "call_sentiments__caller_sentiment_score")
+        .annotate(call_sentiment_count=Count("call_sentiments__caller_sentiment_score"))
+        .values("sip_caller_number", "call_date_hour", "call_sentiments__caller_sentiment_score", "call_sentiment_count")
         .order_by("sip_caller_number", "call_date_hour")
-    
+    )
+
     return analytics
 
 
@@ -292,7 +322,7 @@ def create_dict_from_key_values(d: Dict, key_with_value_for_key: str, key_with_v
         to:
         {"value_1": "value_2"}
     """
-    return {d[key_with_value_for_key] : d[key_with_value_for_value]}
+    return {d[key_with_value_for_key]: d[key_with_value_for_value]}
 
 
 def merge_list_of_dicts_to_dict(l: List[Dict]) -> Dict:
@@ -374,6 +404,7 @@ class NewPatientWinbacksView(views.APIView):
         }
 
         return Response({"filters": display_filters, "results": aggregates})
+
 
 if __name__ == "__main__":
 

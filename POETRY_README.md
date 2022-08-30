@@ -1,7 +1,7 @@
 # Poetry
 
 ### Installation (OSX)
-Disclaimer: This is a work in progress and we do not have prebuilt wheels for google libs and psycopg2 so there is a bit of extra work involved for now, especially on M1 hardware
+Disclaimer: This is a work in progress and we do not have prebuilt wheels for google libs and psycopg2 so there is a bit of extra work involved for now, especially on ARM hardware
 
 Poetry brings with it lots of benefits for deterministic deploys, etc. For now, we're only leveraging it for local development, but we may in the future update our dockerfile to leverage it therein.
 
@@ -50,6 +50,32 @@ Instructions will vary per IDE.
 ### Updating dependencies
 > :warning: **NEVER MANUALLY CHANGE poetry.lock, and try to avoid manually changing `tool.poetry` sections in pyproject.toml**
 
-To update and install dependencies, use the poetry CLI [add](https://python-poetry.org/docs/cli/#add), [update](https://python-poetry.org/docs/cli/#update),
-and [remove](https://python-poetry.org/docs/cli/#remove)
+To update, remove and install dependencies, use the poetry CLI [add](https://python-poetry.org/docs/cli/#add) and [remove](https://python-poetry.org/docs/cli/#remove)
 If it is a development-only dependency, ensure you use `--dev`!
+
+
+### ARM Mac Stuff
+
+Since we don't have prebuilt wheels, you'll have a few extra steps to get up and running.
+
+Ensure the following environment variables are set (~/.zshrc probably):
+```
+export LDFLAGS="-L/opt/homebrew/opt/openssl@1.1/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/openssl@1.1/include"
+export GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1
+export GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1
+```
+
+Some of the google libs require a rust compiler.
+```
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+Psycopg2 requires some other host dependencies:
+```
+brew install postgresql
+brew install openssl
+brew link openssl
+```
+
+After all that is done (and your active shell reflects the changes), you should be all set to `poetry install`
