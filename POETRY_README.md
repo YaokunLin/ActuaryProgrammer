@@ -54,7 +54,18 @@ To update, remove and install dependencies, use the poetry CLI [add](https://pyt
 If it is a development-only dependency, ensure you use `--dev`!
 
 
-### ARM Mac Stuff
+### Pre-commit Hooks
+We have pre-commit hooks which execute inside of the poetry environment for consistency. If you'd like to enable them, just run:
+```
+pre-commit install
+```
+
+If for any reason you run into issues with these that you can't sort out, getting around them is as easy as:
+```
+pre-commit uninstall
+```
+
+### Just-for-now Stuff (especially for ARM Mac users)
 
 Since we don't have prebuilt wheels, you'll have a few extra steps to get up and running.
 
@@ -78,4 +89,6 @@ brew install openssl
 brew link openssl
 ```
 
-After all that is done (and your active shell reflects the changes), you should be all set to `poetry install`
+As always, follow any prompts/instructions from then output of those commands above.
+
+Once all that is done (and your active shell reflects the changes), you should be all set to `poetry install`
