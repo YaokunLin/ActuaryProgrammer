@@ -120,7 +120,7 @@ class CallViewset(viewsets.ModelViewSet):
             query_set = Call.objects.all()
         elif self.request.method in SAFE_METHODS:
             # Can see any practice's calls if you are an assigned agent to a practice
-            practice_ids = Agent.objects.filter(user=self.request.user.id).values("practice_id")
+            practice_ids = Agent.objects.filter(user=self.request.user).values_list("practice_id", flat=True)
             query_set = Call.objects.filter(practice__id__in=practice_ids)
 
         query_set.select_related("engaged_in_calls").select_related("call_purposes__outcome_results__outcome_reason_results").select_related(

@@ -270,7 +270,7 @@ class PracticeViewSet(viewsets.ModelViewSet):
             query_set = Practice.objects.all()
         elif self.request.method in SAFE_METHODS:
             # Can see any practice if you are an assigned agent to a practice
-            practice_ids = Agent.objects.filter(user=self.request.user.id).values("practice_id")
+            practice_ids = Agent.objects.filter(user=self.request.user).values_list("practice_id", flat=True)
             query_set = Practice.objects.filter(pk__in=practice_ids)
 
         return query_set.order_by("name")
