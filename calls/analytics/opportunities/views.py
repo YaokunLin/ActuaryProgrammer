@@ -128,6 +128,9 @@ def get_call_counts_for_outbound(
 
     if breakdown_per_practice_id:
         # TODO Kyle: More to come
+        #  Should this be calls_per_user_per_practice, actually?
+        #    calls_per_user_per_practice_by_date_and_hour?
+        #    etc.
         # call counts per practice
         analytics["calls_per_practice"] = calculate_per_practice_call_counts(calls_qs)
         # call counts per practice over time
