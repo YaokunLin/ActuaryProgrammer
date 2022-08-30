@@ -42,7 +42,7 @@ def authorize_and_validate_practice_id(request):
         return True, None
 
     # Can see any practice's resources if you are an assigned agent to a practice
-    allowed_practice_ids = Agent.objects.filter(user=request.user.id).values("practice__id")
+    allowed_practice_ids = Agent.objects.filter(user=request.user).values_list("practice__id", flat=True)
     if practice__id not in allowed_practice_ids:
         return False, {"practice__id": f"Not allowed to see resources with practice__id='{practice__id}'"}
 
