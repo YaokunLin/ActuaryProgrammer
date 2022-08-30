@@ -345,14 +345,19 @@ class NewPatientWinbacksView(views.APIView):
     QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME = {"call_start_time__gte": "call_start_time_after", "call_start_time__lte": "call_start_time_before"}
 
     def get(self, request, format=None):
-        practice__id = request.query_params.get("practice__id")
-        valid_practice, practice_errors = authorize_and_validate_practice_id(request=request)
+        valid_practice_id, practice_errors = get_validated_practice_id(request=request)
+        valid_practice_group_id, practice_group_errors = get_validated_practice_group_id(request=request)
         dates_info = validate_call_dates(query_data=request.query_params)
         dates_errors = dates_info.get("errors")
 
         errors = {}
         if practice_errors:
             errors.update(practice_errors)
+        if practice_group_errors:
+            errors.update(practice_group_errors)
+        if not practice_errors and not practice_group_errors and bool(valid_practice_id) == bool(valid_practice_group_id):
+            error_message = "practice__id or practice__group_id must be provided, but not both."
+            errors.update({"practice__id": error_message, "practice__group_id": error_message})
         if dates_errors:
             errors.update(dates_errors)
         if errors:
@@ -360,8 +365,12 @@ class NewPatientWinbacksView(views.APIView):
 
         # practice filter
         practice_filter = {}
-        if valid_practice and practice__id:
-            practice_filter = {"practice__id": practice__id}
+        if valid_practice_id:
+            practice_filter = {"practice__id": valid_practice_id}
+
+        practice_group_filter = {}
+        if valid_practice_group_id:
+            practice_group_filter = {"practice__practice_group__id": valid_practice_group_id}
 
         # date filters
         dates = dates_info.get("dates")
@@ -376,9 +385,10 @@ class NewPatientWinbacksView(views.APIView):
             engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT,
             **dates_filter,
             **practice_filter,
+            **practice_group_filter,
         )
         winback_opportunities_total_qs = new_patient_opportunities_qs.filter(
-            call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.FAILURE, **dates_filter, **practice_filter
+            call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.FAILURE, **dates_filter, **practice_filter, **practice_group_filter
         )
         winback_opportunities_won_qs = Call.objects.filter(
             call_direction=CallDirectionTypes.OUTBOUND,
@@ -386,6 +396,7 @@ class NewPatientWinbacksView(views.APIView):
             call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.SUCCESS,
             **dates_filter,
             **practice_filter,
+            **practice_group_filter,
         )
         winback_opportunities_lost_qs = Call.objects.filter(
             call_direction=CallDirectionTypes.OUTBOUND,
@@ -393,6 +404,7 @@ class NewPatientWinbacksView(views.APIView):
             call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.FAILURE,
             **dates_filter,
             **practice_filter,
+            **practice_group_filter,
         )
 
         aggregates["new_patient_opportunities_total"] = new_patient_opportunities_qs.count()
