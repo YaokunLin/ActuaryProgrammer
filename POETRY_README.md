@@ -1,7 +1,7 @@
 # Poetry
 
 ### Installation (OSX)
-Disclaimer: This is a work in progress and we do not have prebuilt wheels for google libs and psycopg2 so there is a bit of extra work involved for now, especially on ARM hardware
+Disclaimer: This is a work in progress and we do not have prebuilt wheels for google libs and psycopg2 so there is a bit of extra work involved for now, especially on ARM hardware.
 
 Poetry brings with it lots of benefits for deterministic deploys, etc. For now, we're only leveraging it for local development, but we may in the future update our dockerfile to leverage it therein.
 
@@ -89,6 +89,6 @@ brew install openssl
 brew link openssl
 ```
 
-As always, follow any prompts/instructions from then output of those commands above.
+As always, follow any prompts/instructions from the output of those commands above.
 
-Once all that is done (and your active shell reflects the changes), you should be all set to `poetry install`
+Once of all that is done (and your active shell reflects the changes), you should be all ready `poetry install`!
