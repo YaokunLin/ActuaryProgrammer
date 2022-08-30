@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, cast
 
 from django.db.models import Avg, Count, Q, QuerySet, Sum
 from django.db.models.functions import Trunc, TruncHour
@@ -118,10 +118,14 @@ def get_call_counts_for_outbound(
     # call counts per caller (agent) phone number
     analytics["calls_per_user"] = calculate_per_user_call_counts(calls_qs)
 
+    # call counts per practice
     analytics["calls_per_practice"] = calculate_per_practice_call_counts(calls_qs)
 
-    # call count per caller (agent) phone number over time
+    # call counts per caller (agent) phone number over time
     analytics["calls_per_user_by_date_and_hour"] = calculate_call_counts_per_user_time_series(calls_qs)
+
+    # call counts per practice over time
+    analytics["calls_per_practice_by_date_and_hour"] = calculate_call_counts_per_practice_time_series(calls_qs)
 
     analytics["non_agent_engagement_types"] = calculate_outbound_call_non_agent_engagement_type_counts(calls_qs)
 
@@ -261,11 +265,15 @@ def _calculate_call_counts_per_field_time_series(calls_qs: QuerySet, field_name:
     return analytics
 
 
+def calculate_call_counts_per_practice_time_series(calls_qs: QuerySet) -> Dict:
+    return _calculate_call_counts_per_field_time_series(calls_qs, "practice_id")
+
+
 def calculate_call_counts_per_user_time_series(calls_qs: QuerySet) -> Dict:
     return _calculate_call_counts_per_field_time_series(calls_qs, "sip_caller_number")
 
 
-def create_group_of_list_of_dicts_by_key(qs: QuerySet, key_to_group_by: str) -> List[Dict]:
+def create_group_of_list_of_dicts_by_key(qs: QuerySet, key_to_group_by: str) -> Dict[str, List[Dict]]:
     """
     Pulls up a value from a list of dictionaries to create a higher-level grouping. This is a destructive / mutative operation.
         Input, QS result of:
@@ -277,7 +285,7 @@ def create_group_of_list_of_dicts_by_key(qs: QuerySet, key_to_group_by: str) -> 
             {"grouping": "b", "col1": "val_b", "col2": "val"},
         ]
         to:
-        [
+        {
             "a": [
                 {"col1": "val_a", "col2": "val"},
                 {"col1": "val_b", "col2": "val"},
@@ -287,7 +295,7 @@ def create_group_of_list_of_dicts_by_key(qs: QuerySet, key_to_group_by: str) -> 
                 {"col1": "val_a", "col2": "val"},
                 {"col1": "val_b", "col2": "val"}
             ]
-        ]
+        }
     """
     grouping_dict = defaultdict(list)
 
@@ -295,7 +303,7 @@ def create_group_of_list_of_dicts_by_key(qs: QuerySet, key_to_group_by: str) -> 
         grouping = d.pop(key_to_group_by)
         grouping_dict[grouping].append(d)
 
-    return grouping_dict
+    return cast(Dict[str, List[Dict]], grouping_dict)
 
 
 def convert_count_results(qs: QuerySet, key_with_value_for_key: str, key_with_value_for_values: str) -> Dict:
@@ -412,7 +420,19 @@ class NewPatientWinbacksView(views.APIView):
         aggregates["winback_opportunities_won"] = winback_opportunities_won_qs.count()
         aggregates["winback_opportunities_lost"] = winback_opportunities_lost_qs.count()
         aggregates["winback_opportunities_attempted"] = aggregates.get("winback_opportunities_won", 0) + aggregates.get("winback_opportunities_lost", 0)
-        aggregates["winback_opportunities_open"] = aggregates.get("winback_opportunities_total", 0) + aggregates.get("winback_opportunities_attempted", 0)
+        aggregates["winback_opportunities_open"] = aggregates.get("winback_opportunities_total", 0) - aggregates.get("winback_opportunities_attempted", 0)
+
+        if practice_group_filter:
+            aggregates["new_patient_opportunities_total_per_practice"] = self.get_winback_opportunities_breakdown_per_practice(new_patient_opportunities_qs)
+            aggregates["winback_opportunities_total_per_practice"] = self.get_winback_opportunities_breakdown_per_practice(winback_opportunities_total_qs)
+            aggregates["winback_opportunities_won_per_practice"] = self.get_winback_opportunities_breakdown_per_practice(winback_opportunities_won_qs)
+            aggregates["winback_opportunities_lost_per_practice"] = self.get_winback_opportunities_breakdown_per_practice(winback_opportunities_lost_qs)
+            aggregates["winback_opportunities_attempted_per_practice"] = self.get_attempted_winback_opportunities_per_practice(
+                aggregates["winback_opportunities_won_per_practice"], aggregates["winback_opportunities_lost_per_practice"]
+            )
+            aggregates["winback_opportunities_open_per_practice"] = self.get_open_winback_opportunities_per_practice(
+                aggregates["winback_opportunities_won_per_practice"], aggregates["winback_opportunities_lost_per_practice"]
+            )
 
         # display syntactic sugar
         display_filters = {
@@ -421,6 +441,30 @@ class NewPatientWinbacksView(views.APIView):
         }
 
         return Response({"filters": display_filters, "results": aggregates})
+
+    @staticmethod
+    def get_attempted_winback_opportunities_per_practice(won_opportunities_per_practice: Dict, lost_opportunities_per_practice: Dict) -> Dict:
+        attempted_opportunities_per_practice = {}
+        for practice_id in won_opportunities_per_practice:
+            attempted_opportunities_per_practice[practice_id] = won_opportunities_per_practice.get(practice_id, 0) + lost_opportunities_per_practice.get(
+                practice_id, 0
+            )
+        return attempted_opportunities_per_practice
+
+    @staticmethod
+    def get_open_winback_opportunities_per_practice(total_opportunities_per_practice: Dict, attempted_opportunities_per_practice: Dict) -> Dict:
+        open_opportunities_per_practice = {}
+        for practice_id in total_opportunities_per_practice:
+            open_opportunities_per_practice[practice_id] = total_opportunities_per_practice.get(practice_id, 0) - attempted_opportunities_per_practice.get(
+                practice_id, 0
+            )
+        return open_opportunities_per_practice
+
+    @staticmethod
+    def get_winback_opportunities_breakdown_per_practice(qs: QuerySet) -> Dict:
+        new_patient_opportunities_qs = qs.values("practice_id")
+        qs = new_patient_opportunities_qs.annotate(count=Count("id")).order_by("-count")
+        return convert_count_results(qs, "practice_id", "count")
 
 
 if __name__ == "__main__":
