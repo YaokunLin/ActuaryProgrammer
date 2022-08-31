@@ -419,7 +419,7 @@ class NewPatientWinbacksView(views.APIView):
             **practice_filter,
             **practice_group_filter,
         )
-        aggregates["new_patient_opportunities_per_day"] = _calculate_new_patient_opportunities_time_series(new_patient_opportunities_qs, dates[0], dates[1])
+        aggregates["new_patient_opportunities_time_series"] = _calculate_new_patient_opportunities_time_series(new_patient_opportunities_qs, dates[0], dates[1])
 
         winback_opportunities_total_qs = new_patient_opportunities_qs.filter(
             call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.FAILURE, **dates_filter, **practice_filter, **practice_group_filter
@@ -493,13 +493,16 @@ def _calculate_new_patient_opportunities_time_series(opportunities_qs: QuerySet,
             conversion_rates.append({"date": date, "value": rate})
         return conversion_rates
 
-    def get_monday(date_str: str, return_next_monday: bool = False) -> str:
+    def get_monday(date_str: str, previous: bool = False) -> str:
         """
-        Gets you the next Monday if return_next_monday else the previous (or current) Monday
+        If previous is False, returns the next or current Monday
+        If previous is True, returns the previous or current Monday
         """
         date_format = "%Y-%m-%d"
         date = datetime.datetime.strptime(date_str, date_format).date()
-        return (date + datetime.timedelta(days=-date.weekday(), weeks=1 if return_next_monday else 0)).strftime(date_format)
+        if date.weekday():
+            date = date + datetime.timedelta(days=-date.weekday(), weeks=-1 if previous else 0)
+        return date.strftime(date_format)
 
     def fill_zeroes(data: List[Dict], start_date: str, end_date: str, frequency_days=1) -> List[Dict]:
         date_field_name = "date"
@@ -523,7 +526,7 @@ def _calculate_new_patient_opportunities_time_series(opportunities_qs: QuerySet,
     per_day["conversion"] = fill_zeroes(get_conversion_rates_breakdown(total_per_day, won_per_day), start_date, end_date)
 
     start_date_week = get_monday(start_date)
-    end_date_week = get_monday(end_date, return_next_monday=True)
+    end_date_week = get_monday(end_date, previous=True)
     total_per_week = get_call_count_per_week(opportunities_qs)
     won_per_week = get_call_count_per_week(won_qs)
     per_week["total"] = fill_zeroes(total_per_week, start_date_week, end_date_week, frequency_days=7)
