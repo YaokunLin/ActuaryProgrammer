@@ -43,7 +43,7 @@ def get_validated_practice_id(request: Request) -> Tuple[Optional[str], Optional
 def get_validated_practice_group_id(request: Request) -> Tuple[Optional[str], Optional[Dict[str, str]]]:
     param_name = "practice_group__id"
     practice_group_id = request.query_params.get(param_name)
-    invalid_error = {param_name: f"Invalid f{param_name}='{practice_group_id}'"}
+    invalid_error = {param_name: f"Invalid {param_name}='{practice_group_id}'"}
 
     if not practice_group_id:
         return None, None
