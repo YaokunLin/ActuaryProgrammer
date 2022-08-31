@@ -55,6 +55,7 @@ google-cloud-pubsub = "2.9.0"
 google-cloud-storage = "2.1.0"
 
 # WARNING - DO NOT MANUNALLY EDIT THIS SECTION
+pandas = "<1.4"
 # Use poetry.add ... --dev, poetry.remove ... --dev, etc.
 [tool.poetry.dev-dependencies]
 black = "22.6.0"

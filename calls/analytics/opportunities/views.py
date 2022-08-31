@@ -1,9 +1,11 @@
+import datetime
 import logging
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Tuple, cast
 
+import pandas as pd
 from django.db.models import Avg, Count, Q, QuerySet, Sum
-from django.db.models.functions import TruncHour
+from django.db.models.functions import TruncDate, TruncHour, TruncWeek
 from rest_framework import status, views
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -417,6 +419,8 @@ class NewPatientWinbacksView(views.APIView):
             **practice_filter,
             **practice_group_filter,
         )
+        aggregates["new_patient_opportunities_per_day"] = _calculate_new_patient_opportunities_time_series(new_patient_opportunities_qs, dates[0], dates[1])
+
         winback_opportunities_total_qs = new_patient_opportunities_qs.filter(
             call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.FAILURE, **dates_filter, **practice_filter, **practice_group_filter
         )
@@ -464,10 +468,70 @@ class NewPatientWinbacksView(views.APIView):
         return Response({"filters": display_filters, "results": aggregates})
 
 
-if __name__ == "__main__":
+def _calculate_new_patient_opportunities_time_series(opportunities_qs: QuerySet, start_date, end_date) -> Dict:
+    per_day = {}
+    per_week = {}
 
-    practice_filter = {"practice__id": "595HFaVZjjjCXfbMBbXzcd"}
-    dates_filter = {"call_start_time__gte": "2022-07-05", "call_start_time__lte": "2022-08-16"}
+    won_qs = opportunities_qs.filter(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.SUCCESS)
+    missed_qs = opportunities_qs.filter(went_to_voicemail=True)  # TODO Kyle: This is probably wrong
 
-    counts = get_call_counts_for_outbound(dates_filter, practice_filter, {})
-    print(counts)
+    def get_call_count_per_week(qs: QuerySet) -> List[Dict]:
+        return list(qs.annotate(date=TruncWeek("call_start_time")).values("date").annotate(value=Count("id")).values("date", "value").order_by("date"))
+
+    def get_call_count_per_day(qs: QuerySet) -> List[Dict]:
+        return list(qs.annotate(date=TruncDate("call_start_time")).values("date").annotate(value=Count("id")).values("date", "value").order_by("date"))
+
+    def get_conversion_rates_breakdown(total: List[Dict], won: List[Dict]) -> List[Dict]:
+        conversion_rates = []
+        total_per_date_mapping = {i["date"]: i["value"] for i in total}
+        for record in won:
+            date = record["date"]
+            total_for_date = total_per_date_mapping[date]
+            rate = 0
+            if total_for_date:
+                rate = record["value"] / total_per_date_mapping[date]
+            conversion_rates.append({"date": date, "value": rate})
+        return conversion_rates
+
+    def get_monday(date_str: str, return_next_monday: bool = False) -> str:
+        """
+        Gets you the next Monday if return_next_monday else the previous (or current) Monday
+        """
+        date_format = "%Y-%m-%d"
+        date = datetime.datetime.strptime(date_str, date_format).date()
+        return (date + datetime.timedelta(days=-date.weekday(), weeks=1 if return_next_monday else 0)).strftime(date_format)
+
+    def fill_zeroes(data: List[Dict], start_date: str, end_date: str, frequency_days=1) -> List[Dict]:
+        date_field_name = "date"
+        value_field_name = "value"
+        date_format = "%Y-%m-%d"
+        date_range = pd.date_range(start_date, end_date, name=date_field_name, freq=f"{frequency_days}D")
+        if not data:
+            return [{date_field_name: i.strftime(date_format), value_field_name: 0} for i in date_range]
+        data_by_date = {i[date_field_name].strftime(date_format): i[value_field_name] for i in data}
+        out = []
+        for timestamp in date_range:
+            date_str = timestamp.strftime(date_format)
+            out.append({date_field_name: date_str, value_field_name: data_by_date.get(date_str, 0)})
+        return out
+
+    total_per_day = get_call_count_per_day(opportunities_qs)
+    won_per_day = get_call_count_per_day(won_qs)
+    per_day["total"] = fill_zeroes(total_per_day, start_date, end_date)
+    per_day["won"] = fill_zeroes(won_per_day, start_date, end_date)
+    per_day["missed"] = fill_zeroes(get_call_count_per_day(missed_qs), start_date, end_date)
+    per_day["conversion"] = fill_zeroes(get_conversion_rates_breakdown(total_per_day, won_per_day), start_date, end_date)
+
+    start_date_week = get_monday(start_date)
+    end_date_week = get_monday(end_date, return_next_monday=True)
+    total_per_week = get_call_count_per_week(opportunities_qs)
+    won_per_week = get_call_count_per_week(won_qs)
+    per_week["total"] = fill_zeroes(total_per_week, start_date_week, end_date_week, frequency_days=7)
+    per_week["won"] = fill_zeroes(won_per_week, start_date_week, end_date_week, frequency_days=7)
+    per_week["missed"] = fill_zeroes(get_call_count_per_week(missed_qs), start_date_week, end_date_week, frequency_days=7)
+    per_week["conversion"] = fill_zeroes(get_conversion_rates_breakdown(total_per_week, won_per_week), start_date_week, end_date_week, frequency_days=7)
+
+    return {
+        "per_day": per_day,
+        "per_week": per_week,
+    }
