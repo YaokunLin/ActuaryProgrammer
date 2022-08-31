@@ -126,6 +126,7 @@ def get_call_counts_for_outbound(
     analytics["calls_per_user_by_date_and_hour"] = calculate_call_counts_per_user_time_series(calls_qs)
 
     analytics["non_agent_engagement_types"] = calculate_outbound_call_non_agent_engagement_type_counts(calls_qs)
+    # analytics["non_agent_engagement_types"] = convert_count_results(analytics["non_agent_engagement_types"], )
 
     if practice_group_filter:
         practice_group_id = practice_group_filter.get("practice__practice_group_id")
@@ -177,14 +178,10 @@ def calculate_call_count_durations_averages_per_practice(calls_qs: QuerySet) -> 
 
 def calculate_call_sentiments(calls_qs: QuerySet) -> Dict:
     # Get sentiment counts
-    call_sentiment_analytics_qs = calls_qs.values("call_sentiments__caller_sentiment_score").annotate(
-        call_sentiment_count=Count("call_sentiments__caller_sentiment_score")
-    )
+    call_sentiment_score_key = "call_sentiments__caller_sentiment_score"
+    call_sentiment_analytics_qs = calls_qs.values(call_sentiment_score_key).annotate(count=Count(call_sentiment_score_key))
 
-    call_sentiment_counts = {
-        sentiment_row["call_sentiments__caller_sentiment_score"]: sentiment_row["call_sentiment_count"] for sentiment_row in call_sentiment_analytics_qs
-    }
-
+    call_sentiment_counts = convert_count_results(call_sentiment_analytics_qs, call_sentiment_score_key, "count")
     return call_sentiment_counts
 
 
