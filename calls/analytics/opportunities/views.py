@@ -2,8 +2,8 @@ import logging
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Tuple, cast
 
-from django.db.models import Avg, Count, F, Q, QuerySet, Sum
-from django.db.models.functions import Trunc, TruncHour
+from django.db.models import Avg, Count, Q, QuerySet, Sum
+from django.db.models.functions import TruncHour
 from rest_framework import status, views
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -127,10 +127,6 @@ def get_call_counts_for_outbound(
 
     if practice_group_filter:
         practice_group_id = practice_group_filter.get("practice__practice_group_id")
-        # TODO Kyle: More to come
-        #  Should this be calls_per_user_per_practice, actually?
-        #    calls_per_user_per_practice_by_date_and_hour?
-        #    etc.
         per_practice_averages = {}
         call_sentiment_counts = {}
         num_practices = Practice.objects.filter(practice_group_id=practice_group_id).count()
@@ -162,6 +158,7 @@ def calculate_call_counts(calls_qs: QuerySet) -> Dict:
 
 
 def calculate_call_count_durations_averages_per_practice(calls_qs: QuerySet) -> Dict:
+    # TODO: Maybe this is unnecessary and we can just do simple math :thnk:
     call_seconds_total = (
         calls_qs.values("practice_id").annotate(sum_duration_sec=Sum("duration_seconds")).aggregate(Avg("sum_duration_sec"))["sum_duration_sec__avg"]
     )
