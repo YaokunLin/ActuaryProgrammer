@@ -177,7 +177,6 @@ def calculate_call_count_durations_averages_per_practice(calls_qs: QuerySet) -> 
 
 
 def calculate_call_sentiments(calls_qs: QuerySet) -> Dict:
-    # Get sentiment counts
     call_sentiment_score_key = "call_sentiments__caller_sentiment_score"
     call_sentiment_analytics_qs = calls_qs.values(call_sentiment_score_key).annotate(count=Count(call_sentiment_score_key))
 
@@ -196,11 +195,10 @@ def calculate_outbound_call_non_agent_engagement_type_counts(calls_qs: QuerySet)
 def _calculate_call_counts_per_field(calls_qs: QuerySet, field_name: str) -> Dict:
     analytics = {}
 
-    # group by practice_id
+    # group by field name first
     calls_qs = calls_qs.values(field_name)
 
     # calculate and convert
-
     analytics["call_total"] = calls_qs.annotate(count=Count("id")).order_by("-count")
     analytics["call_total"] = convert_count_results(analytics["call_total"], field_name, "count")
 
@@ -247,11 +245,10 @@ def calculate_per_user_call_counts(calls_qs: QuerySet) -> Dict:
 def _calculate_call_counts_per_field_time_series(calls_qs: QuerySet, field_name: str) -> Dict:
     analytics = {}
 
-    # group by caller_number
+    # group by field name first
     calls_qs = calls_qs.values(field_name)
 
     # calculate
-
     analytics["calls_total"] = (
         calls_qs.annotate(call_date_hour=TruncHour("call_start_time"))
         .values(field_name, "call_date_hour")
