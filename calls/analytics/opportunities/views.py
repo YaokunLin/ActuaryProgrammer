@@ -468,7 +468,7 @@ class NewPatientWinbacksView(views.APIView):
         return Response({"filters": display_filters, "results": aggregates})
 
 
-def _calculate_new_patient_opportunities_time_series(opportunities_qs: QuerySet, start_date, end_date) -> Dict:
+def _calculate_new_patient_opportunities_time_series(opportunities_qs: QuerySet, start_date: str, end_date: str) -> Dict:
     per_day = {}
     per_week = {}
 
