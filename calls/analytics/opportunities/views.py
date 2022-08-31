@@ -514,15 +514,29 @@ def _calculate_winback_time_series(winbacks_total_qs: QuerySet, winbacks_won_qs:
     per_day = {}
     per_week = {}
 
+    def get_winbacks_attempted_breakdown(won: List[Dict], lost: List[Dict]) -> List[Dict]:
+        wins_by_date = {i["date"]: i["value"] for i in won}
+        lost_by_date = {i["date"]: i["value"] for i in lost}
+        all_dates = set(wins_by_date.keys()).union(lost_by_date)
+        return [{"date": d, "value": wins_by_date.get(d, 0) + lost_by_date.get(d, 0)} for d in all_dates]
+
+    winbacks_won_per_day = _get_call_count_per_day(winbacks_won_qs)
+    winbacks_lost_per_day = _get_call_count_per_day(winbacks_lost_qs)
     per_day["total"] = _fill_zeroes(_get_call_count_per_day(winbacks_total_qs), start_date, end_date)
-    per_day["won"] = _fill_zeroes(_get_call_count_per_day(winbacks_won_qs), start_date, end_date)
-    per_day["lost"] = _fill_zeroes(_get_call_count_per_day(winbacks_lost_qs), start_date, end_date)
+    per_day["won"] = _fill_zeroes(winbacks_won_per_day, start_date, end_date)
+    per_day["lost"] = _fill_zeroes(winbacks_lost_per_day, start_date, end_date)
+    per_day["attempted"] = _fill_zeroes(get_winbacks_attempted_breakdown(winbacks_won_per_day, winbacks_lost_per_day), start_date, end_date)
 
     start_date_week = _get_monday(start_date)
     end_date_week = _get_monday(end_date, previous=True)
+    winbacks_won_per_week = _get_call_count_per_week(winbacks_won_qs)
+    winbacks_lost_per_week = _get_call_count_per_week(winbacks_lost_qs)
     per_week["total"] = _fill_zeroes(_get_call_count_per_week(winbacks_total_qs), start_date_week, end_date_week, frequency_days=7)
-    per_week["won"] = _fill_zeroes(_get_call_count_per_week(winbacks_won_qs), start_date_week, end_date_week, frequency_days=7)
-    per_week["lost"] = _fill_zeroes(_get_call_count_per_week(winbacks_lost_qs), start_date_week, end_date_week, frequency_days=7)
+    per_week["won"] = _fill_zeroes(winbacks_won_per_week, start_date_week, end_date_week, frequency_days=7)
+    per_week["lost"] = _fill_zeroes(winbacks_lost_per_week, start_date_week, end_date_week, frequency_days=7)
+    per_week["attempted"] = _fill_zeroes(
+        get_winbacks_attempted_breakdown(winbacks_won_per_week, winbacks_lost_per_week), start_date_week, end_date_week, frequency_days=7
+    )
 
     return {
         "per_day": per_day,
