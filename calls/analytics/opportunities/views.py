@@ -523,7 +523,7 @@ def _calculate_new_patient_opportunities_time_series(opportunities_qs: QuerySet,
     per_day["total"] = fill_zeroes(total_per_day, start_date, end_date)
     per_day["won"] = fill_zeroes(won_per_day, start_date, end_date)
     per_day["missed"] = fill_zeroes(get_call_count_per_day(missed_qs), start_date, end_date)
-    per_day["conversion"] = fill_zeroes(get_conversion_rates_breakdown(total_per_day, won_per_day), start_date, end_date)
+    per_day["conversion_rate"] = fill_zeroes(get_conversion_rates_breakdown(total_per_day, won_per_day), start_date, end_date)
 
     start_date_week = get_monday(start_date)
     end_date_week = get_monday(end_date, previous=True)
@@ -532,7 +532,7 @@ def _calculate_new_patient_opportunities_time_series(opportunities_qs: QuerySet,
     per_week["total"] = fill_zeroes(total_per_week, start_date_week, end_date_week, frequency_days=7)
     per_week["won"] = fill_zeroes(won_per_week, start_date_week, end_date_week, frequency_days=7)
     per_week["missed"] = fill_zeroes(get_call_count_per_week(missed_qs), start_date_week, end_date_week, frequency_days=7)
-    per_week["conversion"] = fill_zeroes(get_conversion_rates_breakdown(total_per_week, won_per_week), start_date_week, end_date_week, frequency_days=7)
+    per_week["conversion_rate"] = fill_zeroes(get_conversion_rates_breakdown(total_per_week, won_per_week), start_date_week, end_date_week, frequency_days=7)
 
     return {
         "per_day": per_day,
