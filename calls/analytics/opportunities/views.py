@@ -186,9 +186,11 @@ def calculate_call_sentiments(calls_qs: QuerySet) -> Dict:
 
 
 def calculate_outbound_call_non_agent_engagement_type_counts(calls_qs: QuerySet) -> Dict:
-    return calls_qs.values("engaged_in_calls__non_agent_engagement_persona_type").annotate(
-        non_agent_engagement_type_count=Count("engaged_in_calls__non_agent_engagement_persona_type")
-    )
+    non_agent_engagement_key = "engaged_in_calls__non_agent_engagement_persona_type"
+    non_agent_engagement_qs = calls_qs.values(non_agent_engagement_key).annotate(count=Count(non_agent_engagement_key))
+
+    non_agent_engagement_counts = convert_count_results(non_agent_engagement_qs, non_agent_engagement_key, "count")
+    return non_agent_engagement_counts
 
 
 def _calculate_call_counts_per_field(calls_qs: QuerySet, field_name: str) -> Dict:
