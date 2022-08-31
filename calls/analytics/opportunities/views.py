@@ -130,12 +130,16 @@ def get_call_counts_for_outbound(
         per_practice_averages = {}
         call_sentiment_counts = {}
         num_practices = Practice.objects.filter(practice_group_id=practice_group_id).count()
-        per_practice_averages["call_total"] = analytics["calls_overall"]["call_total"] / num_practices
-        per_practice_averages["call_connected_total"] = analytics["calls_overall"]["call_connected_total"] / num_practices
+
+        calls_overall = analytics["calls_overall"]
+        per_practice_averages["call_total"] = calls_overall["call_total"] / num_practices
+        per_practice_averages["call_connected_total"] = calls_overall["call_connected_total"] / num_practices
         per_practice_averages.update(calculate_call_count_durations_averages_per_practice(calls_qs))
-        call_sentiment_counts["not_applicable"] = analytics["calls_overall"]["call_sentiment_counts"]["not_applicable"] / num_practices
-        call_sentiment_counts["positivte"] = analytics["calls_overall"]["call_sentiment_counts"]["positive"] / num_practices
-        call_sentiment_counts["neutral"] = analytics["calls_overall"]["call_sentiment_counts"]["neutral"] / num_practices
+
+        sentiments_types = ("not_applicable", "positive", "neutral", "negative")
+        for sentiment_type in sentiments_types:
+            call_sentiment_counts[sentiment_type] = calls_overall["call_sentiment_counts"].get(sentiment_type, 0) / num_practices
+
         per_practice_averages["call_sentiment_counts"] = call_sentiment_counts
         analytics["per_practice_averages"] = per_practice_averages
 
