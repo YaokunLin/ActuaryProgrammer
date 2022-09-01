@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple, cast
 import pandas as pd
 from django.db.models import Avg, Count, Q, QuerySet, Sum
 from django.db.models.functions import TruncDate, TruncHour, TruncWeek
+from django_pandas.io import read_frame
 from rest_framework import status, views
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -217,16 +218,14 @@ def _calculate_call_counts_per_field(calls_qs: QuerySet, field_name: str) -> Dic
         .values(field_name, "call_sentiments__caller_sentiment_score", "call_sentiment_count")
         .order_by(field_name)
     )
-    analytics["call_sentiment_counts"] = create_group_of_list_of_dicts_by_key(analytics["call_sentiment_counts"], field_name)
-
-    call_sentiment_counts_regrouped = {}
-    for grouping, value_list in analytics["call_sentiment_counts"].items():
-        log.info(grouping)
-        log.info(value_list)
-        call_sentiment_counts_regrouped[grouping] = convert_count_results(value_list, "call_sentiments__caller_sentiment_score", "call_sentiment_count")
-        log.info(call_sentiment_counts_regrouped[grouping])
-
-    analytics["call_sentiment_counts"] = call_sentiment_counts_regrouped
+    analytics["call_sentiment_counts"] = read_frame(analytics["call_sentiment_counts"])
+    analytics["call_sentiment_counts"] = (
+        analytics["call_sentiment_counts"]
+        .groupby(field_name)[["call_sentiments__caller_sentiment_score", "call_sentiment_count"]]
+        .apply(lambda x: x.to_dict(orient="records"))
+        .apply(lambda x: convert_count_results(x, "call_sentiments__caller_sentiment_score", "call_sentiment_count"))
+        .to_dict()
+    )
 
     return analytics
 
@@ -256,6 +255,11 @@ def _calculate_call_counts_per_field_time_series(calls_qs: QuerySet, field_name:
         .values(field_name, "call_date_hour", "call_total")
         .order_by(field_name, "call_date_hour")
     )
+    analytics["calls_total"] = read_frame(analytics["calls_total"])
+    analytics["calls_total"] = (
+        analytics["calls_total"].groupby(field_name)[["call_date_hour", "call_total"]].apply(lambda x: x.to_dict(orient="records")).to_dict()
+    )
+
     analytics["call_connected_total"] = (
         calls_qs.filter(call_connection="connected")
         .annotate(call_date_hour=TruncHour("call_start_time"))
@@ -264,6 +268,11 @@ def _calculate_call_counts_per_field_time_series(calls_qs: QuerySet, field_name:
         .values(field_name, "call_date_hour", "call_total")
         .order_by(field_name, "call_date_hour")
     )
+    analytics["call_connected_total"] = read_frame(analytics["call_connected_total"])
+    analytics["call_connected_total"] = (
+        analytics["call_connected_total"].groupby(field_name)[["call_date_hour", "call_total"]].apply(lambda x: x.to_dict(orient="records")).to_dict()
+    )
+
     analytics["call_seconds_total"] = (
         calls_qs.annotate(call_date_hour=TruncHour("call_start_time"))
         .values(field_name, "call_date_hour")
@@ -271,6 +280,11 @@ def _calculate_call_counts_per_field_time_series(calls_qs: QuerySet, field_name:
         .values(field_name, "call_date_hour", "call_seconds_total")
         .order_by(field_name, "call_date_hour")
     )
+    analytics["call_seconds_total"] = read_frame(analytics["call_seconds_total"])
+    analytics["call_seconds_total"] = (
+        analytics["call_seconds_total"].groupby(field_name)[["call_date_hour", "call_seconds_total"]].apply(lambda x: x.to_dict(orient="records")).to_dict()
+    )
+
     analytics["call_seconds_average"] = (
         calls_qs.annotate(call_date_hour=TruncHour("call_start_time"))
         .values(field_name, "call_date_hour")
@@ -278,6 +292,11 @@ def _calculate_call_counts_per_field_time_series(calls_qs: QuerySet, field_name:
         .values(field_name, "call_date_hour", "call_seconds_average")
         .order_by(field_name, "call_date_hour")
     )
+    analytics["call_seconds_average"] = read_frame(analytics["call_seconds_average"])
+    analytics["call_seconds_average"] = (
+        analytics["call_seconds_average"].groupby(field_name)[["call_date_hour", "call_seconds_average"]].apply(lambda x: x.to_dict(orient="records")).to_dict()
+    )
+
     analytics["call_sentiment_counts"] = (
         calls_qs.annotate(call_date_hour=TruncHour("call_start_time"))
         .values(field_name, "call_date_hour", "call_sentiments__caller_sentiment_score")
@@ -285,45 +304,19 @@ def _calculate_call_counts_per_field_time_series(calls_qs: QuerySet, field_name:
         .values(field_name, "call_date_hour", "call_sentiments__caller_sentiment_score", "call_sentiment_count")
         .order_by(field_name, "call_date_hour")
     )
+    analytics["call_sentiment_counts"] = read_frame(analytics["call_sentiment_counts"])
+    analytics["call_sentiment_counts"] = (
+        analytics["call_sentiment_counts"]
+        .groupby(field_name)[["call_date_hour", "call_sentiment_count"]]
+        .apply(lambda x: x.to_dict(orient="records"))
+        .to_dict()
+    )
 
     return analytics
 
 
 def calculate_call_counts_per_user_time_series(calls_qs: QuerySet) -> Dict:
     return _calculate_call_counts_per_field_time_series(calls_qs, "sip_caller_number")
-
-
-def create_group_of_list_of_dicts_by_key(qs: QuerySet, key_to_group_by: str) -> Dict[str, List[Dict]]:
-    """
-    Pulls up a value from a list of dictionaries to create a higher-level grouping. This is a destructive / mutative operation.
-        Input, QS result of:
-        [
-            {"grouping": "a", "col1": "val_a", "col2": "val"},
-            {"grouping": "a", "col1": "val_b", "col2": "val"},
-            {"grouping": "a", "col1": "val_c", "col2": "val"},
-            {"grouping": "b", "col1": "val_a", "col2": "val"},
-            {"grouping": "b", "col1": "val_b", "col2": "val"},
-        ]
-        to:
-        {
-            "a": [
-                {"col1": "val_a", "col2": "val"},
-                {"col1": "val_b", "col2": "val"},
-                {"col1": "val_c", "col2": "val"}
-            ],
-            "b": [
-                {"col1": "val_a", "col2": "val"},
-                {"col1": "val_b", "col2": "val"}
-            ]
-        }
-    """
-    grouping_dict = defaultdict(list)
-
-    for d in qs:
-        grouping = d.pop(key_to_group_by)
-        grouping_dict[grouping].append(d)
-
-    return cast(Dict[str, List[Dict]], grouping_dict)
 
 
 def convert_count_results(qs: QuerySet, key_with_value_for_key: str, key_with_value_for_values: str) -> Dict:
