@@ -126,8 +126,8 @@ def get_call_counts_for_outbound(
     # call counts per caller (agent) phone number over time
     analytics["calls_per_user_by_date_and_hour"] = calculate_call_counts_per_user_time_series(calls_qs)
 
+    # call counts for non agents
     analytics["non_agent_engagement_types"] = calculate_outbound_call_non_agent_engagement_type_counts(calls_qs)
-    # analytics["non_agent_engagement_types"] = convert_count_results(analytics["non_agent_engagement_types"], )
 
     if practice_group_filter:
         practice_group_id = practice_group_filter.get("practice__practice_group_id")
