@@ -13,7 +13,6 @@ from django.contrib.postgres.search import (
 from django.db import models
 from django_countries.fields import CountryField
 from django_extensions.db.fields import ShortUUIDField
-from django_pandas.managers import DataFrameManager
 from phonenumber_field.modelfields import PhoneNumberField
 
 from calls.analytics.participants.field_choices import EngagementPersonaTypes
@@ -90,8 +89,6 @@ class Call(AuditTrailModel):
         except Exception as e:
             log.info(f"No transcript found for call={self.pk}")
         return signed_url
-
-    objects = DataFrameManager()
 
 
 class CallAudio(AuditTrailModel):

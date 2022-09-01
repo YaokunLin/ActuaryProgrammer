@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 from django.db.models import Avg, Count, Q, QuerySet, Sum
-from django.db.models.functions import TruncHour
+from django.db.models.functions import TruncDate, TruncHour
 from django_pandas.io import read_frame
 from django_pandas.managers import DataFrameQuerySet
 from rest_framework import status, views
@@ -241,7 +241,9 @@ def calculate_per_user_call_counts(calls_qs: QuerySet) -> Dict:
 #
 # Call Counts - Per Field Time Series
 #
-def _calculate_call_counts_per_field_time_series(calls_qs: QuerySet, field_name: str) -> Dict:
+def calculate_call_counts_per_user_time_series(calls_qs: QuerySet) -> Dict:
+    field_name = "sip_caller_number"
+
     analytics = {}
 
     # group by field name first
@@ -313,10 +315,6 @@ def _calculate_call_counts_per_field_time_series(calls_qs: QuerySet, field_name:
     )
 
     return analytics
-
-
-def calculate_call_counts_per_user_time_series(calls_qs: QuerySet) -> Dict:
-    return _calculate_call_counts_per_field_time_series(calls_qs, "sip_caller_number")
 
 
 def convert_count_results(qs: QuerySet, key_with_value_for_key: str, key_with_value_for_values: str) -> Dict:
@@ -461,10 +459,7 @@ class NewPatientWinbacksView(views.APIView):
 
 
 def _get_zero_filled_call_counts_per_day(calls_qs: DataFrameQuerySet, start_date: str, end_date: str) -> List[Dict]:
-    data = calls_qs.to_timeseries(
-        index="call_start_time", fieldnames=["call_start_time", "id"], values=["call_start_time", "id"], freq=f"1D", agg_kwargs={"func": "count"}
-    ).to_dict()["id"]
-    data = [{"date": k.to_pydatetime().date(), "value": v} for k, v in data.items()]
+    data = list(calls_qs.annotate(date=TruncDate("call_start_time")).values("date").annotate(value=Count("id")).values("date", "value").order_by("date"))
     if not data:
         return []
 
