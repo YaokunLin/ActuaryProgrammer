@@ -2,19 +2,21 @@ import logging
 from datetime import datetime, timedelta
 from typing import Optional
 
-from core.abstract_models import AuditTrailModel
 from django.conf import settings
 from django.contrib.postgres.indexes import GinIndex
-from django.contrib.postgres.search import SearchQuery, SearchRank, SearchVector, SearchVectorField
+from django.contrib.postgres.search import (
+    SearchQuery,
+    SearchRank,
+    SearchVector,
+    SearchVectorField,
+)
 from django.db import models
 from django_countries.fields import CountryField
 from django_extensions.db.fields import ShortUUIDField
+from django_pandas.managers import DataFrameManager
 from phonenumber_field.modelfields import PhoneNumberField
 
-from calls.analytics.participants.field_choices import (
-    EngagementPersonaTypes,
-)
-
+from calls.analytics.participants.field_choices import EngagementPersonaTypes
 from calls.field_choices import (
     CallAudioFileStatusTypes,
     CallConnectionTypes,
@@ -30,6 +32,7 @@ from calls.field_choices import (
     TelecomPersonaTypes,
     TranscriptTypes,
 )
+from core.abstract_models import AuditTrailModel
 from core.cloud_storage_helpers import get_signed_url, put_file
 
 # Get an instance of a logger
@@ -88,6 +91,8 @@ class Call(AuditTrailModel):
             log.info(f"No transcript found for call={self.pk}")
         return signed_url
 
+    objects = DataFrameManager()
+
 
 class CallAudio(AuditTrailModel):
     BUCKET_NAME: str = settings.BUCKET_NAME_CALL_AUDIO
@@ -110,25 +115,19 @@ class CallAudio(AuditTrailModel):
 class CallTranscriptManager(models.Manager):
     # This is not currently used by the RESTful frontend but should be adapted at some point in the future
     # See: https://pganalyze.com/blog/full-text-search-django-postgres for great examples on how to use this
-    search_vectors = (
-        SearchVector("transcript_text_tsvector", weight="A", config="english")  # use "+" to add additional vectors
-    )
+    search_vectors = SearchVector("transcript_text_tsvector", weight="A", config="english")  # use "+" to add additional vectors
 
     def search(self, text):
         search_query = SearchQuery(text, config="english")
         search_rank = SearchRank(CallTranscriptManager.search_vectors, search_query)
-        return self.get_queryset().annotate(
-            search=CallTranscriptManager.search_vectors
-        ).filter(
-            search=search_query
-        ).annotate(
-            rank=search_rank
-        ).order_by('-rank')
+        return (
+            self.get_queryset().annotate(search=CallTranscriptManager.search_vectors).filter(search=search_query).annotate(rank=search_rank).order_by("-rank")
+        )
 
 
 class CallTranscript(AuditTrailModel):
     objects = CallTranscriptManager()
-    
+
     BUCKET_NAME: str = settings.BUCKET_NAME_CALL_TRANSCRIPT
     id = ShortUUIDField(primary_key=True, editable=False)
     call = models.ForeignKey(Call, on_delete=models.CASCADE)
@@ -239,7 +238,7 @@ class CallNote(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     call = models.ForeignKey("Call", on_delete=models.CASCADE, related_name="notes")
     note = models.CharField(max_length=255)
-    
+
 
 class TelecomCallerNameInfo(AuditTrailModel):
     phone_number = PhoneNumberField(primary_key=True)
