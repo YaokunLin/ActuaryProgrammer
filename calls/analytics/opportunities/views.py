@@ -351,6 +351,8 @@ def convert_count_results(qs: QuerySet, key_with_value_for_key: str, key_with_va
         }
     """
     result = []
+    if not qs:
+        return result
 
     for item_dict in qs:
         new_dict = create_dict_from_key_values(item_dict, key_with_value_for_key, key_with_value_for_values)
