@@ -204,17 +204,26 @@ def calculate_outbound_call_non_agent_engagement_type_counts(calls_qs: QuerySet)
     return non_agent_engagement_counts
 
 
-def calculate_per_user_call_counts(calls_qs: QuerySet) -> Dict:
-    analytics = {}
-
-    field_name = "caller_number_with_extension"
-    calls_qs = calls_qs.annotate(
-        caller_number_with_extension=Case(
+def annotate_caller_number_with_extension(calls_qs: QuerySet) -> QuerySet:
+    """
+    Annotates a field "sip_caller_number_with_extension"
+    If extension is not blank, the value will be {sip_caller_number}x{sip_caller_extension}
+    Else, the value will be {sip_caller_number}
+    """
+    return calls_qs.annotate(
+        sip_caller_number_with_extension=Case(
             When(sip_caller_extension__exact="", then=F("sip_caller_number")),
             default=Concat("sip_caller_number", Value("x"), "sip_caller_extension", output_field=CharField()),
             output_field=CharField(),
         )
     )
+
+
+def calculate_per_user_call_counts(calls_qs: QuerySet) -> Dict:
+    analytics = {}
+
+    field_name = "sip_caller_number_with_extension"
+    calls_qs = annotate_caller_number_with_extension(calls_qs)
 
     # group by field name first
     calls_qs = calls_qs.values(field_name)
@@ -256,14 +265,8 @@ def calculate_per_user_call_counts(calls_qs: QuerySet) -> Dict:
 def calculate_call_counts_per_user_time_series(calls_qs: QuerySet) -> Dict:
     analytics = {}
 
-    field_name = "caller_number_with_extension"
-    calls_qs = calls_qs.annotate(
-        caller_number_with_extension=Case(
-            When(sip_caller_extension__exact="", then=F("sip_caller_number")),
-            default=Concat("sip_caller_number", Value("x"), "sip_caller_extension", output_field=CharField()),
-            output_field=CharField(),
-        )
-    )
+    field_name = "sip_caller_number_with_extension"
+    calls_qs = annotate_caller_number_with_extension(calls_qs)
     calls_qs = calls_qs.values(field_name)
 
     # calculate
