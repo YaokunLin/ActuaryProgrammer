@@ -3,8 +3,19 @@ import logging
 from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
-from django.db.models import Avg, Count, Q, QuerySet, Sum
-from django.db.models.functions import TruncDate, TruncHour
+from django.db.models import (
+    Avg,
+    Case,
+    CharField,
+    Count,
+    F,
+    Q,
+    QuerySet,
+    Sum,
+    Value,
+    When,
+)
+from django.db.models.functions import Concat, TruncDate, TruncHour
 from django_pandas.io import read_frame
 from django_pandas.managers import DataFrameQuerySet
 from rest_framework import status, views
@@ -193,8 +204,17 @@ def calculate_outbound_call_non_agent_engagement_type_counts(calls_qs: QuerySet)
     return non_agent_engagement_counts
 
 
-def _calculate_call_counts_per_field(calls_qs: QuerySet, field_name: str) -> Dict:
+def calculate_per_user_call_counts(calls_qs: QuerySet) -> Dict:
     analytics = {}
+
+    field_name = "caller_number_with_extension"
+    calls_qs = calls_qs.annotate(
+        caller_number_with_extension=Case(
+            When(sip_caller_extension__exact="", then=F("sip_caller_number")),
+            default=Concat("sip_caller_number", Value("x"), "sip_caller_extension", output_field=CharField()),
+            output_field=CharField(),
+        )
+    )
 
     # group by field name first
     calls_qs = calls_qs.values(field_name)
@@ -230,23 +250,20 @@ def _calculate_call_counts_per_field(calls_qs: QuerySet, field_name: str) -> Dic
     return analytics
 
 
-def calculate_per_practice_call_counts(calls_qs: QuerySet) -> Dict:
-    return _calculate_call_counts_per_field(calls_qs, "practice_id")
-
-
-def calculate_per_user_call_counts(calls_qs: QuerySet) -> Dict:
-    return _calculate_call_counts_per_field(calls_qs, "sip_caller_number")
-
-
 #
 # Call Counts - Per Field Time Series
 #
 def calculate_call_counts_per_user_time_series(calls_qs: QuerySet) -> Dict:
-    field_name = "sip_caller_number"
-
     analytics = {}
 
-    # group by field name first
+    field_name = "caller_number_with_extension"
+    calls_qs = calls_qs.annotate(
+        caller_number_with_extension=Case(
+            When(sip_caller_extension__exact="", then=F("sip_caller_number")),
+            default=Concat("sip_caller_number", Value("x"), "sip_caller_extension", output_field=CharField()),
+            output_field=CharField(),
+        )
+    )
     calls_qs = calls_qs.values(field_name)
 
     # calculate
