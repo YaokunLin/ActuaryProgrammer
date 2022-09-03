@@ -22,16 +22,16 @@ from rest_framework import status, views
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from calls.analytics.helpers import (
-    calculate_call_counts,
-    get_validated_practice_group_id,
-    get_validated_practice_id,
-)
+from calls.analytics.aggregates import calculate_call_counts
 from calls.analytics.intents.field_choices import CallOutcomeTypes
 from calls.analytics.participants.field_choices import NonAgentEngagementPersonaTypes
 from calls.field_choices import CallDirectionTypes
 from calls.models import Call
-from calls.validation import validate_call_dates
+from calls.validation import (
+    get_validated_call_dates,
+    get_validated_practice_group_id,
+    get_validated_practice_id,
+)
 from core.models import Agent, InsuranceProviderPhoneNumber, Practice, PracticeGroup
 
 # Get an instance of a logger
@@ -42,7 +42,7 @@ class InsuranceProviderCallMetricsView(views.APIView):
     def get(self, request, format=None):
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
         valid_practice_group_id, practice_group_errors = get_validated_practice_group_id(request=request)
-        dates_info = validate_call_dates(query_data=request.query_params)
+        dates_info = get_validated_call_dates(query_data=request.query_params)
         dates_errors = dates_info.get("errors")
 
         errors = {}
