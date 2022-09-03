@@ -1,30 +1,16 @@
-import datetime
 import logging
-from typing import Any, Dict, List, Optional, Tuple
 
-import pandas as pd
-from django.db.models import (
-    Avg,
-    Case,
-    CharField,
-    Count,
-    F,
-    Q,
-    QuerySet,
-    Sum,
-    Value,
-    When,
-)
-from django.db.models.functions import Concat, TruncDate, TruncHour
-from django_pandas.io import read_frame
-from django_pandas.managers import DataFrameQuerySet
+from django.db.models import Q
 from rest_framework import status, views
-from rest_framework.request import Request
 from rest_framework.response import Response
 
-from calls.analytics.aggregates import calculate_call_counts
-from calls.analytics.intents.field_choices import CallOutcomeTypes
-from calls.analytics.participants.field_choices import NonAgentEngagementPersonaTypes
+from calls.analytics.aggregates import (
+    calculate_call_breakdown_per_practice,
+    calculate_call_counts,
+    calculate_call_counts_per_user,
+    calculate_call_counts_per_user_time_series,
+    calculate_outbound_call_non_agent_engagement_type_counts,
+)
 from calls.field_choices import CallDirectionTypes
 from calls.models import Call
 from calls.validation import (
@@ -32,7 +18,7 @@ from calls.validation import (
     get_validated_practice_group_id,
     get_validated_practice_id,
 )
-from core.models import Agent, InsuranceProviderPhoneNumber, Practice, PracticeGroup
+from core.models import InsuranceProviderPhoneNumber
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -82,6 +68,15 @@ class InsuranceProviderCallMetricsView(views.APIView):
         )
         calls_qs = Call.objects.filter(all_filters)
 
-        analytics = {}
-        analytics["calls_overall"] = calculate_call_counts(calls_qs)
+        analytics = {
+            "calls_overall": calculate_call_counts(calls_qs),
+            "calls_per_user": calculate_call_counts_per_user(calls_qs),
+            "calls_per_user_by_date_and_hour": calculate_call_counts_per_user_time_series(calls_qs),
+            "non_agent_engagement_types": calculate_outbound_call_non_agent_engagement_type_counts(calls_qs),
+        }
+        if practice_group_filter:
+            analytics["calls_per_practice"] = calculate_call_breakdown_per_practice(
+                calls_qs, practice_group_filter.get("practice__practice_group_id"), analytics["calls_overall"]
+            )
+
         return Response({"results": analytics})

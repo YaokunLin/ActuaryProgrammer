@@ -16,20 +16,33 @@ from django.db.models import (
 from django.db.models.functions import Concat, TruncHour
 from django_pandas.io import read_frame
 
+from core.models import Practice
+
 # Get an instance of a logger
 log = logging.getLogger(__name__)
 
 
 def calculate_call_counts(calls_qs: QuerySet) -> Dict:
     # get call counts
-    count_analytics = calls_qs.aggregate(
-        call_total=Count("id"),
-        call_connected_total=Count("call_connection", filter=Q(call_connection="connected")),
-        call_seconds_total=Sum("duration_seconds"),
-        call_seconds_average=Avg("duration_seconds"),
+    analytics = dict(
+        calls_qs.aggregate(
+            call_total=Count("id"),
+            call_connected_total=Count("call_connection", filter=Q(call_connection="connected")),
+            call_seconds_total=Sum("duration_seconds"),
+            call_seconds_average=Avg("duration_seconds"),
+        )
     )
 
-    return count_analytics
+    analytics["call_sentiment_counts"] = calculate_call_sentiments(calls_qs)
+    return analytics
+
+
+def calculate_outbound_call_non_agent_engagement_type_counts(calls_qs: QuerySet) -> Dict:
+    non_agent_engagement_key = "engaged_in_calls__non_agent_engagement_persona_type"
+    non_agent_engagement_qs = calls_qs.values(non_agent_engagement_key).annotate(count=Count(non_agent_engagement_key))
+
+    non_agent_engagement_counts = convert_count_results(non_agent_engagement_qs, non_agent_engagement_key, "count")
+    return non_agent_engagement_counts
 
 
 def annotate_caller_number_with_extension(calls_qs: QuerySet) -> QuerySet:
@@ -47,11 +60,18 @@ def annotate_caller_number_with_extension(calls_qs: QuerySet) -> QuerySet:
     )
 
 
-def calculate_per_user_call_counts(calls_qs: QuerySet) -> Dict:
-    analytics = {}
-
-    field_name = "sip_caller_number_with_extension"
+def calculate_call_counts_per_user(calls_qs: QuerySet) -> Dict:
     calls_qs = annotate_caller_number_with_extension(calls_qs)
+    return calculate_call_counts_per_field(calls_qs, "sip_caller_number_with_extension")
+
+
+def calculate_call_counts_per_practice(calls_qs: QuerySet) -> Dict:
+    # TODO: A more meaningful key than ID in the dict returned
+    return calculate_call_counts_per_field(calls_qs, "practice_id")
+
+
+def calculate_call_counts_per_field(calls_qs: QuerySet, field_name: str) -> Dict:
+    analytics = {}
 
     # group by field name first
     calls_qs = calls_qs.values(field_name)
@@ -87,11 +107,19 @@ def calculate_per_user_call_counts(calls_qs: QuerySet) -> Dict:
     return analytics
 
 
-def calculate_per_user_call_counts_time_series(calls_qs: QuerySet) -> Dict:
+def calculate_call_counts_per_user_time_series(calls_qs: QuerySet) -> Dict:
+    calls_qs = annotate_caller_number_with_extension(calls_qs)
+    return calculate_call_counts_per_field_time_series(calls_qs, "sip_caller_number_with_extension")
+
+
+def calculate_call_counts_per_practice_time_series(calls_qs: QuerySet) -> Dict:
+    # TODO: A more meaningful key than ID in the dict returned
+    return calculate_call_counts_per_field_time_series(calls_qs, "practice_id")
+
+
+def calculate_call_counts_per_field_time_series(calls_qs: QuerySet, field_name: str) -> Dict:
     analytics = {}
 
-    field_name = "sip_caller_number_with_extension"
-    calls_qs = annotate_caller_number_with_extension(calls_qs)
     calls_qs = calls_qs.values(field_name)
 
     # calculate
@@ -192,6 +220,27 @@ def calculate_call_sentiments(calls_qs: QuerySet) -> Dict:
 
     call_sentiment_counts = convert_count_results(call_sentiment_analytics_qs, call_sentiment_score_key, "count")
     return call_sentiment_counts
+
+
+def calculate_call_breakdown_per_practice(calls_qs: QuerySet, practice_group_id: str, overall_call_counts_data: Dict) -> Dict:
+    per_practice = {}
+    per_practice_averages = {}
+    call_sentiment_counts = {}
+    num_practices = Practice.objects.filter(practice_group_id=practice_group_id).count()
+    if num_practices:
+        per_practice_averages["call_count"] = overall_call_counts_data["call_total"] / num_practices
+        per_practice_averages["call_connected_count"] = overall_call_counts_data["call_connected_total"] / num_practices
+        per_practice_averages["call_seconds_total"] = overall_call_counts_data["call_seconds_total"] / num_practices
+        per_practice_averages["call_seconds_average"] = overall_call_counts_data["call_seconds_average"] / num_practices
+
+        sentiments_types = ("not_applicable", "positive", "neutral", "negative")
+        for sentiment_type in sentiments_types:
+            call_sentiment_counts[sentiment_type] = overall_call_counts_data["call_sentiment_counts"].get(sentiment_type, 0) / num_practices
+
+    per_practice_averages["call_sentiment_counts"] = call_sentiment_counts
+    per_practice["averages"] = per_practice_averages
+    per_practice.update(calculate_call_counts_per_practice(calls_qs))
+    return per_practice
 
 
 def _create_dict_from_key_values(d: Dict, key_with_value_for_key: str, key_with_value_for_value: str) -> Dict:

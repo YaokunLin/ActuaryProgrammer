@@ -5,16 +5,15 @@ from typing import Any, Dict, List, Optional
 import pandas as pd
 from django.db.models import Avg, Count, Q, QuerySet, Sum
 from django.db.models.functions import TruncDate
-from django_pandas.managers import DataFrameQuerySet
 from rest_framework import status, views
 from rest_framework.response import Response
 
 from calls.analytics.aggregates import (
+    calculate_call_breakdown_per_practice,
     calculate_call_counts,
-    calculate_call_sentiments,
-    calculate_per_user_call_counts,
-    calculate_per_user_call_counts_time_series,
-    convert_count_results,
+    calculate_call_counts_per_user,
+    calculate_call_counts_per_user_time_series,
+    calculate_outbound_call_non_agent_engagement_type_counts,
 )
 from calls.analytics.intents.field_choices import CallOutcomeTypes
 from calls.analytics.participants.field_choices import NonAgentEngagementPersonaTypes
@@ -75,7 +74,6 @@ def get_call_counts_for_outbound(
     practice_filter: Optional[Dict[str, str]],
     practice_group_filter: Optional[Dict[str, str]],
 ) -> Dict[str, Any]:
-    analytics = {}
 
     # set re-usable filters
     filters = Q(call_direction=CallDirectionTypes.OUTBOUND) & Q(**dates_filter) & Q(**practice_filter) & Q(**practice_group_filter)
@@ -83,37 +81,17 @@ def get_call_counts_for_outbound(
     # set re-usable filtered queryset
     calls_qs = Call.objects.filter(filters)
 
-    # perform call counts
-    analytics["calls_overall"] = calculate_call_counts(calls_qs)
-    analytics["calls_overall"]["call_sentiment_counts"] = calculate_call_sentiments(calls_qs)
-
-    # call counts per caller (agent) phone number
-    analytics["calls_per_user"] = calculate_per_user_call_counts(calls_qs)
-
-    # call counts per caller (agent) phone number over time
-    analytics["calls_per_user_by_date_and_hour"] = calculate_per_user_call_counts_time_series(calls_qs)
-
-    # call counts for non agents
-    analytics["non_agent_engagement_types"] = calculate_outbound_call_non_agent_engagement_type_counts(calls_qs)
+    analytics = {
+        "calls_overall": calculate_call_counts(calls_qs),  # perform call counts
+        "calls_per_user": calculate_call_counts_per_user(calls_qs),  # call counts per caller (agent) phone number
+        "calls_per_user_by_date_and_hour": calculate_call_counts_per_user_time_series(calls_qs),  # call counts per caller (agent) phone number over time
+        "non_agent_engagement_types": calculate_outbound_call_non_agent_engagement_type_counts(calls_qs),  # call counts for non agents
+    }
 
     if practice_group_filter:
-        practice_group_id = practice_group_filter.get("practice__practice_group_id")
-        per_practice_averages = {}
-        call_sentiment_counts = {}
-        num_practices = Practice.objects.filter(practice_group_id=practice_group_id).count()
-
-        calls_overall = analytics["calls_overall"]
-        per_practice_averages["call_total"] = calls_overall["call_total"] / num_practices
-        per_practice_averages["call_connected_total"] = calls_overall["call_connected_total"] / num_practices
-        per_practice_averages.update(calculate_call_count_durations_averages_per_practice(calls_qs))
-
-        sentiments_types = ("not_applicable", "positive", "neutral", "negative")
-        for sentiment_type in sentiments_types:
-            call_sentiment_counts[sentiment_type] = calls_overall["call_sentiment_counts"].get(sentiment_type, 0) / num_practices
-
-        per_practice_averages["call_sentiment_counts"] = call_sentiment_counts
-        analytics["per_practice_averages"] = per_practice_averages
-
+        analytics["calls_per_practice"] = calculate_call_breakdown_per_practice(
+            calls_qs, practice_group_filter.get("practice__practice_group_id"), analytics["calls_overall"]
+        )
     return analytics
 
 
@@ -127,14 +105,6 @@ def calculate_call_count_durations_averages_per_practice(calls_qs: QuerySet) -> 
     )
 
     return {"call_seconds_total": call_seconds_total, "call_seconds_average": call_seconds_average}
-
-
-def calculate_outbound_call_non_agent_engagement_type_counts(calls_qs: QuerySet) -> Dict:
-    non_agent_engagement_key = "engaged_in_calls__non_agent_engagement_persona_type"
-    non_agent_engagement_qs = calls_qs.values(non_agent_engagement_key).annotate(count=Count(non_agent_engagement_key))
-
-    non_agent_engagement_counts = convert_count_results(non_agent_engagement_qs, non_agent_engagement_key, "count")
-    return non_agent_engagement_counts
 
 
 class NewPatientWinbacksView(views.APIView):
@@ -235,7 +205,7 @@ class NewPatientWinbacksView(views.APIView):
         return Response({"filters": display_filters, "results": aggregates})
 
 
-def _get_zero_filled_call_counts_per_day(calls_qs: DataFrameQuerySet, start_date: str, end_date: str) -> List[Dict]:
+def _get_zero_filled_call_counts_per_day(calls_qs: QuerySet, start_date: str, end_date: str) -> List[Dict]:
     data = list(calls_qs.annotate(date=TruncDate("call_start_time")).values("date").annotate(value=Count("id")).values("date", "value").order_by("date"))
     if not data:
         return []
@@ -274,9 +244,7 @@ def _convert_daily_to_weekly(data: List[Dict]) -> List[Dict]:
     return weekly_data
 
 
-def _calculate_winback_time_series(
-    winbacks_total_qs: DataFrameQuerySet, winbacks_won_qs: DataFrameQuerySet, winbacks_lost_qs: DataFrameQuerySet, start_date: str, end_date: str
-) -> Dict:
+def _calculate_winback_time_series(winbacks_total_qs: QuerySet, winbacks_won_qs: QuerySet, winbacks_lost_qs: QuerySet, start_date: str, end_date: str) -> Dict:
     per_day = {}
     per_week = {}
 
