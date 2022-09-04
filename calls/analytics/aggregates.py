@@ -66,8 +66,7 @@ def calculate_call_counts_per_user(calls_qs: QuerySet) -> Dict:
 
 
 def calculate_call_counts_per_practice(calls_qs: QuerySet) -> Dict:
-    # TODO: A more meaningful key than ID in the dict returned
-    return calculate_call_counts_per_field(calls_qs, "practice_id")
+    return calculate_call_counts_per_field(calls_qs, "practice__name")
 
 
 def calculate_call_counts_per_field(calls_qs: QuerySet, field_name: str) -> Dict:
@@ -113,8 +112,7 @@ def calculate_call_counts_per_user_time_series(calls_qs: QuerySet) -> Dict:
 
 
 def calculate_call_counts_per_practice_time_series(calls_qs: QuerySet) -> Dict:
-    # TODO: A more meaningful key than ID in the dict returned
-    return calculate_call_counts_per_field_time_series(calls_qs, "practice_id")
+    return calculate_call_counts_per_field_time_series(calls_qs, "practice__name")
 
 
 def calculate_call_counts_per_field_time_series(calls_qs: QuerySet, field_name: str) -> Dict:
@@ -239,7 +237,8 @@ def calculate_call_breakdown_per_practice(calls_qs: QuerySet, practice_group_id:
 
     per_practice_averages["call_sentiment_counts"] = call_sentiment_counts
     per_practice["averages"] = per_practice_averages
-    per_practice.update(calculate_call_counts_per_practice(calls_qs))
+    per_practice["per_practice"] = calculate_call_counts_per_practice(calls_qs)
+    per_practice["per_practice_by_date_and_hour"] = calculate_call_counts_per_practice_time_series(calls_qs)
     return per_practice
 
 
