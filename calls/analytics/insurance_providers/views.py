@@ -1,8 +1,8 @@
 import logging
 from collections import Counter
-from typing import Dict, List, Optional
+from typing import Dict
 
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 from rest_framework import status, views
 from rest_framework.response import Response
 
@@ -76,49 +76,8 @@ class InsuranceProviderCallMetricsView(views.APIView):
             "calls_per_user": calculate_call_counts_per_user(calls_qs),
             "calls_per_user_by_date_and_hour": calculate_call_counts_per_user_time_series(calls_qs),
             "non_agent_engagement_types": calculate_outbound_call_non_agent_engagement_type_counts(calls_qs),
+            "calls_per_insurance_provider": calculate_call_breakdown_per_insurance_provider(calls_qs),
         }
-
-        # TODO Kyle: Refactor under here and abstract this shit out, fix names, fix what's injected, etc.
-        per_insurance_provider_phone_number = calculate_call_counts_per_field(calls_qs, "sip_callee_number")
-        insurance_provider_phone_numbers = InsuranceProviderPhoneNumber.objects.select_related("insurance_provider").filter(
-            phone_number__in=per_insurance_provider_phone_number["call_total"].keys()
-        )
-        insurance_provider_by_phone_number = {ipp.phone_number: ipp.insurance_provider for ipp in insurance_provider_phone_numbers}
-        num_phone_numbers_by_insurance_provider = Counter(insurance_provider_by_phone_number.values())
-
-        def foo(section_name: str, calculate_average: bool = False) -> Dict:
-            data_by_provider = dict()
-            for phone_number, value in per_insurance_provider_phone_number[section_name].items():
-                insurance_provider = insurance_provider_by_phone_number[phone_number]
-                new_value = value
-                existing_value = data_by_provider.get(insurance_provider, None)
-                if existing_value:
-                    if isinstance(existing_value, dict):
-                        new_value = dict()
-                        for k, v in existing_value.items():
-                            new_value[k] = v + value[k]
-                    else:
-                        new_value = existing_value + value
-                data_by_provider[insurance_provider] = new_value
-            if calculate_average:
-                for insurance_provider, v in data_by_provider.items():
-                    num_phone_numbers = num_phone_numbers_by_insurance_provider[insurance_provider]
-                    if isinstance(v, dict):
-                        new_value = dict()
-                        for k2, v2 in v.items():
-                            new_value[k2] = v2 / num_phone_numbers
-                    else:
-                        new_value = v / num_phone_numbers
-                    data_by_provider[insurance_provider] = new_value
-            return data_by_provider
-
-        for section_name in ("call_total", "call_connected_total", "call_seconds_total", "call_sentiment_counts"):
-            data_by_provider = foo(section_name)
-            per_insurance_provider_phone_number[section_name] = {p.name: v for p, v in data_by_provider.items()}
-        per_insurance_provider_phone_number["call_seconds_average"] = {p.name: v for p, v in foo("call_seconds_average", calculate_average=True).items()}
-
-        analytics["calls_per_insurance_provider"] = per_insurance_provider_phone_number
-        # END TODO Kyle
 
         if practice_group_filter:
             analytics["calls_per_practice"] = calculate_call_breakdown_per_practice(
@@ -126,3 +85,62 @@ class InsuranceProviderCallMetricsView(views.APIView):
             )
 
         return Response({"results": analytics})
+
+
+def calculate_call_breakdown_per_insurance_provider(calls_qs: QuerySet) -> Dict:
+    data_per_phone_number = calculate_call_counts_per_field(calls_qs, "sip_callee_number")
+    phone_numbers = InsuranceProviderPhoneNumber.objects.select_related("insurance_provider").filter(
+        phone_number__in=data_per_phone_number["call_total"].keys()
+    )
+    insurance_provider_per_phone_number = {ipp.phone_number: ipp.insurance_provider for ipp in phone_numbers}
+    num_phone_numbers_per_insurance_provider = Counter(insurance_provider_per_phone_number.values())
+
+    data_per_insurance_provider_name = {}
+    for section_name in ("call_total", "call_connected_total", "call_seconds_total", "call_sentiment_counts"):
+        data_per_insurance_provider = _aggregate_per_insurance_provider(
+            data_per_phone_number, num_phone_numbers_per_insurance_provider, insurance_provider_per_phone_number, section_name
+        )
+        data_per_insurance_provider_name[section_name] = {p.name: v for p, v in data_per_insurance_provider.items()}
+    call_seconds_average_data = _aggregate_per_insurance_provider(
+        data_per_phone_number, num_phone_numbers_per_insurance_provider, insurance_provider_per_phone_number, "call_seconds_average", True
+    )
+    data_per_insurance_provider_name["call_seconds_average"] = {p.name: v for p, v in call_seconds_average_data.items()}
+    return data_per_insurance_provider_name
+
+
+def _aggregate_per_insurance_provider(
+    data_per_phone_number: Dict,
+    num_phone_numbers_per_insurance_provider: Dict,
+    insurance_provider_per_phone_number: Dict,
+    section_name: str,
+    calculate_average: bool = False,
+) -> Dict:
+    """
+    Given data broken down by phone number, aggregate it by insurance provider.
+    Averages the values if calculate_average is True else sums the values.
+    """
+    data_per_provider = dict()
+    for phone_number, value in data_per_phone_number[section_name].items():
+        insurance_provider = insurance_provider_per_phone_number[phone_number]
+        new_value = value
+        existing_value = data_per_provider.get(insurance_provider, None)
+        if existing_value:
+            if isinstance(existing_value, dict):
+                new_value = dict()
+                for k, v in existing_value.items():
+                    new_value[k] = v + value[k]
+            else:
+                new_value = existing_value + value
+        data_per_provider[insurance_provider] = new_value
+
+    if calculate_average:
+        for insurance_provider, v in data_per_provider.items():
+            num_phone_numbers = num_phone_numbers_per_insurance_provider[insurance_provider]
+            if isinstance(v, dict):
+                new_value = dict()
+                for subkey, subvalue in v.items():
+                    new_value[subkey] = subvalue / num_phone_numbers
+            else:
+                new_value = v / num_phone_numbers
+            data_per_provider[insurance_provider] = new_value
+    return data_per_provider
