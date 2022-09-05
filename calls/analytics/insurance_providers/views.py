@@ -98,11 +98,11 @@ def calculate_call_breakdown_per_insurance_provider(calls_qs: QuerySet) -> Dict:
     data_per_insurance_provider_name = {}
     for section_name in ("call_total", "call_connected_total", "call_seconds_total", "call_sentiment_counts"):
         data_per_insurance_provider = _aggregate_per_insurance_provider(
-            data_per_phone_number, num_phone_numbers_per_insurance_provider, insurance_provider_per_phone_number, section_name
+            data_per_phone_number, num_phone_numbers_per_insurance_provider, insurance_provider_per_phone_number, section_name, "sum"
         )
         data_per_insurance_provider_name[section_name] = {p.name: v for p, v in data_per_insurance_provider.items()}
     call_seconds_average_data = _aggregate_per_insurance_provider(
-        data_per_phone_number, num_phone_numbers_per_insurance_provider, insurance_provider_per_phone_number, "call_seconds_average", True
+        data_per_phone_number, num_phone_numbers_per_insurance_provider, insurance_provider_per_phone_number, "call_seconds_average", "avg"
     )
     data_per_insurance_provider_name["call_seconds_average"] = {p.name: v for p, v in call_seconds_average_data.items()}
     return data_per_insurance_provider_name
@@ -113,11 +113,11 @@ def _aggregate_per_insurance_provider(
     num_phone_numbers_per_insurance_provider: Dict,
     insurance_provider_per_phone_number: Dict,
     section_name: str,
-    calculate_average: bool = False,
+    calculation: str,
 ) -> Dict:
     """
     Given data broken down by phone number, aggregate it by insurance provider.
-    Averages the values if calculate_average is True else sums the values.
+    calculation must be either "sum" or "avg"
     """
     data_per_provider = dict()
     for phone_number, value in data_per_phone_number[section_name].items():
@@ -133,7 +133,7 @@ def _aggregate_per_insurance_provider(
                 new_value = existing_value + value
         data_per_provider[insurance_provider] = new_value
 
-    if calculate_average:
+    if calculation == "avg":
         for insurance_provider, v in data_per_provider.items():
             num_phone_numbers = num_phone_numbers_per_insurance_provider[insurance_provider]
             if isinstance(v, dict):
