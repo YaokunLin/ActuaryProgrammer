@@ -2,7 +2,9 @@ import logging
 from collections import Counter
 from typing import Dict
 
-from django.db.models import Q, QuerySet
+from django.db.models import Count, Q, QuerySet
+from django.db.models.functions import TruncHour
+from django_pandas.io import read_frame
 from rest_framework import status, views
 from rest_framework.response import Response
 
@@ -13,7 +15,9 @@ from calls.analytics.aggregates import (
     calculate_call_counts_per_user,
     calculate_call_counts_per_user_time_series,
     calculate_call_non_agent_engagement_type_counts,
+    convert_count_results,
 )
+from calls.analytics.intents.field_choices import CallOutcomeTypes
 from calls.field_choices import CallDirectionTypes
 from calls.models import Call
 from calls.validation import (
@@ -78,7 +82,6 @@ class InsuranceProviderCallMetricsView(views.APIView):
             "non_agent_engagement_types": calculate_call_non_agent_engagement_type_counts(calls_qs),
             "calls_per_insurance_provider": calculate_call_breakdown_per_insurance_provider(calls_qs),
         }
-
         if practice_group_filter:
             analytics["calls_per_practice"] = calculate_call_breakdown_per_practice(
                 calls_qs, practice_group_filter.get("practice__practice_group_id"), analytics["calls_overall"]
@@ -89,14 +92,35 @@ class InsuranceProviderCallMetricsView(views.APIView):
 
 def calculate_call_breakdown_per_insurance_provider(calls_qs: QuerySet) -> Dict:
     data_per_phone_number = calculate_call_counts_per_field(calls_qs, "sip_callee_number")
+
+    # Successes ---
+    successes_qs = calls_qs.filter(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.SUCCESS).values("sip_callee_number")
+    data_per_phone_number["call_success_total"] = successes_qs.annotate(count=Count("id")).order_by("-count")
+    data_per_phone_number["call_success_total"] = convert_count_results(data_per_phone_number["call_success_total"], "sip_callee_number", "count")
+
+    # By date and hour
+    field_name = "sip_callee_number"
+    d = (
+        calls_qs.annotate(call_date_hour=TruncHour("call_start_time"))
+        .values(field_name, "call_date_hour")
+        .annotate(call_total=Count("id"))
+        .values(field_name, "call_date_hour", "call_total")
+        .order_by(field_name, "call_date_hour")
+    )
+    d = read_frame(d)
+    data_per_phone_number["calls_by_date_and_hour"] = (
+        d.groupby(field_name)[["call_date_hour", "call_total"]].apply(lambda x: x.to_dict(orient="records")).to_dict()
+    )
+
     phone_numbers = InsuranceProviderPhoneNumber.objects.select_related("insurance_provider").filter(
         phone_number__in=data_per_phone_number["call_total"].keys()
     )
     insurance_provider_per_phone_number = {ipp.phone_number: ipp.insurance_provider for ipp in phone_numbers}
     num_phone_numbers_per_insurance_provider = Counter(insurance_provider_per_phone_number.values())
 
+    # HEREBEDRAGONS: Insurance Provider name isn't technically unique so there could be fuckery...
     data_per_insurance_provider_name = {}
-    for section_name in ("call_total", "call_connected_total", "call_seconds_total", "call_sentiment_counts"):
+    for section_name in ("call_total", "call_connected_total", "call_seconds_total", "call_sentiment_counts", "call_success_total", "calls_by_date_and_hour"):
         data_per_insurance_provider = _aggregate_per_insurance_provider(
             data_per_phone_number, num_phone_numbers_per_insurance_provider, insurance_provider_per_phone_number, section_name, "sum"
         )
@@ -105,6 +129,13 @@ def calculate_call_breakdown_per_insurance_provider(calls_qs: QuerySet) -> Dict:
         data_per_phone_number, num_phone_numbers_per_insurance_provider, insurance_provider_per_phone_number, "call_seconds_average", "avg"
     )
     data_per_insurance_provider_name["call_seconds_average"] = {p.name: v for p, v in call_seconds_average_data.items()}
+
+    # Success Rate ---
+    data_per_insurance_provider_name["call_success_rate"] = dict()
+    for k, v in data_per_insurance_provider_name["call_total"].items():
+        success_count = data_per_insurance_provider_name["call_success_total"].get(k, None)
+        data_per_insurance_provider_name["call_success_rate"][k] = success_count / v if success_count else 0
+
     return data_per_insurance_provider_name
 
 
@@ -128,7 +159,8 @@ def _aggregate_per_insurance_provider(
             if isinstance(existing_value, dict):
                 new_value = dict()
                 for k, v in existing_value.items():
-                    new_value[k] = v + value[k]
+                    subvalue = value.get(k, None)
+                    new_value[k] = v + subvalue if subvalue is not None else v
             else:
                 new_value = existing_value + value
         data_per_provider[insurance_provider] = new_value
