@@ -49,7 +49,9 @@ steps:
       - '-c'
       - |
         curl $(gcloud app services browse django-createsuperuser --no-launch-browser --format='value(url)')
+    timeout: "1600s"
 
+timeout: "1600s"
 
   # disable until we get it working - need asgi
   # - id: "celery-beat service App Engine Deploy"
