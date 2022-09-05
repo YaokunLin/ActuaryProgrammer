@@ -12,7 +12,7 @@ from calls.analytics.aggregates import (
     calculate_call_counts_per_field,
     calculate_call_counts_per_user,
     calculate_call_counts_per_user_time_series,
-    calculate_outbound_call_non_agent_engagement_type_counts,
+    calculate_call_non_agent_engagement_type_counts,
 )
 from calls.field_choices import CallDirectionTypes
 from calls.models import Call
@@ -75,7 +75,7 @@ class InsuranceProviderCallMetricsView(views.APIView):
             "calls_overall": calculate_call_counts(calls_qs),
             "calls_per_user": calculate_call_counts_per_user(calls_qs),
             "calls_per_user_by_date_and_hour": calculate_call_counts_per_user_time_series(calls_qs),
-            "non_agent_engagement_types": calculate_outbound_call_non_agent_engagement_type_counts(calls_qs),
+            "non_agent_engagement_types": calculate_call_non_agent_engagement_type_counts(calls_qs),
             "calls_per_insurance_provider": calculate_call_breakdown_per_insurance_provider(calls_qs),
         }
 

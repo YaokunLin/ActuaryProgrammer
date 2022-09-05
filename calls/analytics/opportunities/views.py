@@ -13,7 +13,7 @@ from calls.analytics.aggregates import (
     calculate_call_counts,
     calculate_call_counts_per_user,
     calculate_call_counts_per_user_time_series,
-    calculate_outbound_call_non_agent_engagement_type_counts,
+    calculate_call_non_agent_engagement_type_counts,
 )
 from calls.analytics.intents.field_choices import CallOutcomeTypes
 from calls.analytics.participants.field_choices import NonAgentEngagementPersonaTypes
@@ -85,7 +85,7 @@ def get_call_counts_for_outbound(
         "calls_overall": calculate_call_counts(calls_qs),  # perform call counts
         "calls_per_user": calculate_call_counts_per_user(calls_qs),  # call counts per caller (agent) phone number
         "calls_per_user_by_date_and_hour": calculate_call_counts_per_user_time_series(calls_qs),  # call counts per caller (agent) phone number over time
-        "non_agent_engagement_types": calculate_outbound_call_non_agent_engagement_type_counts(calls_qs),  # call counts for non agents
+        "non_agent_engagement_types": calculate_call_non_agent_engagement_type_counts(calls_qs),  # call counts for non agents
     }
 
     if practice_group_filter:

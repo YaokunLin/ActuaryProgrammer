@@ -37,7 +37,7 @@ def calculate_call_counts(calls_qs: QuerySet) -> Dict:
     return analytics
 
 
-def calculate_outbound_call_non_agent_engagement_type_counts(calls_qs: QuerySet) -> Dict:
+def calculate_call_non_agent_engagement_type_counts(calls_qs: QuerySet) -> Dict:
     non_agent_engagement_key = "engaged_in_calls__non_agent_engagement_persona_type"
     non_agent_engagement_qs = calls_qs.values(non_agent_engagement_key).annotate(count=Count(non_agent_engagement_key))
 
