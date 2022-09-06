@@ -2,6 +2,7 @@ import logging
 from typing import Dict, List
 
 from django.db.models import (
+    Aggregate,
     Avg,
     Case,
     CharField,
@@ -115,16 +116,62 @@ def calculate_call_counts_per_practice_time_series(calls_qs: QuerySet) -> Dict:
     return calculate_call_counts_per_field_time_series(calls_qs, "practice__name")
 
 
-def calculate_call_count_by_date_and_hour(calls_by_field_name_qs: QuerySet, field_name: str) -> Dict:
+def _calculate_call_values_by_date_and_hour(calls_by_field_name_qs: QuerySet, field_name: str, calculation: Aggregate, calculation_name: str) -> Dict:
+    calculated_value_label = "calculated_value"
+    call_date_hour_label = "call_date_hour"
     data = (
         calls_by_field_name_qs.annotate(call_date_hour=TruncHour("call_start_time"))
-        .values(field_name, "call_date_hour")
-        .annotate(call_total=Count("id"))
-        .values(field_name, "call_date_hour", "call_total")
+        .values(field_name, call_date_hour_label)
+        .annotate(calculated_value=calculation)
+        .values(field_name, call_date_hour_label, calculated_value_label)
+        .order_by(field_name, call_date_hour_label)
+    )
+    data = read_frame(data)
+    data = data.groupby(field_name)[[call_date_hour_label, calculated_value_label]].apply(lambda x: x.to_dict(orient="records")).to_dict()
+    for field_value, value_list in data.items():
+        for value_dict in value_list:
+            value_dict[calculation_name] = value_dict[calculated_value_label]
+            del value_dict[calculated_value_label]
+    return data
+
+
+def calculate_call_count_by_date_and_hour(calls_by_field_name_qs: QuerySet, field_name: str) -> Dict:
+    return _calculate_call_values_by_date_and_hour(calls_by_field_name_qs, field_name, Count("id"), "call_total")
+
+
+def calculate_total_call_duration_by_date_and_hour(calls_by_field_name_qs: QuerySet, field_name: str) -> Dict:
+    return _calculate_call_values_by_date_and_hour(
+        calls_by_field_name_qs,
+        field_name,
+        Sum("duration_seconds"),
+        "call_seconds_total",
+    )
+
+
+def calculate_average_call_duration_by_date_and_hour(calls_by_field_name_qs: QuerySet, field_name: str) -> Dict:
+    return _calculate_call_values_by_date_and_hour(
+        calls_by_field_name_qs,
+        field_name,
+        Avg("duration_seconds"),
+        "call_seconds_average",
+    )
+
+
+def calculate_call_sentiment_counts_by_date_and_hour(calls_by_field_name_qs: QuerySet, field_name: str) -> Dict:
+    data = (
+        calls_by_field_name_qs.annotate(call_date_hour=TruncHour("call_start_time"))
+        .values(field_name, "call_date_hour", "call_sentiments__caller_sentiment_score")
+        .annotate(call_sentiment_count=Count("call_sentiments__caller_sentiment_score"))
+        .values(field_name, "call_date_hour", "call_sentiments__caller_sentiment_score", "call_sentiment_count")
         .order_by(field_name, "call_date_hour")
     )
     data = read_frame(data)
-    return data.groupby(field_name)[["call_date_hour", "call_total"]].apply(lambda x: x.to_dict(orient="records")).to_dict()
+    return (
+        data.groupby(field_name)[["call_date_hour", "call_sentiments__caller_sentiment_score", "call_sentiment_count"]]
+        .apply(lambda x: x.to_dict(orient="records"))
+        .apply(lambda x: convert_count_results(x, "call_sentiments__caller_sentiment_score", "call_sentiment_count"))
+        .to_dict()
+    )
 
 
 def calculate_call_counts_per_field_time_series(calls_qs: QuerySet, field_name: str) -> Dict:
@@ -134,45 +181,10 @@ def calculate_call_counts_per_field_time_series(calls_qs: QuerySet, field_name: 
 
     analytics["calls_total"] = calculate_call_count_by_date_and_hour(calls_qs, field_name)
     analytics["call_connected_total"] = calculate_call_count_by_date_and_hour(calls_qs.filter(call_connection="connected"), field_name)
+    analytics["call_seconds_total"] = calculate_total_call_duration_by_date_and_hour(calls_qs, field_name)
+    analytics["call_seconds_average"] = calculate_average_call_duration_by_date_and_hour(calls_qs, field_name)
 
-    analytics["call_seconds_total"] = (
-        calls_qs.annotate(call_date_hour=TruncHour("call_start_time"))
-        .values(field_name, "call_date_hour")
-        .annotate(call_seconds_total=Sum("duration_seconds"))
-        .values(field_name, "call_date_hour", "call_seconds_total")
-        .order_by(field_name, "call_date_hour")
-    )
-    analytics["call_seconds_total"] = read_frame(analytics["call_seconds_total"])
-    analytics["call_seconds_total"] = (
-        analytics["call_seconds_total"].groupby(field_name)[["call_date_hour", "call_seconds_total"]].apply(lambda x: x.to_dict(orient="records")).to_dict()
-    )
-
-    analytics["call_seconds_average"] = (
-        calls_qs.annotate(call_date_hour=TruncHour("call_start_time"))
-        .values(field_name, "call_date_hour")
-        .annotate(call_seconds_average=Avg("duration_seconds"))
-        .values(field_name, "call_date_hour", "call_seconds_average")
-        .order_by(field_name, "call_date_hour")
-    )
-    analytics["call_seconds_average"] = read_frame(analytics["call_seconds_average"])
-    analytics["call_seconds_average"] = (
-        analytics["call_seconds_average"].groupby(field_name)[["call_date_hour", "call_seconds_average"]].apply(lambda x: x.to_dict(orient="records")).to_dict()
-    )
-
-    analytics["call_sentiment_counts"] = (
-        calls_qs.annotate(call_date_hour=TruncHour("call_start_time"))
-        .values(field_name, "call_date_hour", "call_sentiments__caller_sentiment_score")
-        .annotate(call_sentiment_count=Count("call_sentiments__caller_sentiment_score"))
-        .values(field_name, "call_date_hour", "call_sentiments__caller_sentiment_score", "call_sentiment_count")
-        .order_by(field_name, "call_date_hour")
-    )
-    analytics["call_sentiment_counts"] = read_frame(analytics["call_sentiment_counts"])
-    analytics["call_sentiment_counts"] = (
-        analytics["call_sentiment_counts"]
-        .groupby(field_name)[["call_date_hour", "call_sentiment_count"]]
-        .apply(lambda x: x.to_dict(orient="records"))
-        .to_dict()
-    )
+    analytics["call_sentiment_counts"] = calculate_call_sentiment_counts_by_date_and_hour(calls_qs, field_name)
 
     return analytics
 
