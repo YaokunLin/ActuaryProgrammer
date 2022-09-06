@@ -115,36 +115,25 @@ def calculate_call_counts_per_practice_time_series(calls_qs: QuerySet) -> Dict:
     return calculate_call_counts_per_field_time_series(calls_qs, "practice__name")
 
 
+def calculate_call_count_by_date_and_hour(calls_by_field_name_qs: QuerySet, field_name: str) -> Dict:
+    data = (
+        calls_by_field_name_qs.annotate(call_date_hour=TruncHour("call_start_time"))
+        .values(field_name, "call_date_hour")
+        .annotate(call_total=Count("id"))
+        .values(field_name, "call_date_hour", "call_total")
+        .order_by(field_name, "call_date_hour")
+    )
+    data = read_frame(data)
+    return data.groupby(field_name)[["call_date_hour", "call_total"]].apply(lambda x: x.to_dict(orient="records")).to_dict()
+
+
 def calculate_call_counts_per_field_time_series(calls_qs: QuerySet, field_name: str) -> Dict:
     analytics = {}
 
     calls_qs = calls_qs.values(field_name)
 
-    # calculate
-    analytics["calls_total"] = (
-        calls_qs.annotate(call_date_hour=TruncHour("call_start_time"))
-        .values(field_name, "call_date_hour")
-        .annotate(call_total=Count("id"))
-        .values(field_name, "call_date_hour", "call_total")
-        .order_by(field_name, "call_date_hour")
-    )
-    analytics["calls_total"] = read_frame(analytics["calls_total"])
-    analytics["calls_total"] = (
-        analytics["calls_total"].groupby(field_name)[["call_date_hour", "call_total"]].apply(lambda x: x.to_dict(orient="records")).to_dict()
-    )
-
-    analytics["call_connected_total"] = (
-        calls_qs.filter(call_connection="connected")
-        .annotate(call_date_hour=TruncHour("call_start_time"))
-        .values(field_name, "call_date_hour")
-        .annotate(call_total=Count("id"))
-        .values(field_name, "call_date_hour", "call_total")
-        .order_by(field_name, "call_date_hour")
-    )
-    analytics["call_connected_total"] = read_frame(analytics["call_connected_total"])
-    analytics["call_connected_total"] = (
-        analytics["call_connected_total"].groupby(field_name)[["call_date_hour", "call_total"]].apply(lambda x: x.to_dict(orient="records")).to_dict()
-    )
+    analytics["calls_total"] = calculate_call_count_by_date_and_hour(calls_qs, field_name)
+    analytics["call_connected_total"] = calculate_call_count_by_date_and_hour(calls_qs.filter(call_connection="connected"), field_name)
 
     analytics["call_seconds_total"] = (
         calls_qs.annotate(call_date_hour=TruncHour("call_start_time"))

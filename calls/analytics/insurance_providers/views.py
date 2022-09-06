@@ -10,6 +10,7 @@ from rest_framework.response import Response
 
 from calls.analytics.aggregates import (
     calculate_call_breakdown_per_practice,
+    calculate_call_count_by_date_and_hour,
     calculate_call_counts,
     calculate_call_counts_per_field,
     calculate_call_counts_per_user,
@@ -98,19 +99,7 @@ def calculate_call_breakdown_per_insurance_provider(calls_qs: QuerySet) -> Dict:
     data_per_phone_number["call_success_total"] = successes_qs.annotate(count=Count("id")).order_by("-count")
     data_per_phone_number["call_success_total"] = convert_count_results(data_per_phone_number["call_success_total"], "sip_callee_number", "count")
 
-    # By date and hour
-    field_name = "sip_callee_number"
-    d = (
-        calls_qs.annotate(call_date_hour=TruncHour("call_start_time"))
-        .values(field_name, "call_date_hour")
-        .annotate(call_total=Count("id"))
-        .values(field_name, "call_date_hour", "call_total")
-        .order_by(field_name, "call_date_hour")
-    )
-    d = read_frame(d)
-    data_per_phone_number["calls_by_date_and_hour"] = (
-        d.groupby(field_name)[["call_date_hour", "call_total"]].apply(lambda x: x.to_dict(orient="records")).to_dict()
-    )
+    data_per_phone_number["calls_by_date_and_hour"] = calculate_call_count_by_date_and_hour(calls_qs, "sip_callee_number")
 
     phone_numbers = InsuranceProviderPhoneNumber.objects.select_related("insurance_provider").filter(
         phone_number__in=data_per_phone_number["call_total"].keys()
