@@ -89,10 +89,10 @@ class InsuranceProviderCallMetricsView(views.APIView):
         analytics["calls_by_date_and_hour"] = calculate_call_counts_by_date_and_hour(calls_qs)
         analytics["calls_by_day_of_week"] = calculate_call_counts_by_day_of_week(calls_qs)
 
-        if practice_group_filter:
-            analytics["calls_per_practice"] = calculate_call_breakdown_per_practice(
-                calls_qs, practice_group_filter.get("practice__practice_group_id"), analytics["calls_overall"]
-            )
+        # if practice_group_filter:
+        #     analytics["calls_per_practice"] = calculate_call_breakdown_per_practice(
+        #         calls_qs, practice_group_filter.get("practice__practice_group_id"), analytics["calls_overall"]
+        #     )
 
         return Response({"results": analytics})
 
