@@ -95,18 +95,6 @@ def get_call_counts_for_outbound(
     return analytics
 
 
-def calculate_call_count_durations_averages_per_practice(calls_qs: QuerySet) -> Dict:
-    # TODO: Maybe this is unnecessary and we can just do simple math :thnk:
-    call_seconds_total = (
-        calls_qs.values("practice_id").annotate(sum_duration_sec=Sum("duration_seconds")).aggregate(Avg("sum_duration_sec"))["sum_duration_sec__avg"]
-    )
-    call_seconds_average = (
-        calls_qs.values("practice_id").annotate(avg_duration_sec=Avg("duration_seconds")).aggregate(Avg("avg_duration_sec"))["avg_duration_sec__avg"]
-    )
-
-    return {"call_seconds_total": call_seconds_total, "call_seconds_average": call_seconds_average}
-
-
 class NewPatientWinbacksView(views.APIView):
     QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME = {"call_start_time__gte": "call_start_time_after", "call_start_time__lte": "call_start_time_before"}
 
