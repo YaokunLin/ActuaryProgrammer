@@ -113,16 +113,27 @@ def calculate_call_counts_per_field(calls_qs: QuerySet, field_name: str) -> Dict
     return analytics
 
 
-def calculate_call_counts_per_user_time_series(calls_qs: QuerySet) -> Dict:
+def calculate_call_counts_per_user_by_date_and_hour(calls_qs: QuerySet) -> Dict:
     calls_qs = annotate_caller_number_with_extension(calls_qs)
-    return calculate_call_counts_per_field_time_series(calls_qs, "sip_caller_number_with_extension")
+    return calculate_call_counts_per_field_by_date_and_hour(calls_qs, "sip_caller_number_with_extension")
 
 
-def calculate_call_counts_per_practice_time_series(calls_qs: QuerySet) -> Dict:
-    return calculate_call_counts_per_field_time_series(calls_qs, "practice__name")
+def calculate_call_counts_per_practice_by_date_and_hour(calls_qs: QuerySet) -> Dict:
+    return calculate_call_counts_per_field_by_date_and_hour(calls_qs, "practice__name")
 
 
-def _calculate_call_values_by_date_and_hour(
+def calculate_call_counts_by_date_and_hour(calls_qs: QuerySet) -> Dict:
+    call_date_hour_label = "call_date_hour"
+    data = (
+        calls_qs.annotate(call_date_hour=TruncHour("call_start_time"))
+        .values(call_date_hour_label)
+        .annotate(call_total=Count("id"))
+        .order_by(call_date_hour_label)
+    )
+    return data.all()
+
+
+def _calculate_call_values_per_field_by_date_and_hour(
     calls_by_field_name_qs: QuerySet, field_name: str, calculation: Union[Aggregate, Coalesce], calculation_name: str
 ) -> Dict:
     calculated_value_label = "calculated_value"
@@ -143,18 +154,18 @@ def _calculate_call_values_by_date_and_hour(
     return data
 
 
-def calculate_call_count_by_date_and_hour(calls_by_field_name_qs: QuerySet, field_name: str) -> Dict:
-    return _calculate_call_values_by_date_and_hour(calls_by_field_name_qs, field_name, Count("id"), "call_total")
+def calculate_call_count_per_field_by_date_and_hour(calls_by_field_name_qs: QuerySet, field_name: str) -> Dict:
+    return _calculate_call_values_per_field_by_date_and_hour(calls_by_field_name_qs, field_name, Count("id"), "call_total")
 
 
-def calculate_average_hold_time_seconds_by_date_and_hour(calls_by_field_name_qs: QuerySet, field_name: str) -> Dict:
-    return _calculate_call_values_by_date_and_hour(
+def calculate_average_hold_time_seconds_per_field_by_date_and_hour(calls_by_field_name_qs: QuerySet, field_name: str) -> Dict:
+    return _calculate_call_values_per_field_by_date_and_hour(
         calls_by_field_name_qs, field_name, Coalesce(Avg("hold_time_seconds"), Value(timedelta(seconds=0))), "hold_time_seconds_average"
     )
 
 
-def calculate_total_call_duration_by_date_and_hour(calls_by_field_name_qs: QuerySet, field_name: str) -> Dict:
-    return _calculate_call_values_by_date_and_hour(
+def calculate_total_call_duration_per_field_by_date_and_hour(calls_by_field_name_qs: QuerySet, field_name: str) -> Dict:
+    return _calculate_call_values_per_field_by_date_and_hour(
         calls_by_field_name_qs,
         field_name,
         Sum("duration_seconds"),
@@ -162,8 +173,8 @@ def calculate_total_call_duration_by_date_and_hour(calls_by_field_name_qs: Query
     )
 
 
-def calculate_average_call_duration_by_date_and_hour(calls_by_field_name_qs: QuerySet, field_name: str) -> Dict:
-    return _calculate_call_values_by_date_and_hour(
+def calculate_average_call_duration_per_field_by_date_and_hour(calls_by_field_name_qs: QuerySet, field_name: str) -> Dict:
+    return _calculate_call_values_per_field_by_date_and_hour(
         calls_by_field_name_qs,
         field_name,
         Avg("duration_seconds"),
@@ -171,7 +182,7 @@ def calculate_average_call_duration_by_date_and_hour(calls_by_field_name_qs: Que
     )
 
 
-def calculate_call_sentiment_counts_by_date_and_hour(calls_by_field_name_qs: QuerySet, field_name: str) -> Dict:
+def calculate_call_sentiment_counts_per_field_by_date_and_hour(calls_by_field_name_qs: QuerySet, field_name: str) -> Dict:
     data = (
         calls_by_field_name_qs.annotate(call_date_hour=TruncHour("call_start_time"))
         .values(field_name, "call_date_hour", "call_sentiments__caller_sentiment_score")
@@ -188,17 +199,17 @@ def calculate_call_sentiment_counts_by_date_and_hour(calls_by_field_name_qs: Que
     )
 
 
-def calculate_call_counts_per_field_time_series(calls_qs: QuerySet, field_name: str) -> Dict:
+def calculate_call_counts_per_field_by_date_and_hour(calls_qs: QuerySet, field_name: str) -> Dict:
     analytics = {}
 
     calls_qs = calls_qs.values(field_name)
 
-    analytics["call_total"] = calculate_call_count_by_date_and_hour(calls_qs, field_name)
-    analytics["call_connected_total"] = calculate_call_count_by_date_and_hour(calls_qs.filter(call_connection="connected"), field_name)
-    analytics["call_seconds_total"] = calculate_total_call_duration_by_date_and_hour(calls_qs, field_name)
-    analytics["call_seconds_average"] = calculate_average_call_duration_by_date_and_hour(calls_qs, field_name)
-    analytics["call_on_hold_seconds_average"] = calculate_average_hold_time_seconds_by_date_and_hour(calls_qs, field_name)
-    analytics["call_sentiment_counts"] = calculate_call_sentiment_counts_by_date_and_hour(calls_qs, field_name)
+    analytics["call_total"] = calculate_call_count_per_field_by_date_and_hour(calls_qs, field_name)
+    analytics["call_connected_total"] = calculate_call_count_per_field_by_date_and_hour(calls_qs.filter(call_connection="connected"), field_name)
+    analytics["call_seconds_total"] = calculate_total_call_duration_per_field_by_date_and_hour(calls_qs, field_name)
+    analytics["call_seconds_average"] = calculate_average_call_duration_per_field_by_date_and_hour(calls_qs, field_name)
+    analytics["call_on_hold_seconds_average"] = calculate_average_hold_time_seconds_per_field_by_date_and_hour(calls_qs, field_name)
+    analytics["call_sentiment_counts"] = calculate_call_sentiment_counts_per_field_by_date_and_hour(calls_qs, field_name)
 
     return analytics
 
@@ -253,7 +264,7 @@ def calculate_call_breakdown_per_practice(calls_qs: QuerySet, practice_group_id:
     per_practice_averages["call_sentiment_counts"] = call_sentiment_counts
     per_practice["averages"] = per_practice_averages
     per_practice["per_practice"] = calculate_call_counts_per_practice(calls_qs)
-    per_practice["per_practice_by_date_and_hour"] = calculate_call_counts_per_practice_time_series(calls_qs)
+    per_practice["per_practice_by_date_and_hour"] = calculate_call_counts_per_practice_by_date_and_hour(calls_qs)
     return per_practice
 
 

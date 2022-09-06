@@ -2,20 +2,21 @@ import logging
 from collections import Counter
 from typing import Dict
 
-from django.db.models import Count, Q, QuerySet
-from django.db.models.functions import TruncHour
+from django.db.models import Count, Q, QuerySet, Sum
+from django.db.models.functions import ExtractWeekDay, TruncHour
 from django_pandas.io import read_frame
 from rest_framework import status, views
 from rest_framework.response import Response
 
 from calls.analytics.aggregates import (
     calculate_call_breakdown_per_practice,
-    calculate_call_count_by_date_and_hour,
+    calculate_call_count_per_field_by_date_and_hour,
     calculate_call_counts,
+    calculate_call_counts_by_date_and_hour,
     calculate_call_counts_per_field,
-    calculate_call_counts_per_field_time_series,
+    calculate_call_counts_per_field_by_date_and_hour,
     calculate_call_counts_per_user,
-    calculate_call_counts_per_user_time_series,
+    calculate_call_counts_per_user_by_date_and_hour,
     calculate_call_non_agent_engagement_type_counts,
     convert_count_results,
 )
@@ -79,11 +80,14 @@ class InsuranceProviderCallMetricsView(views.APIView):
 
         analytics = {
             "calls_overall": calculate_call_counts(calls_qs),
-            "calls_per_user": calculate_call_counts_per_user(calls_qs),
-            "calls_per_user_by_date_and_hour": calculate_call_counts_per_user_time_series(calls_qs),
-            "non_agent_engagement_types": calculate_call_non_agent_engagement_type_counts(calls_qs),
+            # "calls_per_user": calculate_call_counts_per_user(calls_qs),
+            # "calls_per_user_by_date_and_hour": calculate_call_counts_per_user_time_series(calls_qs),
+            # "non_agent_engagement_types": calculate_call_non_agent_engagement_type_counts(calls_qs),
         }
         analytics.update(**calculate_call_breakdown_per_insurance_provider(calls_qs))
+
+        analytics["calls_by_date_and_hour"] = calculate_call_counts_by_date_and_hour(calls_qs)
+        analytics["calls_by_day_of_week"] = calculate_call_counts_by_day_of_week(calls_qs)
 
         if practice_group_filter:
             analytics["calls_per_practice"] = calculate_call_breakdown_per_practice(
@@ -91,6 +95,24 @@ class InsuranceProviderCallMetricsView(views.APIView):
             )
 
         return Response({"results": analytics})
+
+
+def calculate_call_counts_by_day_of_week(calls_qs: QuerySet) -> Dict:
+    day_of_week_mapping = {
+        1: "sunday",
+        2: "monday",
+        3: "tuesday",
+        4: "wednesday",
+        5: "thursday",
+        6: "friday",
+        7: "saturday",
+    }
+    calls_qs = calls_qs.annotate(day_of_week=ExtractWeekDay("call_start_time")).values("day_of_week").annotate(call_total=Count("id")).order_by("day_of_week")
+    calls_per_day_of_week = {day_of_week_mapping[d["day_of_week"]]: d["call_total"] for d in calls_qs.all()}
+    for day_name in day_of_week_mapping.values():
+        if day_name not in calls_per_day_of_week:
+            calls_per_day_of_week[day_name] = 0
+    return calls_per_day_of_week
 
 
 def calculate_call_breakdown_per_insurance_provider(calls_qs: QuerySet) -> Dict:
@@ -138,7 +160,7 @@ def calculate_call_breakdown_per_insurance_provider(calls_qs: QuerySet) -> Dict:
 def calculate_call_breakdown_per_insurance_provider_by_date_and_hour(
     calls_qs: QuerySet, num_phone_numbers_per_insurance_provider: Dict, insurance_provider_per_phone_number: Dict
 ) -> Dict:
-    data_per_phone_number = calculate_call_counts_per_field_time_series(calls_qs, "sip_callee_number")
+    data_per_phone_number = calculate_call_counts_per_field_by_date_and_hour(calls_qs, "sip_callee_number")
     data_per_insurance_provider_name = {}
 
     for section_name in ("call_total", "call_connected_total", "call_seconds_total"):
