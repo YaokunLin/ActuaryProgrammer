@@ -218,15 +218,15 @@ def calculate_call_breakdown_per_insurance_provider_by_date_and_hour(
 
     for section_name in ("call_total", "call_connected_total", "call_seconds_total"):
         data_per_insurance_provider_name[section_name] = _aggregate_per_insurance_provider_name(
-            data_per_phone_number, num_phone_numbers_per_insurance_provider, insurance_provider_per_phone_number, section_name, "sum"
+            data_per_phone_number, num_phone_numbers_per_insurance_provider, insurance_provider_per_phone_number, section_name, "sum", True
         )
 
+    data_per_insurance_provider_name["call_seconds_average"] = _aggregate_per_insurance_provider_name(
+        data_per_phone_number, num_phone_numbers_per_insurance_provider, insurance_provider_per_phone_number, "call_seconds_average", "avg", True
+    )
+
     data_per_insurance_provider_name["call_on_hold_seconds_average"] = _aggregate_per_insurance_provider_name(
-        data_per_phone_number,
-        num_phone_numbers_per_insurance_provider,
-        insurance_provider_per_phone_number,
-        "call_on_hold_seconds_average",
-        "avg",
+        data_per_phone_number, num_phone_numbers_per_insurance_provider, insurance_provider_per_phone_number, "call_on_hold_seconds_average", "avg", True
     )
     return data_per_insurance_provider_name
 
@@ -237,6 +237,7 @@ def _aggregate_per_insurance_provider_name(
     insurance_provider_per_phone_number: Dict,
     section_name: str,
     calculation: str,
+    is_time_series_breakdown: bool = False,
 ) -> Dict:
     """
     Given data broken down by phone number, aggregate it by insurance provider/name instead
@@ -245,7 +246,6 @@ def _aggregate_per_insurance_provider_name(
     HEREBEDRAGONS: This is fragile and overly complex and works only with very specifically-structured dicts
     """
     data_per_provider = dict()
-    is_time_series = False
     for phone_number, value in data_per_phone_number[section_name].items():
         insurance_provider = insurance_provider_per_phone_number[phone_number]
         new_value = value
@@ -253,16 +253,14 @@ def _aggregate_per_insurance_provider_name(
         if existing_value:
             if isinstance(existing_value, dict):
                 new_value = dict()
-                if isinstance(value, list):
-                    is_time_series = True
+                if is_time_series_breakdown:
                     value = {d["call_date_hour"]: {k: v for k, v in d.items() if k != "call_date_hour"} for d in value}
                 for k, v in existing_value.items():
                     subvalue = value.get(k, None)
                     new_value[k] = v + subvalue if subvalue is not None else v
             else:
                 new_value = existing_value + value
-        if isinstance(new_value, list):
-            is_time_series = True
+        if is_time_series_breakdown:
             new_value = {d["call_date_hour"]: {k: v for k, v in d.items() if k != "call_date_hour"} for d in value}
         data_per_provider[insurance_provider] = new_value
 
@@ -272,19 +270,18 @@ def _aggregate_per_insurance_provider_name(
             if isinstance(v, dict):
                 new_value = dict()
                 for subkey, subvalue in v.items():
-                    if isinstance(subvalue, dict):
+                    if is_time_series_breakdown:
                         for subvalue_key, subvalue_value in subvalue.items():
-                            if subvalue_key == "call_date_hour":
-                                subvalue[subvalue_key] = subvalue_value
-                            else:
-                                subvalue[subvalue_key] = subvalue_value / num_phone_numbers
+                            subvalue[subvalue_key] = subvalue_value / num_phone_numbers
+                        new_value[subkey] = subvalue
                     else:
                         new_value[subkey] = subvalue / num_phone_numbers
             else:
                 new_value = v / num_phone_numbers
             data_per_provider[insurance_provider] = new_value
 
-    if is_time_series:
+    if is_time_series_breakdown:
         for p, value_per_provider in data_per_provider.items():
             data_per_provider[p] = [{"call_date_hour": k, **v} for k, v in value_per_provider.items()]
+
     return {p.name: v for p, v in data_per_provider.items()}
