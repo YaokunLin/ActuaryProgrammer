@@ -12,7 +12,7 @@ from calls.analytics.aggregates import (
     calculate_call_breakdown_per_practice,
     calculate_call_counts,
     calculate_call_counts_per_user,
-    calculate_call_counts_per_user_time_series,
+    calculate_call_counts_per_user_by_date_and_hour,
     calculate_call_non_agent_engagement_type_counts,
 )
 from calls.analytics.intents.field_choices import CallOutcomeTypes
@@ -84,7 +84,7 @@ def get_call_counts_for_outbound(
     analytics = {
         "calls_overall": calculate_call_counts(calls_qs),  # perform call counts
         "calls_per_user": calculate_call_counts_per_user(calls_qs),  # call counts per caller (agent) phone number
-        "calls_per_user_by_date_and_hour": calculate_call_counts_per_user_time_series(calls_qs),  # call counts per caller (agent) phone number over time
+        "calls_per_user_by_date_and_hour": calculate_call_counts_per_user_by_date_and_hour(calls_qs),  # call counts per caller (agent) phone number over time
         "non_agent_engagement_types": calculate_call_non_agent_engagement_type_counts(calls_qs),  # call counts for non agents
     }
 
@@ -93,18 +93,6 @@ def get_call_counts_for_outbound(
             calls_qs, practice_group_filter.get("practice__practice_group_id"), analytics["calls_overall"]
         )
     return analytics
-
-
-def calculate_call_count_durations_averages_per_practice(calls_qs: QuerySet) -> Dict:
-    # TODO: Maybe this is unnecessary and we can just do simple math :thnk:
-    call_seconds_total = (
-        calls_qs.values("practice_id").annotate(sum_duration_sec=Sum("duration_seconds")).aggregate(Avg("sum_duration_sec"))["sum_duration_sec__avg"]
-    )
-    call_seconds_average = (
-        calls_qs.values("practice_id").annotate(avg_duration_sec=Avg("duration_seconds")).aggregate(Avg("avg_duration_sec"))["avg_duration_sec__avg"]
-    )
-
-    return {"call_seconds_total": call_seconds_total, "call_seconds_average": call_seconds_average}
 
 
 class NewPatientWinbacksView(views.APIView):
