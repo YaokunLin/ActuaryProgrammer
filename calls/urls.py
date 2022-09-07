@@ -3,6 +3,7 @@ from rest_framework_nested import routers
 
 from calls.analytics.insurance_providers.views import (
     InsuranceProviderCallMetricsView,
+    InsuranceProviderInteractionsView,
     InsuranceProviderMentionedView,
 )
 from calls.analytics.intents.views import (
@@ -104,6 +105,7 @@ urlpatterns = [
         r"calls/aggregates/outbound-insurance-provider-call-counts/", InsuranceProviderCallMetricsView.as_view(), name="outbound-insurance-provider-call-counts"
     ),
     path(r"calls/aggregates/insurance-providers-mentioned/", InsuranceProviderMentionedView.as_view(), name="insurance-providers-mentioned"),
+    path(r"calls/aggregates/insurance-provider-interactions/", InsuranceProviderInteractionsView.as_view(), name="insurance-provider-interactions"),
     # Routers
     path(r"", include(calls_app_root_router.urls)),
     path(r"", include(call_router.urls)),

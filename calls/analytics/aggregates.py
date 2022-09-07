@@ -90,9 +90,9 @@ def calculate_call_counts_per_field(calls_qs: QuerySet, field_name: str) -> Dict
     analytics["call_seconds_average"] = calls_qs.annotate(call_seconds_average=Avg("duration_seconds")).order_by("-call_seconds_average")
     analytics["call_seconds_average"] = convert_count_results(analytics["call_seconds_average"], field_name, "call_seconds_average")
 
-    analytics["call_on_hold_seconds_average"] = calls_qs.annotate(
-        hold_time_seconds_average=Coalesce(Avg("hold_time_seconds"), Value(timedelta(seconds=0)))
-    ).order_by("-hold_time_seconds_average")
+    analytics["call_on_hold_seconds_average"] = calls_qs.annotate(hold_time_seconds_average=Coalesce(Avg("hold_time_seconds"), Value(timedelta()))).order_by(
+        "-hold_time_seconds_average"
+    )
     analytics["call_on_hold_seconds_average"] = convert_count_results(analytics["call_on_hold_seconds_average"], field_name, "hold_time_seconds_average")
 
     analytics["call_sentiment_counts"] = (
@@ -178,7 +178,7 @@ def calculate_call_count_per_field_by_date_and_hour(calls_by_field_name_qs: Quer
 
 def calculate_average_hold_time_seconds_per_field_by_date_and_hour(calls_by_field_name_qs: QuerySet, field_name: str) -> Dict:
     return _calculate_call_values_per_field_by_date_and_hour(
-        calls_by_field_name_qs, field_name, Coalesce(Avg("hold_time_seconds"), Value(timedelta(seconds=0))), "hold_time_seconds_average"
+        calls_by_field_name_qs, field_name, Coalesce(Avg("hold_time_seconds"), Value(timedelta())), "hold_time_seconds_average"
     )
 
 
