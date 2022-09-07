@@ -159,8 +159,8 @@ class NewPatientOpportunitiesView(views.APIView):
             **practice_filter,
             **practice_group_filter,
         )
-        # aggregates["new_patient_opportunities_total"] = new_patient_opportunities_qs.count()
-        # aggregates["new_patient_opportunities_time_series"] = _calculate_new_patient_opportunities_time_series(new_patient_opportunities_qs, dates[0], dates[1])
+        aggregates["new_patient_opportunities_total"] = new_patient_opportunities_qs.count()
+        aggregates["new_patient_opportunities_time_series"] = _calculate_new_patient_opportunities_time_series(new_patient_opportunities_qs, dates[0], dates[1])
 
         new_patient_opportunities_won_qs = Call.objects.filter(
             call_direction=CallDirectionTypes.INBOUND,
