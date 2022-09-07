@@ -159,8 +159,8 @@ class NewPatientOpportunitiesView(views.APIView):
             **practice_filter,
             **practice_group_filter,
         )
-        aggregates["new_patient_opportunities_total"] = new_patient_opportunities_qs.count()
-        aggregates["new_patient_opportunities_time_series"] = _calculate_new_patient_opportunities_time_series(new_patient_opportunities_qs, dates[0], dates[1])
+        # aggregates["new_patient_opportunities_total"] = new_patient_opportunities_qs.count()
+        # aggregates["new_patient_opportunities_time_series"] = _calculate_new_patient_opportunities_time_series(new_patient_opportunities_qs, dates[0], dates[1])
 
         new_patient_opportunities_won_qs = Call.objects.filter(
             call_direction=CallDirectionTypes.INBOUND,
@@ -276,11 +276,9 @@ class NewPatientWinbacksView(views.APIView):
         aggregates["winback_opportunities_time_series"] = _calculate_winback_time_series(
             winback_opportunities_total_qs, winback_opportunities_won_qs, winback_opportunities_lost_qs, dates[0], dates[1]
         )
-
-        aggregates["new_patient_opportunities_total"] = new_patient_opportunities_qs.count()
         aggregates["winback_opportunities_total"] = winback_opportunities_total_qs.count()
         aggregates["winback_opportunities_won"] = winback_opportunities_won_qs.count()
-        aggregates["winback_opportunities_revenue"] = aggregates["winback_opportunities_won"] * REVENUE_PER_WINBACK
+        aggregates["winback_opportunities_revenue_dollars"] = aggregates["winback_opportunities_won"] * REVENUE_PER_WINBACK
         aggregates["winback_opportunities_lost"] = winback_opportunities_lost_qs.count()
         aggregates["winback_opportunities_attempted"] = aggregates.get("winback_opportunities_won", 0) + aggregates.get("winback_opportunities_lost", 0)
         aggregates["winback_opportunities_open"] = aggregates.get("winback_opportunities_total", 0) - aggregates.get("winback_opportunities_attempted", 0)
@@ -288,7 +286,6 @@ class NewPatientWinbacksView(views.APIView):
         if practice_group_filter:
             num_practices = Practice.objects.filter(practice_group_id=valid_practice_group_id).count()
             aggregates["per_practice_averages"] = {
-                "new_patient_opportunities": aggregates["new_patient_opportunities_total"] / num_practices,
                 "winback_opportunities_total": aggregates["winback_opportunities_total"] / num_practices,
                 "winback_opportunities_won": aggregates["winback_opportunities_won"] / num_practices,
                 "winback_opportunities_revenue": aggregates["winback_opportunities_revenue"] / num_practices,
@@ -363,13 +360,13 @@ def _calculate_winback_time_series(winbacks_total_qs: QuerySet, winbacks_won_qs:
     winbacks_attempted_per_day = get_winbacks_attempted_breakdown(winbacks_won_per_day, winbacks_lost_per_day)
     per_day["total"] = winbacks_total_per_day
     per_day["won"] = winbacks_won_per_day
-    per_day["revenue"] = winbacks_revenue_per_day
+    per_day["revenue_dollars"] = winbacks_revenue_per_day
     per_day["lost"] = winbacks_lost_per_day
     per_day["attempted"] = winbacks_attempted_per_day
 
     per_week["total"] = _convert_daily_to_weekly(winbacks_total_per_day)
     per_week["won"] = _convert_daily_to_weekly(winbacks_won_per_day)
-    per_week["won"] = _convert_daily_to_weekly(winbacks_revenue_per_day)
+    per_week["revenue_dollars"] = _convert_daily_to_weekly(winbacks_revenue_per_day)
     per_week["lost"] = _convert_daily_to_weekly(winbacks_lost_per_day)
     per_week["attempted"] = _convert_daily_to_weekly(winbacks_attempted_per_day)
 
