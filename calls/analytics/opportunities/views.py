@@ -95,6 +95,10 @@ def get_call_counts_for_outbound(
     return analytics
 
 
+class NewPatientOpportunitiesView(views.APIView):
+    pass
+
+
 class NewPatientWinbacksView(views.APIView):
     QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME = {"call_start_time__gte": "call_start_time_after", "call_start_time__lte": "call_start_time_before"}
 
