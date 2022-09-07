@@ -39,6 +39,9 @@ log = logging.getLogger(__name__)
 
 
 class InsuranceProviderInteractionsView(views.APIView):
+
+    CALL_DURATION_MINIMUM_SECONDS = 60
+
     def get(self, request, format=None):
         insurance_provider = get_validated_insurance_provider(request)
         response_data = {}
@@ -49,7 +52,7 @@ class InsuranceProviderInteractionsView(views.APIView):
             Q(call_direction=CallDirectionTypes.OUTBOUND)
             & Q(call_start_time__gte=timezone.now() - timedelta(days=180))
             & Q(sip_callee_number__in=insurance_provider.insuranceproviderphonenumber_set.only("phone_number"))
-            & Q(duration_seconds__gte=timedelta(seconds=60))
+            & Q(duration_seconds__gte=timedelta(seconds=self.CALL_DURATION_MINIMUM_SECONDS))
         )
         calls_qs = Call.objects.filter(all_filters).all()
 
@@ -120,7 +123,7 @@ class InsuranceProviderInteractionsView(views.APIView):
         call_counts_all_hours = []
         for data_for_day_of_week in data_by_weekday_and_hour.values():
             call_counts_all_hours.extend([d[call_count_label] for d in data_for_day_of_week[per_hour_label].values()])
-        call_count_cutoff = percentile(call_counts_all_hours, 70)
+        call_count_cutoff = percentile(call_counts_all_hours, 50)
 
         # Begin calculating best day and time to call
         for day_of_week, data_for_day_of_week in data_by_weekday_and_hour.items():
@@ -156,7 +159,8 @@ class InsuranceProviderInteractionsView(views.APIView):
                 hour_label: most_efficient_hour,
                 "call_duration_average_seconds": average_duration_at_most_efficient_day_hour,
                 "__outbound_calls_analyzed": sum(call_counts_all_hours),
-                "__call_count_cutoff": call_count_cutoff,
+                "__call_count_per_hour_minimum": call_count_cutoff,
+                "__call_duration_seconds_minimum": InsuranceProviderInteractionsView.CALL_DURATION_MINIMUM_SECONDS,
                 "__calls_this_day_and_hour": most_efficient_hour_data,
             }
 
