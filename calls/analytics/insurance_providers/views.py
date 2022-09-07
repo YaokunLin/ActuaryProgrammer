@@ -3,7 +3,6 @@ from collections import Counter
 from typing import Dict
 
 from django.db.models import Count, Q, QuerySet
-from django.db.models.functions import ExtractWeekDay
 from rest_framework import status, views
 from rest_framework.response import Response
 
@@ -11,6 +10,7 @@ from calls.analytics.aggregates import (
     calculate_call_breakdown_per_practice,
     calculate_call_counts,
     calculate_call_counts_by_date_and_hour,
+    calculate_call_counts_by_day_of_week,
     calculate_call_counts_per_field,
     calculate_call_counts_per_field_by_date_and_hour,
     calculate_call_counts_per_user,
@@ -148,24 +148,6 @@ class InsuranceProviderCallMetricsView(views.APIView):
             )
 
         return Response({"results": analytics})
-
-
-def calculate_call_counts_by_day_of_week(calls_qs: QuerySet) -> Dict:
-    day_of_week_mapping = {
-        1: "sunday",
-        2: "monday",
-        3: "tuesday",
-        4: "wednesday",
-        5: "thursday",
-        6: "friday",
-        7: "saturday",
-    }
-    calls_qs = calls_qs.annotate(day_of_week=ExtractWeekDay("call_start_time")).values("day_of_week").annotate(call_total=Count("id")).order_by("day_of_week")
-    calls_per_day_of_week = {day_of_week_mapping[d["day_of_week"]]: d["call_total"] for d in calls_qs.all()}
-    for day_name in day_of_week_mapping.values():
-        if day_name not in calls_per_day_of_week:
-            calls_per_day_of_week[day_name] = 0
-    return calls_per_day_of_week
 
 
 def calculate_call_breakdown_per_insurance_provider(calls_qs: QuerySet) -> Dict:

@@ -15,7 +15,7 @@ from django.db.models import (
     Value,
     When,
 )
-from django.db.models.functions import Coalesce, Concat, TruncHour
+from django.db.models.functions import Coalesce, Concat, ExtractWeekDay, TruncHour
 from django_pandas.io import read_frame
 
 from core.models import Practice
@@ -111,6 +111,24 @@ def calculate_call_counts_per_field(calls_qs: QuerySet, field_name: str) -> Dict
     )
 
     return analytics
+
+
+def calculate_call_counts_by_day_of_week(calls_qs: QuerySet) -> Dict:
+    day_of_week_mapping = {
+        1: "sunday",
+        2: "monday",
+        3: "tuesday",
+        4: "wednesday",
+        5: "thursday",
+        6: "friday",
+        7: "saturday",
+    }
+    calls_qs = calls_qs.annotate(day_of_week=ExtractWeekDay("call_start_time")).values("day_of_week").annotate(call_total=Count("id")).order_by("day_of_week")
+    calls_per_day_of_week = {day_of_week_mapping[d["day_of_week"]]: d["call_total"] for d in calls_qs.all()}
+    for day_name in day_of_week_mapping.values():
+        if day_name not in calls_per_day_of_week:
+            calls_per_day_of_week[day_name] = 0
+    return calls_per_day_of_week
 
 
 def calculate_call_counts_per_user_by_date_and_hour(calls_qs: QuerySet) -> Dict:
