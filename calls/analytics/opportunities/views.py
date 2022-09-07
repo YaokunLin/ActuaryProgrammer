@@ -3,7 +3,7 @@ import logging
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
-from django.db.models import Avg, Count, Q, QuerySet, Sum
+from django.db.models import Count, Q, QuerySet
 from django.db.models.functions import TruncDate
 from rest_framework import status, views
 from rest_framework.response import Response
@@ -13,7 +13,7 @@ from calls.analytics.aggregates import (
     calculate_call_count_opportunities,
     calculate_call_counts,
     calculate_call_counts_per_user,
-    calculate_call_counts_per_user_time_series,
+    calculate_call_counts_per_user_by_date_and_hour,
     calculate_call_non_agent_engagement_type_counts,
 )
 from calls.analytics.intents.field_choices import CallOutcomeTypes
@@ -100,7 +100,7 @@ def get_call_counts(
         "opportunities": calculate_call_count_opportunities(calls_qs),
         "calls_overall": calculate_call_counts(calls_qs),  # perform call counts
         "calls_per_user": calculate_call_counts_per_user(calls_qs),  # call counts per caller (agent) phone number
-        "calls_per_user_by_date_and_hour": calculate_call_counts_per_user_time_series(calls_qs),  # call counts per caller (agent) phone number over time
+        "calls_per_user_by_date_and_hour": calculate_call_counts_per_user_by_date_and_hour(calls_qs),  # call counts per caller (agent) phone number over time
         "non_agent_engagement_types": calculate_call_non_agent_engagement_type_counts(calls_qs),  # call counts for non agents
     }
 
@@ -111,16 +111,98 @@ def get_call_counts(
     return analytics
 
 
-def calculate_call_count_durations_averages_per_practice(calls_qs: QuerySet) -> Dict:
-    # TODO: Maybe this is unnecessary and we can just do simple math :thnk:
-    call_seconds_total = (
-        calls_qs.values("practice_id").annotate(sum_duration_sec=Sum("duration_seconds")).aggregate(Avg("sum_duration_sec"))["sum_duration_sec__avg"]
-    )
-    call_seconds_average = (
-        calls_qs.values("practice_id").annotate(avg_duration_sec=Avg("duration_seconds")).aggregate(Avg("avg_duration_sec"))["avg_duration_sec__avg"]
-    )
+class NewPatientOpportunitiesView(views.APIView):
+    QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME = {"call_start_time__gte": "call_start_time_after", "call_start_time__lte": "call_start_time_before"}
 
-    return {"call_seconds_total": call_seconds_total, "call_seconds_average": call_seconds_average}
+    def get(self, request, format=None):
+        valid_practice_id, practice_errors = get_validated_practice_id(request=request)
+        valid_practice_group_id, practice_group_errors = get_validated_practice_group_id(request=request)
+        dates_info = get_validated_call_dates(query_data=request.query_params)
+        dates_errors = dates_info.get("errors")
+
+        errors = {}
+        if practice_errors:
+            errors.update(practice_errors)
+        if practice_group_errors:
+            errors.update(practice_group_errors)
+        if not practice_errors and not practice_group_errors and bool(valid_practice_id) == bool(valid_practice_group_id):
+            error_message = "practice__id or practice__group_id must be provided, but not both."
+            errors.update({"practice__id": error_message, "practice__group_id": error_message})
+        if dates_errors:
+            errors.update(dates_errors)
+        if errors:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data=errors)
+
+        # practice filter
+        practice_filter = {}
+        if valid_practice_id:
+            practice_filter = {"practice__id": valid_practice_id}
+
+        practice_group_filter = {}
+        if valid_practice_group_id:
+            practice_group_filter = {"practice__practice_group__id": valid_practice_group_id}
+
+        # date filters
+        dates = dates_info.get("dates")
+        call_start_time__gte = dates[0]
+        call_start_time__lte = dates[1]
+        dates_filter = {"call_start_time__gte": call_start_time__gte, "call_start_time__lte": call_start_time__lte}
+
+        # aggregate analytics
+        aggregates = {}
+        new_patient_opportunities_qs = Call.objects.filter(
+            call_direction=CallDirectionTypes.INBOUND,
+            engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT,
+            **dates_filter,
+            **practice_filter,
+            **practice_group_filter,
+        )
+        aggregates["new_patient_opportunities_total"] = new_patient_opportunities_qs.count()
+        aggregates["new_patient_opportunities_time_series"] = _calculate_new_patient_opportunities_time_series(new_patient_opportunities_qs, dates[0], dates[1])
+
+        new_patient_opportunities_won_qs = Call.objects.filter(
+            call_direction=CallDirectionTypes.INBOUND,
+            engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT,
+            call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.SUCCESS,
+            **dates_filter,
+            **practice_filter,
+            **practice_group_filter,
+        )
+        aggregates["new_patient_opportunities_won_total"] = new_patient_opportunities_won_qs.count()
+
+        new_patient_opportunities_lost_qs = Call.objects.filter(
+            call_direction=CallDirectionTypes.INBOUND,
+            engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT,
+            call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.FAILURE,
+            **dates_filter,
+            **practice_filter,
+            **practice_group_filter,
+        )
+        aggregates["new_patient_opportunities_lost_total"] = new_patient_opportunities_lost_qs.count()
+
+        # conversion
+        aggregates["new_patient_opportunities_conversion_rate_total"] = (
+            aggregates["new_patient_opportunities_won_total"] / aggregates["new_patient_opportunities_total"]
+        )
+
+        # New pt conversion (use absolutes on the frontend)
+
+        if practice_group_filter:
+            per_practice_averages = {}
+            num_practices = Practice.objects.filter(practice_group_id=valid_practice_group_id).count()
+            per_practice_averages["new_patient_opportunities"] = aggregates["new_patient_opportunities_total"] / num_practices
+            per_practice_averages["new_patient_opportunities_won"] = aggregates["new_patient_opportunities_won_total"] / num_practices
+            per_practice_averages["new_patient_opportunities_lost"] = aggregates["new_patient_opportunities_lost_total"] / num_practices
+            aggregates["new_patient_opportunities_conversion_rate"] = aggregates["new_patient_opportunities_conversion_rate_total"] / num_practices
+            aggregates["per_practice_averages"] = per_practice_averages
+
+        # display syntactic sugar
+        display_filters = {
+            self.QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME["call_start_time__gte"]: call_start_time__gte,
+            self.QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME["call_start_time__lte"]: call_start_time__lte,
+        }
+
+        return Response({"filters": display_filters, "results": aggregates})
 
 
 class NewPatientWinbacksView(views.APIView):
@@ -169,7 +251,6 @@ class NewPatientWinbacksView(views.APIView):
             **practice_filter,
             **practice_group_filter,
         )
-        aggregates["new_patient_opportunities_time_series"] = _calculate_new_patient_opportunities_time_series(new_patient_opportunities_qs, dates[0], dates[1])
 
         winback_opportunities_total_qs = new_patient_opportunities_qs.filter(
             call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.FAILURE, **dates_filter, **practice_filter, **practice_group_filter
@@ -296,7 +377,7 @@ def _calculate_new_patient_opportunities_time_series(opportunities_qs: QuerySet,
     per_week = {}
 
     won_qs = opportunities_qs.filter(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.SUCCESS)
-    missed_qs = opportunities_qs.filter(went_to_voicemail=True)  # TODO Kyle: This is probably wrong
+    lost_qs = opportunities_qs.filter(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.FAILURE)
 
     def get_conversion_rates_breakdown(total: List[Dict], won: List[Dict]) -> List[Dict]:
         conversion_rates = []
@@ -312,16 +393,16 @@ def _calculate_new_patient_opportunities_time_series(opportunities_qs: QuerySet,
 
     total_per_day = _get_zero_filled_call_counts_per_day(opportunities_qs, start_date, end_date)
     won_per_day = _get_zero_filled_call_counts_per_day(won_qs, start_date, end_date)
-    missed_per_day = _get_zero_filled_call_counts_per_day(missed_qs, start_date, end_date)
+    lost_per_day = _get_zero_filled_call_counts_per_day(lost_qs, start_date, end_date)
     conversion_rate_per_day = get_conversion_rates_breakdown(total_per_day, won_per_day)
     per_day["total"] = total_per_day
     per_day["won"] = won_per_day
-    per_day["missed"] = missed_per_day
+    per_day["lost"] = lost_per_day
     per_day["conversion_rate"] = conversion_rate_per_day
 
     per_week["total"] = _convert_daily_to_weekly(total_per_day)
     per_week["won"] = _convert_daily_to_weekly(won_per_day)
-    per_week["missed"] = _convert_daily_to_weekly(missed_per_day)
+    per_week["lost"] = _convert_daily_to_weekly(lost_per_day)
     per_week["conversion_rate"] = _convert_daily_to_weekly(conversion_rate_per_day)
 
     return {
