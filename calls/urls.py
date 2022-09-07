@@ -21,7 +21,11 @@ from calls.analytics.interactions.views import (
     AgentCallScoreMetricViewset,
     AgentCallScoreViewset,
 )
-from calls.analytics.opportunities.views import CallMetricsView, NewPatientWinbacksView
+from calls.analytics.opportunities.views import (
+    CallMetricsView,
+    NewPatientOpportunitiesView,
+    NewPatientWinbacksView,
+)
 from calls.analytics.participants.views import (
     AgentAssignedCallViewSet,
     AgentEngagedWithViewset,
@@ -99,13 +103,14 @@ urlpatterns = [
     # Distinct views
     path(r"mentioned-procedures/", CallMentionedProcedureDistinctView.as_view(), name="mentioned-procedures"),
     # Call Aggregates
+    path(r"calls/aggregates/insurance-provider-interactions/", InsuranceProviderInteractionsView.as_view(), name="insurance-provider-interactions"),
+    path(r"calls/aggregates/insurance-providers-mentioned/", InsuranceProviderMentionedView.as_view(), name="insurance-providers-mentioned"),
+    path(r"calls/aggregates/new-patient-opportunities/", NewPatientOpportunitiesView.as_view(), name="new-patient-opportunities"),
     path(r"calls/aggregates/new-patient-winback-opportunities/", NewPatientWinbacksView.as_view(), name="new-patient-winback-opportunities"),
     path(r"calls/aggregates/outbound-call-counts/", CallMetricsView.as_view(), name="outbound-call-counts"),
     path(
         r"calls/aggregates/outbound-insurance-provider-call-counts/", InsuranceProviderCallMetricsView.as_view(), name="outbound-insurance-provider-call-counts"
     ),
-    path(r"calls/aggregates/insurance-providers-mentioned/", InsuranceProviderMentionedView.as_view(), name="insurance-providers-mentioned"),
-    path(r"calls/aggregates/insurance-provider-interactions/", InsuranceProviderInteractionsView.as_view(), name="insurance-provider-interactions"),
     # Routers
     path(r"", include(calls_app_root_router.urls)),
     path(r"", include(call_router.urls)),
