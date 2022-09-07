@@ -155,9 +155,6 @@ class NewPatientOpportunitiesView(views.APIView):
             **practice_group_filter,
         )
         aggregates["new_patient_opportunities_won_total"] = new_patient_opportunities_won_qs.count()
-        aggregates["new_patient_opportunities_won_time_series"] = _calculate_new_patient_opportunities_time_series(
-            new_patient_opportunities_won_qs, dates[0], dates[1]
-        )
 
         new_patient_opportunities_lost_qs = Call.objects.filter(
             call_direction=CallDirectionTypes.INBOUND,
@@ -168,9 +165,6 @@ class NewPatientOpportunitiesView(views.APIView):
             **practice_group_filter,
         )
         aggregates["new_patient_opportunities_lost_total"] = new_patient_opportunities_lost_qs.count()
-        aggregates["new_patient_opportunities_lost_time_series"] = _calculate_new_patient_opportunities_time_series(
-            new_patient_opportunities_lost_qs, dates[0], dates[1]
-        )
 
         # conversion
         aggregates["new_patient_opportunities_conversion_rate_total"] = (
@@ -179,13 +173,14 @@ class NewPatientOpportunitiesView(views.APIView):
 
         # New pt conversion (use absolutes on the frontend)
 
-        # if practice_group_filter:
-        #     per_practice_averages = {}
-        #     num_practices = Practice.objects.filter(practice_group_id=valid_practice_group_id).count()
-        #     per_practice_averages["new_patient_opportunities"] = aggregates["new_patient_opportunities_total"] / num_practices
-        #     per_practice_averages["new_patient_opportunities_won"] = aggregates["new_patient_opportunities_won"] / num_practices
-        #     per_practice_averages["new_patient_opportunities_lost_total"] = aggregates["new_patient_opportunities_lost_total"] / num_practices
-        #     aggregates["per_practice_averages"] = per_practice_averages
+        if practice_group_filter:
+            per_practice_averages = {}
+            num_practices = Practice.objects.filter(practice_group_id=valid_practice_group_id).count()
+            per_practice_averages["new_patient_opportunities"] = aggregates["new_patient_opportunities_total"] / num_practices
+            per_practice_averages["new_patient_opportunities_won"] = aggregates["new_patient_opportunities_won_total"] / num_practices
+            per_practice_averages["new_patient_opportunities_lost"] = aggregates["new_patient_opportunities_lost_total"] / num_practices
+            aggregates["new_patient_opportunities_conversion_rate"] = aggregates["new_patient_opportunities_conversion_rate_total"] / num_practices
+            aggregates["per_practice_averages"] = per_practice_averages
 
         # display syntactic sugar
         display_filters = {
@@ -368,7 +363,7 @@ def _calculate_new_patient_opportunities_time_series(opportunities_qs: QuerySet,
     per_week = {}
 
     won_qs = opportunities_qs.filter(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.SUCCESS)
-    missed_qs = opportunities_qs.filter(went_to_voicemail=True)  # TODO Kyle: This is probably wrong
+    lost_qs = opportunities_qs.filter(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.FAILURE)
 
     def get_conversion_rates_breakdown(total: List[Dict], won: List[Dict]) -> List[Dict]:
         conversion_rates = []
@@ -384,16 +379,16 @@ def _calculate_new_patient_opportunities_time_series(opportunities_qs: QuerySet,
 
     total_per_day = _get_zero_filled_call_counts_per_day(opportunities_qs, start_date, end_date)
     won_per_day = _get_zero_filled_call_counts_per_day(won_qs, start_date, end_date)
-    missed_per_day = _get_zero_filled_call_counts_per_day(missed_qs, start_date, end_date)
+    lost_per_day = _get_zero_filled_call_counts_per_day(lost_qs, start_date, end_date)
     conversion_rate_per_day = get_conversion_rates_breakdown(total_per_day, won_per_day)
     per_day["total"] = total_per_day
     per_day["won"] = won_per_day
-    per_day["missed"] = missed_per_day
+    per_day["lost"] = lost_per_day
     per_day["conversion_rate"] = conversion_rate_per_day
 
     per_week["total"] = _convert_daily_to_weekly(total_per_day)
     per_week["won"] = _convert_daily_to_weekly(won_per_day)
-    per_week["missed"] = _convert_daily_to_weekly(missed_per_day)
+    per_week["lost"] = _convert_daily_to_weekly(lost_per_day)
     per_week["conversion_rate"] = _convert_daily_to_weekly(conversion_rate_per_day)
 
     return {
