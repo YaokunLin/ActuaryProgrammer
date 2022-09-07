@@ -3,7 +3,7 @@ import logging
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
-from django.db.models import Avg, Count, Q, QuerySet, Sum
+from django.db.models import Count, Q, QuerySet
 from django.db.models.functions import TruncDate
 from rest_framework import status, views
 from rest_framework.response import Response
@@ -11,8 +11,6 @@ from rest_framework.response import Response
 from calls.analytics.aggregates import (
     calculate_call_breakdown_per_practice,
     calculate_call_counts,
-    calculate_call_counts_by_date_and_hour,
-    calculate_call_counts_by_day_of_week,
     calculate_call_counts_per_user,
     calculate_call_counts_per_user_by_date_and_hour,
     calculate_call_non_agent_engagement_type_counts,
