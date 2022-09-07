@@ -2,15 +2,13 @@ import logging
 from collections import Counter
 from typing import Dict
 
-from django.db.models import Count, Q, QuerySet, Sum
-from django.db.models.functions import ExtractWeekDay, TruncHour
-from django_pandas.io import read_frame
+from django.db.models import Count, Q, QuerySet
+from django.db.models.functions import ExtractWeekDay
 from rest_framework import status, views
 from rest_framework.response import Response
 
 from calls.analytics.aggregates import (
     calculate_call_breakdown_per_practice,
-    calculate_call_count_per_field_by_date_and_hour,
     calculate_call_counts,
     calculate_call_counts_by_date_and_hour,
     calculate_call_counts_per_field,
@@ -21,6 +19,7 @@ from calls.analytics.aggregates import (
     convert_count_results,
 )
 from calls.analytics.intents.field_choices import CallOutcomeTypes
+from calls.analytics.participants.field_choices import NonAgentEngagementPersonaTypes
 from calls.field_choices import CallDirectionTypes
 from calls.models import Call
 from calls.validation import (
@@ -32,6 +31,60 @@ from core.models import InsuranceProviderPhoneNumber
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
+
+
+class InsuranceProviderMentionedView(views.APIView):
+    def get(self, request, format=None):
+        valid_practice_id, practice_errors = get_validated_practice_id(request=request)
+        valid_practice_group_id, practice_group_errors = get_validated_practice_group_id(request=request)
+        dates_info = get_validated_call_dates(query_data=request.query_params)
+        dates_errors = dates_info.get("errors")
+
+        errors = {}
+        if practice_errors:
+            errors.update(practice_errors)
+        if practice_group_errors:
+            errors.update(practice_group_errors)
+        if not practice_errors and not practice_group_errors and bool(valid_practice_id) == bool(valid_practice_group_id):
+            error_message = "practice__id or practice__group_id must be provided, but not both."
+            errors.update({"practice__id": error_message, "practice__group_id": error_message})
+        if dates_errors:
+            errors.update(dates_errors)
+        if errors:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data=errors)
+
+        practice_filter = {}
+        if valid_practice_id:
+            practice_filter = {"practice__id": valid_practice_id}
+
+        practice_group_filter = {}
+        if valid_practice_group_id:
+            practice_group_filter = {"practice__practice_group_id": valid_practice_group_id}
+
+        # date filters
+        dates = dates_info.get("dates")
+        call_start_time__gte = dates[0]
+        call_start_time__lte = dates[1]
+        dates_filter = {"call_start_time__gte": call_start_time__gte, "call_start_time__lte": call_start_time__lte}
+
+        all_filters = (
+            Q(
+                engaged_in_calls__non_agent_engagement_persona_type__in=[
+                    NonAgentEngagementPersonaTypes.NEW_PATIENT,
+                    NonAgentEngagementPersonaTypes.EXISTING_PATIENT,
+                ]
+            )
+            & Q(**dates_filter)
+            & Q(**practice_filter)
+            & Q(**practice_group_filter)
+            & Q(mentioned_insurances__keyword__isnull=False)
+        )
+        calls_qs = Call.objects.select_related("mentioned_insurances").filter(all_filters)
+
+        # Limit to top 10
+        top_mentions = calls_qs.values("mentioned_insurances__keyword").annotate(call_total=Count("id")).order_by("-call_total")[:10]
+        results = {"top_insurances_mentioned": [{"insurance": i["mentioned_insurances__keyword"], "count": i["call_total"]} for i in top_mentions]}
+        return Response({"results": results})
 
 
 class InsuranceProviderCallMetricsView(views.APIView):
@@ -80,19 +133,19 @@ class InsuranceProviderCallMetricsView(views.APIView):
 
         analytics = {
             "calls_overall": calculate_call_counts(calls_qs),
-            # "calls_per_user": calculate_call_counts_per_user(calls_qs),
-            # "calls_per_user_by_date_and_hour": calculate_call_counts_per_user_time_series(calls_qs),
-            # "non_agent_engagement_types": calculate_call_non_agent_engagement_type_counts(calls_qs),
+            "calls_per_user": calculate_call_counts_per_user(calls_qs),
+            "calls_per_user_by_date_and_hour": calculate_call_counts_per_user_by_date_and_hour(calls_qs),
+            "non_agent_engagement_types": calculate_call_non_agent_engagement_type_counts(calls_qs),
         }
         analytics.update(**calculate_call_breakdown_per_insurance_provider(calls_qs))
 
         analytics["calls_by_date_and_hour"] = calculate_call_counts_by_date_and_hour(calls_qs)
         analytics["calls_by_day_of_week"] = calculate_call_counts_by_day_of_week(calls_qs)
 
-        # if practice_group_filter:
-        #     analytics["calls_per_practice"] = calculate_call_breakdown_per_practice(
-        #         calls_qs, practice_group_filter.get("practice__practice_group_id"), analytics["calls_overall"]
-        #     )
+        if practice_group_filter:
+            analytics["calls_per_practice"] = calculate_call_breakdown_per_practice(
+                calls_qs, practice_group_filter.get("practice__practice_group_id"), analytics["calls_overall"]
+            )
 
         return Response({"results": analytics})
 
