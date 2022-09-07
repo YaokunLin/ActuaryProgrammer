@@ -15,6 +15,8 @@ from django.db.models import (
     When,
 )
 from django.db.models.functions import Concat, TruncHour
+from calls.analytics.intents.field_choices import CallOutcomeTypes, CallPurposeTypes
+from calls.analytics.participants.field_choices import NonAgentEngagementPersonaTypes
 from django_pandas.io import read_frame
 
 from core.models import Practice
@@ -36,6 +38,42 @@ def calculate_call_counts(calls_qs: QuerySet) -> Dict:
 
     analytics["call_sentiment_counts"] = calculate_call_sentiments(calls_qs)
     return analytics
+
+
+def calculate_call_count_opportunities(calls_qs: QuerySet) -> Dict:
+    total_opportunities_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT) | Q(
+        engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.EXISTING_PATIENT
+    )
+    opportunity_call_purpose_filters = Q(call_purposes__call_purpose_type=CallPurposeTypes.NEW_APPOINTMENT)
+
+    existing_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.EXISTING_PATIENT)
+    new_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT)
+
+    opportunities_total_qs = calls_qs.filter(total_opportunities_filter, opportunity_call_purpose_filters)
+    opportunities_existing_qs = calls_qs.filter(existing_filter)
+    opportunities_new_qs = calls_qs.filter(new_filter)
+    opportunities = {"total": opportunities_total_qs.count(), "existing": opportunities_existing_qs.count(), "new": opportunities_new_qs.count()}
+
+    booked_filters = Q(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.SUCCESS) | opportunity_call_purpose_filters
+
+    lost_filters = Q(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.FAILURE) | opportunity_call_purpose_filters
+    opportunities_booked_qs = opportunities_total_qs.filter(booked_filters)
+    opportunities_lost_qs = opportunities_total_qs.filter(lost_filters)
+
+    # TODO: discuss - change to won?
+    opportunities["booked"] = {
+        "total": opportunities_booked_qs.count(),
+        "existing": opportunities_booked_qs.filter(existing_filter).count(),
+        "new": opportunities_booked_qs.filter(new_filter).count(),
+    }
+
+    opportunities["lost"] = {
+        "total": opportunities_lost_qs.count(),
+        "existing": opportunities_lost_qs.filter(existing_filter).count(),
+        "new": opportunities_lost_qs.filter(new_filter).count(),
+    }
+
+    return opportunities
 
 
 def calculate_call_non_agent_engagement_type_counts(calls_qs: QuerySet) -> Dict:
