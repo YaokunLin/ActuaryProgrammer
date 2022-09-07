@@ -32,7 +32,7 @@ from core.models import Practice
 # Get an instance of a logger
 log = logging.getLogger(__name__)
 
-REVENUE_PER_WINBACK = 10_000
+REVENUE_PER_WINBACK_USD = 10_000
 
 
 class CallMetricsView(views.APIView):
@@ -278,7 +278,7 @@ class NewPatientWinbacksView(views.APIView):
         )
         aggregates["winback_opportunities_total"] = winback_opportunities_total_qs.count()
         aggregates["winback_opportunities_won"] = winback_opportunities_won_qs.count()
-        aggregates["winback_opportunities_revenue_dollars"] = aggregates["winback_opportunities_won"] * REVENUE_PER_WINBACK
+        aggregates["winback_opportunities_revenue_dollars"] = aggregates["winback_opportunities_won"] * REVENUE_PER_WINBACK_USD
         aggregates["winback_opportunities_lost"] = winback_opportunities_lost_qs.count()
         aggregates["winback_opportunities_attempted"] = aggregates.get("winback_opportunities_won", 0) + aggregates.get("winback_opportunities_lost", 0)
         aggregates["winback_opportunities_open"] = aggregates.get("winback_opportunities_total", 0) - aggregates.get("winback_opportunities_attempted", 0)
@@ -355,7 +355,7 @@ def _calculate_winback_time_series(winbacks_total_qs: QuerySet, winbacks_won_qs:
 
     winbacks_total_per_day = _get_zero_filled_call_counts_per_day(winbacks_total_qs, start_date, end_date)
     winbacks_won_per_day = _get_zero_filled_call_counts_per_day(winbacks_won_qs, start_date, end_date)
-    winbacks_revenue_per_day = [{"date": d["date"], "value": d["value"] * REVENUE_PER_WINBACK} for d in winbacks_won_per_day]
+    winbacks_revenue_per_day = [{"date": d["date"], "value": d["value"] * REVENUE_PER_WINBACK_USD} for d in winbacks_won_per_day]
     winbacks_lost_per_day = _get_zero_filled_call_counts_per_day(winbacks_lost_qs, start_date, end_date)
     winbacks_attempted_per_day = get_winbacks_attempted_breakdown(winbacks_won_per_day, winbacks_lost_per_day)
     per_day["total"] = winbacks_total_per_day
