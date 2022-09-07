@@ -105,6 +105,7 @@ urlpatterns = [
     path(r"calls/aggregates/insurance-providers-mentioned/", InsuranceProviderMentionedView.as_view(), name="insurance-providers-mentioned"),
     path(r"calls/aggregates/new-patient-opportunities/", NewPatientOpportunitiesView.as_view(), name="new-patient-opportunities"),
     path(r"calls/aggregates/new-patient-winback-opportunities/", NewPatientWinbacksView.as_view(), name="new-patient-winback-opportunities"),
+    path(r"calls/aggregates/call-counts/", CallMetricsView.as_view(), name="call-counts"),
     path(r"calls/aggregates/outbound-call-counts/", CallMetricsView.as_view(), name="outbound-call-counts"),
     path(
         r"calls/aggregates/outbound-insurance-provider-call-counts/", InsuranceProviderCallMetricsView.as_view(), name="outbound-insurance-provider-call-counts"

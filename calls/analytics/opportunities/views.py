@@ -10,6 +10,7 @@ from rest_framework.response import Response
 
 from calls.analytics.aggregates import (
     calculate_call_breakdown_per_practice,
+    calculate_call_count_opportunities,
     calculate_call_counts,
     calculate_call_counts_per_user,
     calculate_call_counts_per_user_by_date_and_hour,
@@ -20,7 +21,9 @@ from calls.analytics.participants.field_choices import NonAgentEngagementPersona
 from calls.field_choices import CallDirectionTypes
 from calls.models import Call
 from calls.validation import (
+    ALL_FILTER_NAME,
     get_validated_call_dates,
+    get_validated_call_direction,
     get_validated_practice_group_id,
     get_validated_practice_id,
 )
@@ -34,6 +37,7 @@ class CallMetricsView(views.APIView):
     def get(self, request, format=None):
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
         valid_practice_group_id, practice_group_errors = get_validated_practice_group_id(request=request)
+        valid_call_direction, call_direction_errors = get_validated_call_direction(request=request)
         dates_info = get_validated_call_dates(query_data=request.query_params)
         dates_errors = dates_info.get("errors")
 
@@ -64,24 +68,36 @@ class CallMetricsView(views.APIView):
         call_start_time__lte = dates[1]
         dates_filter = {"call_start_time__gte": call_start_time__gte, "call_start_time__lte": call_start_time__lte}
 
-        analytics = get_call_counts_for_outbound(dates_filter, practice_filter, practice_group_filter)
+        # TODO: include filters to REST API for other call directions (Inbound)
+        call_direction_filter = {}
+        if valid_call_direction == ALL_FILTER_NAME:
+            call_direction_filter = {}  # stating explicitly even though it is initialized above
+        elif valid_call_direction:
+            call_direction_filter = {"call_direction": valid_call_direction}
+        else:
+            # TODO: Default to no filter after dependency is removed
+            {"call_direction": CallDirectionTypes.OUTBOUND}
+
+        analytics = get_call_counts(dates_filter, practice_filter, practice_group_filter, call_direction_filter)
 
         return Response({"results": analytics})
 
 
-def get_call_counts_for_outbound(
+def get_call_counts(
     dates_filter: Optional[Dict[str, str]],
     practice_filter: Optional[Dict[str, str]],
     practice_group_filter: Optional[Dict[str, str]],
+    call_direction_filter: Optional[Dict[str, str]],
 ) -> Dict[str, Any]:
 
     # set re-usable filters
-    filters = Q(call_direction=CallDirectionTypes.OUTBOUND) & Q(**dates_filter) & Q(**practice_filter) & Q(**practice_group_filter)
+    filters = Q(**call_direction_filter) & Q(**dates_filter) & Q(**practice_filter) & Q(**practice_group_filter)
 
     # set re-usable filtered queryset
     calls_qs = Call.objects.filter(filters)
 
     analytics = {
+        "opportunities": calculate_call_count_opportunities(calls_qs),
         "calls_overall": calculate_call_counts(calls_qs),  # perform call counts
         "calls_per_user": calculate_call_counts_per_user(calls_qs),  # call counts per caller (agent) phone number
         "calls_per_user_by_date_and_hour": calculate_call_counts_per_user_by_date_and_hour(calls_qs),  # call counts per caller (agent) phone number over time
