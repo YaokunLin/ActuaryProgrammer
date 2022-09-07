@@ -1,6 +1,10 @@
 from django.urls import include, path
 from rest_framework_nested import routers
 
+from calls.analytics.insurance_providers.views import (
+    InsuranceProviderCallMetricsView,
+    InsuranceProviderMentionedView,
+)
 from calls.analytics.intents.views import (
     CallMentionedCompanyViewset,
     CallMentionedInsuranceViewset,
@@ -16,10 +20,7 @@ from calls.analytics.interactions.views import (
     AgentCallScoreMetricViewset,
     AgentCallScoreViewset,
 )
-from calls.analytics.opportunities.views import (
-    CallMetricsView,
-    NewPatientWinbacksView
-)
+from calls.analytics.opportunities.views import CallMetricsView, NewPatientWinbacksView
 from calls.analytics.participants.views import (
     AgentAssignedCallViewSet,
     AgentEngagedWithViewset,
@@ -30,9 +31,7 @@ from calls.analytics.transcripts.views import (
     CallTranscriptFragmentSentimentViewset,
     CallTranscriptFragmentViewset,
 )
-from calls.analytics.views import (
-    CallAnalyticsFieldChoicesView,
-)
+from calls.analytics.views import CallAnalyticsFieldChoicesView
 from calls.views import (
     CallAudioPartialViewset,
     CallAudioViewset,
@@ -49,7 +48,6 @@ from calls.views import (
     GetCallTranscriptPartials,
     TelecomCallerNameInfoViewSet,
 )
-
 
 calls_app_root_router = routers.SimpleRouter()
 
@@ -102,6 +100,10 @@ urlpatterns = [
     # Call Aggregates
     path(r"calls/aggregates/new-patient-winback-opportunities/", NewPatientWinbacksView.as_view(), name="new-patient-winback-opportunities"),
     path(r"calls/aggregates/outbound-call-counts/", CallMetricsView.as_view(), name="outbound-call-counts"),
+    path(
+        r"calls/aggregates/outbound-insurance-provider-call-counts/", InsuranceProviderCallMetricsView.as_view(), name="outbound-insurance-provider-call-counts"
+    ),
+    path(r"calls/aggregates/insurance-providers-mentioned/", InsuranceProviderMentionedView.as_view(), name="insurance-providers-mentioned"),
     # Routers
     path(r"", include(calls_app_root_router.urls)),
     path(r"", include(call_router.urls)),

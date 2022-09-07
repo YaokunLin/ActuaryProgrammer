@@ -2,10 +2,13 @@
 
 ## Load Fixtures
 
+Quickstart:
+
 ```bash
 docker-compose run --rm  api python3 manage.py loaddata -i fixtures/core.json fixtures/netsapiens_integration.json fixtures/netsapiens_integration_event_extracts.json fixtures/netsapiens_integration_cdr2_extracts.json
 docker-compose run --rm  api python3 manage.py loaddata -i fixtures/calls_ctps.json fixtures/calls_caps.json
 docker-compose run --rm  api python3 manage.py loaddata -i fixtures/calls_calltranscript.json fixtures/calls_callaudio.json
+docker-compose run --rm api python3 manage.py load_ml_results_from_bq_json 2022-07 --practice-id 2d32ZHoXXo7RYVjZ7Grker
 ```
 
 ## Generate more Fixtures when needed

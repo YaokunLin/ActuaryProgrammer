@@ -1,35 +1,51 @@
 import logging
 
+import requests
 from django.conf import settings
 from django.db import transaction
-from django.http import (
-    HttpRequest,
-)
+from django.http import HttpRequest
 from django.utils import timezone
 from django.utils.translation import ugettext as _
+from oauth2_provider.contrib.rest_framework import TokenHasReadWriteScope, TokenHasScope
 from pydantic import BaseModel
-from rest_framework import viewsets
+from rest_framework import status, viewsets
 from rest_framework.exceptions import (
     APIException,
     AuthenticationFailed,
     ParseError,
     PermissionDenied,
 )
-from rest_framework import status
-from rest_framework.permissions import AllowAny, SAFE_METHODS
+from rest_framework.permissions import SAFE_METHODS, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from oauth2_provider.contrib.rest_framework import TokenHasReadWriteScope, TokenHasScope
-
-from core.exceptions import (
-    InternalServerError,
-    ServiceUnavailableError,
+from core.exceptions import InternalServerError, ServiceUnavailableError
+from core.models import (
+    Agent,
+    Client,
+    Patient,
+    Practice,
+    PracticeTelecom,
+    User,
+    VoipProvider,
 )
-from core.models import Agent, Client, Patient, Practice, PracticeTelecom, User, VoipProvider
-from core.serializers import AdminUserSerializer, AgentSerializer, ClientSerializer, PatientSerializer, PracticeSerializer, PracticeTelecomSerializer, VoipProviderSerializer
-from core.setup_user_and_practice import create_agent, create_user_telecom, save_user_activity_and_token, setup_practice, setup_user, update_user_on_refresh
-
+from core.serializers import (
+    AdminUserSerializer,
+    AgentSerializer,
+    ClientSerializer,
+    PatientSerializer,
+    PracticeSerializer,
+    PracticeTelecomSerializer,
+    VoipProviderSerializer,
+)
+from core.setup_user_and_practice import (
+    create_agent,
+    create_user_telecom,
+    save_user_activity_and_token,
+    setup_practice,
+    setup_user,
+    update_user_on_refresh,
+)
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -108,7 +124,7 @@ class LoginView(APIView):
         request: HttpRequest,
         client_id: str = settings.NETSAPIENS_CLIENT_ID,
         client_secret: str = settings.NETSAPIENS_CLIENT_SECRET,
-        netsapiens_client: str = settings.NETSAPIENS_SYSTEM_CLIENT,
+        netsapiens_client: requests.Session = settings.NETSAPIENS_SYSTEM_CLIENT,
     ) -> Response:
 
         username = request.data.get("username")
@@ -270,7 +286,7 @@ class PracticeViewSet(viewsets.ModelViewSet):
             query_set = Practice.objects.all()
         elif self.request.method in SAFE_METHODS:
             # Can see any practice if you are an assigned agent to a practice
-            practice_ids = Agent.objects.filter(user=self.request.user.id).values("practice_id")
+            practice_ids = Agent.objects.filter(user=self.request.user).values_list("practice_id", flat=True)
             query_set = Practice.objects.filter(pk__in=practice_ids)
 
         return query_set.order_by("name")
@@ -307,6 +323,7 @@ class AdminUserViewset(viewsets.ModelViewSet):
     """
     Used by Auth0 for user creation. Not for any other use.
     """
+
     queryset = User.objects.all().order_by("-modified_at")
     permission_classes = [TokenHasReadWriteScope]
     serializer_class = AdminUserSerializer

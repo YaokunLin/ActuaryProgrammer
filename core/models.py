@@ -1,5 +1,12 @@
+from django.contrib.auth.models import (
+    AbstractUser,
+    Permission,
+    _user_get_permissions,
+    _user_has_module_perms,
+    _user_has_perm,
+)
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
-from django.contrib.auth.models import AbstractUser, Permission, _user_get_permissions, _user_has_perm, _user_has_module_perms
 from django.utils.translation import gettext_lazy as _
 from django_extensions.db.fields import ShortUUIDField
 from phonenumber_field.modelfields import PhoneNumberField
@@ -113,6 +120,8 @@ class Practice(AuditTrailModel):
         null=True, blank=False, default=False
     )  # practices are active or inactive based upon whether we've approved their submission and whether they're paid up
 
+    practice_group = models.ForeignKey("PracticeGroup", null=True, blank=True, on_delete=models.SET_NULL)
+
     objects = PracticeManager()
 
     class Meta:
@@ -127,6 +136,14 @@ class Practice(AuditTrailModel):
         return (self.name,)
 
     objects = PracticeManager()
+
+
+class PracticeGroup(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    name = models.CharField(_("name"), max_length=150)
+
+    def __str__(self):
+        return f"{self.id} - {self.name}"
 
 
 class Agent(AuditTrailModel):
@@ -183,3 +200,17 @@ class UserPatient(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+
+
+class InsuranceProvider(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    name = models.CharField(blank=True, max_length=255)
+
+
+class InsuranceProviderPhoneNumber(AuditTrailModel):
+    """
+    Temporary surrogate for TelecomCallerNameInfo, probably
+    """
+
+    phone_number = PhoneNumberField(primary_key=True)
+    insurance_provider = models.ForeignKey(InsuranceProvider, null=False, on_delete=models.CASCADE)
