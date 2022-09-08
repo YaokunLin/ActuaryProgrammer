@@ -44,7 +44,7 @@ def calculate_call_counts(calls_qs: QuerySet) -> Dict:
 def calculate_call_count_opportunities(calls_qs: QuerySet) -> Dict:
     total_opportunities_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT) | Q(
         engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.EXISTING_PATIENT,
-        call_purposes__call_purpose_type=CallPurposeTypes.NEW_APPOINTMENT
+        call_purposes__call_purpose_type=CallPurposeTypes.NEW_APPOINTMENT,
     )
     opportunity_call_purpose_filters = Q(call_purposes__call_purpose_type=CallPurposeTypes.NEW_APPOINTMENT)
 
@@ -153,7 +153,8 @@ def calculate_call_counts_per_field(calls_qs: QuerySet, field_name: str) -> Dict
 
 
 def calculate_call_counts_by_day_of_week(calls_qs: QuerySet) -> Dict:
-    day_of_week_mapping = {
+    weekday_label = "weekday"
+    weekday_mapping = {
         1: "sunday",
         2: "monday",
         3: "tuesday",
@@ -162,9 +163,9 @@ def calculate_call_counts_by_day_of_week(calls_qs: QuerySet) -> Dict:
         6: "friday",
         7: "saturday",
     }
-    calls_qs = calls_qs.annotate(day_of_week=ExtractWeekDay("call_start_time")).values("day_of_week").annotate(call_total=Count("id")).order_by("day_of_week")
-    calls_per_day_of_week = {day_of_week_mapping[d["day_of_week"]]: d["call_total"] for d in calls_qs.all()}
-    for day_name in day_of_week_mapping.values():
+    calls_qs = calls_qs.annotate(weekday=ExtractWeekDay("call_start_time")).values(weekday_label).annotate(call_total=Count("id")).order_by(weekday_label)
+    calls_per_day_of_week = {weekday_mapping[d[weekday_label]]: d["call_total"] for d in calls_qs.all()}
+    for day_name in weekday_mapping.values():
         if day_name not in calls_per_day_of_week:
             calls_per_day_of_week[day_name] = 0
     return calls_per_day_of_week
@@ -356,7 +357,7 @@ SATURDAY = "saturday"
 
 
 def get_call_counts_and_durations_by_weekday_and_hour(calls_qs: QuerySet) -> Dict:
-    day_of_week_by_index = {
+    weekday_by_index = {
         0: MONDAY,
         1: TUESDAY,
         2: WEDNESDAY,
@@ -373,7 +374,7 @@ def get_call_counts_and_durations_by_weekday_and_hour(calls_qs: QuerySet) -> Dic
     average_hold_duration_label = "average_hold_duration_seconds"
     efficiency_label = "efficiency"
     per_hour_label = "per_hour"
-    day_of_week_label = "day_of_week"
+    weekday_label = "weekday"
 
     # Group data by date_and_hour
     data = (
@@ -389,27 +390,27 @@ def get_call_counts_and_durations_by_weekday_and_hour(calls_qs: QuerySet) -> Dic
 
     # Convert data by date_and_hour into data_by_weekday_and_hour
     data_by_weekday_and_hour = {
-        MONDAY: {per_hour_label: {}, day_of_week_label: MONDAY},
-        TUESDAY: {per_hour_label: {}, day_of_week_label: TUESDAY},
-        WEDNESDAY: {per_hour_label: {}, day_of_week_label: WEDNESDAY},
-        THURSDAY: {per_hour_label: {}, day_of_week_label: THURSDAY},
-        FRIDAY: {per_hour_label: {}, day_of_week_label: FRIDAY},
-        SATURDAY: {per_hour_label: {}, day_of_week_label: SATURDAY},
-        SUNDAY: {per_hour_label: {}, day_of_week_label: SUNDAY},
+        MONDAY: {per_hour_label: {}, weekday_label: MONDAY},
+        TUESDAY: {per_hour_label: {}, weekday_label: TUESDAY},
+        WEDNESDAY: {per_hour_label: {}, weekday_label: WEDNESDAY},
+        THURSDAY: {per_hour_label: {}, weekday_label: THURSDAY},
+        FRIDAY: {per_hour_label: {}, weekday_label: FRIDAY},
+        SATURDAY: {per_hour_label: {}, weekday_label: SATURDAY},
+        SUNDAY: {per_hour_label: {}, weekday_label: SUNDAY},
     }
     for data_for_hour in data:
         data_datetime = data_for_hour[call_date_hour_label]
-        day_of_week = day_of_week_by_index[data_datetime.weekday()]
+        weekday = weekday_by_index[data_datetime.weekday()]
         hour = data_datetime.hour
-        existing_data = data_by_weekday_and_hour[day_of_week][per_hour_label].get(hour, {})
-        data_by_weekday_and_hour[day_of_week][per_hour_label][hour] = {
+        existing_data = data_by_weekday_and_hour[weekday][per_hour_label].get(hour, {})
+        data_by_weekday_and_hour[weekday][per_hour_label][hour] = {
             call_count_label: existing_data.get(call_count_label, 0) + data_for_hour[call_count_label],
             call_duration_label: existing_data.get(call_duration_label, timedelta()) + data_for_hour[call_duration_label],
             hold_duration_label: existing_data.get(hold_duration_label, timedelta()) + data_for_hour[hold_duration_label],
         }
 
-    for day_of_week, data_for_day_of_week in data_by_weekday_and_hour.items():
-        for hour, data_for_hour in data_for_day_of_week[per_hour_label].items():
+    for data_for_weekday in data_by_weekday_and_hour.values():
+        for hour, data_for_hour in data_for_weekday[per_hour_label].items():
             # Per hour, calculate efficiency, average call duration and average hold duration
             data_for_hour[efficiency_label] = data_for_hour[call_count_label] / data_for_hour[call_duration_label].total_seconds()
             data_for_hour[average_call_duration_label] = data_for_hour[call_duration_label].total_seconds() / data_for_hour[call_count_label]
