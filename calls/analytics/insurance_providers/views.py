@@ -148,7 +148,7 @@ class InsuranceProviderInteractionsView(views.APIView):
                 data_for_hour[efficiency_label] = data_for_hour[call_count_label] / data_for_hour[call_duration_label].total_seconds()
                 data_for_hour[average_duration_label] = data_for_hour[call_duration_label].total_seconds() / data_for_hour[call_count_label]
 
-            # For each day, get the hour with the greatest efficiency which also has >= median calls made in that hour
+            # For each day, get the hour with the greatest efficiency which also has >= call_count_cutoff calls made in that hour
             # Store the data about that hour on the day
             d = [
                 {efficiency_label: v[efficiency_label], hour_label: k}
