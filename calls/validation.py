@@ -2,12 +2,16 @@ import logging
 from typing import Dict, Optional, Tuple
 
 from rest_framework.request import Request
+from calls.field_choices import CallDirectionTypes
 
 from core.models import Agent, InsuranceProvider, Practice, PracticeGroup
 from core.validation import validate_date_format, validate_dates
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
+
+# TODO: remove, see note in calls/analytics/opportunities/views.py#CallMetricsView
+ALL_FILTER_NAME = "all"
 
 
 def get_validated_call_dates(query_data: Dict) -> Dict:
@@ -62,6 +66,30 @@ def get_validated_practice_id(request: Request) -> Tuple[Optional[str], Optional
         return None, invalid_error
 
     return practice_id, None
+
+
+def get_validated_call_direction(request: Request) -> Tuple[Optional[str], Optional[Dict[str, str]]]:
+    # TODO: Remove ALL_FILTER_NAME; all is a stop-gap; since its parent was originally using only outbound calls
+    # see note in calls/analytics/opportunities/views.py#CallMetricsView
+    param_name = "call_direction"
+    call_direction = request.query_params.get(param_name)
+    invalid_error = {param_name: f"Invalid {param_name}='{call_direction}'"}
+
+    if call_direction not in CallDirectionTypes.choices or call_direction != ALL_FILTER_NAME:
+        return None, invalid_error
+
+    return call_direction, None
+
+
+def get_validated_call_purpose(request: Request) -> Tuple[Optional[str], Optional[Dict[str, str]]]:
+    param_name = "call_direction"
+    call_direction = request.query_params.get(param_name)
+    invalid_error = {param_name: f"Invalid {param_name}='{call_direction}'"}
+
+    if call_direction not in CallDirectionTypes.choices or call_direction != ALL_FILTER_NAME:
+        return None, invalid_error
+
+    return call_direction, None
 
 
 def get_validated_practice_group_id(request: Request) -> Tuple[Optional[str], Optional[Dict[str, str]]]:
