@@ -272,15 +272,16 @@ class InsuranceProviderCallMetricsView(views.APIView):
             "calls_per_user_by_date_and_hour": calculate_call_counts_per_user_by_date_and_hour(calls_qs),
             "non_agent_engagement_types": calculate_call_non_agent_engagement_type_counts(calls_qs),
         }
-        analytics.update(**calculate_call_breakdown_per_insurance_provider(calls_qs))
-
         analytics["calls_by_date_and_hour"] = calculate_call_counts_by_date_and_hour(calls_qs)
         analytics["calls_by_day_of_week"] = calculate_call_counts_by_day_of_week(calls_qs)
 
-        if practice_group_filter:
-            analytics["calls_per_practice"] = calculate_call_breakdown_per_practice(
-                calls_qs, practice_group_filter.get("practice__practice_group_id"), analytics["calls_overall"]
-            )
+        if calls_qs:
+            analytics.update(**calculate_call_breakdown_per_insurance_provider(calls_qs))
+
+            if practice_group_filter:
+                analytics["calls_per_practice"] = calculate_call_breakdown_per_practice(
+                    calls_qs, practice_group_filter.get("practice__practice_group_id"), analytics["calls_overall"]
+                )
 
         return Response({"results": analytics})
 
