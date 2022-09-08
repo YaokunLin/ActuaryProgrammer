@@ -1,10 +1,10 @@
 import logging
 from collections import Counter
+from contextlib import suppress
 from datetime import timedelta
 from typing import Dict, Optional
 
-from django.db.models import Count, Q, QuerySet, Sum, Value
-from django.db.models.functions import Coalesce, TruncHour
+from django.db.models import Count, Q, QuerySet
 from django.utils import timezone
 from numpy import percentile
 from rest_framework import status, views
@@ -85,7 +85,6 @@ class InsuranceProviderInteractionsView(views.APIView):
         call_duration_label = "total_call_duration_seconds"
         per_hour_label = "per_hour"
         efficiency_label = "efficiency"
-        average_duration_label = "average_call_duration_seconds"
         hour_label = "hour"
         most_efficient_hour_label = "most_efficient_hour"
         highest_efficiency_label = "highest_efficiency"
@@ -146,6 +145,10 @@ class InsuranceProviderInteractionsView(views.APIView):
 
 class InsuranceProviderMentionedView(views.APIView):
     def get(self, request, format=None):
+        size = 10
+        with suppress(Exception):
+            size = max(0, min(50, int(request.query_params.get("size", size))))
+
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
         valid_practice_group_id, practice_group_errors = get_validated_practice_group_id(request=request)
         dates_info = get_validated_call_dates(query_data=request.query_params)
@@ -192,8 +195,8 @@ class InsuranceProviderMentionedView(views.APIView):
         )
         calls_qs = Call.objects.select_related("mentioned_insurances").filter(all_filters)
 
-        # Limit to top 10
-        top_mentions = calls_qs.values("mentioned_insurances__keyword").annotate(call_total=Count("id")).order_by("-call_total")[:10]
+        # Limit to top "size"
+        top_mentions = calls_qs.values("mentioned_insurances__keyword").annotate(call_total=Count("id")).order_by("-call_total")[:size]
         results = {"top_insurances_mentioned": [{"insurance": i["mentioned_insurances__keyword"], "count": i["call_total"]} for i in top_mentions]}
         return Response({"results": results})
 
