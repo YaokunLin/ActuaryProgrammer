@@ -114,6 +114,10 @@ def get_call_counts(
     return analytics
 
 
+class OpportunitiesPerUserView(views.APIView):
+    pass
+
+
 class NewPatientOpportunitiesView(views.APIView):
     QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME = {"call_start_time__gte": "call_start_time_after", "call_start_time__lte": "call_start_time_before"}
 

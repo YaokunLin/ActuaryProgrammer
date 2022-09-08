@@ -25,6 +25,7 @@ from calls.analytics.opportunities.views import (
     CallMetricsView,
     NewPatientOpportunitiesView,
     NewPatientWinbacksView,
+    OpportunitiesPerUserView,
 )
 from calls.analytics.participants.views import (
     AgentAssignedCallViewSet,
@@ -109,6 +110,7 @@ urlpatterns = [
     path(r"calls/aggregates/new-patient-winback-opportunities/", NewPatientWinbacksView.as_view(), name="new-patient-winback-opportunities"),
     path(r"calls/aggregates/call-counts/", CallMetricsView.as_view(), name="call-counts"),
     path(r"calls/aggregates/outbound-call-counts/", CallMetricsView.as_view(), name="outbound-call-counts"),
+    path(r"calls/aggregates/opportunities-per-user", OpportunitiesPerUserView.as_view(), name="opportunities-per-user"),
     path(
         r"calls/aggregates/outbound-insurance-provider-call-counts/", InsuranceProviderCallMetricsView.as_view(), name="outbound-insurance-provider-call-counts"
     ),
