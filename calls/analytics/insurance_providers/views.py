@@ -198,7 +198,19 @@ class InsuranceProviderMentionedView(views.APIView):
         # Limit to top "size"
         top_mentions = calls_qs.values("mentioned_insurances__keyword").annotate(call_total=Count("id")).order_by("-call_total")[:size]
         results = {"top_insurances_mentioned": [{"insurance": i["mentioned_insurances__keyword"], "count": i["call_total"]} for i in top_mentions]}
+        self._normalize_result_insurance_names(results)
         return Response({"results": results})
+
+    @staticmethod
+    def _normalize_result_insurance_names(results: Dict) -> None:
+        """
+        Modifies results in-place to strip excess whitespace and fix capitalization
+        """
+        for r in results["top_insurances_mentioned"]:
+            name = r["insurance"].strip()
+            if name and name[0].islower():
+                name = name.title()
+            r["insurance"] = name
 
 
 class InsuranceProviderCallMetricsView(views.APIView):
@@ -255,7 +267,7 @@ class InsuranceProviderCallMetricsView(views.APIView):
         analytics["calls_by_day_of_week"] = calculate_call_counts_by_day_of_week(calls_qs)
 
         if calls_qs:
-            analytics.update(**calculate_call_breakdown_per_insurance_provider(calls_qs))
+            analytics.update(**self.calculate_call_breakdown_per_insurance_provider(calls_qs))
 
             if practice_group_filter:
                 analytics["calls_per_practice"] = calculate_call_breakdown_per_practice(
@@ -264,121 +276,119 @@ class InsuranceProviderCallMetricsView(views.APIView):
 
         return Response({"results": analytics})
 
+    def calculate_call_breakdown_per_insurance_provider(self, calls_qs: QuerySet) -> Dict:
+        data_per_phone_number = calculate_call_counts_per_field(calls_qs, "sip_callee_number")
 
-def calculate_call_breakdown_per_insurance_provider(calls_qs: QuerySet) -> Dict:
-    data_per_phone_number = calculate_call_counts_per_field(calls_qs, "sip_callee_number")
+        # Successes ---
+        successes_qs = calls_qs.filter(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.SUCCESS).values("sip_callee_number")
+        data_per_phone_number["call_success_total"] = successes_qs.annotate(count=Count("id")).order_by("-count")
+        data_per_phone_number["call_success_total"] = convert_count_results(data_per_phone_number["call_success_total"], "sip_callee_number", "count")
 
-    # Successes ---
-    successes_qs = calls_qs.filter(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.SUCCESS).values("sip_callee_number")
-    data_per_phone_number["call_success_total"] = successes_qs.annotate(count=Count("id")).order_by("-count")
-    data_per_phone_number["call_success_total"] = convert_count_results(data_per_phone_number["call_success_total"], "sip_callee_number", "count")
+        phone_numbers = InsuranceProviderPhoneNumber.objects.select_related("insurance_provider").filter(
+            phone_number__in=data_per_phone_number["call_total"].keys()
+        )
+        insurance_provider_per_phone_number = {ipp.phone_number: ipp.insurance_provider for ipp in phone_numbers}
+        num_phone_numbers_per_insurance_provider = Counter(insurance_provider_per_phone_number.values())
 
-    phone_numbers = InsuranceProviderPhoneNumber.objects.select_related("insurance_provider").filter(
-        phone_number__in=data_per_phone_number["call_total"].keys()
-    )
-    insurance_provider_per_phone_number = {ipp.phone_number: ipp.insurance_provider for ipp in phone_numbers}
-    num_phone_numbers_per_insurance_provider = Counter(insurance_provider_per_phone_number.values())
+        # HEREBEDRAGONS: Insurance Provider name isn't technically unique so there could be fuckery...
+        data_per_insurance_provider_name = {}
+        for section_name in ("call_total", "call_connected_total", "call_seconds_total", "call_sentiment_counts", "call_success_total"):
+            data_per_insurance_provider_name[section_name] = self._aggregate_per_insurance_provider_name(
+                data_per_phone_number, num_phone_numbers_per_insurance_provider, insurance_provider_per_phone_number, section_name, "sum"
+            )
 
-    # HEREBEDRAGONS: Insurance Provider name isn't technically unique so there could be fuckery...
-    data_per_insurance_provider_name = {}
-    for section_name in ("call_total", "call_connected_total", "call_seconds_total", "call_sentiment_counts", "call_success_total"):
-        data_per_insurance_provider_name[section_name] = _aggregate_per_insurance_provider_name(
-            data_per_phone_number, num_phone_numbers_per_insurance_provider, insurance_provider_per_phone_number, section_name, "sum"
+        data_per_insurance_provider_name["call_on_hold_seconds_average"] = self._aggregate_per_insurance_provider_name(
+            data_per_phone_number, num_phone_numbers_per_insurance_provider, insurance_provider_per_phone_number, "call_on_hold_seconds_average", "avg"
+        )
+        data_per_insurance_provider_name["call_seconds_average"] = self._aggregate_per_insurance_provider_name(
+            data_per_phone_number, num_phone_numbers_per_insurance_provider, insurance_provider_per_phone_number, "call_seconds_average", "avg"
         )
 
-    data_per_insurance_provider_name["call_on_hold_seconds_average"] = _aggregate_per_insurance_provider_name(
-        data_per_phone_number, num_phone_numbers_per_insurance_provider, insurance_provider_per_phone_number, "call_on_hold_seconds_average", "avg"
-    )
-    data_per_insurance_provider_name["call_seconds_average"] = _aggregate_per_insurance_provider_name(
-        data_per_phone_number, num_phone_numbers_per_insurance_provider, insurance_provider_per_phone_number, "call_seconds_average", "avg"
-    )
+        # Success Rate ---
+        data_per_insurance_provider_name["call_success_rate"] = dict()
+        for k, v in data_per_insurance_provider_name["call_total"].items():
+            success_count = data_per_insurance_provider_name["call_success_total"].get(k, None)
+            data_per_insurance_provider_name["call_success_rate"][k] = success_count / v if success_count else 0
 
-    # Success Rate ---
-    data_per_insurance_provider_name["call_success_rate"] = dict()
-    for k, v in data_per_insurance_provider_name["call_total"].items():
-        success_count = data_per_insurance_provider_name["call_success_total"].get(k, None)
-        data_per_insurance_provider_name["call_success_rate"][k] = success_count / v if success_count else 0
+        return {
+            "calls_per_insurance_provider": data_per_insurance_provider_name,
+            "calls_per_insurance_provider_by_date_and_hour": self.calculate_call_breakdown_per_insurance_provider_by_date_and_hour(
+                calls_qs, num_phone_numbers_per_insurance_provider, insurance_provider_per_phone_number
+            ),
+        }
 
-    return {
-        "calls_per_insurance_provider": data_per_insurance_provider_name,
-        "calls_per_insurance_provider_by_date_and_hour": calculate_call_breakdown_per_insurance_provider_by_date_and_hour(
-            calls_qs, num_phone_numbers_per_insurance_provider, insurance_provider_per_phone_number
-        ),
-    }
+    def calculate_call_breakdown_per_insurance_provider_by_date_and_hour(
+        self, calls_qs: QuerySet, num_phone_numbers_per_insurance_provider: Dict, insurance_provider_per_phone_number: Dict
+    ) -> Dict:
+        data_per_phone_number = calculate_call_counts_per_field_by_date_and_hour(calls_qs, "sip_callee_number")
+        data_per_insurance_provider_name = {}
 
+        for section_name in ("call_total", "call_connected_total", "call_seconds_total"):
+            data_per_insurance_provider_name[section_name] = self._aggregate_per_insurance_provider_name(
+                data_per_phone_number, num_phone_numbers_per_insurance_provider, insurance_provider_per_phone_number, section_name, "sum", True
+            )
 
-def calculate_call_breakdown_per_insurance_provider_by_date_and_hour(
-    calls_qs: QuerySet, num_phone_numbers_per_insurance_provider: Dict, insurance_provider_per_phone_number: Dict
-) -> Dict:
-    data_per_phone_number = calculate_call_counts_per_field_by_date_and_hour(calls_qs, "sip_callee_number")
-    data_per_insurance_provider_name = {}
-
-    for section_name in ("call_total", "call_connected_total", "call_seconds_total"):
-        data_per_insurance_provider_name[section_name] = _aggregate_per_insurance_provider_name(
-            data_per_phone_number, num_phone_numbers_per_insurance_provider, insurance_provider_per_phone_number, section_name, "sum", True
+        data_per_insurance_provider_name["call_seconds_average"] = self._aggregate_per_insurance_provider_name(
+            data_per_phone_number, num_phone_numbers_per_insurance_provider, insurance_provider_per_phone_number, "call_seconds_average", "avg", True
         )
 
-    data_per_insurance_provider_name["call_seconds_average"] = _aggregate_per_insurance_provider_name(
-        data_per_phone_number, num_phone_numbers_per_insurance_provider, insurance_provider_per_phone_number, "call_seconds_average", "avg", True
-    )
+        data_per_insurance_provider_name["call_on_hold_seconds_average"] = self._aggregate_per_insurance_provider_name(
+            data_per_phone_number, num_phone_numbers_per_insurance_provider, insurance_provider_per_phone_number, "call_on_hold_seconds_average", "avg", True
+        )
+        return data_per_insurance_provider_name
 
-    data_per_insurance_provider_name["call_on_hold_seconds_average"] = _aggregate_per_insurance_provider_name(
-        data_per_phone_number, num_phone_numbers_per_insurance_provider, insurance_provider_per_phone_number, "call_on_hold_seconds_average", "avg", True
-    )
-    return data_per_insurance_provider_name
+    @staticmethod
+    def _aggregate_per_insurance_provider_name(
+        data_per_phone_number: Dict,
+        num_phone_numbers_per_insurance_provider: Dict,
+        insurance_provider_per_phone_number: Dict,
+        section_name: str,
+        calculation: str,
+        is_time_series_breakdown: bool = False,
+    ) -> Dict:
+        """
+        Given data broken down by phone number, aggregate it by insurance provider/name instead
+        calculation must be either "sum" or "avg"
 
-
-def _aggregate_per_insurance_provider_name(
-    data_per_phone_number: Dict,
-    num_phone_numbers_per_insurance_provider: Dict,
-    insurance_provider_per_phone_number: Dict,
-    section_name: str,
-    calculation: str,
-    is_time_series_breakdown: bool = False,
-) -> Dict:
-    """
-    Given data broken down by phone number, aggregate it by insurance provider/name instead
-    calculation must be either "sum" or "avg"
-
-    HEREBEDRAGONS: This is fragile and overly complex and works only with very specifically-structured dicts
-    """
-    data_per_provider = dict()
-    for phone_number, value in data_per_phone_number[section_name].items():
-        insurance_provider = insurance_provider_per_phone_number[phone_number]
-        new_value = value
-        existing_value = data_per_provider.get(insurance_provider, None)
-        if existing_value:
-            if isinstance(existing_value, dict):
-                new_value = dict()
-                if is_time_series_breakdown:
-                    value = {d["call_date_hour"]: {k: v for k, v in d.items() if k != "call_date_hour"} for d in value}
-                for k, v in existing_value.items():
-                    subvalue = value.get(k, None)
-                    new_value[k] = v + subvalue if subvalue is not None else v
-            else:
-                new_value = existing_value + value
-        if is_time_series_breakdown:
-            new_value = {d["call_date_hour"]: {k: v for k, v in d.items() if k != "call_date_hour"} for d in value}
-        data_per_provider[insurance_provider] = new_value
-
-    if calculation == "avg":
-        for insurance_provider, v in data_per_provider.items():
-            num_phone_numbers = num_phone_numbers_per_insurance_provider[insurance_provider]
-            if isinstance(v, dict):
-                new_value = dict()
-                for subkey, subvalue in v.items():
+        HEREBEDRAGONS: This is fragile and overly complex and works only with very specifically-structured dicts
+        """
+        data_per_provider = dict()
+        for phone_number, value in data_per_phone_number[section_name].items():
+            insurance_provider = insurance_provider_per_phone_number[phone_number]
+            new_value = value
+            existing_value = data_per_provider.get(insurance_provider, None)
+            if existing_value:
+                if isinstance(existing_value, dict):
+                    new_value = dict()
                     if is_time_series_breakdown:
-                        for subvalue_key, subvalue_value in subvalue.items():
-                            subvalue[subvalue_key] = subvalue_value / num_phone_numbers
-                        new_value[subkey] = subvalue
-                    else:
-                        new_value[subkey] = subvalue / num_phone_numbers
-            else:
-                new_value = v / num_phone_numbers
+                        value = {d["call_date_hour"]: {k: v for k, v in d.items() if k != "call_date_hour"} for d in value}
+                    for k, v in existing_value.items():
+                        subvalue = value.get(k, None)
+                        new_value[k] = v + subvalue if subvalue is not None else v
+                else:
+                    new_value = existing_value + value
+            if is_time_series_breakdown:
+                new_value = {d["call_date_hour"]: {k: v for k, v in d.items() if k != "call_date_hour"} for d in value}
             data_per_provider[insurance_provider] = new_value
 
-    if is_time_series_breakdown:
-        for p, value_per_provider in data_per_provider.items():
-            data_per_provider[p] = [{"call_date_hour": k, **v} for k, v in value_per_provider.items()]
+        if calculation == "avg":
+            for insurance_provider, v in data_per_provider.items():
+                num_phone_numbers = num_phone_numbers_per_insurance_provider[insurance_provider]
+                if isinstance(v, dict):
+                    new_value = dict()
+                    for subkey, subvalue in v.items():
+                        if is_time_series_breakdown:
+                            for subvalue_key, subvalue_value in subvalue.items():
+                                subvalue[subvalue_key] = subvalue_value / num_phone_numbers
+                            new_value[subkey] = subvalue
+                        else:
+                            new_value[subkey] = subvalue / num_phone_numbers
+                else:
+                    new_value = v / num_phone_numbers
+                data_per_provider[insurance_provider] = new_value
 
-    return {p.name: v for p, v in data_per_provider.items()}
+        if is_time_series_breakdown:
+            for p, value_per_provider in data_per_provider.items():
+                data_per_provider[p] = [{"call_date_hour": k, **v} for k, v in value_per_provider.items()]
+
+        return {p.name: v for p, v in data_per_provider.items()}
