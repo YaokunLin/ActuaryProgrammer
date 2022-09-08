@@ -1,7 +1,9 @@
+import datetime
 import logging
 from datetime import timedelta
 from typing import Dict, List, Union
 
+import pandas as pd
 from django.db.models import (
     Aggregate,
     Avg,
@@ -15,7 +17,13 @@ from django.db.models import (
     Value,
     When,
 )
-from django.db.models.functions import Coalesce, Concat, ExtractWeekDay, TruncHour
+from django.db.models.functions import (
+    Coalesce,
+    Concat,
+    ExtractWeekDay,
+    TruncDate,
+    TruncHour,
+)
 from django_pandas.io import read_frame
 
 from calls.analytics.intents.field_choices import CallOutcomeTypes, CallPurposeTypes
@@ -41,19 +49,18 @@ def calculate_call_counts(calls_qs: QuerySet) -> Dict:
     return analytics
 
 
-def calculate_call_count_opportunities(calls_qs: QuerySet) -> Dict:
-    total_opportunities_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT) | Q(
-        engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.EXISTING_PATIENT,
-        call_purposes__call_purpose_type=CallPurposeTypes.NEW_APPOINTMENT,
-    )
-    opportunity_call_purpose_filters = Q(call_purposes__call_purpose_type=CallPurposeTypes.NEW_APPOINTMENT)
+def calculate_call_count_opportunities(calls_qs: QuerySet, start_date_str: str, end_date_str: str) -> Dict:
+    total_opportunities_filter = (
+        Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT)
+        | Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.EXISTING_PATIENT)
+    ) & Q(call_purposes__call_purpose_type=CallPurposeTypes.NEW_APPOINTMENT)
 
     existing_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.EXISTING_PATIENT)
     new_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT)
 
     opportunities_total_qs = calls_qs.filter(total_opportunities_filter)
     opportunities_existing_qs = calls_qs.filter(total_opportunities_filter, existing_filter)
-    opportunities_new_qs = calls_qs.filter(new_filter)
+    opportunities_new_qs = calls_qs.filter(total_opportunities_filter, new_filter)
     opportunities = {"total": opportunities_total_qs.count(), "existing": opportunities_existing_qs.count(), "new": opportunities_new_qs.count()}
 
     booked_filters = Q(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.SUCCESS)
@@ -68,11 +75,27 @@ def calculate_call_count_opportunities(calls_qs: QuerySet) -> Dict:
         "existing": opportunities_booked_qs.filter(existing_filter).count(),
         "new": opportunities_booked_qs.filter(new_filter).count(),
     }
+    opportunities["booked_by_week"] = {
+        "total": convert_call_counts_to_by_week(calculate_zero_filled_call_counts_by_day(opportunities_booked_qs, start_date_str, end_date_str)),
+        "existing": convert_call_counts_to_by_week(
+            calculate_zero_filled_call_counts_by_day(opportunities_booked_qs.filter(existing_filter), start_date_str, end_date_str)
+        ),
+        "new": convert_call_counts_to_by_week(
+            calculate_zero_filled_call_counts_by_day(opportunities_booked_qs.filter(new_filter), start_date_str, end_date_str)
+        ),
+    }
 
     opportunities["lost"] = {
         "total": opportunities_lost_qs.count(),
         "existing": opportunities_lost_qs.filter(existing_filter).count(),
         "new": opportunities_lost_qs.filter(new_filter).count(),
+    }
+    opportunities["lost_by_week"] = {
+        "total": convert_call_counts_to_by_week(calculate_zero_filled_call_counts_by_day(opportunities_lost_qs, start_date_str, end_date_str)),
+        "existing": convert_call_counts_to_by_week(
+            calculate_zero_filled_call_counts_by_day(opportunities_lost_qs.filter(existing_filter), start_date_str, end_date_str)
+        ),
+        "new": convert_call_counts_to_by_week(calculate_zero_filled_call_counts_by_day(opportunities_lost_qs.filter(new_filter), start_date_str, end_date_str)),
     }
 
     return opportunities
@@ -417,3 +440,43 @@ def get_call_counts_and_durations_by_weekday_and_hour(calls_qs: QuerySet) -> Dic
             data_for_hour[average_hold_duration_label] = data_for_hour[hold_duration_label].total_seconds() / data_for_hour[call_count_label]
 
     return data_by_weekday_and_hour
+
+
+def calculate_zero_filled_call_counts_by_day(calls_qs: QuerySet, start_date: str, end_date: str) -> List[Dict]:
+    data = list(calls_qs.annotate(date=TruncDate("call_start_time")).values("date").annotate(value=Count("id")).values("date", "value").order_by("date"))
+    if not data:
+        return []
+
+    date_range = pd.date_range(start_date, end_date, name="date")
+    data = pd.DataFrame(data).set_index("date").reindex(date_range, fill_value=0).reset_index()
+    data = data.to_dict("records")
+    for i in data:
+        i["date"] = i["date"].strftime("%Y-%m-%d")
+    return data
+
+
+def convert_call_counts_to_by_week(data: List[Dict]) -> List[Dict]:
+    date_format = "%Y-%m-%d"
+    if not data:
+        return []
+
+    # https://pandas.pydata.org/docs/user_guide/timeseries.html#anchored-offsets
+    day_of_week_mapping = {
+        0: "MON",
+        1: "TUE",
+        2: "WED",
+        3: "THU",
+        4: "FRI",
+        5: "SAT",
+        6: "SUN",
+    }
+
+    day_of_week = datetime.datetime.strptime(data[0]["date"], date_format).weekday()
+    df = pd.DataFrame(data)
+    df["date"] = df["date"].astype("datetime64[ns]")
+
+    weekly_data = df.resample(f"W-{day_of_week_mapping[day_of_week]}", label="left", closed="left", on="date").sum().reset_index().sort_values(by="date")
+    weekly_data = weekly_data.to_dict("records")
+    for i in weekly_data:
+        i["date"] = i["date"].strftime(date_format)
+    return weekly_data
