@@ -1,9 +1,9 @@
 import logging
-from collections import Counter, defaultdict
+from collections import Counter
 from datetime import timedelta
 from typing import Dict, Optional
 
-from django.db.models import Avg, Count, Q, QuerySet, Sum, Value
+from django.db.models import Count, Q, QuerySet, Sum, Value
 from django.db.models.functions import Coalesce, TruncHour
 from django.utils import timezone
 from numpy import percentile
@@ -40,28 +40,42 @@ log = logging.getLogger(__name__)
 
 class InsuranceProviderInteractionsView(views.APIView):
 
-    CALL_DURATION_MINIMUM_SECONDS = 60
+    # HEREBEDRAGONS: The following variables greatly affect the data that is returned
+    #   These values were chosen after a fair bit of trial & error against production data.
+    CALL_DURATION_MINIMUM_SECONDS = 140
+    CALL_PER_HOUR_PERCENTILE = 60
 
     def get(self, request, format=None):
         insurance_provider = get_validated_insurance_provider(request)
-        response_data = {}
+        try:
+            verbose = request.query_params.get("verbose", "False").lower() in {"true", "1", "t", "alex"}
+        except Exception:
+            verbose = False
+
         if insurance_provider is None:
-            return Response(response_data)
+            return Response({"insurance_provider_name": "Invalid insurance_provider_name"}, status=status.HTTP_400_BAD_REQUEST)
 
         all_filters = (
             Q(call_direction=CallDirectionTypes.OUTBOUND)
-            & Q(call_start_time__gte=timezone.now() - timedelta(days=180))
+            & Q(call_start_time__gte=timezone.now() - timedelta(days=700))
             & Q(sip_callee_number__in=insurance_provider.insuranceproviderphonenumber_set.only("phone_number"))
             & Q(duration_seconds__gte=timedelta(seconds=self.CALL_DURATION_MINIMUM_SECONDS))
         )
         calls_qs = Call.objects.filter(all_filters).all()
 
-        best_day_and_hour_data = self._get_best_day_and_hour_to_call(calls_qs)
+        response_data = self._get_best_day_and_hour_to_call(calls_qs, verbose=verbose)
+        if not response_data:
+            return Response(
+                {"error": f"Insufficient data to calculate best call day and time for {insurance_provider.name}"}, status=status.HTTP_204_NO_CONTENT
+            )
 
-        return Response(best_day_and_hour_data)  # TODO Kyle: Temporary
+        return Response(response_data)
 
     @staticmethod
-    def _get_best_day_and_hour_to_call(calls_qs: QuerySet) -> Optional[Dict]:
+    def _get_best_day_and_hour_to_call(calls_qs: QuerySet, verbose: bool) -> Optional[Dict]:
+        if not calls_qs:
+            return None
+
         # Constants
         sunday = "sunday"
         monday = "monday"
@@ -79,12 +93,14 @@ class InsuranceProviderInteractionsView(views.APIView):
             5: saturday,
             6: sunday,
         }
+        index_by_day_of_week = {v: k for k, v in day_of_week_by_index.items()}
         call_date_hour_label = "call_date_hour"
         call_count_label = "call_count"
         call_duration_label = "call_duration"
         hold_duration_label = "hold_duration"
         per_hour_label = "per_hour"
         efficiency_label = "efficiency"
+        average_duration_label = "average_duration_seconds"
         hour_label = "hour"
         most_efficient_hour_label = "most_efficient_hour"
         highest_efficiency_label = "highest_efficiency"
@@ -123,13 +139,14 @@ class InsuranceProviderInteractionsView(views.APIView):
         call_counts_all_hours = []
         for data_for_day_of_week in data_by_weekday_and_hour.values():
             call_counts_all_hours.extend([d[call_count_label] for d in data_for_day_of_week[per_hour_label].values()])
-        call_count_cutoff = percentile(call_counts_all_hours, 50)
+        call_count_cutoff = percentile(call_counts_all_hours, InsuranceProviderInteractionsView.CALL_PER_HOUR_PERCENTILE)
 
         # Begin calculating best day and time to call
         for day_of_week, data_for_day_of_week in data_by_weekday_and_hour.items():
             for hour, data_for_hour in data_for_day_of_week[per_hour_label].items():
                 # For hour, calculate call efficiency
                 data_for_hour[efficiency_label] = data_for_hour[call_count_label] / data_for_hour[call_duration_label].total_seconds()
+                data_for_hour[average_duration_label] = data_for_hour[call_duration_label].total_seconds() / data_for_hour[call_count_label]
 
             # For each day, get the hour with the greatest efficiency which also has >= median calls made in that hour
             # Store the data about that hour on the day
@@ -154,15 +171,23 @@ class InsuranceProviderInteractionsView(views.APIView):
             most_efficient_hour = most_efficient_day[most_efficient_hour_label]
             most_efficient_hour_data = data_by_weekday_and_hour[most_efficient_day_of_the_week][per_hour_label][most_efficient_hour]
             average_duration_at_most_efficient_day_hour = most_efficient_hour_data[call_duration_label] / most_efficient_hour_data[call_count_label]
-            return {
+            return_data = {
                 day_of_week_label: most_efficient_day_of_the_week,
                 hour_label: most_efficient_hour,
                 "call_duration_average_seconds": average_duration_at_most_efficient_day_hour,
-                "__outbound_calls_analyzed": sum(call_counts_all_hours),
-                "__call_count_per_hour_minimum": call_count_cutoff,
-                "__call_duration_seconds_minimum": InsuranceProviderInteractionsView.CALL_DURATION_MINIMUM_SECONDS,
-                "__calls_this_day_and_hour": most_efficient_hour_data,
             }
+            if verbose:
+                return_data.update(
+                    {
+                        "__all_data": data_by_weekday_and_hour,
+                        "__call_count_per_hour_minimum": call_count_cutoff,
+                        "__call_count_per_hour_percentile": InsuranceProviderInteractionsView.CALL_PER_HOUR_PERCENTILE,
+                        "__call_duration_seconds_minimum": InsuranceProviderInteractionsView.CALL_DURATION_MINIMUM_SECONDS,
+                        "__calls_this_day_and_hour": most_efficient_hour_data,
+                        "__outbound_calls_analyzed": sum(call_counts_all_hours),
+                    }
+                )
+            return return_data
 
         # No good answers based on data, do not suggest
         return None
