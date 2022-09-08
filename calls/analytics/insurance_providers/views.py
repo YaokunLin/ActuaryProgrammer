@@ -14,7 +14,6 @@ from calls.analytics.aggregates import (
     calculate_call_breakdown_per_practice,
     calculate_call_counts,
     calculate_call_counts_by_date_and_hour,
-    calculate_call_counts_by_day_of_week,
     calculate_call_counts_per_field,
     calculate_call_counts_per_field_by_date_and_hour,
     calculate_call_counts_per_user,
@@ -257,22 +256,28 @@ class InsuranceProviderCallMetricsView(views.APIView):
         )
         calls_qs = Call.objects.filter(all_filters)
 
+        data_by_weekday_and_hour = get_call_counts_and_durations_by_weekday_and_hour(calls_qs)
+
         analytics = {
+            "most_popular_weekday_and_hour": self._get_most_popular_weekday_and_hour(data_by_weekday_and_hour),
             "calls_overall": calculate_call_counts(calls_qs),
-            "calls_per_user": calculate_call_counts_per_user(calls_qs),
-            "calls_per_user_by_date_and_hour": calculate_call_counts_per_user_by_date_and_hour(calls_qs),
-            "non_agent_engagement_types": calculate_call_non_agent_engagement_type_counts(calls_qs),
+            # TODO: PTECH-1240
+            # "calls_per_user": calculate_call_counts_per_user(calls_qs),
+            # "calls_per_user_by_date_and_hour": calculate_call_counts_per_user_by_date_and_hour(calls_qs),
+            # "non_agent_engagement_types": calculate_call_non_agent_engagement_type_counts(calls_qs),
         }
-        analytics["calls_by_date_and_hour"] = calculate_call_counts_by_date_and_hour(calls_qs)
-        analytics["calls_by_day_of_week"] = calculate_call_counts_by_day_of_week(calls_qs)
+        # TODO: PTECH-1240
+        # analytics["calls_by_date_and_hour"] = calculate_call_counts_by_date_and_hour(calls_qs)
+        analytics["calls_by_day_of_week"] = self._convert_to_call_counts_per_hour(data_by_weekday_and_hour)
 
-        if calls_qs:
-            analytics.update(**self.calculate_call_breakdown_per_insurance_provider(calls_qs))
-
-            if practice_group_filter:
-                analytics["calls_per_practice"] = calculate_call_breakdown_per_practice(
-                    calls_qs, practice_group_filter.get("practice__practice_group_id"), analytics["calls_overall"]
-                )
+        # TODO: PTECH-1240
+        # if calls_qs:
+        #     analytics.update(**self.calculate_call_breakdown_per_insurance_provider(calls_qs))
+        #
+        #     if practice_group_filter:
+        #         analytics["calls_per_practice"] = calculate_call_breakdown_per_practice(
+        #             calls_qs, practice_group_filter.get("practice__practice_group_id"), analytics["calls_overall"]
+        #         )
 
         return Response({"results": analytics})
 
@@ -392,3 +397,27 @@ class InsuranceProviderCallMetricsView(views.APIView):
                 data_per_provider[p] = [{"call_date_hour": k, **v} for k, v in value_per_provider.items()]
 
         return {p.name: v for p, v in data_per_provider.items()}
+
+    @staticmethod
+    def _convert_to_call_counts_per_hour(data_by_weekday_and_hour: Dict) -> Dict:
+        return {k: sum(v2["call_count"] for v2 in v["per_hour"].values()) for k, v in data_by_weekday_and_hour.items()}
+
+    @staticmethod
+    def _get_most_popular_weekday_and_hour(data_by_weekday_and_hour: Dict) -> Dict:
+        top_day = None
+        top_hour = None
+        top_day_hour_call_count = 0
+        top_day_hour_call_count_average_duration_seconds = None
+        for day, data_by_weekday in data_by_weekday_and_hour.items():
+            for hour, data_by_hour in data_by_weekday["per_hour"].items():
+                if data_by_hour["call_count"] > top_day_hour_call_count:
+                    top_hour = hour
+                    top_day = day
+                    top_day_hour_call_count = data_by_hour["call_count"]
+                    top_day_hour_call_count_average_duration_seconds = data_by_hour["average_call_duration_seconds"]
+        return {
+            "weekday": top_day,
+            "hour": top_hour,
+            "call_count": top_day_hour_call_count,
+            "average_call_duration_seconds": top_day_hour_call_count_average_duration_seconds,
+        }
