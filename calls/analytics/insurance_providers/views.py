@@ -44,6 +44,7 @@ class InsuranceProviderInteractionsView(views.APIView):
     #   These values were chosen after a fair bit of trial & error against production data.
     CALL_DURATION_MINIMUM_SECONDS = 140
     CALL_PER_HOUR_PERCENTILE = 60
+    LOOKBACK_DAYS = 365
 
     def get(self, request, format=None):
         insurance_provider = get_validated_insurance_provider(request)
@@ -57,7 +58,7 @@ class InsuranceProviderInteractionsView(views.APIView):
 
         all_filters = (
             Q(call_direction=CallDirectionTypes.OUTBOUND)
-            & Q(call_start_time__gte=timezone.now() - timedelta(days=700))
+            & Q(call_start_time__gte=timezone.now() - timedelta(days=self.LOOKBACK_DAYS))
             & Q(sip_callee_number__in=insurance_provider.insuranceproviderphonenumber_set.only("phone_number"))
             & Q(duration_seconds__gte=timedelta(seconds=self.CALL_DURATION_MINIMUM_SECONDS))
         )

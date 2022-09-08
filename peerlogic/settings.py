@@ -11,21 +11,16 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
 
-from datetime import timedelta
 import io
 import logging
 import os
+from datetime import timedelta
 
 import boto3 as boto3
-from dotenv import load_dotenv
-from google.cloud import (
-    pubsub_v1,
-    secretmanager,
-    storage,
-)
 import requests
+from dotenv import load_dotenv
+from google.cloud import pubsub_v1, secretmanager, storage
 from requests.auth import HTTPBasicAuth
-
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -274,6 +269,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django_userforeignkey.middleware.UserForeignKeyMiddleware",
+    "peerlogic.middleware.TimezoneMiddleware",
 ]
 
 ROOT_URLCONF = "peerlogic.urls"
