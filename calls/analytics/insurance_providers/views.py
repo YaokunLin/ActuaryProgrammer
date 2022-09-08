@@ -158,7 +158,7 @@ class InsuranceProviderInteractionsView(views.APIView):
         average_call_duration_label = "average_call_duration_seconds"
         hour_label = "hour"
         if len(data_by_hour) < 2:
-            return None
+            return None  # Not much insight here if no data or if best == worst
 
         call_counts_all_hours = [d[call_count_label] for d in data_by_hour.values()]
         call_count_cutoff = percentile(call_counts_all_hours, InsuranceProviderInteractionsView.CALL_PER_HOUR_PERCENTILE_BY_HOUR)
