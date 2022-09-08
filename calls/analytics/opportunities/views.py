@@ -101,8 +101,9 @@ def get_call_counts(
     analytics = {
         "opportunities": calculate_call_count_opportunities(calls_qs),
         "calls_overall": calculate_call_counts(calls_qs),  # perform call counts
-        "calls_per_user": calculate_call_counts_per_user(calls_qs),  # call counts per caller (agent) phone number
-        "calls_per_user_by_date_and_hour": calculate_call_counts_per_user_by_date_and_hour(calls_qs),  # call counts per caller (agent) phone number over time
+        # TODO: PTECH-1240
+        # "calls_per_user": calculate_call_counts_per_user(calls_qs),  # call counts per caller (agent) phone number
+        # "calls_per_user_by_date_and_hour": calculate_call_counts_per_user_by_date_and_hour(calls_qs),  # call counts per caller (agent) phone number over time
         "non_agent_engagement_types": calculate_call_non_agent_engagement_type_counts(calls_qs),  # call counts for non agents
     }
 

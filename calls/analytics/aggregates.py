@@ -15,12 +15,11 @@ from django.db.models import (
     Value,
     When,
 )
-from django.db.models.functions import Concat, TruncHour
-from calls.analytics.intents.field_choices import CallOutcomeTypes, CallPurposeTypes
-from calls.analytics.participants.field_choices import NonAgentEngagementPersonaTypes
 from django.db.models.functions import Coalesce, Concat, ExtractWeekDay, TruncHour
 from django_pandas.io import read_frame
 
+from calls.analytics.intents.field_choices import CallOutcomeTypes, CallPurposeTypes
+from calls.analytics.participants.field_choices import NonAgentEngagementPersonaTypes
 from core.models import Practice
 
 # Get an instance of a logger
@@ -130,9 +129,9 @@ def calculate_call_counts_per_field(calls_qs: QuerySet, field_name: str) -> Dict
     analytics["call_seconds_average"] = calls_qs.annotate(call_seconds_average=Avg("duration_seconds")).order_by("-call_seconds_average")
     analytics["call_seconds_average"] = convert_count_results(analytics["call_seconds_average"], field_name, "call_seconds_average")
 
-    analytics["call_on_hold_seconds_average"] = calls_qs.annotate(
-        hold_time_seconds_average=Coalesce(Avg("hold_time_seconds"), Value(timedelta(seconds=0)))
-    ).order_by("-hold_time_seconds_average")
+    analytics["call_on_hold_seconds_average"] = calls_qs.annotate(hold_time_seconds_average=Coalesce(Avg("hold_time_seconds"), Value(timedelta()))).order_by(
+        "-hold_time_seconds_average"
+    )
     analytics["call_on_hold_seconds_average"] = convert_count_results(analytics["call_on_hold_seconds_average"], field_name, "hold_time_seconds_average")
 
     analytics["call_sentiment_counts"] = (
@@ -218,7 +217,7 @@ def calculate_call_count_per_field_by_date_and_hour(calls_by_field_name_qs: Quer
 
 def calculate_average_hold_time_seconds_per_field_by_date_and_hour(calls_by_field_name_qs: QuerySet, field_name: str) -> Dict:
     return _calculate_call_values_per_field_by_date_and_hour(
-        calls_by_field_name_qs, field_name, Coalesce(Avg("hold_time_seconds"), Value(timedelta(seconds=0))), "hold_time_seconds_average"
+        calls_by_field_name_qs, field_name, Coalesce(Avg("hold_time_seconds"), Value(timedelta())), "hold_time_seconds_average"
     )
 
 
@@ -345,3 +344,75 @@ def _merge_list_of_dicts_to_dict(l: List[Dict]) -> Dict:
         dict_new.update(dict_sub)
 
     return dict_new
+
+
+SUNDAY = "sunday"
+MONDAY = "monday"
+TUESDAY = "tuesday"
+WEDNESDAY = "wednesday"
+THURSDAY = "thursday"
+FRIDAY = "friday"
+SATURDAY = "saturday"
+
+
+def get_call_counts_and_durations_by_weekday_and_hour(calls_qs: QuerySet) -> Dict:
+    day_of_week_by_index = {
+        0: MONDAY,
+        1: TUESDAY,
+        2: WEDNESDAY,
+        3: THURSDAY,
+        4: FRIDAY,
+        5: SATURDAY,
+        6: SUNDAY,
+    }
+    call_date_hour_label = "call_date_hour"
+    call_count_label = "call_count"
+    call_duration_label = "total_call_duration_seconds"
+    hold_duration_label = "total_hold_duration_seconds"
+    average_call_duration_label = "average_call_duration_seconds"
+    average_hold_duration_label = "average_hold_duration_seconds"
+    efficiency_label = "efficiency"
+    per_hour_label = "per_hour"
+    day_of_week_label = "day_of_week"
+
+    # Group data by date_and_hour
+    data = (
+        calls_qs.annotate(call_date_hour=TruncHour("call_start_time"))
+        .values(call_date_hour_label)
+        .annotate(
+            call_count=Count("id"),
+            total_call_duration_seconds=Sum("duration_seconds"),
+            total_hold_duration_seconds=Coalesce(Sum("hold_time_seconds"), Value(timedelta())),
+        )
+        .order_by(call_date_hour_label)
+    ).all()
+
+    # Convert data by date_and_hour into data_by_weekday_and_hour
+    data_by_weekday_and_hour = {
+        MONDAY: {per_hour_label: {}, day_of_week_label: MONDAY},
+        TUESDAY: {per_hour_label: {}, day_of_week_label: TUESDAY},
+        WEDNESDAY: {per_hour_label: {}, day_of_week_label: WEDNESDAY},
+        THURSDAY: {per_hour_label: {}, day_of_week_label: THURSDAY},
+        FRIDAY: {per_hour_label: {}, day_of_week_label: FRIDAY},
+        SATURDAY: {per_hour_label: {}, day_of_week_label: SATURDAY},
+        SUNDAY: {per_hour_label: {}, day_of_week_label: SUNDAY},
+    }
+    for data_for_hour in data:
+        data_datetime = data_for_hour[call_date_hour_label]
+        day_of_week = day_of_week_by_index[data_datetime.weekday()]
+        hour = data_datetime.hour
+        existing_data = data_by_weekday_and_hour[day_of_week][per_hour_label].get(hour, {})
+        data_by_weekday_and_hour[day_of_week][per_hour_label][hour] = {
+            call_count_label: existing_data.get(call_count_label, 0) + data_for_hour[call_count_label],
+            call_duration_label: existing_data.get(call_duration_label, timedelta()) + data_for_hour[call_duration_label],
+            hold_duration_label: existing_data.get(hold_duration_label, timedelta()) + data_for_hour[hold_duration_label],
+        }
+
+    for day_of_week, data_for_day_of_week in data_by_weekday_and_hour.items():
+        for hour, data_for_hour in data_for_day_of_week[per_hour_label].items():
+            # Per hour, calculate efficiency, average call duration and average hold duration
+            data_for_hour[efficiency_label] = data_for_hour[call_count_label] / data_for_hour[call_duration_label].total_seconds()
+            data_for_hour[average_call_duration_label] = data_for_hour[call_duration_label].total_seconds() / data_for_hour[call_count_label]
+            data_for_hour[average_hold_duration_label] = data_for_hour[hold_duration_label].total_seconds() / data_for_hour[call_count_label]
+
+    return data_by_weekday_and_hour

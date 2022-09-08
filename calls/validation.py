@@ -2,9 +2,9 @@ import logging
 from typing import Dict, Optional, Tuple
 
 from rest_framework.request import Request
-from calls.field_choices import CallDirectionTypes
 
-from core.models import Agent, Practice, PracticeGroup
+from calls.field_choices import CallDirectionTypes
+from core.models import Agent, InsuranceProvider, Practice, PracticeGroup
 from core.validation import validate_date_format, validate_dates
 
 # Get an instance of a logger
@@ -111,3 +111,17 @@ def get_validated_practice_group_id(request: Request) -> Tuple[Optional[str], Op
         return None, {param_name: f"Invalid {param_name}='{practice_group_id}'"}
 
     return practice_group_id, None
+
+
+def get_validated_insurance_provider(request: Request) -> Optional[InsuranceProvider]:
+    param_name = "insurance_provider_name"
+    insurance_provider_name = request.query_params.get(param_name)
+
+    if not insurance_provider_name:
+        return None
+
+    try:
+        return InsuranceProvider.objects.get(name=insurance_provider_name)
+    except InsuranceProvider.DoesNotExist:
+        log.info("Found no insurance provider with name: %s", insurance_provider_name)
+        return None
