@@ -204,7 +204,7 @@ class UserPatient(AuditTrailModel):
 
 class InsuranceProvider(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
-    name = models.CharField(blank=True, max_length=255)
+    name = models.CharField(blank=True, max_length=255, unique=True)
 
 
 class InsuranceProviderPhoneNumber(AuditTrailModel):
