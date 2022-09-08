@@ -21,6 +21,7 @@ from calls.analytics.aggregates import (
     calculate_call_counts_per_user_by_date_and_hour,
     calculate_call_non_agent_engagement_type_counts,
     convert_count_results,
+    get_call_counts_and_durations_by_weekday_and_hour,
 )
 from calls.analytics.intents.field_choices import CallOutcomeTypes
 from calls.analytics.participants.field_choices import NonAgentEngagementPersonaTypes
@@ -77,64 +78,18 @@ class InsuranceProviderInteractionsView(views.APIView):
         if not calls_qs:
             return None
 
+        data_by_weekday_and_hour = get_call_counts_and_durations_by_weekday_and_hour(calls_qs)
+
         # Constants
-        sunday = "sunday"
-        monday = "monday"
-        tuesday = "tuesday"
-        wednesday = "wednesday"
-        thursday = "thursday"
-        friday = "friday"
-        saturday = "saturday"
-        day_of_week_by_index = {
-            0: monday,
-            1: tuesday,
-            2: wednesday,
-            3: thursday,
-            4: friday,
-            5: saturday,
-            6: sunday,
-        }
-        index_by_day_of_week = {v: k for k, v in day_of_week_by_index.items()}
-        call_date_hour_label = "call_date_hour"
         call_count_label = "call_count"
-        call_duration_label = "call_duration"
-        hold_duration_label = "hold_duration"
+        call_duration_label = "total_call_duration_seconds"
         per_hour_label = "per_hour"
         efficiency_label = "efficiency"
-        average_duration_label = "average_duration_seconds"
+        average_duration_label = "average_call_duration_seconds"
         hour_label = "hour"
         most_efficient_hour_label = "most_efficient_hour"
         highest_efficiency_label = "highest_efficiency"
         day_of_week_label = "day_of_week"
-
-        # Group data by date_and_hour
-        data = (
-            calls_qs.annotate(call_date_hour=TruncHour("call_start_time"))
-            .values(call_date_hour_label)
-            .annotate(call_count=Count("id"), call_duration=Sum("duration_seconds"), hold_duration=Coalesce(Sum("hold_time_seconds"), Value(timedelta())))
-            .order_by(call_date_hour_label)
-        ).all()
-
-        # Convert data by date_and_hour into data_by_weekday_and_hour
-        data_by_weekday_and_hour = {
-            monday: {per_hour_label: {}, day_of_week_label: monday},
-            tuesday: {per_hour_label: {}, day_of_week_label: tuesday},
-            wednesday: {per_hour_label: {}, day_of_week_label: wednesday},
-            thursday: {per_hour_label: {}, day_of_week_label: thursday},
-            friday: {per_hour_label: {}, day_of_week_label: friday},
-            saturday: {per_hour_label: {}, day_of_week_label: saturday},
-            sunday: {per_hour_label: {}, day_of_week_label: sunday},
-        }
-        for data_for_hour in data:
-            data_datetime = data_for_hour[call_date_hour_label]
-            day_of_week = day_of_week_by_index[data_datetime.weekday()]
-            hour = data_datetime.hour
-            existing_data = data_by_weekday_and_hour[day_of_week][per_hour_label].get(hour, {})
-            data_by_weekday_and_hour[day_of_week][per_hour_label][hour] = {
-                call_count_label: existing_data.get(call_count_label, 0) + data_for_hour[call_count_label],
-                call_duration_label: existing_data.get(call_duration_label, timedelta()) + data_for_hour[call_duration_label],
-                hold_duration_label: existing_data.get(hold_duration_label, timedelta()) + data_for_hour[hold_duration_label],
-            }
 
         # Calculate a cutoff for call count per hour. We don't want to suggest an hour with too low volume, only hours with more calls than this
         call_counts_all_hours = []
@@ -144,11 +99,6 @@ class InsuranceProviderInteractionsView(views.APIView):
 
         # Begin calculating best day and time to call
         for day_of_week, data_for_day_of_week in data_by_weekday_and_hour.items():
-            for hour, data_for_hour in data_for_day_of_week[per_hour_label].items():
-                # For hour, calculate call efficiency
-                data_for_hour[efficiency_label] = data_for_hour[call_count_label] / data_for_hour[call_duration_label].total_seconds()
-                data_for_hour[average_duration_label] = data_for_hour[call_duration_label].total_seconds() / data_for_hour[call_count_label]
-
             # For each day, get the hour with the greatest efficiency which also has >= call_count_cutoff calls made in that hour
             # Store the data about that hour on the day
             d = [
