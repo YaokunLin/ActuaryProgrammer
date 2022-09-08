@@ -24,7 +24,8 @@ class TimezoneMiddleware:
             else:
                 timezone.activate(self.DEFAULT_TZ)
 
-        response = self.get_response(request)
-        if timezone_changed:
-            timezone.deactivate()
-        return response
+        try:
+            return self.get_response(request)
+        finally:
+            if timezone_changed:
+                timezone.deactivate()
