@@ -48,7 +48,8 @@ class InsuranceProviderInteractionsView(views.APIView):
     # HEREBEDRAGONS: The following variables greatly affect the data that is returned
     #   These values were chosen after a fair bit of trial & error against production data.
     CALL_DURATION_MINIMUM_SECONDS = 140
-    CALL_PER_HOUR_PERCENTILE = 60
+    CALL_PER_HOUR_PERCENTILE_BY_WEEKDAY_HOUR = 60
+    CALL_PER_HOUR_PERCENTILE_BY_HOUR = 30
     LOOKBACK_DAYS = 365
 
     def get(self, request, format=None):
@@ -69,7 +70,16 @@ class InsuranceProviderInteractionsView(views.APIView):
         )
         calls_qs = Call.objects.filter(all_filters).all()
 
-        response_data = self._get_best_day_and_hour_to_call(calls_qs, verbose=verbose)
+        response_data = {}
+        if calls_qs:
+            data_by_weekday_and_hour = get_call_counts_and_durations_by_weekday_and_hour(calls_qs)
+            data_by_hour = _convert_to_call_data_by_hour(data_by_weekday_and_hour)
+            hour_extremes = self._get_worst_and_best_hour_to_call(data_by_hour)
+            best_weekday_and_hour_to_call = self._get_best_weekday_and_hour_to_call(data_by_weekday_and_hour, verbose=verbose)
+            if hour_extremes:
+                response_data.update(hour_extremes)
+            if best_weekday_and_hour_to_call:
+                response_data["best_weekday_and_hour_to_call"] = best_weekday_and_hour_to_call
         if not response_data:
             return Response(
                 {"error": f"Insufficient data to calculate best call day and time for {insurance_provider.name}"}, status=status.HTTP_204_NO_CONTENT
@@ -78,41 +88,37 @@ class InsuranceProviderInteractionsView(views.APIView):
         return Response(response_data)
 
     @staticmethod
-    def _get_best_day_and_hour_to_call(calls_qs: QuerySet, verbose: bool) -> Optional[Dict]:
-        if not calls_qs:
-            return None
-
-        data_by_weekday_and_hour = get_call_counts_and_durations_by_weekday_and_hour(calls_qs)
-
+    def _get_best_weekday_and_hour_to_call(data_by_weekday_and_hour: Dict, verbose: bool) -> Optional[Dict]:
         # Constants
         call_count_label = "call_count"
-        call_duration_label = "total_call_duration_seconds"
+        total_call_duration_label = "total_call_duration_seconds"
+        average_call_duration_label = "average_call_duration_seconds"
         per_hour_label = "per_hour"
         efficiency_label = "efficiency"
         hour_label = "hour"
         most_efficient_hour_label = "most_efficient_hour"
         highest_efficiency_label = "highest_efficiency"
-        day_of_week_label = "day_of_week"
+        weekday_label = "weekday"
 
         # Calculate a cutoff for call count per hour. We don't want to suggest an hour with too low volume, only hours with more calls than this
         call_counts_all_hours = []
-        for data_for_day_of_week in data_by_weekday_and_hour.values():
-            call_counts_all_hours.extend([d[call_count_label] for d in data_for_day_of_week[per_hour_label].values()])
-        call_count_cutoff = percentile(call_counts_all_hours, InsuranceProviderInteractionsView.CALL_PER_HOUR_PERCENTILE)
+        for data_for_weekday in data_by_weekday_and_hour.values():
+            call_counts_all_hours.extend([d[call_count_label] for d in data_for_weekday[per_hour_label].values()])
+        call_count_cutoff = percentile(call_counts_all_hours, InsuranceProviderInteractionsView.CALL_PER_HOUR_PERCENTILE_BY_WEEKDAY_HOUR)
 
         # Begin calculating best day and time to call
-        for day_of_week, data_for_day_of_week in data_by_weekday_and_hour.items():
+        for data_for_weekday in data_by_weekday_and_hour.values():
             # For each day, get the hour with the greatest efficiency which also has >= call_count_cutoff calls made in that hour
             # Store the data about that hour on the day
             d = [
                 {efficiency_label: v[efficiency_label], hour_label: k}
-                for k, v in data_for_day_of_week[per_hour_label].items()
+                for k, v in data_for_weekday[per_hour_label].items()
                 if v[call_count_label] >= call_count_cutoff
             ]
             data_per_hour_by_efficiency = sorted(d, key=lambda x: x[efficiency_label])
             if data_per_hour_by_efficiency:
-                data_for_day_of_week[most_efficient_hour_label] = data_per_hour_by_efficiency[-1][hour_label]
-                data_for_day_of_week[highest_efficiency_label] = data_per_hour_by_efficiency[-1][efficiency_label]
+                data_for_weekday[most_efficient_hour_label] = data_per_hour_by_efficiency[-1][hour_label]
+                data_for_weekday[highest_efficiency_label] = data_per_hour_by_efficiency[-1][efficiency_label]
 
         # Now, sort the days by the one with the highest per-hour efficiency
         days_by_efficient_hours = sorted([d for d in data_by_weekday_and_hour.values()], key=lambda x: x.get(highest_efficiency_label, 0))
@@ -121,21 +127,21 @@ class InsuranceProviderInteractionsView(views.APIView):
         # If we have a day/hour with highest efficiency which also has a non-zero efficiency, we have a winner!
         if most_efficient_day and most_efficient_day.get(highest_efficiency_label):
             # Return the day, hour and average duration for that time period
-            most_efficient_day_of_the_week = most_efficient_day[day_of_week_label]
+            most_efficient_weekday = most_efficient_day[weekday_label]
             most_efficient_hour = most_efficient_day[most_efficient_hour_label]
-            most_efficient_hour_data = data_by_weekday_and_hour[most_efficient_day_of_the_week][per_hour_label][most_efficient_hour]
-            average_duration_at_most_efficient_day_hour = most_efficient_hour_data[call_duration_label] / most_efficient_hour_data[call_count_label]
+            most_efficient_hour_data = data_by_weekday_and_hour[most_efficient_weekday][per_hour_label][most_efficient_hour]
+            average_duration_at_most_efficient_day_hour = most_efficient_hour_data[total_call_duration_label] / most_efficient_hour_data[call_count_label]
             return_data = {
-                day_of_week_label: most_efficient_day_of_the_week,
+                weekday_label: most_efficient_weekday,
                 hour_label: most_efficient_hour,
-                "call_duration_average_seconds": average_duration_at_most_efficient_day_hour,
+                average_call_duration_label: average_duration_at_most_efficient_day_hour,
             }
             if verbose:
                 return_data.update(
                     {
                         "__all_data": data_by_weekday_and_hour,
                         "__call_count_per_hour_minimum": call_count_cutoff,
-                        "__call_count_per_hour_percentile": InsuranceProviderInteractionsView.CALL_PER_HOUR_PERCENTILE,
+                        "__call_count_per_hour_percentile": InsuranceProviderInteractionsView.CALL_PER_HOUR_PERCENTILE_BY_WEEKDAY_HOUR,
                         "__call_duration_seconds_minimum": InsuranceProviderInteractionsView.CALL_DURATION_MINIMUM_SECONDS,
                         "__calls_this_day_and_hour": most_efficient_hour_data,
                         "__outbound_calls_analyzed": sum(call_counts_all_hours),
@@ -145,6 +151,36 @@ class InsuranceProviderInteractionsView(views.APIView):
 
         # No good answers based on data, do not suggest
         return None
+
+    @staticmethod
+    def _get_worst_and_best_hour_to_call(data_by_hour: Dict) -> Optional[Dict]:
+        call_count_label = "call_count"
+        average_call_duration_label = "average_call_duration_seconds"
+        hour_label = "hour"
+        if len(data_by_hour) < 2:
+            return None  # Not much insight here if no data or if best == worst
+
+        call_counts_all_hours = [d[call_count_label] for d in data_by_hour.values()]
+        call_count_cutoff = percentile(call_counts_all_hours, InsuranceProviderInteractionsView.CALL_PER_HOUR_PERCENTILE_BY_HOUR)
+
+        hours_by_average_duration = sorted(
+            [
+                {hour_label: k, average_call_duration_label: v[average_call_duration_label]}
+                for k, v in data_by_hour.items()
+                if v[call_count_label] > call_count_cutoff
+            ],
+            key=lambda x: x[average_call_duration_label],
+        )
+        return {
+            "hour_with_shortest_average_call_duration": {
+                hour_label: hours_by_average_duration[0][hour_label],
+                average_call_duration_label: hours_by_average_duration[0][average_call_duration_label],
+            },
+            "hour_with_longest_average_call_duration": {
+                hour_label: hours_by_average_duration[-1][hour_label],
+                average_call_duration_label: hours_by_average_duration[-1][average_call_duration_label],
+            },
+        }
 
 
 class InsuranceProviderMentionedView(views.APIView):
@@ -204,7 +240,7 @@ class InsuranceProviderMentionedView(views.APIView):
         top_mentions = calls_qs.values("mentioned_insurances__keyword").annotate(call_total=Count("id")).order_by("-call_total")[:size]
         results = {"top_insurances_mentioned": [{"insurance": i["mentioned_insurances__keyword"], "count": i["call_total"]} for i in top_mentions]}
         self._normalize_result_insurance_names(results)
-        return Response({"results": results})
+        return Response(results)
 
     @staticmethod
     def _normalize_result_insurance_names(results: Dict) -> None:
@@ -220,6 +256,7 @@ class InsuranceProviderMentionedView(views.APIView):
 
 class InsuranceProviderCallMetricsView(views.APIView):
     def get(self, request, format=None):
+        insurance_provider = get_validated_insurance_provider(request)
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
         valid_practice_group_id, practice_group_errors = get_validated_practice_group_id(request=request)
         dates_info = get_validated_call_dates(query_data=request.query_params)
@@ -252,7 +289,10 @@ class InsuranceProviderCallMetricsView(views.APIView):
         call_start_time__lte = dates[1]
         dates_filter = {"call_start_time__gte": call_start_time__gte, "call_start_time__lte": call_start_time__lte}
 
-        insurance_provider_phone_number_filter = Q(sip_callee_number__in=InsuranceProviderPhoneNumber.objects.only("phone_number").all())
+        if insurance_provider:
+            insurance_provider_phone_number_filter = Q(sip_callee_number__in=insurance_provider.insuranceproviderphonenumber_set.only("phone_number"))
+        else:
+            insurance_provider_phone_number_filter = Q(sip_callee_number__in=InsuranceProviderPhoneNumber.objects.only("phone_number").all())
         all_filters = (
             Q(call_direction=CallDirectionTypes.OUTBOUND)
             & Q(**dates_filter)
@@ -274,7 +314,9 @@ class InsuranceProviderCallMetricsView(views.APIView):
         }
         # TODO: PTECH-1240
         # analytics["calls_by_date_and_hour"] = calculate_call_counts_by_date_and_hour(calls_qs)
-        analytics["calls_by_day_of_week"] = self._convert_to_call_counts_per_hour(data_by_weekday_and_hour)
+        analytics["calls_by_weekday"] = self._convert_to_call_counts_per_weekday(data_by_weekday_and_hour)
+        analytics["calls_by_hour"] = _convert_to_call_data_by_hour(data_by_weekday_and_hour)
+        analytics["calls_by_weekday_and_hour"] = data_by_weekday_and_hour
 
         # TODO: PTECH-1240
         # if calls_qs:
@@ -285,7 +327,7 @@ class InsuranceProviderCallMetricsView(views.APIView):
         #             calls_qs, practice_group_filter.get("practice__practice_group_id"), analytics["calls_overall"]
         #         )
 
-        return Response({"results": analytics})
+        return Response(analytics)
 
     def calculate_call_breakdown_per_insurance_provider(self, calls_qs: QuerySet) -> Dict:
         data_per_phone_number = calculate_call_counts_per_field(calls_qs, "sip_callee_number")
@@ -405,7 +447,7 @@ class InsuranceProviderCallMetricsView(views.APIView):
         return {p.name: v for p, v in data_per_provider.items()}
 
     @staticmethod
-    def _convert_to_call_counts_per_hour(data_by_weekday_and_hour: Dict) -> Dict:
+    def _convert_to_call_counts_per_weekday(data_by_weekday_and_hour: Dict) -> Dict:
         return {k: sum(v2["call_count"] for v2 in v["per_hour"].values()) for k, v in data_by_weekday_and_hour.items()}
 
     @staticmethod
@@ -427,3 +469,27 @@ class InsuranceProviderCallMetricsView(views.APIView):
             "call_count": top_day_hour_call_count,
             "average_call_duration_seconds": top_day_hour_call_count_average_duration_seconds,
         }
+
+
+def _convert_to_call_data_by_hour(data_by_weekday_and_hour: Dict) -> Dict:
+    call_count_label = "call_count"
+    total_call_duration_label = "total_call_duration_seconds"
+    average_call_duration_label = "average_call_duration_seconds"
+
+    data_by_hour = {}
+    for data_by_weekday in data_by_weekday_and_hour.values():
+        for hour, data_for_current_hour in data_by_weekday["per_hour"].items():
+            existing = data_by_hour.setdefault(
+                hour,
+                {
+                    call_count_label: 0,
+                    total_call_duration_label: timedelta(),
+                },
+            )
+            existing[call_count_label] = existing[call_count_label] + data_for_current_hour[call_count_label]
+            existing[total_call_duration_label] = existing[total_call_duration_label] + data_for_current_hour[total_call_duration_label]
+
+    for d in data_by_hour.values():
+        d[average_call_duration_label] = d[total_call_duration_label] / d[call_count_label]
+
+    return data_by_hour
