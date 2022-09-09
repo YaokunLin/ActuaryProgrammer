@@ -87,11 +87,6 @@ def calculate_call_count_opportunities(calls_qs: QuerySet, start_date_str: str, 
     opportunities_total_qs = calls_qs.filter(new_appointment_filter & (existing_patient_filter | new_patient_filter))
     opportunities_existing_patient_qs = calls_qs.filter(new_appointment_filter & existing_patient_filter)
     opportunities_new_patient_qs = calls_qs.filter(new_appointment_filter & new_patient_filter)
-    opportunities = {
-        "total": opportunities_total_qs.count(),
-        "existing": opportunities_existing_patient_qs.count(),
-        "new": opportunities_new_patient_qs.count(),
-    }
 
     opportunities_won_total_qs = calls_qs.filter(new_appointment_filter & won_filter & (existing_patient_filter | new_patient_filter))
     opportunities_won_existing_patient_qs = calls_qs.filter(new_appointment_filter & won_filter & existing_patient_filter)
@@ -101,6 +96,37 @@ def calculate_call_count_opportunities(calls_qs: QuerySet, start_date_str: str, 
     opportunities_lost_existing_patient_qs = calls_qs.filter(new_appointment_filter & lost_filter & existing_patient_filter)
     opportunities_lost_new_patient_qs = calls_qs.filter(new_appointment_filter & lost_filter & new_patient_filter)
 
+    def get_conversion_rates_breakdown(total: List[Dict], won: List[Dict]) -> List[Dict]:
+        conversion_rates = []
+        total_per_date_mapping = {i["date"]: i["value"] for i in total}
+        for record in won:
+            date = record["date"]
+            total_for_date = total_per_date_mapping[date]
+            rate = 0
+            if total_for_date:
+                rate = record["value"] / total_per_date_mapping[date]
+            conversion_rates.append({"date": date, "value": rate})
+        return conversion_rates
+
+    total_by_day = calculate_zero_filled_call_counts_by_day(opportunities_total_qs, start_date_str, end_date_str)
+    existing_patient_by_day = calculate_zero_filled_call_counts_by_day(opportunities_existing_patient_qs, start_date_str, end_date_str)
+    new_patient_by_day = calculate_zero_filled_call_counts_by_day(opportunities_new_patient_qs, start_date_str, end_date_str)
+
+    opportunities = {
+        "total": opportunities_total_qs.count(),
+        "existing": opportunities_existing_patient_qs.count(),
+        "new": opportunities_new_patient_qs.count(),
+    }
+    opportunities["total_by_week"] = {
+        "total": convert_call_counts_to_by_week(total_by_day),
+        "existing": convert_call_counts_to_by_week(existing_patient_by_day),
+        "new": convert_call_counts_to_by_week(new_patient_by_day),
+    }
+    opportunities["total_by_month"] = {
+        "total": convert_call_counts_to_by_month(total_by_day),
+        "existing": convert_call_counts_to_by_month(existing_patient_by_day),
+        "new": convert_call_counts_to_by_month(new_patient_by_day),
+    }
     opportunities["won"] = {
         "total": opportunities_won_total_qs.count(),
         "existing": opportunities_won_existing_patient_qs.count(),
@@ -118,6 +144,22 @@ def calculate_call_count_opportunities(calls_qs: QuerySet, start_date_str: str, 
         "total": convert_call_counts_to_by_month(won_by_day_total),
         "existing": convert_call_counts_to_by_month(won_by_day_existing_patient),
         "new": convert_call_counts_to_by_month(won_by_day_new_patient),
+    }
+
+    opportunities["conversion_rate"] = {
+        "total": opportunities["won"]["total"] / opportunities["total"] if opportunities["total"] else 0,
+        "existing": opportunities["won"]["existing"] / opportunities["existing"] if opportunities["existing"] else 0,
+        "new": opportunities["won"]["new"] / opportunities["new"] if opportunities["new"] else 0,
+    }
+    opportunities["conversion_rate_by_week"] = {
+        "total": get_conversion_rates_breakdown(opportunities["total_by_week"]["total"], opportunities["won_by_week"]["total"]),
+        "existing": get_conversion_rates_breakdown(opportunities["total_by_week"]["existing"], opportunities["won_by_week"]["existing"]),
+        "new": get_conversion_rates_breakdown(opportunities["total_by_week"]["new"], opportunities["won_by_week"]["new"]),
+    }
+    opportunities["conversion_rate_by_month"] = {
+        "total": get_conversion_rates_breakdown(opportunities["total_by_month"]["total"], opportunities["won_by_month"]["total"]),
+        "existing": get_conversion_rates_breakdown(opportunities["total_by_month"]["existing"], opportunities["won_by_month"]["existing"]),
+        "new": get_conversion_rates_breakdown(opportunities["total_by_month"]["new"], opportunities["won_by_month"]["new"]),
     }
 
     opportunities["lost"] = {
@@ -480,7 +522,7 @@ def get_call_counts_and_durations_by_weekday_and_hour(calls_qs: QuerySet) -> Dic
             data_for_hour[average_call_duration_label] = data_for_hour[total_call_duration_label].total_seconds() / data_for_hour[call_count_label]
             data_for_hour[average_hold_duration_label] = data_for_hour[total_hold_duration_label].total_seconds() / data_for_hour[call_count_label]
 
-        for i in range(1, 24):
+        for i in range(1, 25):  # 1-24 hours in a day
             if i not in data_for_weekday[per_hour_label]:
                 data_for_weekday[per_hour_label][i] = {
                     call_count_label: 0,
