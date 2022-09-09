@@ -3,7 +3,6 @@ import logging
 from datetime import timedelta
 from typing import Dict, List, Union
 
-import numpy as np
 import pandas as pd
 from django.db.models import (
     Aggregate,
