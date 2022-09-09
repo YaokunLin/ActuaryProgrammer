@@ -36,10 +36,10 @@ log = logging.getLogger(__name__)
 
 
 def calculate_call_counts(calls_qs: QuerySet, include_by_weekday_breakdown: bool = False) -> Dict:
-    connected_filter = Q(call_connection=CallConnectionTypes.CONNECTED.value)
+    connected_filter = Q(call_connection=CallConnectionTypes.CONNECTED)
     answered_filters = connected_filter & Q(went_to_voicemail=False)
     went_to_voicemail_filter = Q(went_to_voicemail=True)
-    missed_filter = Q(call_connection=CallConnectionTypes.MISSED.value)
+    missed_filter = Q(call_connection=CallConnectionTypes.MISSED)
 
     # get call counts
     analytics = dict(
