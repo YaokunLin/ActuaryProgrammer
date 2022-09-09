@@ -247,7 +247,7 @@ def calculate_call_counts_and_opportunities_per_user(calls_qs: QuerySet) -> Dict
     frames = [call_count, call_missed_count, call_opportunities_total_count, call_opportunities_won_count]
 
     df = pd.concat(frames)
-    df.fillna(0, inplace=True)  # dictionaries may not intersect, this creates nan values, replace nan with 0 and do it in-place
+    df.fillna(0, inplace=True)  # dictionaries may not intersect, this creates non-serializable nan values, replace nan with 0 and do it in-place
     df["opportunities_open_count"] = df["opportunities_total_count"] - df["opportunities_won_count"]
 
     return df.to_dict(orient="records")
