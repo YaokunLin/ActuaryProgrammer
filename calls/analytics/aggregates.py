@@ -208,21 +208,16 @@ def annotate_caller_number_with_extension(calls_qs: QuerySet) -> QuerySet:
 
 
 def calculate_call_counts_and_opportunities_per_user(calls_qs: QuerySet) -> Dict:
-    # extension
-    # missed / unknown
-    # Opps Open
-    # Ops Won
-    # Call Count
-    # Call Missed
-
     field_name = "sip_caller_number_with_extension"
     calls_qs = annotate_caller_number_with_extension(calls_qs)
 
+    # call totals
     call_total_qs = calls_qs.values(field_name).annotate(call_count=Count("id")).values(field_name, "call_count")
     call_missed_qs = (
         calls_qs.filter(call_connection="missed").values(field_name).annotate(call_missed_count=Count("id")).values(field_name, "call_missed_count")
     )
 
+    # opportunity totals
     new_appointment_filter = Q(call_purposes__call_purpose_type=CallPurposeTypes.NEW_APPOINTMENT)
     won_filter = Q(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.SUCCESS)
     existing_patient_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.EXISTING_PATIENT)
@@ -240,14 +235,18 @@ def calculate_call_counts_and_opportunities_per_user(calls_qs: QuerySet) -> Dict
         .values(field_name, "opportunities_won_count")
     )
 
+    # create dataframes for crunching
     call_count = read_frame(call_total_qs)
     call_missed_count = read_frame(call_missed_qs)
     call_opportunities_total_count = read_frame(opportunities_total_qs)
     call_opportunities_won_count = read_frame(opportunities_won_qs)
-    frames = [call_count, call_missed_count, call_opportunities_total_count, call_opportunities_won_count]
 
+    # assemble
+    frames = [call_count, call_missed_count, call_opportunities_total_count, call_opportunities_won_count]
     df = pd.concat(frames)
     df.fillna(0, inplace=True)  # dictionaries may not intersect, this creates non-serializable nan values, replace nan with 0 and do it in-place
+
+    # compute derived values
     df["opportunities_open_count"] = df["opportunities_total_count"] - df["opportunities_won_count"]
 
     return df.to_dict(orient="records")
