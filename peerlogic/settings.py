@@ -18,6 +18,7 @@ from datetime import timedelta
 
 import boto3 as boto3
 import requests
+from corsheaders.defaults import default_headers as cors_default_allowed_headers
 from dotenv import load_dotenv
 from google.cloud import pubsub_v1, secretmanager, storage
 from requests.auth import HTTPBasicAuth
@@ -156,6 +157,10 @@ else:
 
 # CORS
 CORS_ALLOW_ALL_ORIGINS = True
+
+CORS_ALLOW_HEADERS = list(cors_default_allowed_headers) + [
+    "Timezone",
+]
 # TODO: Figure out how to pass lists via .env files
 # CORS_ALLOWED_ORIGIN_REGEXES = [r"^https://\w+\.peerlogic\.tech$", r"^https://peerlogic\.tech$", r"^http://localhost:8080$", r"^app://\..*$"]
 
