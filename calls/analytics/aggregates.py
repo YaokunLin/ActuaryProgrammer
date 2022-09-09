@@ -300,6 +300,7 @@ def calculate_call_counts_by_date_and_hour(calls_qs: QuerySet) -> Dict:
 def _calculate_call_values_per_field_by_date_and_hour(
     calls_by_field_name_qs: QuerySet, field_name: str, calculation: Union[Aggregate, Coalesce], calculation_name: str
 ) -> Dict:
+
     calculated_value_label = "calculated_value"
     call_date_hour_label = "call_date_hour"
     data = (
@@ -516,12 +517,6 @@ def get_call_counts_and_durations_by_weekday_and_hour(calls_qs: QuerySet) -> Dic
         }
 
     for data_for_weekday in data_by_weekday_and_hour.values():
-        for hour, data_for_hour in data_for_weekday[per_hour_label].items():
-            # Per hour, calculate efficiency, average call duration and average hold duration
-            data_for_hour[efficiency_label] = data_for_hour[call_count_label] / data_for_hour[total_call_duration_label].total_seconds()
-            data_for_hour[average_call_duration_label] = data_for_hour[total_call_duration_label].total_seconds() / data_for_hour[call_count_label]
-            data_for_hour[average_hold_duration_label] = data_for_hour[total_hold_duration_label].total_seconds() / data_for_hour[call_count_label]
-
         for i in range(1, 25):  # 1-24 hours in a day
             if i not in data_for_weekday[per_hour_label]:
                 data_for_weekday[per_hour_label][i] = {
@@ -531,6 +526,14 @@ def get_call_counts_and_durations_by_weekday_and_hour(calls_qs: QuerySet) -> Dic
                     average_call_duration_label: timedelta(),
                     average_hold_duration_label: timedelta(),
                 }
+
+        for hour, data_for_hour in data_for_weekday[per_hour_label].items():
+            # Per hour, calculate efficiency, average call duration and average hold duration
+            call_count = data_for_hour[call_count_label]
+            total_seconds = data_for_hour[total_call_duration_label].total_seconds()
+            data_for_hour[efficiency_label] = data_for_hour[call_count_label] / total_seconds if total_seconds else 0
+            data_for_hour[average_call_duration_label] = data_for_hour[total_call_duration_label].total_seconds() / call_count if call_count else 0
+            data_for_hour[average_hold_duration_label] = data_for_hour[total_hold_duration_label].total_seconds() / call_count if call_count else 0
 
     return data_by_weekday_and_hour
 

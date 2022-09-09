@@ -51,7 +51,7 @@ class InsuranceProviderInteractionsView(views.APIView):
     #   These values were chosen after a fair bit of trial & error against production data.
     CALL_DURATION_MINIMUM_SECONDS = 140
     CALL_PER_HOUR_PERCENTILE_BY_WEEKDAY_HOUR = 60
-    CALL_PER_HOUR_PERCENTILE_BY_HOUR = 30
+    CALL_PER_HOUR_PERCENTILE_BY_HOUR = 70
     LOOKBACK_DAYS = 365
 
     def get(self, request, format=None):
@@ -320,9 +320,10 @@ class InsuranceProviderCallMetricsView(views.APIView):
         analytics["calls_by_hour"] = convert_to_call_counts_and_durations_by_hour(data_by_weekday_and_hour)
         analytics["calls_by_weekday_and_hour"] = data_by_weekday_and_hour
 
+        if calls_qs:
+            analytics.update(**self.calculate_call_breakdown_per_insurance_provider(calls_qs))
+
         # TODO: PTECH-1240
-        # if calls_qs:
-        #     analytics.update(**self.calculate_call_breakdown_per_insurance_provider(calls_qs))
         #
         #     if practice_group_filter:
         #         analytics["calls_per_practice"] = calculate_call_breakdown_per_practice(
@@ -367,9 +368,10 @@ class InsuranceProviderCallMetricsView(views.APIView):
 
         return {
             "calls_per_insurance_provider": data_per_insurance_provider_name,
-            "calls_per_insurance_provider_by_date_and_hour": self.calculate_call_breakdown_per_insurance_provider_by_date_and_hour(
-                calls_qs, num_phone_numbers_per_insurance_provider, insurance_provider_per_phone_number
-            ),
+            # TODO: PTECH-1240
+            # "calls_per_insurance_provider_by_date_and_hour": self.calculate_call_breakdown_per_insurance_provider_by_date_and_hour(
+            #     calls_qs, num_phone_numbers_per_insurance_provider, insurance_provider_per_phone_number
+            # ),
         }
 
     def calculate_call_breakdown_per_insurance_provider_by_date_and_hour(
