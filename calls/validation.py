@@ -75,7 +75,9 @@ def get_validated_call_direction(request: Request) -> Tuple[Optional[str], Optio
     call_direction = request.query_params.get(param_name)
     invalid_error = {param_name: f"Invalid {param_name}='{call_direction}'"}
 
-    if call_direction not in CallDirectionTypes.choices or call_direction != ALL_FILTER_NAME:
+    valid_call_directions = {i[0] for i in CallDirectionTypes.choices}
+    valid_call_directions.add(ALL_FILTER_NAME)
+    if call_direction not in valid_call_directions:
         return None, invalid_error
 
     return call_direction, None

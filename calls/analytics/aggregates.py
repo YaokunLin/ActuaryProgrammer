@@ -50,17 +50,18 @@ def calculate_call_counts(calls_qs: QuerySet) -> Dict:
 
 
 def calculate_call_count_opportunities(calls_qs: QuerySet, start_date_str: str, end_date_str: str) -> Dict:
-    total_opportunities_filter = (
-        Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT)
-        | Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.EXISTING_PATIENT)
-    ) & Q(call_purposes__call_purpose_type=CallPurposeTypes.NEW_APPOINTMENT)
+    calls_qs = calls_qs.filter(call_purposes__call_purpose_type=CallPurposeTypes.NEW_APPOINTMENT)
+
+    total_opportunities_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT) | Q(
+        engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.EXISTING_PATIENT
+    )
 
     existing_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.EXISTING_PATIENT)
     new_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT)
 
     opportunities_total_qs = calls_qs.filter(total_opportunities_filter)
-    opportunities_existing_qs = calls_qs.filter(total_opportunities_filter, existing_filter)
-    opportunities_new_qs = calls_qs.filter(total_opportunities_filter, new_filter)
+    opportunities_existing_qs = calls_qs.filter(existing_filter)
+    opportunities_new_qs = calls_qs.filter(new_filter)
     opportunities = {"total": opportunities_total_qs.count(), "existing": opportunities_existing_qs.count(), "new": opportunities_new_qs.count()}
 
     booked_filters = Q(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.SUCCESS)
