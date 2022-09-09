@@ -1,3 +1,4 @@
+import datetime
 import logging
 from datetime import timedelta
 from typing import Dict, List, Union
@@ -17,65 +18,167 @@ from django.db.models import (
     Value,
     When,
 )
-from django.db.models.functions import Coalesce, Concat, ExtractWeekDay, TruncHour
+from django.db.models.functions import (
+    Coalesce,
+    Concat,
+    ExtractWeekDay,
+    TruncDate,
+    TruncHour,
+)
 from django_pandas.io import read_frame
 
 from calls.analytics.intents.field_choices import CallOutcomeTypes, CallPurposeTypes
 from calls.analytics.participants.field_choices import NonAgentEngagementPersonaTypes
+from calls.field_choices import CallConnectionTypes
 from core.models import Practice
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
 
 
-def calculate_call_counts(calls_qs: QuerySet) -> Dict:
+def calculate_call_counts(calls_qs: QuerySet, include_by_weekday_breakdown: bool = False) -> Dict:
+    connected_filter = Q(call_connection=CallConnectionTypes.CONNECTED)
+    answered_filters = connected_filter & Q(went_to_voicemail=False)
+    went_to_voicemail_filter = Q(went_to_voicemail=True)
+    missed_filter = Q(call_connection=CallConnectionTypes.MISSED)
+
     # get call counts
     analytics = dict(
         calls_qs.aggregate(
             call_total=Count("id"),
-            call_connected_total=Count("call_connection", filter=Q(call_connection="connected")),
+            call_connected_total=Count("call_connection", filter=connected_filter),
             call_seconds_total=Sum("duration_seconds"),
             call_seconds_average=Avg("duration_seconds"),
+            call_answered_total=Count("id", filter=answered_filters),
+            call_voicemail_total=Count("id", filter=went_to_voicemail_filter),
+            call_missed_total=Count("id", filter=missed_filter),
         )
     )
+
+    if include_by_weekday_breakdown:
+        analytics["calls_by_weekday"] = {
+            "call_total": convert_to_call_counts_only(
+                convert_to_call_counts_and_durations_by_weekday(get_call_counts_and_durations_by_weekday_and_hour(calls_qs))
+            ),
+            "call_connected_total": convert_to_call_counts_only(
+                convert_to_call_counts_and_durations_by_weekday(get_call_counts_and_durations_by_weekday_and_hour(calls_qs.filter(connected_filter)))
+            ),
+            "call_answered_total": convert_to_call_counts_only(
+                convert_to_call_counts_and_durations_by_weekday(get_call_counts_and_durations_by_weekday_and_hour(calls_qs.filter(answered_filters)))
+            ),
+            "call_voicemail_total": convert_to_call_counts_only(
+                convert_to_call_counts_and_durations_by_weekday(get_call_counts_and_durations_by_weekday_and_hour(calls_qs.filter(went_to_voicemail_filter)))
+            ),
+            "call_missed_total": convert_to_call_counts_only(
+                convert_to_call_counts_and_durations_by_weekday(get_call_counts_and_durations_by_weekday_and_hour(calls_qs.filter(missed_filter)))
+            ),
+        }
 
     analytics["call_sentiment_counts"] = calculate_call_sentiments(calls_qs)
     return analytics
 
 
-def calculate_call_count_opportunities(calls_qs: QuerySet) -> Dict:
-    total_opportunities_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT) | Q(
-        engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.EXISTING_PATIENT,
-        call_purposes__call_purpose_type=CallPurposeTypes.NEW_APPOINTMENT,
-    )
-    opportunity_call_purpose_filters = Q(call_purposes__call_purpose_type=CallPurposeTypes.NEW_APPOINTMENT)
+def calculate_call_count_opportunities(calls_qs: QuerySet, start_date_str: str, end_date_str: str) -> Dict:
+    new_appointment_filter = Q(call_purposes__call_purpose_type=CallPurposeTypes.NEW_APPOINTMENT)
+    won_filter = Q(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.SUCCESS)
+    lost_filter = Q(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.FAILURE)
+    existing_patient_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.EXISTING_PATIENT)
+    new_patient_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT)
 
-    existing_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.EXISTING_PATIENT)
-    new_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT)
+    opportunities_total_qs = calls_qs.filter(new_appointment_filter & (existing_patient_filter | new_patient_filter))
+    opportunities_existing_patient_qs = calls_qs.filter(new_appointment_filter & existing_patient_filter)
+    opportunities_new_patient_qs = calls_qs.filter(new_appointment_filter & new_patient_filter)
 
-    opportunities_total_qs = calls_qs.filter(total_opportunities_filter)
+    opportunities_won_total_qs = calls_qs.filter(new_appointment_filter & won_filter & (existing_patient_filter | new_patient_filter))
+    opportunities_won_existing_patient_qs = calls_qs.filter(new_appointment_filter & won_filter & existing_patient_filter)
+    opportunities_won_new_patient_qs = calls_qs.filter(new_appointment_filter & won_filter & new_patient_filter)
 
-    opportunities_existing_qs = calls_qs.filter(total_opportunities_filter, existing_filter)
-    opportunities_new_qs = calls_qs.filter(new_filter)
-    opportunities = {"total": opportunities_total_qs.count(), "existing": opportunities_existing_qs.count(), "new": opportunities_new_qs.count()}
+    opportunities_lost_total_qs = calls_qs.filter(new_appointment_filter & lost_filter & (existing_patient_filter | new_patient_filter))
+    opportunities_lost_existing_patient_qs = calls_qs.filter(new_appointment_filter & lost_filter & existing_patient_filter)
+    opportunities_lost_new_patient_qs = calls_qs.filter(new_appointment_filter & lost_filter & new_patient_filter)
 
-    booked_filters = Q(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.SUCCESS)
+    def get_conversion_rates_breakdown(total: List[Dict], won: List[Dict]) -> List[Dict]:
+        conversion_rates = []
+        total_per_date_mapping = {i["date"]: i["value"] for i in total}
+        for record in won:
+            date = record["date"]
+            total_for_date = total_per_date_mapping[date]
+            rate = 0
+            if total_for_date:
+                rate = record["value"] / total_per_date_mapping[date]
+            conversion_rates.append({"date": date, "value": rate})
+        return conversion_rates
 
-    lost_filters = Q(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.FAILURE)
-    opportunities_booked_qs = opportunities_total_qs.filter(booked_filters)
-    opportunities_lost_qs = opportunities_total_qs.filter(lost_filters)
+    total_by_day = calculate_zero_filled_call_counts_by_day(opportunities_total_qs, start_date_str, end_date_str)
+    existing_patient_by_day = calculate_zero_filled_call_counts_by_day(opportunities_existing_patient_qs, start_date_str, end_date_str)
+    new_patient_by_day = calculate_zero_filled_call_counts_by_day(opportunities_new_patient_qs, start_date_str, end_date_str)
 
-    # TODO: discuss - change to won?
-    opportunities["booked"] = {
-        "total": opportunities_booked_qs.count(),
-        "existing": opportunities_booked_qs.filter(existing_filter).count(),
-        "new": opportunities_booked_qs.filter(new_filter).count(),
+    opportunities = {
+        "total": opportunities_total_qs.count(),
+        "existing": opportunities_existing_patient_qs.count(),
+        "new": opportunities_new_patient_qs.count(),
+    }
+    opportunities["total_by_week"] = {
+        "total": convert_call_counts_to_by_week(total_by_day),
+        "existing": convert_call_counts_to_by_week(existing_patient_by_day),
+        "new": convert_call_counts_to_by_week(new_patient_by_day),
+    }
+    opportunities["total_by_month"] = {
+        "total": convert_call_counts_to_by_month(total_by_day),
+        "existing": convert_call_counts_to_by_month(existing_patient_by_day),
+        "new": convert_call_counts_to_by_month(new_patient_by_day),
+    }
+    opportunities["won"] = {
+        "total": opportunities_won_total_qs.count(),
+        "existing": opportunities_won_existing_patient_qs.count(),
+        "new": opportunities_won_new_patient_qs.count(),
+    }
+    won_by_day_total = calculate_zero_filled_call_counts_by_day(opportunities_won_total_qs, start_date_str, end_date_str)
+    won_by_day_existing_patient = calculate_zero_filled_call_counts_by_day(opportunities_won_existing_patient_qs, start_date_str, end_date_str)
+    won_by_day_new_patient = calculate_zero_filled_call_counts_by_day(opportunities_won_new_patient_qs, start_date_str, end_date_str)
+    opportunities["won_by_week"] = {
+        "total": convert_call_counts_to_by_week(won_by_day_total),
+        "existing": convert_call_counts_to_by_week(won_by_day_existing_patient),
+        "new": convert_call_counts_to_by_week(won_by_day_new_patient),
+    }
+    opportunities["won_by_month"] = {
+        "total": convert_call_counts_to_by_month(won_by_day_total),
+        "existing": convert_call_counts_to_by_month(won_by_day_existing_patient),
+        "new": convert_call_counts_to_by_month(won_by_day_new_patient),
+    }
+    opportunities["conversion_rate"] = {
+        "total": opportunities["won"]["total"] / opportunities["total"] if opportunities["total"] else 0,
+        "existing": opportunities["won"]["existing"] / opportunities["existing"] if opportunities["existing"] else 0,
+        "new": opportunities["won"]["new"] / opportunities["new"] if opportunities["new"] else 0,
+    }
+    opportunities["conversion_rate_by_week"] = {
+        "total": get_conversion_rates_breakdown(opportunities["total_by_week"]["total"], opportunities["won_by_week"]["total"]),
+        "existing": get_conversion_rates_breakdown(opportunities["total_by_week"]["existing"], opportunities["won_by_week"]["existing"]),
+        "new": get_conversion_rates_breakdown(opportunities["total_by_week"]["new"], opportunities["won_by_week"]["new"]),
+    }
+    opportunities["conversion_rate_by_month"] = {
+        "total": get_conversion_rates_breakdown(opportunities["total_by_month"]["total"], opportunities["won_by_month"]["total"]),
+        "existing": get_conversion_rates_breakdown(opportunities["total_by_month"]["existing"], opportunities["won_by_month"]["existing"]),
+        "new": get_conversion_rates_breakdown(opportunities["total_by_month"]["new"], opportunities["won_by_month"]["new"]),
     }
 
     opportunities["lost"] = {
-        "total": opportunities_lost_qs.count(),
-        "existing": opportunities_lost_qs.filter(existing_filter).count(),
-        "new": opportunities_lost_qs.filter(new_filter).count(),
+        "total": opportunities_lost_total_qs.count(),
+        "existing": opportunities_lost_existing_patient_qs.count(),
+        "new": opportunities_lost_new_patient_qs.count(),
+    }
+    lost_by_day_total = calculate_zero_filled_call_counts_by_day(opportunities_lost_total_qs, start_date_str, end_date_str)
+    lost_by_day_existing_patient = calculate_zero_filled_call_counts_by_day(opportunities_lost_existing_patient_qs, start_date_str, end_date_str)
+    lost_by_day_new_patient = calculate_zero_filled_call_counts_by_day(opportunities_lost_new_patient_qs, start_date_str, end_date_str)
+    opportunities["lost_by_week"] = {
+        "total": convert_call_counts_to_by_week(lost_by_day_total),
+        "existing": convert_call_counts_to_by_week(lost_by_day_existing_patient),
+        "new": convert_call_counts_to_by_week(lost_by_day_new_patient),
+    }
+    opportunities["lost_by_month"] = {
+        "total": convert_call_counts_to_by_month(lost_by_day_total),
+        "existing": convert_call_counts_to_by_month(lost_by_day_existing_patient),
+        "new": convert_call_counts_to_by_month(lost_by_day_new_patient),
     }
 
     return opportunities
@@ -195,7 +298,8 @@ def calculate_call_counts_per_field(calls_qs: QuerySet, field_name: str) -> Dict
 
 
 def calculate_call_counts_by_day_of_week(calls_qs: QuerySet) -> Dict:
-    day_of_week_mapping = {
+    weekday_label = "weekday"
+    weekday_mapping = {
         1: "sunday",
         2: "monday",
         3: "tuesday",
@@ -204,9 +308,9 @@ def calculate_call_counts_by_day_of_week(calls_qs: QuerySet) -> Dict:
         6: "friday",
         7: "saturday",
     }
-    calls_qs = calls_qs.annotate(day_of_week=ExtractWeekDay("call_start_time")).values("day_of_week").annotate(call_total=Count("id")).order_by("day_of_week")
-    calls_per_day_of_week = {day_of_week_mapping[d["day_of_week"]]: d["call_total"] for d in calls_qs.all()}
-    for day_name in day_of_week_mapping.values():
+    calls_qs = calls_qs.annotate(weekday=ExtractWeekDay("call_start_time")).values(weekday_label).annotate(call_total=Count("id")).order_by(weekday_label)
+    calls_per_day_of_week = {weekday_mapping[d[weekday_label]]: d["call_total"] for d in calls_qs.all()}
+    for day_name in weekday_mapping.values():
         if day_name not in calls_per_day_of_week:
             calls_per_day_of_week[day_name] = 0
     return calls_per_day_of_week
@@ -398,7 +502,7 @@ SATURDAY = "saturday"
 
 
 def get_call_counts_and_durations_by_weekday_and_hour(calls_qs: QuerySet) -> Dict:
-    day_of_week_by_index = {
+    weekday_by_index = {
         0: MONDAY,
         1: TUESDAY,
         2: WEDNESDAY,
@@ -409,13 +513,13 @@ def get_call_counts_and_durations_by_weekday_and_hour(calls_qs: QuerySet) -> Dic
     }
     call_date_hour_label = "call_date_hour"
     call_count_label = "call_count"
-    call_duration_label = "total_call_duration_seconds"
-    hold_duration_label = "total_hold_duration_seconds"
+    total_call_duration_label = "total_call_duration_seconds"
+    total_hold_duration_label = "total_hold_duration_seconds"
     average_call_duration_label = "average_call_duration_seconds"
     average_hold_duration_label = "average_hold_duration_seconds"
     efficiency_label = "efficiency"
     per_hour_label = "per_hour"
-    day_of_week_label = "day_of_week"
+    weekday_label = "weekday"
 
     # Group data by date_and_hour
     data = (
@@ -431,30 +535,158 @@ def get_call_counts_and_durations_by_weekday_and_hour(calls_qs: QuerySet) -> Dic
 
     # Convert data by date_and_hour into data_by_weekday_and_hour
     data_by_weekday_and_hour = {
-        MONDAY: {per_hour_label: {}, day_of_week_label: MONDAY},
-        TUESDAY: {per_hour_label: {}, day_of_week_label: TUESDAY},
-        WEDNESDAY: {per_hour_label: {}, day_of_week_label: WEDNESDAY},
-        THURSDAY: {per_hour_label: {}, day_of_week_label: THURSDAY},
-        FRIDAY: {per_hour_label: {}, day_of_week_label: FRIDAY},
-        SATURDAY: {per_hour_label: {}, day_of_week_label: SATURDAY},
-        SUNDAY: {per_hour_label: {}, day_of_week_label: SUNDAY},
+        MONDAY: {per_hour_label: {}, weekday_label: MONDAY},
+        TUESDAY: {per_hour_label: {}, weekday_label: TUESDAY},
+        WEDNESDAY: {per_hour_label: {}, weekday_label: WEDNESDAY},
+        THURSDAY: {per_hour_label: {}, weekday_label: THURSDAY},
+        FRIDAY: {per_hour_label: {}, weekday_label: FRIDAY},
+        SATURDAY: {per_hour_label: {}, weekday_label: SATURDAY},
+        SUNDAY: {per_hour_label: {}, weekday_label: SUNDAY},
     }
     for data_for_hour in data:
         data_datetime = data_for_hour[call_date_hour_label]
-        day_of_week = day_of_week_by_index[data_datetime.weekday()]
+        weekday = weekday_by_index[data_datetime.weekday()]
         hour = data_datetime.hour
-        existing_data = data_by_weekday_and_hour[day_of_week][per_hour_label].get(hour, {})
-        data_by_weekday_and_hour[day_of_week][per_hour_label][hour] = {
+        existing_data = data_by_weekday_and_hour[weekday][per_hour_label].get(hour, {})
+        data_by_weekday_and_hour[weekday][per_hour_label][hour] = {
             call_count_label: existing_data.get(call_count_label, 0) + data_for_hour[call_count_label],
-            call_duration_label: existing_data.get(call_duration_label, timedelta()) + data_for_hour[call_duration_label],
-            hold_duration_label: existing_data.get(hold_duration_label, timedelta()) + data_for_hour[hold_duration_label],
+            total_call_duration_label: existing_data.get(total_call_duration_label, timedelta()) + data_for_hour[total_call_duration_label],
+            total_hold_duration_label: existing_data.get(total_hold_duration_label, timedelta()) + data_for_hour[total_hold_duration_label],
         }
 
-    for day_of_week, data_for_day_of_week in data_by_weekday_and_hour.items():
-        for hour, data_for_hour in data_for_day_of_week[per_hour_label].items():
+    for data_for_weekday in data_by_weekday_and_hour.values():
+        for hour, data_for_hour in data_for_weekday[per_hour_label].items():
             # Per hour, calculate efficiency, average call duration and average hold duration
-            data_for_hour[efficiency_label] = data_for_hour[call_count_label] / data_for_hour[call_duration_label].total_seconds()
-            data_for_hour[average_call_duration_label] = data_for_hour[call_duration_label].total_seconds() / data_for_hour[call_count_label]
-            data_for_hour[average_hold_duration_label] = data_for_hour[hold_duration_label].total_seconds() / data_for_hour[call_count_label]
+            data_for_hour[efficiency_label] = data_for_hour[call_count_label] / data_for_hour[total_call_duration_label].total_seconds()
+            data_for_hour[average_call_duration_label] = data_for_hour[total_call_duration_label].total_seconds() / data_for_hour[call_count_label]
+            data_for_hour[average_hold_duration_label] = data_for_hour[total_hold_duration_label].total_seconds() / data_for_hour[call_count_label]
+
+        for i in range(1, 25):  # 1-24 hours in a day
+            if i not in data_for_weekday[per_hour_label]:
+                data_for_weekday[per_hour_label][i] = {
+                    call_count_label: 0,
+                    total_call_duration_label: timedelta(),
+                    total_hold_duration_label: timedelta(),
+                    average_call_duration_label: timedelta(),
+                    average_hold_duration_label: timedelta(),
+                }
 
     return data_by_weekday_and_hour
+
+
+def convert_to_call_counts_and_durations_by_weekday(call_counts_and_durations_by_weekday_and_hour: Dict) -> Dict:
+    call_count_label = "call_count"
+    total_call_duration_label = "total_call_duration_seconds"
+    average_call_duration_label = "average_call_duration_seconds"
+
+    data_by_weekday = {}
+    for weekday, data_for_current_weekday in call_counts_and_durations_by_weekday_and_hour.items():
+        for data_for_current_hour in data_for_current_weekday["per_hour"].values():
+            data = data_by_weekday.setdefault(
+                weekday,
+                {
+                    call_count_label: 0,
+                    total_call_duration_label: timedelta(),
+                },
+            )
+            data[call_count_label] = data[call_count_label] + data_for_current_hour[call_count_label]
+            data[total_call_duration_label] = data[total_call_duration_label] + data_for_current_hour[total_call_duration_label]
+
+    for d in data_by_weekday.values():
+        call_count = d[call_count_label]
+        if call_count:
+            d[average_call_duration_label] = d[total_call_duration_label] / call_count
+        else:
+            d[average_call_duration_label] = 0
+
+    return data_by_weekday
+
+
+def convert_to_call_counts_and_durations_by_hour(call_counts_and_durations_by_weekday_and_hour: Dict) -> Dict:
+    call_count_label = "call_count"
+    total_call_duration_label = "total_call_duration_seconds"
+    average_call_duration_label = "average_call_duration_seconds"
+
+    data_by_hour = {}
+    for data_for_current_weekday in call_counts_and_durations_by_weekday_and_hour.values():
+        for hour, data_for_current_hour in data_for_current_weekday["per_hour"].items():
+            data = data_by_hour.setdefault(
+                hour,
+                {
+                    call_count_label: 0,
+                    total_call_duration_label: timedelta(),
+                },
+            )
+            data[call_count_label] = data[call_count_label] + data_for_current_hour[call_count_label]
+            data[total_call_duration_label] = data[total_call_duration_label] + data_for_current_hour[total_call_duration_label]
+
+    for d in data_by_hour.values():
+        call_count = d[call_count_label]
+        if call_count:
+            d[average_call_duration_label] = d[total_call_duration_label] / call_count
+        else:
+            d[average_call_duration_label] = 0
+
+    return data_by_hour
+
+
+def convert_to_call_counts_only(call_counts_and_durations: Dict) -> Dict:
+    """
+    Convert data by hour or data by weekday to only contain call counts
+    """
+    return {k: v["call_count"] for k, v in call_counts_and_durations.items()}
+
+
+def calculate_zero_filled_call_counts_by_day(calls_qs: QuerySet, start_date: str, end_date: str) -> List[Dict]:
+    data = list(calls_qs.annotate(date=TruncDate("call_start_time")).values("date").annotate(value=Count("id")).values("date", "value").order_by("date"))
+    if not data:
+        return []
+
+    date_range = pd.date_range(start_date, end_date, name="date")
+    data = pd.DataFrame(data).set_index("date").reindex(date_range, fill_value=0).reset_index()
+    data = data.to_dict("records")
+    for i in data:
+        i["date"] = i["date"].strftime("%Y-%m-%d")
+    return data
+
+
+def convert_call_counts_to_by_week(data_by_day: List[Dict]) -> List[Dict]:
+    date_format = "%Y-%m-%d"
+    if not data_by_day:
+        return []
+
+    # https://pandas.pydata.org/docs/user_guide/timeseries.html#anchored-offsets
+    day_of_week_mapping = {
+        0: "MON",
+        1: "TUE",
+        2: "WED",
+        3: "THU",
+        4: "FRI",
+        5: "SAT",
+        6: "SUN",
+    }
+
+    day_of_week = datetime.datetime.strptime(data_by_day[0]["date"], date_format).weekday()
+    df = pd.DataFrame(data_by_day)
+    df["date"] = df["date"].astype("datetime64[ns]")
+
+    weekly_data = df.resample(f"W-{day_of_week_mapping[day_of_week]}", label="left", closed="left", on="date").sum().reset_index().sort_values(by="date")
+    weekly_data = weekly_data.to_dict("records")
+    for i in weekly_data:
+        i["date"] = i["date"].strftime(date_format)
+    return weekly_data
+
+
+def convert_call_counts_to_by_month(data_by_day: List[Dict]) -> List[Dict]:
+    date_format = "%Y-%m-%d"
+    if not data_by_day:
+        return []
+
+    df = pd.DataFrame(data_by_day)
+    df["date"] = df["date"].astype("datetime64[ns]")
+
+    monthly_data = df.resample("MS", on="date").sum().reset_index().sort_values(by="date")
+    monthly_data = monthly_data.to_dict("records")
+    for i in monthly_data:
+        i["date"] = i["date"].strftime(date_format)
+    return monthly_data
