@@ -217,30 +217,39 @@ def calculate_call_counts_and_opportunities_per_user(calls_qs: QuerySet) -> Dict
 
     field_name = "sip_caller_number_with_extension"
     calls_qs = annotate_caller_number_with_extension(calls_qs)
-    calls_qs = calls_qs.values(field_name).annotate(call_count=Count("id")).values(field_name, "call_count")
 
-    calls_missed_qs = (
+    call_total_qs = calls_qs.values(field_name).annotate(call_count=Count("id")).values(field_name, "call_count")
+    call_missed_qs = (
         calls_qs.filter(call_connection="missed").values(field_name).annotate(call_missed_count=Count("id")).values(field_name, "call_missed_count")
     )
 
-    # aggregate = {
-    #
-    # }
+    new_appointment_filter = Q(call_purposes__call_purpose_type=CallPurposeTypes.NEW_APPOINTMENT)
+    won_filter = Q(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.SUCCESS)
+    lost_filter = Q(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.FAILURE)
+    existing_patient_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.EXISTING_PATIENT)
+    new_patient_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT)
 
-    call_count = read_frame(calls_qs)
-    call_missed_count = read_frame(calls_missed_qs)
-    frames = [call_count, call_missed_count]
+    opportunities_total_qs = (
+        calls_qs.filter(new_appointment_filter & (existing_patient_filter | new_patient_filter))
+        .values(field_name)
+        .annotate(opportunities_total_count=Count("id"))
+        .values(field_name, "opportunities_total_count")
+    )
+    opportunities_won_qs = (
+        calls_qs.filter(new_appointment_filter & won_filter & (existing_patient_filter | new_patient_filter))
+        .annotate(opportunities_won_count=Count("id"))
+        .values(field_name, "opportunities_won_count")
+    )
+
+    call_count = read_frame(call_total_qs)
+    call_missed_count = read_frame(call_missed_qs)
+    call_opportunities_total_count = read_frame(opportunities_total_qs)
+    call_opportunities_won_count = read_frame(opportunities_won_qs)
+    frames = [call_count, call_missed_count, call_opportunities_total_count, call_opportunities_won_count]
 
     df = pd.concat(frames)
-    # df.fillna(0)
-    df["call_missed_count"] = df["call_missed_count"].replace(np.nan, 0)
-    df["call_count"] = df["call_count"].replace(np.nan, 0)
-    # aggregate(
-    #     call_total=Count("id"),
-    #     call_connected_total=Count("call_connection", filter=Q(call_connection="connected")),
-    #     call_seconds_total=Sum("duration_seconds"),
-    #     call_seconds_average=Avg("duration_seconds"),
-    # )
+    df.fillna(0, inplace=True)
+    df["opportunities_open_count"] = df["opportunities_total_count"] - df["opportunities_won_count"]
 
     log.info(df.to_dict(orient="records"))
     return df.to_dict(orient="records")  # read_frame(calls_qs).to_dict(orient="records")
