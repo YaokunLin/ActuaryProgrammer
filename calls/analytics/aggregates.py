@@ -56,7 +56,7 @@ def calculate_call_count_opportunities(calls_qs: QuerySet, start_date_str: str, 
     existing_patient_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.EXISTING_PATIENT)
     new_patient_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT)
 
-    opportunities_total_qs = calls_qs.filter(new_appointment_filter & (new_patient_filter | existing_patient_filter))
+    opportunities_total_qs = calls_qs.filter(new_appointment_filter & (existing_patient_filter | new_patient_filter))
     opportunities_existing_patient_qs = calls_qs.filter(new_appointment_filter & existing_patient_filter)
     opportunities_new_patient_qs = calls_qs.filter(new_appointment_filter & new_patient_filter)
     opportunities = {
@@ -65,13 +65,13 @@ def calculate_call_count_opportunities(calls_qs: QuerySet, start_date_str: str, 
         "new": opportunities_new_patient_qs.count(),
     }
 
-    opportunities_won_total_qs = calls_qs.filter(new_appointment_filter & won_filter & (new_patient_filter | existing_patient_filter))
-    opportunities_won_new_patient_qs = calls_qs.filter(new_appointment_filter & won_filter & new_patient_filter)
+    opportunities_won_total_qs = calls_qs.filter(new_appointment_filter & won_filter & (existing_patient_filter | new_patient_filter))
     opportunities_won_existing_patient_qs = calls_qs.filter(new_appointment_filter & won_filter & existing_patient_filter)
+    opportunities_won_new_patient_qs = calls_qs.filter(new_appointment_filter & won_filter & new_patient_filter)
 
-    opportunities_lost_total_qs = calls_qs.filter(new_appointment_filter & lost_filter & (new_patient_filter | existing_patient_filter))
-    opportunities_lost_new_patient_qs = calls_qs.filter(new_appointment_filter & lost_filter & new_patient_filter)
+    opportunities_lost_total_qs = calls_qs.filter(new_appointment_filter & lost_filter & (existing_patient_filter | new_patient_filter))
     opportunities_lost_existing_patient_qs = calls_qs.filter(new_appointment_filter & lost_filter & existing_patient_filter)
+    opportunities_lost_new_patient_qs = calls_qs.filter(new_appointment_filter & lost_filter & new_patient_filter)
 
     opportunities["won"] = {
         "total": opportunities_won_total_qs.count(),
