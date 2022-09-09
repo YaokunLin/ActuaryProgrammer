@@ -50,53 +50,53 @@ def calculate_call_counts(calls_qs: QuerySet) -> Dict:
 
 
 def calculate_call_count_opportunities(calls_qs: QuerySet, start_date_str: str, end_date_str: str) -> Dict:
-    calls_qs = calls_qs.filter(call_purposes__call_purpose_type=CallPurposeTypes.NEW_APPOINTMENT)
+    new_appointment_filter = Q(call_purposes__call_purpose_type=CallPurposeTypes.NEW_APPOINTMENT)
+    won_filter = Q(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.SUCCESS)
+    lost_filter = Q(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.FAILURE)
+    existing_patient_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.EXISTING_PATIENT)
+    new_patient_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT)
 
-    total_opportunities_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT) | Q(
-        engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.EXISTING_PATIENT
-    )
-
-    existing_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.EXISTING_PATIENT)
-    new_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT)
-
-    opportunities_total_qs = calls_qs.filter(total_opportunities_filter)
-    opportunities_existing_qs = calls_qs.filter(existing_filter)
-    opportunities_new_qs = calls_qs.filter(new_filter)
-    opportunities = {"total": opportunities_total_qs.count(), "existing": opportunities_existing_qs.count(), "new": opportunities_new_qs.count()}
-
-    booked_filters = Q(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.SUCCESS)
-
-    lost_filters = Q(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.FAILURE)
-    opportunities_booked_qs = opportunities_total_qs.filter(booked_filters)
-    opportunities_lost_qs = opportunities_total_qs.filter(lost_filters)
-
-    # TODO: discuss - change to won?
-    opportunities["booked"] = {
-        "total": opportunities_booked_qs.count(),
-        "existing": opportunities_booked_qs.filter(existing_filter).count(),
-        "new": opportunities_booked_qs.filter(new_filter).count(),
+    opportunities_total_qs = calls_qs.filter(new_appointment_filter & (new_patient_filter | existing_patient_filter))
+    opportunities_existing_patient_qs = calls_qs.filter(new_appointment_filter & existing_patient_filter)
+    opportunities_new_patient_qs = calls_qs.filter(new_appointment_filter & new_patient_filter)
+    opportunities = {
+        "total": opportunities_total_qs.count(),
+        "existing": opportunities_existing_patient_qs.count(),
+        "new": opportunities_new_patient_qs.count(),
     }
-    opportunities["booked_by_week"] = {
-        "total": convert_call_counts_to_by_week(calculate_zero_filled_call_counts_by_day(opportunities_booked_qs, start_date_str, end_date_str)),
+
+    opportunities_won_total_qs = calls_qs.filter(new_appointment_filter & won_filter & (new_patient_filter | existing_patient_filter))
+    opportunities_won_new_patient_qs = calls_qs.filter(new_appointment_filter & won_filter & new_patient_filter)
+    opportunities_won_existing_patient_qs = calls_qs.filter(new_appointment_filter & won_filter & existing_patient_filter)
+
+    opportunities_lost_total_qs = calls_qs.filter(new_appointment_filter & lost_filter & (new_patient_filter | existing_patient_filter))
+    opportunities_lost_new_patient_qs = calls_qs.filter(new_appointment_filter & lost_filter & new_patient_filter)
+    opportunities_lost_existing_patient_qs = calls_qs.filter(new_appointment_filter & lost_filter & existing_patient_filter)
+
+    opportunities["won"] = {
+        "total": opportunities_won_total_qs.count(),
+        "existing": opportunities_won_existing_patient_qs.count(),
+        "new": opportunities_won_new_patient_qs.count(),
+    }
+    opportunities["won_by_week"] = {
+        "total": convert_call_counts_to_by_week(calculate_zero_filled_call_counts_by_day(opportunities_won_total_qs, start_date_str, end_date_str)),
         "existing": convert_call_counts_to_by_week(
-            calculate_zero_filled_call_counts_by_day(opportunities_booked_qs.filter(existing_filter), start_date_str, end_date_str)
+            calculate_zero_filled_call_counts_by_day(opportunities_won_existing_patient_qs, start_date_str, end_date_str)
         ),
-        "new": convert_call_counts_to_by_week(
-            calculate_zero_filled_call_counts_by_day(opportunities_booked_qs.filter(new_filter), start_date_str, end_date_str)
-        ),
+        "new": convert_call_counts_to_by_week(calculate_zero_filled_call_counts_by_day(opportunities_won_new_patient_qs, start_date_str, end_date_str)),
     }
 
     opportunities["lost"] = {
-        "total": opportunities_lost_qs.count(),
-        "existing": opportunities_lost_qs.filter(existing_filter).count(),
-        "new": opportunities_lost_qs.filter(new_filter).count(),
+        "total": opportunities_lost_total_qs.count(),
+        "existing": opportunities_lost_existing_patient_qs.count(),
+        "new": opportunities_lost_new_patient_qs.count(),
     }
     opportunities["lost_by_week"] = {
-        "total": convert_call_counts_to_by_week(calculate_zero_filled_call_counts_by_day(opportunities_lost_qs, start_date_str, end_date_str)),
+        "total": convert_call_counts_to_by_week(calculate_zero_filled_call_counts_by_day(opportunities_lost_total_qs, start_date_str, end_date_str)),
         "existing": convert_call_counts_to_by_week(
-            calculate_zero_filled_call_counts_by_day(opportunities_lost_qs.filter(existing_filter), start_date_str, end_date_str)
+            calculate_zero_filled_call_counts_by_day(opportunities_lost_existing_patient_qs, start_date_str, end_date_str)
         ),
-        "new": convert_call_counts_to_by_week(calculate_zero_filled_call_counts_by_day(opportunities_lost_qs.filter(new_filter), start_date_str, end_date_str)),
+        "new": convert_call_counts_to_by_week(calculate_zero_filled_call_counts_by_day(opportunities_lost_new_patient_qs, start_date_str, end_date_str)),
     }
 
     return opportunities
