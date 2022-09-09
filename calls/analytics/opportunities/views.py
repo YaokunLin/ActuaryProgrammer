@@ -157,23 +157,9 @@ class OpportunitiesPerUserView(views.APIView):
         dates_filter = {"call_start_time__gte": call_start_time__gte, "call_start_time__lte": call_start_time__lte}
 
         filters = Q(**dates_filter) & Q(**practice_filter)
-
         calls_qs = Call.objects.filter(filters)
 
-        # aggregate analytics
-        # telecomcaller list page
-        # extension
-        # missed / unknown
-        # Opps Open
-        # Ops Won
-        # Call Count
-        # Call Missed
-
-        #
-        # "calls_per_user_by_date_and_hour": calculate_call_counts_per_user_by_date_and_hour(calls_qs),  # call counts per caller (agent) phone number over time
-
         aggregates = {
-            # "calls_per_user": calculate_call_counts_per_user(calls_qs),  # call counts per caller (agent) phone number
             "calls_per_user": calculate_call_counts_and_opportunities_per_user(calls_qs),  # call counts per caller (agent) phone number
         }
 
