@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional
 import pandas as pd
 from django.db.models import Count, Q, QuerySet
 from django.db.models.functions import TruncDate
+from django_pandas.io import read_frame
 from rest_framework import status, views
 from rest_framework.response import Response
 
@@ -12,6 +13,7 @@ from calls.analytics.aggregates import (
     calculate_call_breakdown_per_practice,
     calculate_call_count_opportunities,
     calculate_call_counts,
+    calculate_call_counts_and_opportunities_per_user,
     calculate_call_counts_per_user,
     calculate_call_counts_per_user_by_date_and_hour,
     calculate_call_non_agent_engagement_type_counts,
@@ -115,7 +117,64 @@ def get_call_counts(
 
 
 class OpportunitiesPerUserView(views.APIView):
-    pass
+    QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME = {"call_start_time__gte": "call_start_time_after", "call_start_time__lte": "call_start_time_before"}
+
+    def get(self, request, format=None):
+        valid_practice_id, practice_errors = get_validated_practice_id(request=request)
+        valid_practice_group_id, practice_group_errors = get_validated_practice_group_id(request=request)
+        dates_info = get_validated_call_dates(query_data=request.query_params)
+        dates_errors = dates_info.get("errors")
+
+        errors = {}
+        if practice_errors:
+            errors.update(practice_errors)
+        if practice_group_errors:
+            errors.update(practice_group_errors)
+        if not practice_errors and not practice_group_errors and bool(valid_practice_id) == bool(valid_practice_group_id):
+            error_message = "practice__id or practice__group_id must be provided, but not both."
+            errors.update({"practice__id": error_message, "practice__group_id": error_message})
+        if dates_errors:
+            errors.update(dates_errors)
+        if errors:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data=errors)
+
+        # practice filter
+        practice_filter = {}
+        if valid_practice_id:
+            practice_filter = {"practice__id": valid_practice_id}
+
+        practice_group_filter = {}
+        if valid_practice_group_id:
+            practice_group_filter = {"practice__practice_group__id": valid_practice_group_id}
+
+        # date filters
+        dates = dates_info.get("dates")
+        call_start_time__gte = dates[0]
+        call_start_time__lte = dates[1]
+        dates_filter = {"call_start_time__gte": call_start_time__gte, "call_start_time__lte": call_start_time__lte}
+
+        filters = Q(**dates_filter) & Q(**practice_filter)  # & Q(**practice_group_filter)
+
+        calls_qs = Call.objects.filter(filters)
+
+        # aggregate analytics
+        # telecomcaller list page
+        # extension
+        # missed / unknown
+        # Opps Open
+        # Ops Won
+        # Call Count
+        # Call Missed
+        aggregates = {
+            "calls_per_user": calculate_call_counts_and_opportunities_per_user(calls_qs),  # call counts per caller (agent) phone number
+        }
+
+        display_filters = {
+            self.QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME["call_start_time__gte"]: call_start_time__gte,
+            self.QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME["call_start_time__lte"]: call_start_time__lte,
+        }
+
+        return Response({"filters": display_filters, "results": aggregates})
 
 
 class NewPatientOpportunitiesView(views.APIView):

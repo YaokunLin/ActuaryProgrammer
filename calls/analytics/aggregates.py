@@ -2,6 +2,8 @@ import logging
 from datetime import timedelta
 from typing import Dict, List, Union
 
+import numpy as np
+import pandas as pd
 from django.db.models import (
     Aggregate,
     Avg,
@@ -44,7 +46,7 @@ def calculate_call_counts(calls_qs: QuerySet) -> Dict:
 def calculate_call_count_opportunities(calls_qs: QuerySet) -> Dict:
     total_opportunities_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT) | Q(
         engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.EXISTING_PATIENT,
-        call_purposes__call_purpose_type=CallPurposeTypes.NEW_APPOINTMENT
+        call_purposes__call_purpose_type=CallPurposeTypes.NEW_APPOINTMENT,
     )
     opportunity_call_purpose_filters = Q(call_purposes__call_purpose_type=CallPurposeTypes.NEW_APPOINTMENT)
 
@@ -52,6 +54,7 @@ def calculate_call_count_opportunities(calls_qs: QuerySet) -> Dict:
     new_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT)
 
     opportunities_total_qs = calls_qs.filter(total_opportunities_filter)
+
     opportunities_existing_qs = calls_qs.filter(total_opportunities_filter, existing_filter)
     opportunities_new_qs = calls_qs.filter(new_filter)
     opportunities = {"total": opportunities_total_qs.count(), "existing": opportunities_existing_qs.count(), "new": opportunities_new_qs.count()}
@@ -99,6 +102,45 @@ def annotate_caller_number_with_extension(calls_qs: QuerySet) -> QuerySet:
             output_field=CharField(),
         )
     )
+
+
+def calculate_call_counts_and_opportunities_per_user(calls_qs: QuerySet) -> Dict:
+    # extension
+    # missed / unknown
+    # Opps Open
+    # Ops Won
+    # Call Count
+    # Call Missed
+
+    field_name = "sip_caller_number_with_extension"
+    calls_qs = annotate_caller_number_with_extension(calls_qs)
+    calls_qs = calls_qs.values(field_name).annotate(call_count=Count("id")).values(field_name, "call_count")
+
+    calls_missed_qs = (
+        calls_qs.filter(call_connection="missed").values(field_name).annotate(call_missed_count=Count("id")).values(field_name, "call_missed_count")
+    )
+
+    # aggregate = {
+    #
+    # }
+
+    call_count = read_frame(calls_qs)
+    call_missed_count = read_frame(calls_missed_qs)
+    frames = [call_count, call_missed_count]
+
+    df = pd.concat(frames)
+    # df.fillna(0)
+    df["call_missed_count"] = df["call_missed_count"].replace(np.nan, 0)
+    df["call_count"] = df["call_count"].replace(np.nan, 0)
+    # aggregate(
+    #     call_total=Count("id"),
+    #     call_connected_total=Count("call_connection", filter=Q(call_connection="connected")),
+    #     call_seconds_total=Sum("duration_seconds"),
+    #     call_seconds_average=Avg("duration_seconds"),
+    # )
+
+    log.info(df.to_dict(orient="records"))
+    return df.to_dict(orient="records")  # read_frame(calls_qs).to_dict(orient="records")
 
 
 def calculate_call_counts_per_user(calls_qs: QuerySet) -> Dict:
