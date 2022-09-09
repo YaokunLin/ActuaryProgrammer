@@ -211,6 +211,9 @@ def calculate_call_counts_and_opportunities_per_user(calls_qs: QuerySet) -> Dict
     field_name = "sip_caller_number_with_extension"
     calls_qs = annotate_caller_number_with_extension(calls_qs)
 
+    # location / practice
+    practice_qs = calls_qs.values(field_name, "practice__name", "practice__created_at")
+
     # call totals
     call_total_qs = calls_qs.values(field_name).annotate(call_count=Count("id")).values(field_name, "call_count")
     call_missed_qs = (
@@ -236,13 +239,14 @@ def calculate_call_counts_and_opportunities_per_user(calls_qs: QuerySet) -> Dict
     )
 
     # create dataframes for crunching
+    practice_info = read_frame(practice_qs)
     call_count = read_frame(call_total_qs)
     call_missed_count = read_frame(call_missed_qs)
     call_opportunities_total_count = read_frame(opportunities_total_qs)
     call_opportunities_won_count = read_frame(opportunities_won_qs)
 
     # assemble
-    frames = [call_count, call_missed_count, call_opportunities_total_count, call_opportunities_won_count]
+    frames = [practice_info, call_count, call_missed_count, call_opportunities_total_count, call_opportunities_won_count]
     df = pd.concat(frames)
     df.fillna(0, inplace=True)  # dictionaries may not intersect, this creates non-serializable nan values, replace nan with 0 and do it in-place
 
