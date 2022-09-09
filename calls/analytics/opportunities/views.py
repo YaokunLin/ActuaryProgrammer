@@ -96,7 +96,7 @@ def get_call_counts(
     calls_qs = Call.objects.filter(filters)
 
     analytics = {
-        "calls_overall": calculate_call_counts(calls_qs),  # perform call counts
+        "calls_overall": calculate_call_counts(calls_qs, True),  # perform call counts
         "opportunities": calculate_call_count_opportunities(calls_qs, start_date_str, end_date_str),
         # TODO: PTECH-1240
         # "calls_per_user": calculate_call_counts_per_user(calls_qs),  # call counts per caller (agent) phone number

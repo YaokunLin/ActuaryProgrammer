@@ -15,6 +15,8 @@ from calls.analytics.aggregates import (
     calculate_call_counts_per_field,
     calculate_call_counts_per_field_by_date_and_hour,
     convert_count_results,
+    convert_to_call_counts_and_durations_by_hour,
+    convert_to_call_counts_and_durations_by_weekday,
     get_call_counts_and_durations_by_weekday_and_hour,
 )
 from calls.analytics.intents.field_choices import CallOutcomeTypes
@@ -73,7 +75,7 @@ class InsuranceProviderInteractionsView(views.APIView):
         response_data = {}
         if calls_qs:
             data_by_weekday_and_hour = get_call_counts_and_durations_by_weekday_and_hour(calls_qs)
-            data_by_hour = _convert_to_call_data_by_hour(data_by_weekday_and_hour)
+            data_by_hour = convert_to_call_counts_and_durations_by_hour(data_by_weekday_and_hour)
             hour_extremes = self._get_worst_and_best_hour_to_call(data_by_hour)
             best_weekday_and_hour_to_call = self._get_best_weekday_and_hour_to_call(data_by_weekday_and_hour, verbose=verbose)
             if hour_extremes:
@@ -314,8 +316,8 @@ class InsuranceProviderCallMetricsView(views.APIView):
         }
         # TODO: PTECH-1240
         # analytics["calls_by_date_and_hour"] = calculate_call_counts_by_date_and_hour(calls_qs)
-        analytics["calls_by_weekday"] = self._convert_to_call_counts_per_weekday(data_by_weekday_and_hour)
-        analytics["calls_by_hour"] = _convert_to_call_data_by_hour(data_by_weekday_and_hour)
+        analytics["calls_by_weekday"] = convert_to_call_counts_and_durations_by_weekday(data_by_weekday_and_hour)
+        analytics["calls_by_hour"] = convert_to_call_counts_and_durations_by_hour(data_by_weekday_and_hour)
         analytics["calls_by_weekday_and_hour"] = data_by_weekday_and_hour
 
         # TODO: PTECH-1240
@@ -447,10 +449,6 @@ class InsuranceProviderCallMetricsView(views.APIView):
         return {p.name: v for p, v in data_per_provider.items()}
 
     @staticmethod
-    def _convert_to_call_counts_per_weekday(data_by_weekday_and_hour: Dict) -> Dict:
-        return {k: sum(v2["call_count"] for v2 in v["per_hour"].values()) for k, v in data_by_weekday_and_hour.items()}
-
-    @staticmethod
     def _get_most_popular_weekday_and_hour(data_by_weekday_and_hour: Dict) -> Dict:
         top_day = None
         top_hour = None
@@ -469,27 +467,3 @@ class InsuranceProviderCallMetricsView(views.APIView):
             "call_count": top_day_hour_call_count,
             "average_call_duration_seconds": top_day_hour_call_count_average_duration_seconds,
         }
-
-
-def _convert_to_call_data_by_hour(data_by_weekday_and_hour: Dict) -> Dict:
-    call_count_label = "call_count"
-    total_call_duration_label = "total_call_duration_seconds"
-    average_call_duration_label = "average_call_duration_seconds"
-
-    data_by_hour = {}
-    for data_by_weekday in data_by_weekday_and_hour.values():
-        for hour, data_for_current_hour in data_by_weekday["per_hour"].items():
-            existing = data_by_hour.setdefault(
-                hour,
-                {
-                    call_count_label: 0,
-                    total_call_duration_label: timedelta(),
-                },
-            )
-            existing[call_count_label] = existing[call_count_label] + data_for_current_hour[call_count_label]
-            existing[total_call_duration_label] = existing[total_call_duration_label] + data_for_current_hour[total_call_duration_label]
-
-    for d in data_by_hour.values():
-        d[average_call_duration_label] = d[total_call_duration_label] / d[call_count_label]
-
-    return data_by_hour

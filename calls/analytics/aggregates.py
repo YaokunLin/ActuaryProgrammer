@@ -28,22 +28,50 @@ from django_pandas.io import read_frame
 
 from calls.analytics.intents.field_choices import CallOutcomeTypes, CallPurposeTypes
 from calls.analytics.participants.field_choices import NonAgentEngagementPersonaTypes
+from calls.field_choices import CallConnectionTypes
 from core.models import Practice
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
 
 
-def calculate_call_counts(calls_qs: QuerySet) -> Dict:
+def calculate_call_counts(calls_qs: QuerySet, include_by_weekday_breakdown: bool = False) -> Dict:
+    connected_filter = Q(call_connection=CallConnectionTypes.CONNECTED.value)
+    answered_filters = connected_filter & Q(went_to_voicemail=False)
+    went_to_voicemail_filter = Q(went_to_voicemail=True)
+    missed_filter = Q(call_connection=CallConnectionTypes.MISSED.value)
+
     # get call counts
     analytics = dict(
         calls_qs.aggregate(
             call_total=Count("id"),
-            call_connected_total=Count("call_connection", filter=Q(call_connection="connected")),
+            call_connected_total=Count("call_connection", filter=connected_filter),
             call_seconds_total=Sum("duration_seconds"),
             call_seconds_average=Avg("duration_seconds"),
+            call_answered_total=Count("id", filter=answered_filters),
+            call_voicemail_total=Count("id", filter=went_to_voicemail_filter),
+            call_missed_total=Count("id", filter=missed_filter),
         )
     )
+
+    if include_by_weekday_breakdown:
+        analytics["calls_by_weekday"] = {
+            "call_total": convert_to_call_counts_only(
+                convert_to_call_counts_and_durations_by_weekday(get_call_counts_and_durations_by_weekday_and_hour(calls_qs))
+            ),
+            "call_connected_total": convert_to_call_counts_only(
+                convert_to_call_counts_and_durations_by_weekday(get_call_counts_and_durations_by_weekday_and_hour(calls_qs.filter(connected_filter)))
+            ),
+            "call_answered_total": convert_to_call_counts_only(
+                convert_to_call_counts_and_durations_by_weekday(get_call_counts_and_durations_by_weekday_and_hour(calls_qs.filter(answered_filters)))
+            ),
+            "call_voicemail_total": convert_to_call_counts_only(
+                convert_to_call_counts_and_durations_by_weekday(get_call_counts_and_durations_by_weekday_and_hour(calls_qs.filter(went_to_voicemail_filter)))
+            ),
+            "call_missed_total": convert_to_call_counts_only(
+                convert_to_call_counts_and_durations_by_weekday(get_call_counts_and_durations_by_weekday_and_hour(calls_qs.filter(missed_filter)))
+            ),
+        }
 
     analytics["call_sentiment_counts"] = calculate_call_sentiments(calls_qs)
     return analytics
@@ -404,8 +432,8 @@ def get_call_counts_and_durations_by_weekday_and_hour(calls_qs: QuerySet) -> Dic
     }
     call_date_hour_label = "call_date_hour"
     call_count_label = "call_count"
-    call_duration_label = "total_call_duration_seconds"
-    hold_duration_label = "total_hold_duration_seconds"
+    total_call_duration_label = "total_call_duration_seconds"
+    total_hold_duration_label = "total_hold_duration_seconds"
     average_call_duration_label = "average_call_duration_seconds"
     average_hold_duration_label = "average_hold_duration_seconds"
     efficiency_label = "efficiency"
@@ -441,18 +469,91 @@ def get_call_counts_and_durations_by_weekday_and_hour(calls_qs: QuerySet) -> Dic
         existing_data = data_by_weekday_and_hour[weekday][per_hour_label].get(hour, {})
         data_by_weekday_and_hour[weekday][per_hour_label][hour] = {
             call_count_label: existing_data.get(call_count_label, 0) + data_for_hour[call_count_label],
-            call_duration_label: existing_data.get(call_duration_label, timedelta()) + data_for_hour[call_duration_label],
-            hold_duration_label: existing_data.get(hold_duration_label, timedelta()) + data_for_hour[hold_duration_label],
+            total_call_duration_label: existing_data.get(total_call_duration_label, timedelta()) + data_for_hour[total_call_duration_label],
+            total_hold_duration_label: existing_data.get(total_hold_duration_label, timedelta()) + data_for_hour[total_hold_duration_label],
         }
 
     for data_for_weekday in data_by_weekday_and_hour.values():
         for hour, data_for_hour in data_for_weekday[per_hour_label].items():
             # Per hour, calculate efficiency, average call duration and average hold duration
-            data_for_hour[efficiency_label] = data_for_hour[call_count_label] / data_for_hour[call_duration_label].total_seconds()
-            data_for_hour[average_call_duration_label] = data_for_hour[call_duration_label].total_seconds() / data_for_hour[call_count_label]
-            data_for_hour[average_hold_duration_label] = data_for_hour[hold_duration_label].total_seconds() / data_for_hour[call_count_label]
+            data_for_hour[efficiency_label] = data_for_hour[call_count_label] / data_for_hour[total_call_duration_label].total_seconds()
+            data_for_hour[average_call_duration_label] = data_for_hour[total_call_duration_label].total_seconds() / data_for_hour[call_count_label]
+            data_for_hour[average_hold_duration_label] = data_for_hour[total_hold_duration_label].total_seconds() / data_for_hour[call_count_label]
+
+        for i in range(1, 24):
+            if i not in data_for_weekday[per_hour_label]:
+                data_for_weekday[per_hour_label][i] = {
+                    call_count_label: 0,
+                    total_call_duration_label: timedelta(),
+                    total_hold_duration_label: timedelta(),
+                    average_call_duration_label: timedelta(),
+                    average_hold_duration_label: timedelta(),
+                }
 
     return data_by_weekday_and_hour
+
+
+def convert_to_call_counts_and_durations_by_weekday(call_counts_and_durations_by_weekday_and_hour: Dict) -> Dict:
+    call_count_label = "call_count"
+    total_call_duration_label = "total_call_duration_seconds"
+    average_call_duration_label = "average_call_duration_seconds"
+
+    data_by_weekday = {}
+    for weekday, data_for_current_weekday in call_counts_and_durations_by_weekday_and_hour.items():
+        for data_for_current_hour in data_for_current_weekday["per_hour"].values():
+            data = data_by_weekday.setdefault(
+                weekday,
+                {
+                    call_count_label: 0,
+                    total_call_duration_label: timedelta(),
+                },
+            )
+            data[call_count_label] = data[call_count_label] + data_for_current_hour[call_count_label]
+            data[total_call_duration_label] = data[total_call_duration_label] + data_for_current_hour[total_call_duration_label]
+
+    for d in data_by_weekday.values():
+        call_count = d[call_count_label]
+        if call_count:
+            d[average_call_duration_label] = d[total_call_duration_label] / call_count
+        else:
+            d[average_call_duration_label] = 0
+
+    return data_by_weekday
+
+
+def convert_to_call_counts_and_durations_by_hour(call_counts_and_durations_by_weekday_and_hour: Dict) -> Dict:
+    call_count_label = "call_count"
+    total_call_duration_label = "total_call_duration_seconds"
+    average_call_duration_label = "average_call_duration_seconds"
+
+    data_by_hour = {}
+    for data_for_current_weekday in call_counts_and_durations_by_weekday_and_hour.values():
+        for hour, data_for_current_hour in data_for_current_weekday["per_hour"].items():
+            data = data_by_hour.setdefault(
+                hour,
+                {
+                    call_count_label: 0,
+                    total_call_duration_label: timedelta(),
+                },
+            )
+            data[call_count_label] = data[call_count_label] + data_for_current_hour[call_count_label]
+            data[total_call_duration_label] = data[total_call_duration_label] + data_for_current_hour[total_call_duration_label]
+
+    for d in data_by_hour.values():
+        call_count = d[call_count_label]
+        if call_count:
+            d[average_call_duration_label] = d[total_call_duration_label] / call_count
+        else:
+            d[average_call_duration_label] = 0
+
+    return data_by_hour
+
+
+def convert_to_call_counts_only(call_counts_and_durations: Dict) -> Dict:
+    """
+    Convert data by hour or data by weekday to only contain call counts
+    """
+    return {k: v["call_count"] for k, v in call_counts_and_durations.items()}
 
 
 def calculate_zero_filled_call_counts_by_day(calls_qs: QuerySet, start_date: str, end_date: str) -> List[Dict]:
