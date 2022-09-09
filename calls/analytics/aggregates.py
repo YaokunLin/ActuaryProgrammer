@@ -250,8 +250,7 @@ def calculate_call_counts_and_opportunities_per_user(calls_qs: QuerySet) -> Dict
     df.fillna(0, inplace=True)
     df["opportunities_open_count"] = df["opportunities_total_count"] - df["opportunities_won_count"]
 
-    log.info(df.to_dict(orient="records"))
-    return df.to_dict(orient="records")  # read_frame(calls_qs).to_dict(orient="records")
+    return df.to_dict(orient="records")
 
 
 def calculate_call_counts_per_user(calls_qs: QuerySet) -> Dict:
