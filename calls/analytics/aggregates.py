@@ -78,12 +78,18 @@ def calculate_call_count_opportunities(calls_qs: QuerySet, start_date_str: str, 
         "existing": opportunities_won_existing_patient_qs.count(),
         "new": opportunities_won_new_patient_qs.count(),
     }
+    won_by_day_total = calculate_zero_filled_call_counts_by_day(opportunities_won_total_qs, start_date_str, end_date_str)
+    won_by_day_existing_patient = calculate_zero_filled_call_counts_by_day(opportunities_won_existing_patient_qs, start_date_str, end_date_str)
+    won_by_day_new_patient = calculate_zero_filled_call_counts_by_day(opportunities_won_new_patient_qs, start_date_str, end_date_str)
     opportunities["won_by_week"] = {
-        "total": convert_call_counts_to_by_week(calculate_zero_filled_call_counts_by_day(opportunities_won_total_qs, start_date_str, end_date_str)),
-        "existing": convert_call_counts_to_by_week(
-            calculate_zero_filled_call_counts_by_day(opportunities_won_existing_patient_qs, start_date_str, end_date_str)
-        ),
-        "new": convert_call_counts_to_by_week(calculate_zero_filled_call_counts_by_day(opportunities_won_new_patient_qs, start_date_str, end_date_str)),
+        "total": convert_call_counts_to_by_week(won_by_day_total),
+        "existing": convert_call_counts_to_by_week(won_by_day_existing_patient),
+        "new": convert_call_counts_to_by_week(won_by_day_new_patient),
+    }
+    opportunities["won_by_month"] = {
+        "total": convert_call_counts_to_by_month(won_by_day_total),
+        "existing": convert_call_counts_to_by_month(won_by_day_existing_patient),
+        "new": convert_call_counts_to_by_month(won_by_day_new_patient),
     }
 
     opportunities["lost"] = {
@@ -91,12 +97,18 @@ def calculate_call_count_opportunities(calls_qs: QuerySet, start_date_str: str, 
         "existing": opportunities_lost_existing_patient_qs.count(),
         "new": opportunities_lost_new_patient_qs.count(),
     }
+    lost_by_day_total = calculate_zero_filled_call_counts_by_day(opportunities_lost_total_qs, start_date_str, end_date_str)
+    lost_by_day_existing_patient = calculate_zero_filled_call_counts_by_day(opportunities_lost_existing_patient_qs, start_date_str, end_date_str)
+    lost_by_day_new_patient = calculate_zero_filled_call_counts_by_day(opportunities_lost_new_patient_qs, start_date_str, end_date_str)
     opportunities["lost_by_week"] = {
-        "total": convert_call_counts_to_by_week(calculate_zero_filled_call_counts_by_day(opportunities_lost_total_qs, start_date_str, end_date_str)),
-        "existing": convert_call_counts_to_by_week(
-            calculate_zero_filled_call_counts_by_day(opportunities_lost_existing_patient_qs, start_date_str, end_date_str)
-        ),
-        "new": convert_call_counts_to_by_week(calculate_zero_filled_call_counts_by_day(opportunities_lost_new_patient_qs, start_date_str, end_date_str)),
+        "total": convert_call_counts_to_by_week(lost_by_day_total),
+        "existing": convert_call_counts_to_by_week(lost_by_day_existing_patient),
+        "new": convert_call_counts_to_by_week(lost_by_day_new_patient),
+    }
+    opportunities["lost_by_month"] = {
+        "total": convert_call_counts_to_by_month(lost_by_day_total),
+        "existing": convert_call_counts_to_by_month(lost_by_day_existing_patient),
+        "new": convert_call_counts_to_by_month(lost_by_day_new_patient),
     }
 
     return opportunities
@@ -456,9 +468,9 @@ def calculate_zero_filled_call_counts_by_day(calls_qs: QuerySet, start_date: str
     return data
 
 
-def convert_call_counts_to_by_week(data: List[Dict]) -> List[Dict]:
+def convert_call_counts_to_by_week(data_by_day: List[Dict]) -> List[Dict]:
     date_format = "%Y-%m-%d"
-    if not data:
+    if not data_by_day:
         return []
 
     # https://pandas.pydata.org/docs/user_guide/timeseries.html#anchored-offsets
@@ -472,8 +484,8 @@ def convert_call_counts_to_by_week(data: List[Dict]) -> List[Dict]:
         6: "SUN",
     }
 
-    day_of_week = datetime.datetime.strptime(data[0]["date"], date_format).weekday()
-    df = pd.DataFrame(data)
+    day_of_week = datetime.datetime.strptime(data_by_day[0]["date"], date_format).weekday()
+    df = pd.DataFrame(data_by_day)
     df["date"] = df["date"].astype("datetime64[ns]")
 
     weekly_data = df.resample(f"W-{day_of_week_mapping[day_of_week]}", label="left", closed="left", on="date").sum().reset_index().sort_values(by="date")
@@ -481,3 +493,18 @@ def convert_call_counts_to_by_week(data: List[Dict]) -> List[Dict]:
     for i in weekly_data:
         i["date"] = i["date"].strftime(date_format)
     return weekly_data
+
+
+def convert_call_counts_to_by_month(data_by_day: List[Dict]) -> List[Dict]:
+    date_format = "%Y-%m-%d"
+    if not data_by_day:
+        return []
+
+    df = pd.DataFrame(data_by_day)
+    df["date"] = df["date"].astype("datetime64[ns]")
+
+    monthly_data = df.resample("MS", on="date").sum().reset_index().sort_values(by="date")
+    monthly_data = monthly_data.to_dict("records")
+    for i in monthly_data:
+        i["date"] = i["date"].strftime(date_format)
+    return monthly_data
