@@ -160,7 +160,7 @@ class OpportunitiesPerUserView(views.APIView):
         calls_qs = Call.objects.filter(filters)
 
         aggregates = {
-            "calls_per_user": calculate_call_counts_and_opportunities_per_user(calls_qs),  # call counts per caller (agent) phone number
+            "agent": calculate_call_counts_and_opportunities_per_user(calls_qs),  # call counts per caller (agent) phone number
         }
 
         display_filters = {
