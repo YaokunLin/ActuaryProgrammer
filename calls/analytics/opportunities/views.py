@@ -1,10 +1,7 @@
 import logging
 from typing import Any, Dict, List, Optional
 
-import pandas as pd
-from django.db.models import Count, Q, QuerySet
-from django.db.models.functions import TruncDate
-from django_pandas.io import read_frame
+from django.db.models import Q, QuerySet
 from rest_framework import status, views
 from rest_framework.response import Response
 
@@ -12,9 +9,6 @@ from calls.analytics.aggregates import (
     calculate_call_count_opportunities,
     calculate_call_counts,
     calculate_call_counts_and_opportunities_per_user,
-    calculate_call_counts_per_user,
-    calculate_call_counts_per_user_by_date_and_hour,
-    calculate_call_non_agent_engagement_type_counts,
     calculate_zero_filled_call_counts_by_day,
     convert_call_counts_to_by_week,
 )
