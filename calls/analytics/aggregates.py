@@ -212,7 +212,7 @@ def calculate_call_counts_and_opportunities_per_user(calls_qs: QuerySet) -> Dict
 
     # get distinct sip_caller_number_with_extensions first to form the basis of our return and subsequent joins, includes location / practice
     user_and_practice_qs = calls_qs.distinct(field_name).values(
-        field_name, "sip_caller_number", "sip_caller_extension", "practice__name", "practice__created_at"
+        field_name, "sip_caller_number", "sip_caller_extension", "practice__name", "practice__address_us_state", "practice__created_at"
     )
 
     # call totals
