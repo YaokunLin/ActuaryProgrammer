@@ -156,7 +156,7 @@ class OpportunitiesPerUserView(views.APIView):
         call_start_time__lte = dates[1]
         dates_filter = {"call_start_time__gte": call_start_time__gte, "call_start_time__lte": call_start_time__lte}
 
-        filters = Q(**dates_filter) & Q(**practice_filter)
+        filters = Q(**dates_filter) & Q(**practice_filter) & Q(call_direction=CallDirectionTypes.INBOUND)
         calls_qs = Call.objects.filter(filters)
 
         aggregates = {
