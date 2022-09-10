@@ -1,5 +1,7 @@
 Django>=3.0
 argon2-cffi==16.1.0
+# TODO: If still using reqs.txt once we are on Python 3.9+, tzinfo is builtin
+backports.zoneinfo==0.2.1
 boto3==1.24.9
 celery==5.0.2
 cryptography>=35.0.0
@@ -9,6 +11,7 @@ django-countries==7.2.1
 django-extensions==3.0.5
 django-filter==2.3.0
 django-fixture-magic==0.1.5
+django-localflavor==3.1
 django-oauth-toolkit==2.0.0
 django-pandas==0.6.6
 django-phonenumber-field[phonenumbers]==5.2.0

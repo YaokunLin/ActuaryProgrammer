@@ -5,10 +5,10 @@ from django.contrib.auth.models import (
     _user_has_module_perms,
     _user_has_perm,
 )
-from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django_extensions.db.fields import ShortUUIDField
+from localflavor.us.models import USStateField
 from phonenumber_field.modelfields import PhoneNumberField
 
 from core.abstract_models import AuditTrailModel
@@ -120,6 +120,8 @@ class Practice(AuditTrailModel):
         null=True, blank=False, default=False
     )  # practices are active or inactive based upon whether we've approved their submission and whether they're paid up
 
+    address_us_state = USStateField(blank=True, default="AZ")  # yes, it's a char field behind the scenes
+
     practice_group = models.ForeignKey("PracticeGroup", null=True, blank=True, on_delete=models.SET_NULL)
 
     objects = PracticeManager()
@@ -204,7 +206,7 @@ class UserPatient(AuditTrailModel):
 
 class InsuranceProvider(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
-    name = models.CharField(blank=True, max_length=255)
+    name = models.CharField(blank=True, max_length=255, unique=True)
 
 
 class InsuranceProviderPhoneNumber(AuditTrailModel):

@@ -23,6 +23,7 @@ class CallsFilter(filters.FilterSet):
             "call_purposes__outcome_results__outcome_reason_results__call_outcome_reason_type": ["exact"],
             "call_sentiments__overall_sentiment_score": ["exact"],
             "mentioned_procedures__keyword": ["exact"],
+            "sip_caller_extension": ["exact"],
         }
 
 
