@@ -45,16 +45,11 @@ class CallSerializer(serializers.ModelSerializer):
     call_purposes = serializers.SerializerMethodField()  # Includes outcome and outcome reasons
 
     # mentioned, inline
-    mentioned_companies = InlineCallMentionedCompanySerializer(many=True, read_only=True)
-    mentioned_companies_distinct = serializers.SerializerMethodField()
-    mentioned_insurances = InlineCallMentionedInsuranceSerializer(many=True, read_only=True)
-    mentioned_insurances_distinct = serializers.SerializerMethodField()
-    mentioned_procedures = InlineCallMentionedProcedureSerializer(many=True, read_only=True)
-    mentioned_procedures_distinct = serializers.SerializerMethodField()
-    mentioned_products = InlineCallMentionedProductSerializer(many=True, read_only=True)
-    mentioned_products_distinct = serializers.SerializerMethodField()
-    mentioned_symptoms = InlineCallMentionedSymptomSerializer(many=True, read_only=True)
-    mentioned_symptoms_distinct = serializers.SerializerMethodField()
+    mentioned_companies = serializers.SerializerMethodField()
+    mentioned_insurances = serializers.SerializerMethodField()
+    mentioned_procedures = serializers.SerializerMethodField()
+    mentioned_products = serializers.SerializerMethodField()
+    mentioned_symptoms = serializers.SerializerMethodField()
 
     call_sentiments = InlineCallSentimentSerializer(many=True, read_only=True)
 
@@ -67,23 +62,23 @@ class CallSerializer(serializers.ModelSerializer):
         distinct_purposes_qs = call.call_purposes.distinct("call_purpose_type")
         return InlineCallPurposeSerializer(distinct_purposes_qs, many=True).data
 
-    def get_mentioned_companies_distinct(self, call: Call):
+    def get_mentioned_companies(self, call: Call):
         distinct_keyword_qs = call.mentioned_companies.distinct("keyword")
         return InlineCallMentionedCompanySerializer(distinct_keyword_qs, many=True).data
 
-    def get_mentioned_insurances_distinct(self, call: Call):
+    def get_mentioned_insurances(self, call: Call):
         distinct_keyword_qs = call.mentioned_insurances.distinct("keyword")
         return InlineCallMentionedInsuranceSerializer(distinct_keyword_qs, many=True).data
 
-    def get_mentioned_procedures_distinct(self, call: Call):
+    def get_mentioned_procedures(self, call: Call):
         distinct_keyword_qs = call.mentioned_procedures.distinct("keyword")
         return InlineCallMentionedProcedureSerializer(distinct_keyword_qs, many=True).data
 
-    def get_mentioned_products_distinct(self, call: Call):
+    def get_mentioned_products(self, call: Call):
         distinct_keyword_qs = call.mentioned_products.distinct("keyword")
         return InlineCallMentionedProductSerializer(distinct_keyword_qs, many=True).data
 
-    def get_mentioned_symptoms_distinct(self, call: Call):
+    def get_mentioned_symptoms(self, call: Call):
         distinct_keyword_qs = call.mentioned_symptoms.distinct("keyword")
         return InlineCallMentionedSymptomSerializer(distinct_keyword_qs, many=True).data
 
