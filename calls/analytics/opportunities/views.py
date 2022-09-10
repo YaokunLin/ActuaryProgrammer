@@ -146,9 +146,10 @@ class OpportunitiesPerUserView(views.APIView):
         if valid_practice_id:
             practice_filter = {"practice__id": valid_practice_id}
 
-        practice_group_filter = {}
-        if valid_practice_group_id:
-            practice_group_filter = {"practice__practice_group__id": valid_practice_group_id}
+        # TODO: PTECH-1240
+        # practice_group_filter = {}
+        # if valid_practice_group_id:
+        #     practice_group_filter = {"practice__practice_group__id": valid_practice_group_id}
 
         # date filters
         dates = dates_info.get("dates")
