@@ -1,3 +1,4 @@
+import localflavor.us.us_states
 from django.contrib.auth.models import (
     AbstractUser,
     Permission,
@@ -9,6 +10,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django_extensions.db.fields import ShortUUIDField
+from localflavor.us.models import USStateField
 from phonenumber_field.modelfields import PhoneNumberField
 
 from core.abstract_models import AuditTrailModel
@@ -120,6 +122,7 @@ class Practice(AuditTrailModel):
         null=True, blank=False, default=False
     )  # practices are active or inactive based upon whether we've approved their submission and whether they're paid up
 
+    address_us_state = USStateField(blank=True, default="AZ")  # yes, it's a char field behind the scenes
     practice_group = models.ForeignKey("PracticeGroup", null=True, blank=True, on_delete=models.SET_NULL)
 
     objects = PracticeManager()

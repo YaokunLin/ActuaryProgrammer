@@ -404,6 +404,18 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "django-localflavor"
+version = "3.1"
+description = "Country-specific Django helpers"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+django = ">=2.2"
+python-stdnum = ">=1.6"
+
+[[package]]
 name = "django-oauth-toolkit"
 version = "2.0.0"
 description = "OAuth2 Provider for Django"
@@ -1328,6 +1340,19 @@ python-versions = "*"
 cli = ["click (>=5.0)"]
 
 [[package]]
+name = "python-stdnum"
+version = "1.17"
+description = "Python module to handle standardized numbers and codes"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.extras]
+soap = ["zeep"]
+soap-alt = ["suds"]
+soap-fallback = ["pysimplesoap"]
+
+[[package]]
 name = "pytz"
 version = "2022.2.1"
 description = "World timezone definitions, modern and historical"
@@ -1580,7 +1605,7 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.9"
-content-hash = "3f083ba5f3a8df7c5345f58b8e9d8ab3947a9234cdf2c5fb0160c2796b57cd35"
+content-hash = "b151959b7ab23c2009b06a0013155db5f192f5ff9b1fe40c5ec16b5f416df277"
 
 [metadata.files]
 amqp = [
@@ -1831,6 +1856,10 @@ django-filter = [
 django-fixture-magic = [
     {file = "django-fixture-magic-0.1.5.tar.gz", hash = "sha256:d82a4d4f6ade078e942927b5157f0536d0cd0232adfeb943dced0858128dd734"},
     {file = "django_fixture_magic-0.1.5-py2-none-any.whl", hash = "sha256:c50f3de4a46a5844e2c1e2a9ff88b29db0830da8383e43d5ef6a66f1c4bfd8af"},
+]
+django-localflavor = [
+    {file = "django-localflavor-3.1.tar.gz", hash = "sha256:ac2fa377bbcba4cae95e97077d9e77c7f22b3d93e4845e2e133ba7e664043a44"},
+    {file = "django_localflavor-3.1-py3-none-any.whl", hash = "sha256:6593865dc671333b3edc88e729e6d384d00b6db7891ef5d3a65db831a40050d2"},
 ]
 django-oauth-toolkit = [
     {file = "django-oauth-toolkit-2.0.0.tar.gz", hash = "sha256:755df741b9e1cce4d9b651453c54a4338b23919cefa55ad40d37c797e508e192"},
@@ -2414,6 +2443,10 @@ python-dateutil = [
 python-dotenv = [
     {file = "python-dotenv-0.15.0.tar.gz", hash = "sha256:587825ed60b1711daea4832cf37524dfd404325b7db5e25ebe88c495c9f807a0"},
     {file = "python_dotenv-0.15.0-py2.py3-none-any.whl", hash = "sha256:0c8d1b80d1a1e91717ea7d526178e3882732420b03f08afea0406db6402e220e"},
+]
+python-stdnum = [
+    {file = "python-stdnum-1.17.tar.gz", hash = "sha256:374e2b5e13912ccdbf50b0b23fca2c3e0531174805c32d74e145f37756328340"},
+    {file = "python_stdnum-1.17-py2.py3-none-any.whl", hash = "sha256:a46e6cf9652807314d369b654b255c86a59f93d18be2834f3d567ed1a346c547"},
 ]
 pytz = [
     {file = "pytz-2022.2.1-py2.py3-none-any.whl", hash = "sha256:220f481bdafa09c3955dfbdddb7b57780e9a94f5127e35456a48589b9e0c0197"},
