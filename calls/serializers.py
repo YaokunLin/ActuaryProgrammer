@@ -3,17 +3,7 @@ import logging
 from django_countries.serializers import CountryFieldMixin
 from rest_framework import serializers
 
-from .models import (
-    Call,
-    CallAudio,
-    CallAudioPartial,
-    CallLabel,
-    CallNote,
-    CallPartial,
-    CallTranscript,
-    CallTranscriptPartial,
-    TelecomCallerNameInfo,
-)
+from calls.analytics.participants.serializers import AgentAssignedCallSerializer
 from calls.inline_serializers import (
     InlineAgentEngagedWithSerializer,
     InlineCallMentionedCompanySerializer,
@@ -24,8 +14,17 @@ from calls.inline_serializers import (
     InlineCallPurposeSerializer,
     InlineCallSentimentSerializer,
 )
-from calls.analytics.participants.serializers import (
-    AgentAssignedCallSerializer,
+
+from .models import (
+    Call,
+    CallAudio,
+    CallAudioPartial,
+    CallLabel,
+    CallNote,
+    CallPartial,
+    CallTranscript,
+    CallTranscriptPartial,
+    TelecomCallerNameInfo,
 )
 
 # Get an instance of a logger
@@ -42,8 +41,8 @@ class CallSerializer(serializers.ModelSerializer):
     # TODO: fix both urls (LISTEN)
     latest_audio_signed_url = serializers.CharField(allow_null=True, required=False)
     latest_transcript_signed_url = serializers.CharField(allow_null=True, required=False)
-    # TODO: fix multiple call_purposes with same type value
-    call_purposes = InlineCallPurposeSerializer(many=True, read_only=True)
+
+    call_purposes = serializers.SerializerMethodField()
     # Include outcome and outcome reasons
 
     # mentioned, inline
@@ -60,6 +59,10 @@ class CallSerializer(serializers.ModelSerializer):
 
     domain = serializers.CharField(required=False)  # TODO: deprecate
 
+    def get_call_purposes(self, call: Call):
+        distinct_purposes_qs = call.call_purposes.distinct("call_purpose_type")
+        return InlineCallPurposeSerializer(distinct_purposes_qs, many=True).data
+
     class Meta:
         model = Call
         fields = "__all__"
@@ -67,16 +70,13 @@ class CallSerializer(serializers.ModelSerializer):
 
 
 class CallNestedRouterBaseWriteSerializerMixin(object):
-
     def create(self, validated_data):
         call = Call.objects.get(pk=self.context["view"].kwargs["call_pk"])
         validated_data["call"] = call
         return self.Meta.model.objects.create(**validated_data)
 
 
-
 class CallNoteReadSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = CallNote
         fields = "__all__"
@@ -84,7 +84,6 @@ class CallNoteReadSerializer(serializers.ModelSerializer):
 
 
 class CallNoteWriteSerializer(serializers.ModelSerializer):
-
     def create(self, validated_data):
         call = Call.objects.get(pk=self.context["view"].kwargs["call_pk"])
         validated_data["call"] = call
@@ -98,14 +97,24 @@ class CallNoteWriteSerializer(serializers.ModelSerializer):
 
 class CallTranscriptSerializer(serializers.ModelSerializer):
     signed_url = serializers.CharField(required=False)
-    
 
     class Meta:
         model = CallTranscript
         fields = [
-            "id", "call", "publish_event_on_patch", "mime_type", "transcript_type", "transcript_text", "speech_to_text_model_type",
-            "raw_call_transcript_model_run_id", "call_transcript_model_run", "created_by", "created_at", "modified_by", "modified_at",
-            "signed_url"
+            "id",
+            "call",
+            "publish_event_on_patch",
+            "mime_type",
+            "transcript_type",
+            "transcript_text",
+            "speech_to_text_model_type",
+            "raw_call_transcript_model_run_id",
+            "call_transcript_model_run",
+            "created_by",
+            "created_at",
+            "modified_by",
+            "modified_at",
+            "signed_url",
         ]
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "signed_url"]
 
