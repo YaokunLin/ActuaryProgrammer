@@ -42,11 +42,11 @@ class CallSerializer(serializers.ModelSerializer):
     latest_audio_signed_url = serializers.CharField(allow_null=True, required=False)
     latest_transcript_signed_url = serializers.CharField(allow_null=True, required=False)
 
-    call_purposes = serializers.SerializerMethodField()
-    # Include outcome and outcome reasons
+    call_purposes = serializers.SerializerMethodField()  # Includes outcome and outcome reasons
 
     # mentioned, inline
     mentioned_companies = InlineCallMentionedCompanySerializer(many=True, read_only=True)
+    mentioned_companies_distinct = serializers.SerializerMethodField()
     mentioned_insurances = InlineCallMentionedInsuranceSerializer(many=True, read_only=True)
     mentioned_procedures = InlineCallMentionedProcedureSerializer(many=True, read_only=True)
     mentioned_products = InlineCallMentionedProductSerializer(many=True, read_only=True)
@@ -62,6 +62,10 @@ class CallSerializer(serializers.ModelSerializer):
     def get_call_purposes(self, call: Call):
         distinct_purposes_qs = call.call_purposes.distinct("call_purpose_type")
         return InlineCallPurposeSerializer(distinct_purposes_qs, many=True).data
+
+    def get_mentioned_companies_distinct(self, call: Call):
+        distinct_purposes_qs = call.mentioned_companies.distinct("keyword")
+        return InlineCallMentionedCompanySerializer(distinct_purposes_qs, many=True).data
 
     class Meta:
         model = Call
