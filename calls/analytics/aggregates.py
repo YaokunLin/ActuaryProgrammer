@@ -210,8 +210,10 @@ def calculate_call_counts_and_opportunities_per_user(calls_qs: QuerySet) -> Dict
     field_name = "sip_caller_number_with_extension"
     calls_qs = annotate_caller_number_with_extension(calls_qs)
 
-    # location / practice
-    user_and_practice_qs = calls_qs.values(field_name, "sip_caller_number", "sip_caller_extension", "practice__name", "practice__created_at")
+    # get distinct sip_caller_number_with_extensions first to form the basis of our return and subsequent joins, includes location / practice
+    user_and_practice_qs = calls_qs.distinct(field_name).values(
+        field_name, "sip_caller_number", "sip_caller_extension", "practice__name", "practice__created_at"
+    )
 
     # call totals
     call_total_qs = calls_qs.values(field_name).annotate(call_count=Count("id")).values(field_name, "call_count")
@@ -233,6 +235,7 @@ def calculate_call_counts_and_opportunities_per_user(calls_qs: QuerySet) -> Dict
     )
     opportunities_won_qs = (
         calls_qs.filter(new_appointment_filter & won_filter & (existing_patient_filter | new_patient_filter))
+        .values(field_name)
         .annotate(opportunities_won_count=Count("id"))
         .values(field_name, "opportunities_won_count")
     )
@@ -240,19 +243,15 @@ def calculate_call_counts_and_opportunities_per_user(calls_qs: QuerySet) -> Dict
     # create dataframes for crunching
     user_and_practice_info = read_frame(user_and_practice_qs)
     call_count = read_frame(call_total_qs)
-    call_count.set_index("sip_caller_number_with_extension")
     call_missed_count = read_frame(call_missed_qs)
-    call_missed_count.set_index("sip_caller_number_with_extension")
     call_opportunities_total_count = read_frame(opportunities_total_qs)
-    call_opportunities_total_count.set_index("sip_caller_number_with_extension")
     call_opportunities_won_count = read_frame(opportunities_won_qs)
-    call_opportunities_won_count.set_index("sip_caller_number_with_extension")
 
     # assemble
     frame_to_return = user_and_practice_info
-    frames_to_join = [call_count, call_missed_count, call_opportunities_total_count, call_opportunities_won_count]  # , ]
+    frames_to_join = [call_count, call_missed_count, call_opportunities_total_count, call_opportunities_won_count]
     for frame in frames_to_join:
-        frame_to_return = frame_to_return.merge(frame, how="outer", on=field_name)
+        frame_to_return = frame_to_return.merge(frame, how="left", on=field_name)  # merges are a sql-like join. retain left-most rows, always
 
     frame_to_return.fillna(0, inplace=True)  # dictionaries may not intersect, this creates non-serializable nan values, replace nan with 0 and do it in-place
 
