@@ -236,9 +236,12 @@ class NewPatientOpportunitiesView(views.APIView):
         aggregates["new_patient_opportunities_lost_total"] = new_patient_opportunities_lost_qs.count()
 
         # conversion
-        aggregates["new_patient_opportunities_conversion_rate_total"] = (
-            aggregates["new_patient_opportunities_won_total"] / aggregates["new_patient_opportunities_total"]
-        )
+        if aggregates["new_patient_opportunities_total"] == 0:  # check for divide by zer0
+            aggregates["new_patient_opportunities_conversion_rate_total"] = 0
+        else:
+            aggregates["new_patient_opportunities_conversion_rate_total"] = (
+                aggregates["new_patient_opportunities_won_total"] / aggregates["new_patient_opportunities_total"]
+            )
 
         # TODO: PTECH-1240
         if practice_group_filter:
