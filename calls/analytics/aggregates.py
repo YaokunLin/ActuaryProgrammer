@@ -197,22 +197,48 @@ def annotate_caller_number_with_extension(calls_qs: QuerySet) -> QuerySet:
     If extension is not blank, the value will be {sip_caller_number}x{sip_caller_extension}
     Else, the value will be {sip_caller_number}
     """
-    return calls_qs.annotate(
-        sip_caller_number_with_extension=Case(
-            When(sip_caller_extension__exact="", then=F("sip_caller_number")),
-            default=Concat("sip_caller_number", Value("x"), "sip_caller_extension", output_field=CharField()),
+    annotation = _get_annotation_for_phone_number_with_extension("sip_caller")
+    return calls_qs.annotate(**annotation)
+
+
+def annotate_callee_number_with_extension(calls_qs: QuerySet) -> QuerySet:
+    """
+    Annotates a field "sip_callee_number_with_extension"
+    If extension is not blank, the value will be {sip_callee_number}x{sip_callee_extension}
+    Else, the value will be {sip_callee_number}
+    """
+    annotation = _get_annotation_for_phone_number_with_extension("sip_callee")
+    return calls_qs.annotate(**annotation)
+
+
+def _get_annotation_for_phone_number_with_extension(root_phone_number_field: str) -> Dict:
+    extension_field_name = f"{root_phone_number_field}_extension"
+    phone_number_field_name = f"{root_phone_number_field}_number"
+    phone_with_extension_field_name = f"{phone_number_field_name}_with_extension"
+
+    extension_blank_filter = Q(**{extension_field_name: ""})
+    annotation = {
+        phone_with_extension_field_name: Case(
+            When(extension_blank_filter, then=F(phone_number_field_name)),
+            default=Concat(phone_number_field_name, Value("x"), extension_field_name, output_field=CharField()),
             output_field=CharField(),
         )
-    )
+    }
+
+    return annotation
 
 
 def calculate_call_counts_and_opportunities_per_user(calls_qs: QuerySet) -> Dict:
-    field_name = "sip_caller_number_with_extension"
-    calls_qs = annotate_caller_number_with_extension(calls_qs)
+    # set field_name for all calculations
+    phone_with_extension_field_name = "sip_callee_number_with_extension"
+    field_name = phone_with_extension_field_name
+
+    # root annotated queryset for all subsequent calculations
+    calls_qs = annotate_callee_number_with_extension(calls_qs)
 
     # get distinct sip_caller_number_with_extensions first to form the basis of our return and subsequent joins, includes location / practice
     user_and_practice_qs = calls_qs.distinct(field_name).values(
-        field_name, "sip_caller_number", "sip_caller_extension", "practice__name", "practice__address_us_state", "practice__created_at"
+        field_name, "sip_callee_number", "sip_callee_extension", "practice__name", "practice__address_us_state", "practice__created_at"
     )
 
     # call totals
