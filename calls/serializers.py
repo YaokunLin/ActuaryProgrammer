@@ -2,6 +2,7 @@ import logging
 
 from django_countries.serializers import CountryFieldMixin
 from rest_framework import serializers
+from rest_framework.utils.serializer_helpers import ReturnDict
 
 from calls.analytics.participants.serializers import AgentAssignedCallSerializer
 from calls.inline_serializers import (
@@ -32,8 +33,7 @@ log = logging.getLogger(__name__)
 
 
 class CallSerializer(serializers.ModelSerializer):
-    # TODO: fix multiple agent_engaged_with with same type value
-    engaged_in_calls = InlineAgentEngagedWithSerializer(many=True, read_only=True)
+    engaged_in_calls_distinct = serializers.SerializerMethodField(read_only=True)
 
     # TODO: this should not be many-many definitionally but only works when that is set to True
     assigned_agent = AgentAssignedCallSerializer(many=True, required=False)
@@ -58,27 +58,32 @@ class CallSerializer(serializers.ModelSerializer):
 
     domain = serializers.CharField(required=False)  # TODO: deprecate
 
-    def get_call_purposes(self, call: Call):
+    def get_engaged_in_calls_distinct(self, call: Call):
+        # TODO: this is a list for contract reasons, make this a single and verify that analytics dashboard doesn't break
+        engaged_in_call = [call.engaged_in_calls.order_by("created_at").first()]
+        return InlineAgentEngagedWithSerializer(engaged_in_call, many=True).data
+
+    def get_call_purposes(self, call: Call) -> ReturnDict:
         distinct_purposes_qs = call.call_purposes.distinct("call_purpose_type")
         return InlineCallPurposeSerializer(distinct_purposes_qs, many=True).data
 
-    def get_mentioned_companies(self, call: Call):
+    def get_mentioned_companies(self, call: Call) -> ReturnDict:
         distinct_keyword_qs = call.mentioned_companies.distinct("keyword")
         return InlineCallMentionedCompanySerializer(distinct_keyword_qs, many=True).data
 
-    def get_mentioned_insurances(self, call: Call):
+    def get_mentioned_insurances(self, call: Call) -> ReturnDict:
         distinct_keyword_qs = call.mentioned_insurances.distinct("keyword")
         return InlineCallMentionedInsuranceSerializer(distinct_keyword_qs, many=True).data
 
-    def get_mentioned_procedures(self, call: Call):
+    def get_mentioned_procedures(self, call: Call) -> ReturnDict:
         distinct_keyword_qs = call.mentioned_procedures.distinct("keyword")
         return InlineCallMentionedProcedureSerializer(distinct_keyword_qs, many=True).data
 
-    def get_mentioned_products(self, call: Call):
+    def get_mentioned_products(self, call: Call) -> ReturnDict:
         distinct_keyword_qs = call.mentioned_products.distinct("keyword")
         return InlineCallMentionedProductSerializer(distinct_keyword_qs, many=True).data
 
-    def get_mentioned_symptoms(self, call: Call):
+    def get_mentioned_symptoms(self, call: Call) -> ReturnDict:
         distinct_keyword_qs = call.mentioned_symptoms.distinct("keyword")
         return InlineCallMentionedSymptomSerializer(distinct_keyword_qs, many=True).data
 
