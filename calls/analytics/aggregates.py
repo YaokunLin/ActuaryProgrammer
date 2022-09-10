@@ -211,9 +211,15 @@ def annotate_callee_number_with_extension(calls_qs: QuerySet) -> QuerySet:
     return calls_qs.annotate(**annotation)
 
 
-def _get_annotation_for_phone_number_with_extension(root_phone_number_field: str) -> Dict:
-    extension_field_name = f"{root_phone_number_field}_extension"
-    phone_number_field_name = f"{root_phone_number_field}_number"
+def _get_annotation_for_phone_number_with_extension(root_phone_number_field_name: str) -> Dict:
+    """
+    Will generate an annotation based upon the root of the field name for a phone number. Assumes that the phone number and extension field follow our standard
+    conventions
+
+    root_phone_number_field_name: root of the phone number field name, not the full field name itself. e.g. "sip_callee", "sip_caller"
+    """
+    extension_field_name = f"{root_phone_number_field_name}_extension"
+    phone_number_field_name = f"{root_phone_number_field_name}_number"
     phone_with_extension_field_name = f"{phone_number_field_name}_with_extension"
 
     extension_blank_filter = Q(**{extension_field_name: ""})
