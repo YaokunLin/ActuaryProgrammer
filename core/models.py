@@ -121,6 +121,7 @@ class Practice(AuditTrailModel):
     )  # practices are active or inactive based upon whether we've approved their submission and whether they're paid up
 
     address_us_state = USStateField(blank=True, default="AZ")  # yes, it's a char field behind the scenes
+
     practice_group = models.ForeignKey("PracticeGroup", null=True, blank=True, on_delete=models.SET_NULL)
 
     objects = PracticeManager()
