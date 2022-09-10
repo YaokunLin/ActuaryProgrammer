@@ -42,15 +42,14 @@ class CallSerializer(serializers.ModelSerializer):
     latest_audio_signed_url = serializers.CharField(allow_null=True, required=False)
     latest_transcript_signed_url = serializers.CharField(allow_null=True, required=False)
 
-    call_purposes = serializers.SerializerMethodField()
-    # Include outcome and outcome reasons
+    call_purposes = serializers.SerializerMethodField()  # Includes outcome and outcome reasons
 
     # mentioned, inline
-    mentioned_companies = InlineCallMentionedCompanySerializer(many=True, read_only=True)
-    mentioned_insurances = InlineCallMentionedInsuranceSerializer(many=True, read_only=True)
-    mentioned_procedures = InlineCallMentionedProcedureSerializer(many=True, read_only=True)
-    mentioned_products = InlineCallMentionedProductSerializer(many=True, read_only=True)
-    mentioned_symptoms = InlineCallMentionedSymptomSerializer(many=True, read_only=True)
+    mentioned_companies = serializers.SerializerMethodField()
+    mentioned_insurances = serializers.SerializerMethodField()
+    mentioned_procedures = serializers.SerializerMethodField()
+    mentioned_products = serializers.SerializerMethodField()
+    mentioned_symptoms = serializers.SerializerMethodField()
 
     call_sentiments = InlineCallSentimentSerializer(many=True, read_only=True)
 
@@ -62,6 +61,26 @@ class CallSerializer(serializers.ModelSerializer):
     def get_call_purposes(self, call: Call):
         distinct_purposes_qs = call.call_purposes.distinct("call_purpose_type")
         return InlineCallPurposeSerializer(distinct_purposes_qs, many=True).data
+
+    def get_mentioned_companies(self, call: Call):
+        distinct_keyword_qs = call.mentioned_companies.distinct("keyword")
+        return InlineCallMentionedCompanySerializer(distinct_keyword_qs, many=True).data
+
+    def get_mentioned_insurances(self, call: Call):
+        distinct_keyword_qs = call.mentioned_insurances.distinct("keyword")
+        return InlineCallMentionedInsuranceSerializer(distinct_keyword_qs, many=True).data
+
+    def get_mentioned_procedures(self, call: Call):
+        distinct_keyword_qs = call.mentioned_procedures.distinct("keyword")
+        return InlineCallMentionedProcedureSerializer(distinct_keyword_qs, many=True).data
+
+    def get_mentioned_products(self, call: Call):
+        distinct_keyword_qs = call.mentioned_products.distinct("keyword")
+        return InlineCallMentionedProductSerializer(distinct_keyword_qs, many=True).data
+
+    def get_mentioned_symptoms(self, call: Call):
+        distinct_keyword_qs = call.mentioned_symptoms.distinct("keyword")
+        return InlineCallMentionedSymptomSerializer(distinct_keyword_qs, many=True).data
 
     class Meta:
         model = Call
