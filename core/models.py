@@ -6,7 +6,6 @@ from django.contrib.auth.models import (
     _user_has_module_perms,
     _user_has_perm,
 )
-from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django_extensions.db.fields import ShortUUIDField
