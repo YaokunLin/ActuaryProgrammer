@@ -52,6 +52,7 @@ class CallSerializer(serializers.ModelSerializer):
     mentioned_procedures = InlineCallMentionedProcedureSerializer(many=True, read_only=True)
     mentioned_procedures_distinct = serializers.SerializerMethodField()
     mentioned_products = InlineCallMentionedProductSerializer(many=True, read_only=True)
+    mentioned_products_distinct = serializers.SerializerMethodField()
     mentioned_symptoms = InlineCallMentionedSymptomSerializer(many=True, read_only=True)
 
     call_sentiments = InlineCallSentimentSerializer(many=True, read_only=True)
@@ -76,6 +77,10 @@ class CallSerializer(serializers.ModelSerializer):
     def get_mentioned_procedures_distinct(self, call: Call):
         distinct_keyword_qs = call.mentioned_procedures.distinct("keyword")
         return InlineCallMentionedProcedureSerializer(distinct_keyword_qs, many=True).data
+
+    def get_mentioned_products_distinct(self, call: Call):
+        distinct_keyword_qs = call.mentioned_products.distinct("keyword")
+        return InlineCallMentionedProductSerializer(distinct_keyword_qs, many=True).data
 
     class Meta:
         model = Call
