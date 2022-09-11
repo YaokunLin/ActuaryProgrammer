@@ -419,6 +419,21 @@ else:  # app engine or local
     STATICFILES_DIRS = []
 # [END staticurl]
 
+# TODO: PTECH-1240
+# TODO: Use a different env var after the demo
+CACHE_REDIS_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
+ANALYTICS_CACHE_TIME_SECONDS = os.getenv("ANALYTICS_CACHE_TIME_SECONDS", 900)  # 15 Minutes
+ANALYTICS_CACHE_VARY_ON_HEADERS = ("Timezone",)
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": CACHE_REDIS_URL,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+    }
+}
 
 # Celery Configuration Options
 CELERY_ENABLE_UTC = True
