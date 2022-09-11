@@ -24,7 +24,7 @@ file: [peerlogic-api LOCAL  starter .env file](https://start.1password.com/open/
 Initialize Postgres and create the peerlogic database, without tables:
 
 ```bash
-docker-compose up postgres
+docker-compose up -d postgres
 ```
 
 Apply the structure of the tables to the database.
