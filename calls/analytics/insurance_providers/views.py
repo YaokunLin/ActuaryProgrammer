@@ -34,8 +34,8 @@ from calls.validation import (
 )
 from core.models import InsuranceProviderPhoneNumber
 from peerlogic.settings import (
-    ANALYTICS_CACHE_TIME_SECONDS,
     ANALYTICS_CACHE_VARY_ON_HEADERS,
+    CACHE_TIME_ANALYTICS_SECONDS,
 )
 
 # TODO: PTECH-1240
@@ -61,7 +61,7 @@ class InsuranceProviderInteractionsView(views.APIView):
     CALL_PER_HOUR_PERCENTILE_BY_HOUR = 70
     LOOKBACK_DAYS = 365
 
-    @method_decorator(cache_page(ANALYTICS_CACHE_TIME_SECONDS))
+    @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
     @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
         insurance_provider = get_validated_insurance_provider(request)
@@ -195,7 +195,7 @@ class InsuranceProviderInteractionsView(views.APIView):
 
 
 class InsuranceProviderMentionedView(views.APIView):
-    @method_decorator(cache_page(ANALYTICS_CACHE_TIME_SECONDS))
+    @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
     @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
         # TODO: Use app settings for pagination limits and use shared code for getting size here
@@ -268,7 +268,7 @@ class InsuranceProviderMentionedView(views.APIView):
 
 
 class InsuranceProviderCallMetricsView(views.APIView):
-    @method_decorator(cache_page(ANALYTICS_CACHE_TIME_SECONDS))
+    @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
     @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
         insurance_provider = get_validated_insurance_provider(request)

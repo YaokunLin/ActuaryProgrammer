@@ -419,11 +419,15 @@ else:  # app engine or local
     STATICFILES_DIRS = []
 # [END staticurl]
 
+# Caching
 # TODO: PTECH-1240
 # TODO: Use a different env var after the demo
-CACHE_REDIS_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
-ANALYTICS_CACHE_TIME_SECONDS = os.getenv("ANALYTICS_CACHE_TIME_SECONDS", 900)  # 15 Minutes
 ANALYTICS_CACHE_VARY_ON_HEADERS = ("Timezone",)
+CACHE_NAME_AUTH_IN_MEMORY = "memory-auth"
+CACHE_REDIS_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
+CACHE_TIME_ANALYTICS_SECONDS = int(os.getenv("CACHE_TIME_ANALYTICS_SECONDS", 900))  # Default 15 Minutes
+CACHE_TIME_AUTH_MEMORY_SECONDS = int(os.getenv("CACHE_TIME_AUTH_MEMORY_SECONDS", 10))
+CACHE_TIME_AUTH_REDIS_SECONDS = int(os.getenv("CACHE_TIME_AUTH_REDIS_SECONDS", 30))
 
 CACHES = {
     "default": {
@@ -432,7 +436,8 @@ CACHES = {
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },
-    }
+    },
+    CACHE_NAME_AUTH_IN_MEMORY: {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "auth"},
 }
 
 # Celery Configuration Options
