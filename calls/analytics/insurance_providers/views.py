@@ -7,7 +7,7 @@ from typing import Dict, Optional
 from django.db.models import Count, Q, QuerySet
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
+from django.views.decorators.cache import cache_control, cache_page
 from django.views.decorators.vary import vary_on_headers
 from numpy import percentile
 from rest_framework import status, views
@@ -35,6 +35,7 @@ from calls.validation import (
 from core.models import InsuranceProviderPhoneNumber
 from peerlogic.settings import (
     ANALYTICS_CACHE_VARY_ON_HEADERS,
+    CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS,
     CACHE_TIME_ANALYTICS_SECONDS,
 )
 
@@ -61,6 +62,7 @@ class InsuranceProviderInteractionsView(views.APIView):
     CALL_PER_HOUR_PERCENTILE_BY_HOUR = 70
     LOOKBACK_DAYS = 365
 
+    @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
     @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
     @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
@@ -195,6 +197,7 @@ class InsuranceProviderInteractionsView(views.APIView):
 
 
 class InsuranceProviderMentionedView(views.APIView):
+    @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
     @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
     @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
@@ -268,6 +271,7 @@ class InsuranceProviderMentionedView(views.APIView):
 
 
 class InsuranceProviderCallMetricsView(views.APIView):
+    @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
     @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
     @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
