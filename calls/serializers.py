@@ -2,6 +2,19 @@ import logging
 
 from django_countries.serializers import CountryFieldMixin
 from rest_framework import serializers
+from rest_framework.utils.serializer_helpers import ReturnDict
+
+from calls.analytics.participants.serializers import AgentAssignedCallSerializer
+from calls.inline_serializers import (
+    InlineAgentEngagedWithSerializer,
+    InlineCallMentionedCompanySerializer,
+    InlineCallMentionedInsuranceSerializer,
+    InlineCallMentionedProcedureSerializer,
+    InlineCallMentionedProductSerializer,
+    InlineCallMentionedSymptomSerializer,
+    InlineCallPurposeSerializer,
+    InlineCallSentimentSerializer,
+)
 
 from .models import (
     Call,
@@ -14,27 +27,13 @@ from .models import (
     CallTranscriptPartial,
     TelecomCallerNameInfo,
 )
-from calls.inline_serializers import (
-    InlineAgentEngagedWithSerializer,
-    InlineCallMentionedCompanySerializer,
-    InlineCallMentionedInsuranceSerializer,
-    InlineCallMentionedProcedureSerializer,
-    InlineCallMentionedProductSerializer,
-    InlineCallMentionedSymptomSerializer,
-    InlineCallPurposeSerializer,
-    InlineCallSentimentSerializer,
-)
-from calls.analytics.participants.serializers import (
-    AgentAssignedCallSerializer,
-)
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
 
 
 class CallSerializer(serializers.ModelSerializer):
-    # TODO: fix multiple agent_engaged_with with same type value
-    engaged_in_calls = InlineAgentEngagedWithSerializer(many=True, read_only=True)
+    engaged_in_calls_distinct = serializers.SerializerMethodField(read_only=True)
 
     # TODO: this should not be many-many definitionally but only works when that is set to True
     assigned_agent = AgentAssignedCallSerializer(many=True, required=False)
@@ -42,16 +41,15 @@ class CallSerializer(serializers.ModelSerializer):
     # TODO: fix both urls (LISTEN)
     latest_audio_signed_url = serializers.CharField(allow_null=True, required=False)
     latest_transcript_signed_url = serializers.CharField(allow_null=True, required=False)
-    # TODO: fix multiple call_purposes with same type value
-    call_purposes = InlineCallPurposeSerializer(many=True, read_only=True)
-    # Include outcome and outcome reasons
+
+    call_purposes = serializers.SerializerMethodField()  # Includes outcome and outcome reasons
 
     # mentioned, inline
-    mentioned_companies = InlineCallMentionedCompanySerializer(many=True, read_only=True)
-    mentioned_insurances = InlineCallMentionedInsuranceSerializer(many=True, read_only=True)
-    mentioned_procedures = InlineCallMentionedProcedureSerializer(many=True, read_only=True)
-    mentioned_products = InlineCallMentionedProductSerializer(many=True, read_only=True)
-    mentioned_symptoms = InlineCallMentionedSymptomSerializer(many=True, read_only=True)
+    mentioned_companies = serializers.SerializerMethodField()
+    mentioned_insurances = serializers.SerializerMethodField()
+    mentioned_procedures = serializers.SerializerMethodField()
+    mentioned_products = serializers.SerializerMethodField()
+    mentioned_symptoms = serializers.SerializerMethodField()
 
     call_sentiments = InlineCallSentimentSerializer(many=True, read_only=True)
 
@@ -60,6 +58,35 @@ class CallSerializer(serializers.ModelSerializer):
 
     domain = serializers.CharField(required=False)  # TODO: deprecate
 
+    def get_engaged_in_calls_distinct(self, call: Call):
+        # TODO: this is a list for contract reasons, make this a single and verify that analytics dashboard doesn't break
+        engaged_in_call = [call.engaged_in_calls.order_by("modified-at").first()]  # using modified-at in the case where we're by-hand tweaking the rdbms
+        return InlineAgentEngagedWithSerializer(engaged_in_call, many=True).data
+
+    def get_call_purposes(self, call: Call) -> ReturnDict:
+        distinct_purposes_qs = call.call_purposes.distinct("call_purpose_type")
+        return InlineCallPurposeSerializer(distinct_purposes_qs, many=True).data
+
+    def get_mentioned_companies(self, call: Call) -> ReturnDict:
+        distinct_keyword_qs = call.mentioned_companies.distinct("keyword")
+        return InlineCallMentionedCompanySerializer(distinct_keyword_qs, many=True).data
+
+    def get_mentioned_insurances(self, call: Call) -> ReturnDict:
+        distinct_keyword_qs = call.mentioned_insurances.distinct("keyword")
+        return InlineCallMentionedInsuranceSerializer(distinct_keyword_qs, many=True).data
+
+    def get_mentioned_procedures(self, call: Call) -> ReturnDict:
+        distinct_keyword_qs = call.mentioned_procedures.distinct("keyword")
+        return InlineCallMentionedProcedureSerializer(distinct_keyword_qs, many=True).data
+
+    def get_mentioned_products(self, call: Call) -> ReturnDict:
+        distinct_keyword_qs = call.mentioned_products.distinct("keyword")
+        return InlineCallMentionedProductSerializer(distinct_keyword_qs, many=True).data
+
+    def get_mentioned_symptoms(self, call: Call) -> ReturnDict:
+        distinct_keyword_qs = call.mentioned_symptoms.distinct("keyword")
+        return InlineCallMentionedSymptomSerializer(distinct_keyword_qs, many=True).data
+
     class Meta:
         model = Call
         fields = "__all__"
@@ -67,16 +94,13 @@ class CallSerializer(serializers.ModelSerializer):
 
 
 class CallNestedRouterBaseWriteSerializerMixin(object):
-
     def create(self, validated_data):
         call = Call.objects.get(pk=self.context["view"].kwargs["call_pk"])
         validated_data["call"] = call
         return self.Meta.model.objects.create(**validated_data)
 
 
-
 class CallNoteReadSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = CallNote
         fields = "__all__"
@@ -84,7 +108,6 @@ class CallNoteReadSerializer(serializers.ModelSerializer):
 
 
 class CallNoteWriteSerializer(serializers.ModelSerializer):
-
     def create(self, validated_data):
         call = Call.objects.get(pk=self.context["view"].kwargs["call_pk"])
         validated_data["call"] = call
@@ -98,14 +121,24 @@ class CallNoteWriteSerializer(serializers.ModelSerializer):
 
 class CallTranscriptSerializer(serializers.ModelSerializer):
     signed_url = serializers.CharField(required=False)
-    
 
     class Meta:
         model = CallTranscript
         fields = [
-            "id", "call", "publish_event_on_patch", "mime_type", "transcript_type", "transcript_text", "speech_to_text_model_type",
-            "raw_call_transcript_model_run_id", "call_transcript_model_run", "created_by", "created_at", "modified_by", "modified_at",
-            "signed_url"
+            "id",
+            "call",
+            "publish_event_on_patch",
+            "mime_type",
+            "transcript_type",
+            "transcript_text",
+            "speech_to_text_model_type",
+            "raw_call_transcript_model_run_id",
+            "call_transcript_model_run",
+            "created_by",
+            "created_at",
+            "modified_by",
+            "modified_at",
+            "signed_url",
         ]
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "signed_url"]
 
