@@ -21,7 +21,7 @@ steps:
 
   - id: "Default App Engine Deploy"
     name: "gcr.io/cloud-builders/gcloud"
-    args: ["app", "deploy", "/workspace/app.yaml"]
+    args: ["app", "deploy", "$_DEPLOY_YAML_FILE"]
     timeout: "1600s"
 
   - id: "django_migrate service App Engine Deploy"
