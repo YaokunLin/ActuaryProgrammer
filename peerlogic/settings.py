@@ -429,12 +429,15 @@ CACHE_TIME_ANALYTICS_SECONDS = int(os.getenv("CACHE_TIME_ANALYTICS_SECONDS", 900
 CACHE_TIME_AUTH_MEMORY_SECONDS = int(os.getenv("CACHE_TIME_AUTH_MEMORY_SECONDS", 30))
 CACHE_TIME_AUTH_REDIS_SECONDS = int(os.getenv("CACHE_TIME_AUTH_REDIS_SECONDS", 90))
 
+
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
         "LOCATION": CACHE_REDIS_URL,
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "SOCKET_CONNECT_TIMEOUT": 5,  # seconds
+            "SOCKET_TIMEOUT": 5,  # seconds
         },
     },
     CACHE_NAME_AUTH_IN_MEMORY: {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "auth"},
