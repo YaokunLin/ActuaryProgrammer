@@ -61,8 +61,8 @@ class InsuranceProviderInteractionsView(views.APIView):
     CALL_PER_HOUR_PERCENTILE_BY_HOUR = 70
     LOOKBACK_DAYS = 365
 
-    # @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
-    # @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
+    @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
+    @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
         insurance_provider = get_validated_insurance_provider(request)
         try:
@@ -195,8 +195,8 @@ class InsuranceProviderInteractionsView(views.APIView):
 
 
 class InsuranceProviderMentionedView(views.APIView):
-    # @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
-    # @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
+    @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
+    @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
         # TODO: Use app settings for pagination limits and use shared code for getting size here
         size = 10
@@ -268,8 +268,8 @@ class InsuranceProviderMentionedView(views.APIView):
 
 
 class InsuranceProviderCallMetricsView(views.APIView):
-    # @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
-    # @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
+    @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
+    @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
         insurance_provider = get_validated_insurance_provider(request)
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
