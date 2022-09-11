@@ -35,3 +35,6 @@ handlers:
 
 # [END gaestd_py_django_app_yaml]
 # [END django_app]
+
+vpc_access_connector:
+  name: projects/peerlogic-api-stage/locations/us-west4/connectors/uw4-1
