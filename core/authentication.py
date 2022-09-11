@@ -70,28 +70,35 @@ class NetsapiensJSONWebTokenAuthentication(BaseAuthentication):
         # extract token
         jwt_token = self.validate_header_and_get_token_value(request)
 
-        redis_cache = cache
-        memory_cache = caches[CACHE_NAME_AUTH_IN_MEMORY]
-        cache_key = f"{self.__class__.__name__}{jwt_token}"
-        cached_result = memory_cache.get(cache_key, None)
-        if cached_result is None:
-            cached_result = redis_cache.get(cache_key, None)
-            if cached_result is None:
-                # delegate authentication
-                try:
-                    response = self.introspect_token(jwt_token)
-                except AuthenticationFailed:
-                    log.info(f"Netsapiens Authentication failed with token {jwt_token}, trying the next Authentication class.")
-                    return None
+        # redis_cache = cache
+        # memory_cache = caches[CACHE_NAME_AUTH_IN_MEMORY]
+        # cache_key = f"{self.__class__.__name__}{jwt_token}"
+        # cached_result = memory_cache.get(cache_key, None)
+        # if cached_result is None:
+        #     cached_result = redis_cache.get(cache_key, None)
+        #     if cached_result is None:
+        #         # delegate authentication
+        #         try:
+        #             response = self.introspect_token(jwt_token)
+        #         except AuthenticationFailed:
+        #             log.info(f"Netsapiens Authentication failed with token {jwt_token}, trying the next Authentication class.")
+        #             return None
+        #
+        #         payload = xmltodict.parse(response)["Oauthtoken"]
+        #         redis_cache.set(cache_key, json.dumps(payload), CACHE_TIME_AUTH_REDIS_SECONDS)
+        #         memory_cache.set(cache_key, json.dumps(payload), CACHE_TIME_AUTH_MEMORY_SECONDS)
+        #     else:
+        #         payload = json.loads(cached_result)
+        #         memory_cache.set(cache_key, json.dumps(payload), CACHE_TIME_AUTH_REDIS_SECONDS)
+        # else:
+        #     payload = json.loads(cached_result)
+        try:
+            response = self.introspect_token(jwt_token)
+        except AuthenticationFailed:
+            log.info(f"Netsapiens Authentication failed with token {jwt_token}, trying the next Authentication class.")
+            return None
 
-                payload = xmltodict.parse(response)["Oauthtoken"]
-                redis_cache.set(cache_key, json.dumps(payload), CACHE_TIME_AUTH_REDIS_SECONDS)
-                memory_cache.set(cache_key, json.dumps(payload), CACHE_TIME_AUTH_MEMORY_SECONDS)
-            else:
-                payload = json.loads(cached_result)
-                memory_cache.set(cache_key, json.dumps(payload), CACHE_TIME_AUTH_REDIS_SECONDS)
-        else:
-            payload = json.loads(cached_result)
+        payload = xmltodict.parse(response)["Oauthtoken"]
 
         # authentication succeeded from auth system, obtain user from ours
         USER_MODEL = get_user_model()

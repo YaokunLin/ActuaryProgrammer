@@ -39,8 +39,8 @@ REVENUE_PER_WINBACK_USD = 10_000
 
 
 class CallMetricsView(views.APIView):
-    @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
-    @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
+    # @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
+    # @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
         valid_practice_group_id, practice_group_errors = get_validated_practice_group_id(request=request)
@@ -125,8 +125,8 @@ def get_call_counts(
 class OpportunitiesPerUserView(views.APIView):
     QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME = {"call_start_time__gte": "call_start_time_after", "call_start_time__lte": "call_start_time_before"}
 
-    @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
-    @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
+    # @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
+    # @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
         valid_practice_group_id, practice_group_errors = get_validated_practice_group_id(request=request)
@@ -180,8 +180,8 @@ class OpportunitiesPerUserView(views.APIView):
 class NewPatientOpportunitiesView(views.APIView):
     QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME = {"call_start_time__gte": "call_start_time_after", "call_start_time__lte": "call_start_time_before"}
 
-    @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
-    @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
+    # @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
+    # @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
         valid_practice_group_id, practice_group_errors = get_validated_practice_group_id(request=request)
@@ -278,8 +278,8 @@ class NewPatientOpportunitiesView(views.APIView):
 class NewPatientWinbacksView(views.APIView):
     QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME = {"call_start_time__gte": "call_start_time_after", "call_start_time__lte": "call_start_time_before"}
 
-    @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
-    @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
+    # @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
+    # @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
         valid_practice_group_id, practice_group_errors = get_validated_practice_group_id(request=request)
