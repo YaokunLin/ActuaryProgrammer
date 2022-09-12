@@ -33,7 +33,7 @@ log = logging.getLogger(__name__)
 
 
 class CallSerializer(serializers.ModelSerializer):
-    engaged_in_calls_distinct = serializers.SerializerMethodField(read_only=True)
+    engaged_in_calls = serializers.SerializerMethodField(read_only=True)
 
     # TODO: this should not be many-many definitionally but only works when that is set to True
     assigned_agent = AgentAssignedCallSerializer(many=True, required=False)
@@ -58,7 +58,7 @@ class CallSerializer(serializers.ModelSerializer):
 
     domain = serializers.CharField(required=False)  # TODO: deprecate
 
-    def get_engaged_in_calls_distinct(self, call: Call):
+    def get_engaged_in_calls(self, call: Call):
         # TODO: this is a list for contract reasons, make this a single and verify that analytics dashboard doesn't break
         engaged_in_call = [call.engaged_in_calls.order_by("modified_at").first()]  # using modified-at in the case where we're by-hand tweaking the rdbms
         return InlineAgentEngagedWithSerializer(engaged_in_call, many=True).data

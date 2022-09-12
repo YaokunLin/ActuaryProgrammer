@@ -6,6 +6,9 @@ from typing import Dict, Optional
 
 from django.db.models import Count, Q, QuerySet
 from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_control, cache_page
+from django.views.decorators.vary import vary_on_headers
 from numpy import percentile
 from rest_framework import status, views
 from rest_framework.response import Response
@@ -30,6 +33,11 @@ from calls.validation import (
     get_validated_practice_id,
 )
 from core.models import InsuranceProviderPhoneNumber
+from peerlogic.settings import (
+    ANALYTICS_CACHE_VARY_ON_HEADERS,
+    CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS,
+    CACHE_TIME_ANALYTICS_SECONDS,
+)
 
 # TODO: PTECH-1240
 # from calls.analytics.aggregates import (
@@ -54,6 +62,9 @@ class InsuranceProviderInteractionsView(views.APIView):
     CALL_PER_HOUR_PERCENTILE_BY_HOUR = 70
     LOOKBACK_DAYS = 365
 
+    @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
+    @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
+    @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
         insurance_provider = get_validated_insurance_provider(request)
         try:
@@ -186,6 +197,9 @@ class InsuranceProviderInteractionsView(views.APIView):
 
 
 class InsuranceProviderMentionedView(views.APIView):
+    @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
+    @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
+    @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
         # TODO: Use app settings for pagination limits and use shared code for getting size here
         size = 10
@@ -257,6 +271,9 @@ class InsuranceProviderMentionedView(views.APIView):
 
 
 class InsuranceProviderCallMetricsView(views.APIView):
+    @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
+    @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
+    @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
         insurance_provider = get_validated_insurance_provider(request)
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
