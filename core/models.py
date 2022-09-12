@@ -216,3 +216,20 @@ class InsuranceProviderPhoneNumber(AuditTrailModel):
 
     phone_number = PhoneNumberField(primary_key=True)
     insurance_provider = models.ForeignKey(InsuranceProvider, null=False, on_delete=models.CASCADE)
+
+
+class MarketingCampaignPhoneNumber(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    practice = models.ForeignKey(
+        "core.Practice",
+        on_delete=models.CASCADE,
+        verbose_name="The practice that owns the marketing number",
+        related_name="campaign_telephone_numbers",
+        null=False,
+    )
+    name = models.CharField(max_length=128, blank=False, null=False)
+    phone_number = PhoneNumberField(blank=False, null=False)
+    description = models.CharField(max_length=255, blank=True, null=False)
+
+    class Meta:
+        unique_together = ("practice_id", "phone_number")
