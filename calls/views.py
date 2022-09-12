@@ -4,39 +4,60 @@ from typing import Dict, List, Union
 
 from django.conf import settings
 from django.db import DatabaseError, transaction
-from django.db.models import Case, Count, Exists, ExpressionWrapper, F, FloatField, OuterRef, Q, Subquery, Sum, TextField, Value as V, When
+from django.db.models import (
+    Case,
+    Count,
+    Exists,
+    ExpressionWrapper,
+    F,
+    FloatField,
+    OuterRef,
+    Q,
+    Subquery,
+    Sum,
+    TextField,
+)
+from django.db.models import Value as V
+from django.db.models import When
 from django.db.models.expressions import Case, RawSQL, When
 from django.db.models.functions import Coalesce, Concat
 from django.http import Http404, HttpResponseBadRequest
-from django_filters.rest_framework import DjangoFilterBackend  # brought in for a backend filter override
+from django_filters.rest_framework import (
+    DjangoFilterBackend,  # brought in for a backend filter override
+)
 from google.api_core.exceptions import PermissionDenied
 from phonenumber_field.modelfields import to_python as to_phone_number
 from rest_framework import status, views, viewsets
 from rest_framework.decorators import action
-from rest_framework.filters import OrderingFilter  # brought in for a backend filter override
+from rest_framework.filters import (
+    OrderingFilter,  # brought in for a backend filter override
+)
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import SAFE_METHODS
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
-
 from twilio.base.exceptions import TwilioException
+
 from calls.filters import (
-    CallsFilter,
     CallSearchFilter,
+    CallsFilter,
     CallTranscriptsFilter,
     CallTranscriptsSearchFilter,
 )
-from calls.publishers import publish_call_audio_partial_saved, publish_call_audio_saved, publish_call_transcript_saved
-
-from core.file_upload import FileToUpload
-
+from calls.publishers import (
+    publish_call_audio_partial_saved,
+    publish_call_audio_saved,
+    publish_call_transcript_saved,
+)
 from calls.twilio_etl import (
     get_caller_name_info_from_twilio,
     update_telecom_caller_name_info_with_twilio_data_for_valid_sections,
 )
+from core.file_upload import FileToUpload
 from core.models import Agent
 from peerlogic.settings import REST_FRAMEWORK
+
 from .field_choices import (
     AudioCodecType,
     CallAudioFileStatusTypes,
@@ -58,10 +79,10 @@ from .models import (
     CallAudio,
     CallAudioPartial,
     CallLabel,
+    CallNote,
     CallPartial,
     CallTranscript,
     CallTranscriptPartial,
-    CallNote,
     TelecomCallerNameInfo,
 )
 from .serializers import (
@@ -99,6 +120,7 @@ class CallFieldChoicesView(views.APIView):
         result["transcript_types"] = dict((y, x) for x, y in TranscriptTypes.choices)
         result["speech_to_text_model_types"] = dict((y, x) for x, y in SpeechToTextModelTypes.choices)
         result["sentiment_types"] = dict((y, x) for x, y in SentimentTypes.choices)
+        result["marketing_campaign_names"] = {"Mailer": "mailer", "Google My Business": "gmb", "Main": "main"}
         return Response(result)
 
 
