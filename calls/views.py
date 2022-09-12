@@ -120,7 +120,8 @@ class CallFieldChoicesView(views.APIView):
         result["transcript_types"] = dict((y, x) for x, y in TranscriptTypes.choices)
         result["speech_to_text_model_types"] = dict((y, x) for x, y in SpeechToTextModelTypes.choices)
         result["sentiment_types"] = dict((y, x) for x, y in SentimentTypes.choices)
-        result["marketing_campaign_names"] = {"Mailer": "mailer", "Google My Business": "gmb", "Main": "main"}
+        # TODO: PTECH-1240
+        result["marketing_campaign_names"] = {"Mailer": "mailer", "Google My Business": "gmb", "Main": "main"}  # TODO: Unfuck this
         return Response(result)
 
 
