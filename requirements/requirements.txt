@@ -6,6 +6,7 @@ boto3==1.24.9
 celery==5.0.2
 cryptography>=35.0.0
 django-celery-beat==2.1.0
+django-clearcache==1.2.1
 django-cors-headers>=3.5.0
 django-countries==7.2.1
 django-extensions==3.0.5
