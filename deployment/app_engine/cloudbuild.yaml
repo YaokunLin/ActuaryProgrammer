@@ -58,7 +58,7 @@ steps:
       - '-c'
       - |
         versions=$(gcloud app versions list --service default --sort-by '~VERSION.ID' --format 'value(VERSION.ID)' | sed 1,20d) \
-        && for version in $versions; do gcloud app versions delete "$version" --service default --quiet; done
+        && for version in "$versions"; do gcloud app versions delete "$version" --service default --quiet; done
     timeout: "60s"
 
 timeout: "1600s"
