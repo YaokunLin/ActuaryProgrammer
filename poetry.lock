@@ -352,6 +352,17 @@ django-timezone-field = ">=4.0,<5.0"
 python-crontab = ">=2.3.4"
 
 [[package]]
+name = "django-clearcache"
+version = "1.2.1"
+description = "Allows you to clear Django cache via admin UI or manage.py command"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+django = ">=2.2"
+
+[[package]]
 name = "django-cors-headers"
 version = "3.13.0"
 description = "django-cors-headers is a Django application for handling the server headers required for Cross-Origin Resource Sharing (CORS)."
@@ -1620,7 +1631,7 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.9"
-content-hash = "59af56da0191d9e40bae449796e40764a23a9d0c16c26010574be0dae93851be"
+content-hash = "5e68bc680f2509a406ac26e3d92e586f951d49891d479ff0f11084afdb860e97"
 
 [metadata.files]
 amqp = [
@@ -1851,6 +1862,10 @@ django = [
 django-celery-beat = [
     {file = "django-celery-beat-2.1.0.tar.gz", hash = "sha256:4eb0e8412e2e05ba0029912a6f80d1054731001eecbcb4d59688c4e07cf4d9d3"},
     {file = "django_celery_beat-2.1.0-py2.py3-none-any.whl", hash = "sha256:8a169e11d96faed8b72d505ddbc70e7fe0b16cdc854df43cb209c153ed08d651"},
+]
+django-clearcache = [
+    {file = "django-clearcache-1.2.1.tar.gz", hash = "sha256:76ac5d7aebbc79e4f7064c591be1ca3fbb3d00c6b30c873f24f8330d9a7b5026"},
+    {file = "django_clearcache-1.2.1-py3-none-any.whl", hash = "sha256:0891a8171b8ec761983a077a945692407bbb6e00a09c50e0668b466339b779e4"},
 ]
 django-cors-headers = [
     {file = "django-cors-headers-3.13.0.tar.gz", hash = "sha256:f9dc6b4e3f611c3199700b3e5f3398c28757dcd559c2f82932687f3d0443cfdf"},
