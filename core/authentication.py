@@ -61,8 +61,6 @@ class NetsapiensJSONWebTokenAuthentication(BaseAuthentication):
         authentication method), the resource server SHOULD NOT include an error code or other error information.
         """
 
-        log.info(f"{self.__class__.__name__}.authenticate start")
-
         # extract token
         jwt_token = self.validate_header_and_get_token_value(request)
 
@@ -77,7 +75,7 @@ class NetsapiensJSONWebTokenAuthentication(BaseAuthentication):
                 try:
                     response = self.introspect_token(jwt_token)
                 except AuthenticationFailed:
-                    log.info(f"Netsapiens Authentication failed. Trying the next Authentication class.")
+                    log.info("Netsapiens Authentication failed. Trying the next Authentication class.")
                     payload = bad_token_cache_value
                 else:
                     payload = xmltodict.parse(response)["Oauthtoken"]
@@ -91,7 +89,6 @@ class NetsapiensJSONWebTokenAuthentication(BaseAuthentication):
             payload = json.loads(cached_result)
 
         if payload == bad_token_cache_value:
-            log.info(f"{self.__class__.__name__}.authenticate end")
             return None
 
         # authentication succeeded from auth system, obtain user from ours
@@ -102,7 +99,6 @@ class NetsapiensJSONWebTokenAuthentication(BaseAuthentication):
             log.exception("NetsapiensJSONWebTokenAuthentication#authenticate: user not found or created!")
             raise InternalServerError("Encountered an error while trying to obtain authenticated user from Peerlogic API system!")
 
-        log.info(f"{self.__class__.__name__}.authenticate end")
         return (user, None)
 
     def validate_header_and_get_token_value(self, request_object) -> str:
@@ -197,15 +193,12 @@ class ClientCredentialsUserAuthentication(OAuth2Authentication):
         Returns two-tuple of (user, token) if authentication succeeds,
         or None otherwise.
         """
-        log.info(f"{self.__class__.__name__}.authenticate start")
         oauthlib_core = get_oauthlib_core()
         valid, request_result = oauthlib_core.verify_request(original_request, scopes=[])
         if not valid:
             original_request.oauth2_error = getattr(request_result, "oauth2_error", {})
-            log.info(f"{self.__class__.__name__}.authenticate end")
             return None
         if not request_result.user:
             request_result = self._get_application_user(original_request, request_result)
 
-        log.info(f"{self.__class__.__name__}.authenticate end")
         return request_result.user, request_result.access_token
