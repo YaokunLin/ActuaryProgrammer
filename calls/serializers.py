@@ -1,5 +1,7 @@
 import logging
+from typing import Dict, List
 
+from django.db.models import QuerySet
 from django_countries.serializers import CountryFieldMixin
 from rest_framework import serializers
 from rest_framework.utils.serializer_helpers import ReturnDict
@@ -39,6 +41,7 @@ class CallSerializer(serializers.ModelSerializer):
     assigned_agent = AgentAssignedCallSerializer(many=True, required=False)
 
     # TODO: fix both urls (LISTEN)
+    # TODO: Not signed
     latest_audio_signed_url = serializers.CharField(allow_null=True, required=False)
     latest_transcript_signed_url = serializers.CharField(allow_null=True, required=False)
 
@@ -59,37 +62,45 @@ class CallSerializer(serializers.ModelSerializer):
     domain = serializers.CharField(required=False)  # TODO: deprecate
 
     def get_engaged_in_calls(self, call: Call):
+        engaged_in_call = []
+        if hasattr(call, "agent_engaged_with_by_modified_at"):
+            data = call.agent_engaged_with_by_modified_at
+            if data:
+                engaged_in_call = [data[0]]
+        else:
+            engaged_in_call = [call.engaged_in_calls.order_by("modified_at").first()]  # using modified-at in the case where we're by-hand tweaking the rdbms
+
         # TODO: this is a list for contract reasons, make this a single and verify that analytics dashboard doesn't break
-        engaged_in_call = [call.engaged_in_calls.order_by("modified_at").first()]  # using modified-at in the case where we're by-hand tweaking the rdbms
         return InlineAgentEngagedWithSerializer(engaged_in_call, many=True).data
 
     def get_call_purposes(self, call: Call) -> ReturnDict:
-        distinct_purposes_qs = call.call_purposes.distinct("call_purpose_type")
-        return InlineCallPurposeSerializer(distinct_purposes_qs, many=True).data
+        data = getattr(call, "call_purpose_distinct_purpose_types", call.call_purposes.distinct("call_purpose_type"))
+        return InlineCallPurposeSerializer(data, many=True).data
 
     def get_mentioned_companies(self, call: Call) -> ReturnDict:
-        distinct_keyword_qs = call.mentioned_companies.distinct("keyword")
-        return InlineCallMentionedCompanySerializer(distinct_keyword_qs, many=True).data
+        data = getattr(call, "mentioned_company_distinct_keywords", call.mentioned_companies.distinct("keyword"))
+        return InlineCallMentionedCompanySerializer(data, many=True).data
 
     def get_mentioned_insurances(self, call: Call) -> ReturnDict:
-        distinct_keyword_qs = call.mentioned_insurances.distinct("keyword")
-        return InlineCallMentionedInsuranceSerializer(distinct_keyword_qs, many=True).data
+        data = getattr(call, "mentioned_insurance_distinct_keywords", call.mentioned_insurances.distinct("keyword"))
+        return InlineCallMentionedInsuranceSerializer(data, many=True).data
 
     def get_mentioned_procedures(self, call: Call) -> ReturnDict:
-        distinct_keyword_qs = call.mentioned_procedures.distinct("keyword")
-        return InlineCallMentionedProcedureSerializer(distinct_keyword_qs, many=True).data
+        data = getattr(call, "mentioned_procedure_distinct_keywords", call.mentioned_procedures.distinct("keyword"))
+        return InlineCallMentionedProcedureSerializer(data, many=True).data
 
     def get_mentioned_products(self, call: Call) -> ReturnDict:
-        distinct_keyword_qs = call.mentioned_products.distinct("keyword")
-        return InlineCallMentionedProductSerializer(distinct_keyword_qs, many=True).data
+        data = getattr(call, "mentioned_product_distinct_keywords", call.mentioned_products.distinct("keyword"))
+        return InlineCallMentionedProductSerializer(data, many=True).data
 
     def get_mentioned_symptoms(self, call: Call) -> ReturnDict:
-        distinct_keyword_qs = call.mentioned_symptoms.distinct("keyword")
-        return InlineCallMentionedSymptomSerializer(distinct_keyword_qs, many=True).data
+        data = getattr(call, "mentioned_symptom_distinct_keywords", call.mentioned_symptoms.distinct("keyword"))
+        return InlineCallMentionedSymptomSerializer(data, many=True).data
 
     class Meta:
         model = Call
         fields = "__all__"
+        # TODO: Return non-signed URLs
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "domain", "latest_audio_signed_url", "latest_transcript_signed_url"]
 
 

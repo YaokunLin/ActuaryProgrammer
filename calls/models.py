@@ -33,6 +33,7 @@ from calls.field_choices import (
 )
 from core.abstract_models import AuditTrailModel
 from core.cloud_storage_helpers import get_signed_url, put_file
+from peerlogic.settings import PEERLOGIC_API_URL
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -72,23 +73,38 @@ class Call(AuditTrailModel):
 
     @property
     def latest_audio_signed_url(self) -> str:
-        signed_url = None
-        try:
-            call_audio = CallAudio.objects.order_by("-modified_at").filter(call=self).first()
-            signed_url = call_audio.signed_url
-        except Exception as e:
-            log.info(f"No audio for call={self.pk}.")
-        return signed_url
+        # def latest_audio_url(self) -> Optional[str]:
+        # TODO: Return None if not exists
+        # TODO: Also make the endpoint that serves this
+        return f"{PEERLOGIC_API_URL}/calls/latest-audio/{self.id}"
 
     @property
     def latest_transcript_signed_url(self) -> str:
-        signed_url = None
-        try:
-            call_transcript = CallTranscript.objects.order_by("-modified_at").filter(call=self).first()
-            signed_url = call_transcript.signed_url
-        except Exception as e:
-            log.info(f"No transcript found for call={self.pk}")
-        return signed_url
+        # def latest_transcript_url(self) -> Optional[str]:
+        # TODO: Return None if not exists
+        # TODO: Also make the endpoint that serves this
+        return f"{PEERLOGIC_API_URL}/calls/latest-transcript/{self.id}"
+
+    # TODO: Keep these
+    # @property
+    # def latest_audio_signed_url(self) -> str:
+    #     signed_url = None
+    #     try:
+    #         call_audio = CallAudio.objects.order_by("-modified_at").filter(call=self).first()
+    #         signed_url = call_audio.signed_url
+    #     except Exception as e:
+    #         log.info(f"No audio for call={self.pk}.")
+    #     return signed_url
+    #
+    # @property
+    # def latest_transcript_signed_url(self) -> str:
+    #     signed_url = None
+    #     try:
+    #         call_transcript = CallTranscript.objects.order_by("-modified_at").filter(call=self).first()
+    #         signed_url = call_transcript.signed_url
+    #     except Exception as e:
+    #         log.info(f"No transcript found for call={self.pk}")
+    #     return signed_url
 
 
 class CallAudio(AuditTrailModel):

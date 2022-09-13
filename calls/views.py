@@ -1,26 +1,10 @@
 import logging
 import re
-from typing import Dict, List, Union
+from typing import Any, Dict, List, Union
 
 from django.conf import settings
 from django.db import DatabaseError, transaction
-from django.db.models import (
-    Case,
-    Count,
-    Exists,
-    ExpressionWrapper,
-    F,
-    FloatField,
-    OuterRef,
-    Q,
-    Subquery,
-    Sum,
-    TextField,
-)
-from django.db.models import Value as V
-from django.db.models import When
-from django.db.models.expressions import Case, RawSQL, When
-from django.db.models.functions import Coalesce, Concat
+from django.db.models import Prefetch
 from django.http import Http404, HttpResponseBadRequest
 from django_filters.rest_framework import (
     DjangoFilterBackend,  # brought in for a backend filter override
@@ -35,16 +19,29 @@ from rest_framework.filters import (
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import SAFE_METHODS
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from twilio.base.exceptions import TwilioException
 
+from calls.analytics.intents.models import (
+    CallMentionedCompany,
+    CallMentionedInsurance,
+    CallMentionedProcedure,
+    CallMentionedProduct,
+    CallMentionedSymptom,
+    CallOutcome,
+    CallOutcomeReason,
+    CallPurpose,
+)
+from calls.analytics.participants.models import AgentAssignedCall, AgentEngagedWith
 from calls.filters import (
     CallSearchFilter,
     CallsFilter,
     CallTranscriptsFilter,
     CallTranscriptsSearchFilter,
 )
+from calls.models import CallAudio, CallTranscript
 from calls.publishers import (
     publish_call_audio_partial_saved,
     publish_call_audio_saved,
@@ -56,7 +53,6 @@ from calls.twilio_etl import (
 )
 from core.file_upload import FileToUpload
 from core.models import Agent
-from peerlogic.settings import REST_FRAMEWORK
 
 from .field_choices import (
     AudioCodecType,
@@ -137,6 +133,11 @@ class CallViewset(viewsets.ModelViewSet):
     )  # note: these must be kept up to date with settings.py values!
 
     def get_queryset(self):
+        # TODO: Remove query debug logging
+        # l = logging.getLogger('django.db.backends')
+        # l.setLevel(logging.DEBUG)
+        # l.addHandler(logging.StreamHandler())
+
         query_set = Call.objects.none()
 
         if self.request.user.is_staff or self.request.user.is_superuser:
@@ -146,12 +147,56 @@ class CallViewset(viewsets.ModelViewSet):
             practice_ids = Agent.objects.filter(user=self.request.user).values_list("practice_id", flat=True)
             query_set = Call.objects.filter(practice__id__in=practice_ids)
 
-        query_set.select_related("engaged_in_calls").select_related("call_purposes__outcome_results__outcome_reason_results").select_related(
-            "call_sentiments"
-        ).select_related("assigned_agent")
+        query_set = (
+            query_set.prefetch_related(
+                Prefetch("engaged_in_calls", queryset=AgentEngagedWith.objects.order_by("modified_at"), to_attr="agent_engaged_with_by_modified_at")
+            )
+            .prefetch_related(
+                Prefetch("call_purposes", queryset=CallPurpose.objects.distinct("call_id", "call_purpose_type"), to_attr="call_purpose_distinct_purpose_types")
+            )
+            .prefetch_related("call_purposes__outcome_results")
+            .prefetch_related("call_purposes__outcome_results__outcome_reason_results")
+            .prefetch_related("call_sentiments")
+            .prefetch_related("assigned_agent")
+            .prefetch_related("callaudio_set")
+            .prefetch_related(
+                Prefetch(
+                    "mentioned_companies", queryset=CallMentionedCompany.objects.distinct("call_id", "keyword"), to_attr="mentioned_company_distinct_keywords"
+                )
+            )
+            .prefetch_related(
+                Prefetch(
+                    "mentioned_products", queryset=CallMentionedProduct.objects.distinct("call_id", "keyword"), to_attr="mentioned_product_distinct_keywords"
+                )
+            )
+            .prefetch_related(
+                Prefetch(
+                    "mentioned_procedures",
+                    queryset=CallMentionedProcedure.objects.distinct("call_id", "keyword"),
+                    to_attr="mentioned_procedure_distinct_keywords",
+                )
+            )
+            .prefetch_related(
+                Prefetch(
+                    "mentioned_insurances",
+                    queryset=CallMentionedInsurance.objects.distinct("call_id", "keyword"),
+                    to_attr="mentioned_insurance_distinct_keywords",
+                )
+            )
+            .prefetch_related(
+                Prefetch(
+                    "mentioned_symptoms", queryset=CallMentionedSymptom.objects.distinct("call_id", "keyword"), to_attr="mentioned_symptom_distinct_keywords"
+                )
+            )
+        )
         # TODO: Figure out total_value annotation below
 
         return query_set.order_by("-call_start_time")
+
+
+class GetCallLatestTranscript(RetrieveAPIView):
+    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+        return Response()
 
 
 class GetCallAudioPartial(ListAPIView):
