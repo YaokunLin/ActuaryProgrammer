@@ -1,19 +1,13 @@
-import base64
-import binascii
 import json
 import logging
-from urllib.parse import unquote_plus
 
 import requests
 import xmltodict
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache, caches
-from django.utils.translation import gettext_lazy as _
-from django.utils.translation import ugettext as _
 from oauth2_provider.contrib.rest_framework import OAuth2Authentication
 from oauth2_provider.oauth2_backends import get_oauthlib_core
-from oauth2_provider.oauth2_validators import OAuth2Validator
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import (
     AuthenticationFailed,
@@ -74,17 +68,18 @@ class NetsapiensJSONWebTokenAuthentication(BaseAuthentication):
         memory_cache = caches[CACHE_NAME_AUTH_IN_MEMORY]
         cache_key = f"{self.__class__.__name__}{jwt_token}"
         cached_result = memory_cache.get(cache_key, None)
+        bad_token_cache_value = {"bad_token": True}
         if cached_result is None:
             cached_result = redis_cache.get(cache_key, None)
             if cached_result is None:
-                # delegate authentication
                 try:
                     response = self.introspect_token(jwt_token)
                 except AuthenticationFailed:
-                    log.info(f"Netsapiens Authentication failed with token {jwt_token}, trying the next Authentication class.")
-                    return None
+                    log.info("Netsapiens Authentication failed. Trying the next Authentication class.")
+                    payload = bad_token_cache_value
+                else:
+                    payload = xmltodict.parse(response)["Oauthtoken"]
 
-                payload = xmltodict.parse(response)["Oauthtoken"]
                 redis_cache.set(cache_key, json.dumps(payload), CACHE_TIME_AUTH_REDIS_SECONDS)
                 memory_cache.set(cache_key, json.dumps(payload), CACHE_TIME_AUTH_MEMORY_SECONDS)
             else:
@@ -92,6 +87,9 @@ class NetsapiensJSONWebTokenAuthentication(BaseAuthentication):
                 memory_cache.set(cache_key, json.dumps(payload), CACHE_TIME_AUTH_REDIS_SECONDS)
         else:
             payload = json.loads(cached_result)
+
+        if payload == bad_token_cache_value:
+            return None
 
         # authentication succeeded from auth system, obtain user from ours
         USER_MODEL = get_user_model()
