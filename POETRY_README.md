@@ -29,6 +29,11 @@ Appropriate python version via Pyenv (3.7.9 at time of writing)
 pyenv install 3.7.9
 ```
 
+It may not be possible to install the python version above.
+```
+pyenv install 3.7.12
+```
+
 Poetry
 ```
 curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
