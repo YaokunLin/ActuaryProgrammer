@@ -1,19 +1,13 @@
-import base64
-import binascii
 import json
 import logging
-from urllib.parse import unquote_plus
 
 import requests
 import xmltodict
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.cache import cache, caches
-from django.utils.translation import gettext_lazy as _
-from django.utils.translation import ugettext as _
 from oauth2_provider.contrib.rest_framework import OAuth2Authentication
 from oauth2_provider.oauth2_backends import get_oauthlib_core
-from oauth2_provider.oauth2_validators import OAuth2Validator
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import (
     AuthenticationFailed,
@@ -195,6 +189,7 @@ class ClientCredentialsUserAuthentication(OAuth2Authentication):
         Returns two-tuple of (user, token) if authentication succeeds,
         or None otherwise.
         """
+        log.info("ClientCredentialsUserAuthentication.authenticate start")
         oauthlib_core = get_oauthlib_core()
         valid, request_result = oauthlib_core.verify_request(original_request, scopes=[])
         if not valid:
@@ -203,4 +198,5 @@ class ClientCredentialsUserAuthentication(OAuth2Authentication):
         if not request_result.user:
             request_result = self._get_application_user(original_request, request_result)
 
+        log.info("ClientCredentialsUserAuthentication.authenticate end")
         return request_result.user, request_result.access_token
