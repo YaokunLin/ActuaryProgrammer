@@ -99,11 +99,11 @@ class CallSerializer(serializers.ModelSerializer):
 
     def get_latest_audio_url(self, call: Call) -> Optional[str]:
         if call.callaudio_set.exists():
-            return f"{PEERLOGIC_API_URL}/calls/latest-audio/{call.id}"
+            return f"{PEERLOGIC_API_URL}/calls/{call.id}/latest-audio/"
 
     def get_latest_transcript_url(self, call: Call) -> Optional[str]:
         if call.calltranscript_set.exists():
-            return f"{PEERLOGIC_API_URL}/calls/latest-transcript/{call.id}"
+            return f"{PEERLOGIC_API_URL}/calls/{call.id}/latest-transcript/"
 
     class Meta:
         model = Call

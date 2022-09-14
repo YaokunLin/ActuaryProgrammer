@@ -6,6 +6,7 @@ from django.conf import settings
 from django.db import DatabaseError, transaction
 from django.db.models import Exists, OuterRef, Prefetch
 from django.http import Http404, HttpResponseBadRequest
+from django.shortcuts import redirect
 from django_filters.rest_framework import (
     DjangoFilterBackend,  # brought in for a backend filter override
 )
@@ -13,6 +14,7 @@ from google.api_core.exceptions import PermissionDenied
 from phonenumber_field.modelfields import to_python as to_phone_number
 from rest_framework import status, views, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import NotFound
 from rest_framework.filters import (
     OrderingFilter,  # brought in for a backend filter override
 )
@@ -156,8 +158,6 @@ class CallViewset(viewsets.ModelViewSet):
                     to_attr="call_purpose_distinct_purpose_types",
                 )
             )
-            # .prefetch_related("call_purposes__outcome_results")
-            # .prefetch_related("call_purposes__outcome_results__outcome_reason_results")
             .prefetch_related("call_sentiments")
             .prefetch_related("assigned_agent")
             .prefetch_related("callaudio_set")
@@ -197,9 +197,50 @@ class CallViewset(viewsets.ModelViewSet):
         return query_set.order_by("-call_start_time")
 
 
-class GetCallLatestTranscript(RetrieveAPIView):
-    def get(self, request: Request, *args: Any, **kwargs: Any) -> Response:
-        return Response()
+class GetLatestCallTranscript(RetrieveAPIView):
+    def get(self, request: Request, pk: str):
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            query_set = Call.objects.all()
+        elif self.request.method in SAFE_METHODS:
+            # Can see any practice's calls if you are an assigned agent to a practice
+            practice_ids = Agent.objects.filter(user=self.request.user).values_list("practice_id", flat=True)
+            query_set = Call.objects.filter(practice__id__in=practice_ids)
+        else:
+            query_set = Call.objects.none()
+
+        try:
+            call = query_set.get(pk=pk)
+        except Call.DoesNotExist:
+            raise NotFound()
+
+        presigned_url = call.latest_transcript_signed_url
+        if not presigned_url:
+            raise NotFound()
+
+        return redirect(presigned_url)
+
+
+class GetLatestCallAudio(RetrieveAPIView):
+    def get(self, request: Request, pk: str) -> Response:
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            query_set = Call.objects.all()
+        elif self.request.method in SAFE_METHODS:
+            # Can see any practice's calls if you are an assigned agent to a practice
+            practice_ids = Agent.objects.filter(user=self.request.user).values_list("practice_id", flat=True)
+            query_set = Call.objects.filter(practice__id__in=practice_ids)
+        else:
+            query_set = Call.objects.none()
+
+        try:
+            call = query_set.get(pk=pk)
+        except Call.DoesNotExist:
+            raise NotFound()
+
+        presigned_url = call.latest_audio_signed_url
+        if not presigned_url:
+            raise NotFound()
+
+        return redirect(presigned_url)
 
 
 class GetCallAudioPartial(ListAPIView):
