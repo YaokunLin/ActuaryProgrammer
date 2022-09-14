@@ -3,7 +3,18 @@ from django.contrib.auth.models import Group
 
 from core.forms import PracticeAdminForm
 
-from .models import Agent, Client, Patient, Practice, PracticeGroup, PracticeTelecom, User, UserPatient, UserTelecom, VoipProvider
+from .models import (
+    Agent,
+    Client,
+    Organization,
+    Patient,
+    Practice,
+    PracticeTelecom,
+    User,
+    UserPatient,
+    UserTelecom,
+    VoipProvider,
+)
 
 admin.site.unregister(Group)
 
@@ -52,7 +63,7 @@ class PracticeAdmin(admin.ModelAdmin):
     form = PracticeAdminForm
 
 
-class PracticeGroupAdmin(admin.ModelAdmin):
+class OrganizationAdmin(admin.ModelAdmin):
     list_display = ("id", "name")
 
 
@@ -72,7 +83,7 @@ admin.site.register(Agent, AgentAdmin)
 admin.site.register(Client, ClientAdmin)
 admin.site.register(Patient, PatientAdmin)
 admin.site.register(Practice, PracticeAdmin)
-admin.site.register(PracticeGroup, PracticeGroupAdmin)
+admin.site.register(Organization, OrganizationAdmin)
 admin.site.register(PracticeTelecom, PracticeTelecomAdmin)
 admin.site.register(User, UserAdmin)
 admin.site.register(UserPatient, UserPatientAdmin)

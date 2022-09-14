@@ -4,7 +4,7 @@ from typing import Dict, Optional, Tuple
 from rest_framework.request import Request
 
 from calls.field_choices import CallDirectionTypes
-from core.models import Agent, InsuranceProvider, Practice, PracticeGroup
+from core.models import Agent, InsuranceProvider, Organization, Practice
 from core.validation import validate_date_format, validate_dates
 
 # Get an instance of a logger
@@ -94,25 +94,25 @@ def get_validated_call_purpose(request: Request) -> Tuple[Optional[str], Optiona
     return call_direction, None
 
 
-def get_validated_practice_group_id(request: Request) -> Tuple[Optional[str], Optional[Dict[str, str]]]:
-    param_name = "practice_group__id"
-    practice_group_id = request.query_params.get(param_name)
-    invalid_error = {param_name: f"Invalid {param_name}='{practice_group_id}'"}
+def get_validated_organization_id(request: Request) -> Tuple[Optional[str], Optional[Dict[str, str]]]:
+    param_name = "organization__id"
+    organization_id = request.query_params.get(param_name)
+    invalid_error = {param_name: f"Invalid {param_name}='{organization_id}'"}
 
-    if not practice_group_id:
+    if not organization_id:
         return None, None
 
     if request.user.is_staff or request.user.is_superuser:
-        if PracticeGroup.objects.filter(id=practice_group_id).exists():
-            return practice_group_id, None
+        if Organization.objects.filter(id=organization_id).exists():
+            return organization_id, None
         return None, invalid_error
 
     # Can see any practice's resources if you are an assigned agent to a practice
-    allowed_practice_group_ids = Agent.objects.filter(user=request.user).values_list("practice__practice_group__id", flat=True)
-    if practice_group_id not in allowed_practice_group_ids:
-        return None, {param_name: f"Invalid {param_name}='{practice_group_id}'"}
+    allowed_organization_ids = Agent.objects.filter(user=request.user).values_list("practice__organization__id", flat=True)
+    if organization_id not in allowed_organization_ids:
+        return None, {param_name: f"Invalid {param_name}='{organization_id}'"}
 
-    return practice_group_id, None
+    return organization_id, None
 
 
 def get_validated_insurance_provider(request: Request) -> Optional[InsuranceProvider]:
