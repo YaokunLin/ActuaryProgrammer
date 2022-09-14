@@ -122,7 +122,7 @@ class Practice(AuditTrailModel):
 
     address_us_state = USStateField(blank=True, default="AZ")  # yes, it's a char field behind the scenes
 
-    practice_group = models.ForeignKey("PracticeGroup", null=True, blank=True, on_delete=models.SET_NULL)
+    organization = models.ForeignKey("core.Organization", null=True, blank=True, on_delete=models.SET_NULL)
 
     objects = PracticeManager()
 
@@ -140,7 +140,7 @@ class Practice(AuditTrailModel):
     objects = PracticeManager()
 
 
-class PracticeGroup(AuditTrailModel):
+class Organization(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     name = models.CharField(_("name"), max_length=150)
 

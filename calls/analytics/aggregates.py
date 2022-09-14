@@ -497,11 +497,11 @@ def calculate_call_sentiments(calls_qs: QuerySet) -> Dict:
     return call_sentiment_counts
 
 
-def calculate_call_breakdown_per_practice(calls_qs: QuerySet, practice_group_id: str, overall_call_counts_data: Dict) -> Dict:
+def calculate_call_breakdown_per_practice(calls_qs: QuerySet, organization_id: str, overall_call_counts_data: Dict) -> Dict:
     per_practice = {}
     per_practice_averages = {}
     call_sentiment_counts = {}
-    num_practices = Practice.objects.filter(practice_group_id=practice_group_id).count()
+    num_practices = Practice.objects.filter(organization_id=organization_id).count()
     if num_practices:
         per_practice_averages["call_count"] = overall_call_counts_data["call_total"] / num_practices
         per_practice_averages["call_connected_count"] = overall_call_counts_data["call_connected_total"] / num_practices

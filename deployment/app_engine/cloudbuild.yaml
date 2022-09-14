@@ -60,7 +60,8 @@ steps:
         for service in default django-migrate django-createsuperuser; do \
         versions=$(gcloud app versions list --service "$service" --sort-by '~VERSION.ID' --format 'value(VERSION.ID)' | sed 1,15d) \
         && for version in $versions; do gcloud app versions delete "$version" --service "$service" --quiet; done; done
-    timeout: "600s"
+    timeout: "90s"
+tags: ['complete']
 
 timeout: "1600s"
 
