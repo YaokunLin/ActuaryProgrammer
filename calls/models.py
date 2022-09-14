@@ -71,7 +71,7 @@ class Call(AuditTrailModel):
     callee_type = models.CharField(choices=EngagementPersonaTypes.choices, max_length=50, blank=True)
 
     @property
-    def latest_audio_signed_url(self) -> str:
+    def latest_audio_signed_url(self) -> Optional[str]:
         signed_url = None
         try:
             call_audio = CallAudio.objects.order_by("-modified_at").filter(call=self).first()
@@ -81,7 +81,7 @@ class Call(AuditTrailModel):
         return signed_url
 
     @property
-    def latest_transcript_signed_url(self) -> str:
+    def latest_transcript_signed_url(self) -> Optional[str]:
         signed_url = None
         try:
             call_transcript = CallTranscript.objects.order_by("-modified_at").filter(call=self).first()

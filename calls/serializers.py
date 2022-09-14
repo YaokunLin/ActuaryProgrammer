@@ -37,7 +37,6 @@ from calls.models import (
     CallTranscriptPartial,
     TelecomCallerNameInfo,
 )
-from peerlogic.settings import PEERLOGIC_API_URL
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -59,8 +58,8 @@ class CallSerializer(serializers.ModelSerializer):
     mentioned_symptoms = serializers.SerializerMethodField()
 
     # latest audio and transcript URLs
-    latest_audio_url = serializers.SerializerMethodField()
-    latest_transcript_url = serializers.SerializerMethodField()
+    has_audio = serializers.SerializerMethodField()
+    has_transcript = serializers.SerializerMethodField()
 
     call_sentiments = InlineCallSentimentSerializer(many=True, read_only=True)
 
@@ -153,19 +152,28 @@ class CallSerializer(serializers.ModelSerializer):
         data = getattr(call, "mentioned_symptom_distinct_keywords", call.mentioned_symptoms.distinct("keyword"))
         return InlineCallMentionedSymptomSerializer(data, many=True).data
 
-    def get_latest_audio_url(self, call: Call) -> Optional[str]:
-        if call.callaudio_set.exists():
-            return f"{PEERLOGIC_API_URL}/calls/{call.id}/latest-audio/"
+    def get_has_audio(self, call: Call) -> bool:
+        return call.callaudio_set.exists()
 
-    def get_latest_transcript_url(self, call: Call) -> Optional[str]:
-        if call.calltranscript_set.exists():
-            return f"{PEERLOGIC_API_URL}/calls/{call.id}/latest-transcript/"
+    def get_has_transcript(self, call: Call) -> bool:
+        return call.calltranscript_set.exists()
 
     class Meta:
         model = Call
         fields = "__all__"
         # TODO: Return non-signed URLs
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "domain", "latest_audio_signed_url", "latest_transcript_signed_url"]
+
+
+class CallDetailsSerializer(CallSerializer):
+    latest_audio_signed_url = serializers.SerializerMethodField()
+    latest_transcript_signed_url = serializers.SerializerMethodField()
+
+    def get_latest_audio_signed_url(self, call: Call) -> Optional[str]:
+        return call.latest_audio_signed_url
+
+    def get_latest_transcript_signed_url(self, call: Call) -> Optional[str]:
+        return call.latest_transcript_signed_url
 
 
 class CallNestedRouterBaseWriteSerializerMixin(object):

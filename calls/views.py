@@ -73,6 +73,7 @@ from .serializers import (
     CallAudioPartialReadOnlySerializer,
     CallAudioPartialSerializer,
     CallAudioSerializer,
+    CallDetailsSerializer,
     CallLabelSerializer,
     CallNoteReadSerializer,
     CallNoteWriteSerializer,
@@ -135,51 +136,10 @@ class CallViewset(viewsets.ModelViewSet):
 
         return query_set.order_by("-call_start_time")
 
-
-class GetLatestCallTranscript(RetrieveAPIView):
-    def get(self, request: Request, pk: str):
-        if self.request.user.is_staff or self.request.user.is_superuser:
-            query_set = Call.objects.all()
-        elif self.request.method in SAFE_METHODS:
-            # Can see any practice's calls if you are an assigned agent to a practice
-            practice_ids = Agent.objects.filter(user=self.request.user).values_list("practice_id", flat=True)
-            query_set = Call.objects.filter(practice__id__in=practice_ids)
-        else:
-            query_set = Call.objects.none()
-
-        try:
-            call = query_set.get(pk=pk)
-        except Call.DoesNotExist:
-            raise NotFound()
-
-        presigned_url = call.latest_transcript_signed_url
-        if not presigned_url:
-            raise NotFound()
-
-        return redirect(presigned_url)
-
-
-class GetLatestCallAudio(RetrieveAPIView):
-    def get(self, request: Request, pk: str) -> Response:
-        if self.request.user.is_staff or self.request.user.is_superuser:
-            query_set = Call.objects.all()
-        elif self.request.method in SAFE_METHODS:
-            # Can see any practice's calls if you are an assigned agent to a practice
-            practice_ids = Agent.objects.filter(user=self.request.user).values_list("practice_id", flat=True)
-            query_set = Call.objects.filter(practice__id__in=practice_ids)
-        else:
-            query_set = Call.objects.none()
-
-        try:
-            call = query_set.get(pk=pk)
-        except Call.DoesNotExist:
-            raise NotFound()
-
-        presigned_url = call.latest_audio_signed_url
-        if not presigned_url:
-            raise NotFound()
-
-        return redirect(presigned_url)
+    def retrieve(self, request: Request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = CallDetailsSerializer(instance)
+        return Response(serializer.data)
 
 
 class GetCallAudioPartial(ListAPIView):

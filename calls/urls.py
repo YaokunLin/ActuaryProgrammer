@@ -52,8 +52,6 @@ from calls.views import (
     GetCallAudioPartials,
     GetCallTranscriptPartial,
     GetCallTranscriptPartials,
-    GetLatestCallAudio,
-    GetLatestCallTranscript,
     TelecomCallerNameInfoViewSet,
 )
 
@@ -97,10 +95,6 @@ urlpatterns = [
     # Field choices
     path(r"call-analytics-field-choices", CallAnalyticsFieldChoicesView.as_view(), name="call-analytics-field-choices"),
     path(r"call-field-choices", CallFieldChoicesView.as_view(), name="call-field-choices"),
-    # Latest Call Audio
-    path(r"calls/<pk>/latest-audio/", GetLatestCallAudio.as_view(), name="latest-transcript"),
-    # Latest Call Transcript
-    path(r"calls/<pk>/latest-transcript/", GetLatestCallTranscript.as_view(), name="latest-transcript"),
     # Call Audio Partials (root)
     path(r"audio-partials/<pk>/", GetCallAudioPartial.as_view(), name="audio-partial"),
     path(r"audio-partials/", GetCallAudioPartials.as_view(), name="audio-partials"),
