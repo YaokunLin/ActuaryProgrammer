@@ -23,7 +23,7 @@ from calls.validation import (
     ALL_FILTER_NAME,
     get_validated_call_dates,
     get_validated_call_direction,
-    get_validated_practice_group_id,
+    get_validated_organization_id,
     get_validated_practice_id,
 )
 from core.models import Practice
@@ -45,7 +45,7 @@ class CallMetricsView(views.APIView):
     @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
-        valid_practice_group_id, practice_group_errors = get_validated_practice_group_id(request=request)
+        valid_organization_id, organization_errors = get_validated_organization_id(request=request)
         valid_call_direction, call_direction_errors = get_validated_call_direction(request=request)
         dates_info = get_validated_call_dates(query_data=request.query_params)
         dates_errors = dates_info.get("errors")
@@ -53,11 +53,11 @@ class CallMetricsView(views.APIView):
         errors = {}
         if practice_errors:
             errors.update(practice_errors)
-        if practice_group_errors:
-            errors.update(practice_group_errors)
-        if not practice_errors and not practice_group_errors and bool(valid_practice_id) == bool(valid_practice_group_id):
-            error_message = "practice__id or practice__group_id must be provided, but not both."
-            errors.update({"practice__id": error_message, "practice__group_id": error_message})
+        if organization_errors:
+            errors.update(organization_errors)
+        if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id):
+            error_message = "practice__id or practice__organization_id must be provided, but not both."
+            errors.update({"practice__id": error_message, "practice__organization_id": error_message})
         if dates_errors:
             errors.update(dates_errors)
         if errors:
@@ -67,9 +67,9 @@ class CallMetricsView(views.APIView):
         if valid_practice_id:
             practice_filter = {"practice__id": valid_practice_id}
 
-        practice_group_filter = {}
-        if valid_practice_group_id:
-            practice_group_filter = {"practice__practice_group_id": valid_practice_group_id}
+        organization_filter = {}
+        if valid_organization_id:
+            organization_filter = {"practice__organization_id": valid_organization_id}
 
         # date filters
         dates = dates_info.get("dates")
@@ -87,7 +87,7 @@ class CallMetricsView(views.APIView):
             # TODO: Default to no filter after dependency is removed
             pass  # call_direction_filter = {"call_direction": CallDirectionTypes.OUTBOUND}
 
-        analytics = get_call_counts(dates_filter, practice_filter, practice_group_filter, call_direction_filter)
+        analytics = get_call_counts(dates_filter, practice_filter, organization_filter, call_direction_filter)
 
         return Response({"results": analytics})
 
@@ -95,14 +95,14 @@ class CallMetricsView(views.APIView):
 def get_call_counts(
     dates_filter: Optional[Dict[str, str]],
     practice_filter: Optional[Dict[str, str]],
-    practice_group_filter: Optional[Dict[str, str]],
+    organization_filter: Optional[Dict[str, str]],
     call_direction_filter: Optional[Dict[str, str]],
 ) -> Dict[str, Any]:
     start_date_str = dates_filter["call_start_time__gte"]
     end_date_str = dates_filter["call_start_time__lte"]
 
     # set re-usable filters
-    filters = Q(**call_direction_filter) & Q(**dates_filter) & Q(**practice_filter) & Q(**practice_group_filter)
+    filters = Q(**call_direction_filter) & Q(**dates_filter) & Q(**practice_filter) & Q(**organization_filter)
 
     # set re-usable filtered queryset
     calls_qs = Call.objects.filter(filters)
@@ -117,9 +117,9 @@ def get_call_counts(
     }
 
     # TODO: PTECH-1240
-    # if practice_group_filter:
+    # if organization_filter:
     #     analytics["calls_per_practice"] = calculate_call_breakdown_per_practice(
-    #         calls_qs, practice_group_filter.get("practice__practice_group_id"), analytics["calls_overall"]
+    #         calls_qs, organization_filter.get("practice__organization_id"), analytics["calls_overall"]
     #     )
     return analytics
 
@@ -132,18 +132,18 @@ class OpportunitiesPerUserView(views.APIView):
     @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
-        valid_practice_group_id, practice_group_errors = get_validated_practice_group_id(request=request)
+        valid_organization_id, organization_errors = get_validated_organization_id(request=request)
         dates_info = get_validated_call_dates(query_data=request.query_params)
         dates_errors = dates_info.get("errors")
 
         errors = {}
         if practice_errors:
             errors.update(practice_errors)
-        if practice_group_errors:
-            errors.update(practice_group_errors)
-        if not practice_errors and not practice_group_errors and bool(valid_practice_id) == bool(valid_practice_group_id):
-            error_message = "practice__id or practice__group_id must be provided, but not both."
-            errors.update({"practice__id": error_message, "practice__group_id": error_message})
+        if organization_errors:
+            errors.update(organization_errors)
+        if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id):
+            error_message = "practice__id or practice__organization_id must be provided, but not both."
+            errors.update({"practice__id": error_message, "practice__organization_id": error_message})
         if dates_errors:
             errors.update(dates_errors)
         if errors:
@@ -155,9 +155,9 @@ class OpportunitiesPerUserView(views.APIView):
             practice_filter = {"practice__id": valid_practice_id}
 
         # TODO: PTECH-1240
-        # practice_group_filter = {}
-        # if valid_practice_group_id:
-        #     practice_group_filter = {"practice__practice_group__id": valid_practice_group_id}
+        # organization_filter = {}
+        # if valid_organization_id:
+        #     organization_filter = {"practice__organization__id": valid_organization_id}
 
         # date filters
         dates = dates_info.get("dates")
@@ -188,18 +188,18 @@ class NewPatientOpportunitiesView(views.APIView):
     @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
-        valid_practice_group_id, practice_group_errors = get_validated_practice_group_id(request=request)
+        valid_organization_id, organization_errors = get_validated_organization_id(request=request)
         dates_info = get_validated_call_dates(query_data=request.query_params)
         dates_errors = dates_info.get("errors")
 
         errors = {}
         if practice_errors:
             errors.update(practice_errors)
-        if practice_group_errors:
-            errors.update(practice_group_errors)
-        if not practice_errors and not practice_group_errors and bool(valid_practice_id) == bool(valid_practice_group_id):
-            error_message = "practice__id or practice__group_id must be provided, but not both."
-            errors.update({"practice__id": error_message, "practice__group_id": error_message})
+        if organization_errors:
+            errors.update(organization_errors)
+        if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id):
+            error_message = "practice__id or practice__organization_id must be provided, but not both."
+            errors.update({"practice__id": error_message, "practice__organization_id": error_message})
         if dates_errors:
             errors.update(dates_errors)
         if errors:
@@ -210,9 +210,9 @@ class NewPatientOpportunitiesView(views.APIView):
         if valid_practice_id:
             practice_filter = {"practice__id": valid_practice_id}
 
-        practice_group_filter = {}
-        if valid_practice_group_id:
-            practice_group_filter = {"practice__practice_group__id": valid_practice_group_id}
+        organization_filter = {}
+        if valid_organization_id:
+            organization_filter = {"practice__organization__id": valid_organization_id}
 
         # date filters
         dates = dates_info.get("dates")
@@ -227,7 +227,7 @@ class NewPatientOpportunitiesView(views.APIView):
             engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT,
             **dates_filter,
             **practice_filter,
-            **practice_group_filter,
+            **organization_filter,
         )
         aggregates["new_patient_opportunities_total"] = new_patient_opportunities_qs.count()
         aggregates["new_patient_opportunities_time_series"] = _calculate_new_patient_opportunities_time_series(new_patient_opportunities_qs, dates[0], dates[1])
@@ -238,7 +238,7 @@ class NewPatientOpportunitiesView(views.APIView):
             call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.SUCCESS,
             **dates_filter,
             **practice_filter,
-            **practice_group_filter,
+            **organization_filter,
         )
         aggregates["new_patient_opportunities_won_total"] = new_patient_opportunities_won_qs.count()
 
@@ -248,7 +248,7 @@ class NewPatientOpportunitiesView(views.APIView):
             call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.FAILURE,
             **dates_filter,
             **practice_filter,
-            **practice_group_filter,
+            **organization_filter,
         )
         aggregates["new_patient_opportunities_lost_total"] = new_patient_opportunities_lost_qs.count()
 
@@ -261,9 +261,9 @@ class NewPatientOpportunitiesView(views.APIView):
             )
 
         # TODO: PTECH-1240
-        if practice_group_filter:
+        if organization_filter:
             per_practice_averages = {}
-            num_practices = Practice.objects.filter(practice_group_id=valid_practice_group_id).count()
+            num_practices = Practice.objects.filter(organization_id=valid_organization_id).count()
             per_practice_averages["new_patient_opportunities"] = aggregates["new_patient_opportunities_total"] / num_practices
             per_practice_averages["new_patient_opportunities_won"] = aggregates["new_patient_opportunities_won_total"] / num_practices
             per_practice_averages["new_patient_opportunities_lost"] = aggregates["new_patient_opportunities_lost_total"] / num_practices
@@ -287,18 +287,18 @@ class NewPatientWinbacksView(views.APIView):
     @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
-        valid_practice_group_id, practice_group_errors = get_validated_practice_group_id(request=request)
+        valid_organization_id, organization_errors = get_validated_organization_id(request=request)
         dates_info = get_validated_call_dates(query_data=request.query_params)
         dates_errors = dates_info.get("errors")
 
         errors = {}
         if practice_errors:
             errors.update(practice_errors)
-        if practice_group_errors:
-            errors.update(practice_group_errors)
-        if not practice_errors and not practice_group_errors and bool(valid_practice_id) == bool(valid_practice_group_id):
-            error_message = "practice__id or practice__group_id must be provided, but not both."
-            errors.update({"practice__id": error_message, "practice__group_id": error_message})
+        if organization_errors:
+            errors.update(organization_errors)
+        if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id):
+            error_message = "practice__id or practice__organization_id must be provided, but not both."
+            errors.update({"practice__id": error_message, "practice__organization_id": error_message})
         if dates_errors:
             errors.update(dates_errors)
         if errors:
@@ -309,9 +309,9 @@ class NewPatientWinbacksView(views.APIView):
         if valid_practice_id:
             practice_filter = {"practice__id": valid_practice_id}
 
-        practice_group_filter = {}
-        if valid_practice_group_id:
-            practice_group_filter = {"practice__practice_group__id": valid_practice_group_id}
+        organization_filter = {}
+        if valid_organization_id:
+            organization_filter = {"practice__organization__id": valid_organization_id}
 
         # date filters
         dates = dates_info.get("dates")
@@ -326,11 +326,11 @@ class NewPatientWinbacksView(views.APIView):
             engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT,
             **dates_filter,
             **practice_filter,
-            **practice_group_filter,
+            **organization_filter,
         )
 
         winback_opportunities_total_qs = new_patient_opportunities_qs.filter(
-            call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.FAILURE, **dates_filter, **practice_filter, **practice_group_filter
+            call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.FAILURE, **dates_filter, **practice_filter, **organization_filter
         )
         winback_opportunities_won_qs = Call.objects.filter(
             call_direction=CallDirectionTypes.OUTBOUND,
@@ -338,7 +338,7 @@ class NewPatientWinbacksView(views.APIView):
             call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.SUCCESS,
             **dates_filter,
             **practice_filter,
-            **practice_group_filter,
+            **organization_filter,
         )
         winback_opportunities_lost_qs = Call.objects.filter(
             call_direction=CallDirectionTypes.OUTBOUND,
@@ -346,7 +346,7 @@ class NewPatientWinbacksView(views.APIView):
             call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.FAILURE,
             **dates_filter,
             **practice_filter,
-            **practice_group_filter,
+            **organization_filter,
         )
         aggregates["winback_opportunities_time_series"] = _calculate_winback_time_series(
             winback_opportunities_total_qs, winback_opportunities_won_qs, winback_opportunities_lost_qs, dates[0], dates[1]
@@ -359,8 +359,8 @@ class NewPatientWinbacksView(views.APIView):
         aggregates["winback_opportunities_open"] = aggregates.get("winback_opportunities_total", 0) - aggregates.get("winback_opportunities_attempted", 0)
 
         # TODO: PTECH-1240
-        # if practice_group_filter:
-        #     num_practices = Practice.objects.filter(practice_group_id=valid_practice_group_id).count()
+        # if organization_filter:
+        #     num_practices = Practice.objects.filter(organization_id=valid_organization_id).count()
         #     aggregates["per_practice_averages"] = {
         #         "winback_opportunities_total": aggregates["winback_opportunities_total"] / num_practices,
         #         "winback_opportunities_won": aggregates["winback_opportunities_won"] / num_practices,

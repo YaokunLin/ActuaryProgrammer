@@ -29,7 +29,7 @@ from calls.models import Call
 from calls.validation import (
     get_validated_call_dates,
     get_validated_insurance_provider,
-    get_validated_practice_group_id,
+    get_validated_organization_id,
     get_validated_practice_id,
 )
 from core.models import InsuranceProviderPhoneNumber
@@ -207,18 +207,18 @@ class InsuranceProviderMentionedView(views.APIView):
             size = max(0, min(50, int(request.query_params.get("size", size))))
 
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
-        valid_practice_group_id, practice_group_errors = get_validated_practice_group_id(request=request)
+        valid_organization_id, organization_errors = get_validated_organization_id(request=request)
         dates_info = get_validated_call_dates(query_data=request.query_params)
         dates_errors = dates_info.get("errors")
 
         errors = {}
         if practice_errors:
             errors.update(practice_errors)
-        if practice_group_errors:
-            errors.update(practice_group_errors)
-        if not practice_errors and not practice_group_errors and bool(valid_practice_id) == bool(valid_practice_group_id):
-            error_message = "practice__id or practice__group_id must be provided, but not both."
-            errors.update({"practice__id": error_message, "practice__group_id": error_message})
+        if organization_errors:
+            errors.update(organization_errors)
+        if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id):
+            error_message = "practice__id or organization__id must be provided, but not both."
+            errors.update({"practice__id": error_message, "organization__id": error_message})
         if dates_errors:
             errors.update(dates_errors)
         if errors:
@@ -228,9 +228,9 @@ class InsuranceProviderMentionedView(views.APIView):
         if valid_practice_id:
             practice_filter = {"practice__id": valid_practice_id}
 
-        practice_group_filter = {}
-        if valid_practice_group_id:
-            practice_group_filter = {"practice__practice_group_id": valid_practice_group_id}
+        organization_filter = {}
+        if valid_organization_id:
+            organization_filter = {"practice__organization_id": valid_organization_id}
 
         # date filters
         dates = dates_info.get("dates")
@@ -247,7 +247,7 @@ class InsuranceProviderMentionedView(views.APIView):
             )
             & Q(**dates_filter)
             & Q(**practice_filter)
-            & Q(**practice_group_filter)
+            & Q(**organization_filter)
             & Q(mentioned_insurances__keyword__isnull=False)
         )
         calls_qs = Call.objects.select_related("mentioned_insurances").filter(all_filters)
@@ -277,18 +277,18 @@ class InsuranceProviderCallMetricsView(views.APIView):
     def get(self, request, format=None):
         insurance_provider = get_validated_insurance_provider(request)
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
-        valid_practice_group_id, practice_group_errors = get_validated_practice_group_id(request=request)
+        valid_organization_id, organization_errors = get_validated_organization_id(request=request)
         dates_info = get_validated_call_dates(query_data=request.query_params)
         dates_errors = dates_info.get("errors")
 
         errors = {}
         if practice_errors:
             errors.update(practice_errors)
-        if practice_group_errors:
-            errors.update(practice_group_errors)
-        if not practice_errors and not practice_group_errors and bool(valid_practice_id) == bool(valid_practice_group_id):
-            error_message = "practice__id or practice__group_id must be provided, but not both."
-            errors.update({"practice__id": error_message, "practice__group_id": error_message})
+        if organization_errors:
+            errors.update(organization_errors)
+        if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id):
+            error_message = "practice__id or practice__organization_id must be provided, but not both."
+            errors.update({"practice__id": error_message, "practice__organization_id": error_message})
         if dates_errors:
             errors.update(dates_errors)
         if errors:
@@ -298,9 +298,9 @@ class InsuranceProviderCallMetricsView(views.APIView):
         if valid_practice_id:
             practice_filter = {"practice__id": valid_practice_id}
 
-        practice_group_filter = {}
-        if valid_practice_group_id:
-            practice_group_filter = {"practice__practice_group_id": valid_practice_group_id}
+        organization_filter = {}
+        if valid_organization_id:
+            organization_filter = {"practice__organization_id": valid_organization_id}
 
         # date filters
         dates = dates_info.get("dates")
@@ -316,7 +316,7 @@ class InsuranceProviderCallMetricsView(views.APIView):
             Q(call_direction=CallDirectionTypes.OUTBOUND)
             & Q(**dates_filter)
             & Q(**practice_filter)
-            & Q(**practice_group_filter)
+            & Q(**organization_filter)
             & insurance_provider_phone_number_filter
         )
         calls_qs = Call.objects.filter(all_filters)
@@ -342,9 +342,9 @@ class InsuranceProviderCallMetricsView(views.APIView):
 
         # TODO: PTECH-1240
         #
-        #     if practice_group_filter:
+        #     if organization_filter:
         #         analytics["calls_per_practice"] = calculate_call_breakdown_per_practice(
-        #             calls_qs, practice_group_filter.get("practice__practice_group_id"), analytics["calls_overall"]
+        #             calls_qs, organization_filter.get("practice__organization_id"), analytics["calls_overall"]
         #         )
 
         return Response(analytics)
