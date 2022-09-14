@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from django.db.models import QuerySet
 from django_countries.serializers import CountryFieldMixin
@@ -17,6 +17,7 @@ from calls.inline_serializers import (
     InlineCallPurposeSerializer,
     InlineCallSentimentSerializer,
 )
+from peerlogic.settings import PEERLOGIC_API_URL
 
 from .models import (
     Call,
@@ -40,11 +41,6 @@ class CallSerializer(serializers.ModelSerializer):
     # TODO: this should not be many-many definitionally but only works when that is set to True
     assigned_agent = AgentAssignedCallSerializer(many=True, required=False)
 
-    # TODO: fix both urls (LISTEN)
-    # TODO: Not signed
-    latest_audio_signed_url = serializers.CharField(allow_null=True, required=False)
-    latest_transcript_signed_url = serializers.CharField(allow_null=True, required=False)
-
     call_purposes = serializers.SerializerMethodField()  # Includes outcome and outcome reasons
 
     # mentioned, inline
@@ -53,6 +49,10 @@ class CallSerializer(serializers.ModelSerializer):
     mentioned_procedures = serializers.SerializerMethodField()
     mentioned_products = serializers.SerializerMethodField()
     mentioned_symptoms = serializers.SerializerMethodField()
+
+    # latest audio and transcript URLs
+    latest_audio_url = serializers.SerializerMethodField()
+    latest_transcript_url = serializers.SerializerMethodField()
 
     call_sentiments = InlineCallSentimentSerializer(many=True, read_only=True)
 
@@ -96,6 +96,14 @@ class CallSerializer(serializers.ModelSerializer):
     def get_mentioned_symptoms(self, call: Call) -> ReturnDict:
         data = getattr(call, "mentioned_symptom_distinct_keywords", call.mentioned_symptoms.distinct("keyword"))
         return InlineCallMentionedSymptomSerializer(data, many=True).data
+
+    def get_latest_audio_url(self, call: Call) -> Optional[str]:
+        if call.callaudio_set.exists():
+            return f"{PEERLOGIC_API_URL}/calls/latest-audio/{call.id}"
+
+    def get_latest_transcript_url(self, call: Call) -> Optional[str]:
+        if call.calltranscript_set.exists():
+            return f"{PEERLOGIC_API_URL}/calls/latest-transcript/{call.id}"
 
     class Meta:
         model = Call

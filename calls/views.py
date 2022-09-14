@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Union
 
 from django.conf import settings
 from django.db import DatabaseError, transaction
-from django.db.models import Prefetch
+from django.db.models import Exists, OuterRef, Prefetch
 from django.http import Http404, HttpResponseBadRequest
 from django_filters.rest_framework import (
     DjangoFilterBackend,  # brought in for a backend filter override
@@ -133,10 +133,8 @@ class CallViewset(viewsets.ModelViewSet):
     )  # note: these must be kept up to date with settings.py values!
 
     def get_queryset(self):
-        # TODO: Remove query debug logging
-        # l = logging.getLogger('django.db.backends')
-        # l.setLevel(logging.DEBUG)
-        # l.addHandler(logging.StreamHandler())
+        # from peerlogic.debugging import enable_orm_query_logging
+        # enable_orm_query_logging()
 
         query_set = Call.objects.none()
 
@@ -152,13 +150,18 @@ class CallViewset(viewsets.ModelViewSet):
                 Prefetch("engaged_in_calls", queryset=AgentEngagedWith.objects.order_by("modified_at"), to_attr="agent_engaged_with_by_modified_at")
             )
             .prefetch_related(
-                Prefetch("call_purposes", queryset=CallPurpose.objects.distinct("call_id", "call_purpose_type"), to_attr="call_purpose_distinct_purpose_types")
+                Prefetch(
+                    "call_purposes",
+                    queryset=CallPurpose.objects.distinct("call_id", "call_purpose_type").prefetch_related("outcome_results__outcome_reason_results"),
+                    to_attr="call_purpose_distinct_purpose_types",
+                )
             )
-            .prefetch_related("call_purposes__outcome_results")
-            .prefetch_related("call_purposes__outcome_results__outcome_reason_results")
+            # .prefetch_related("call_purposes__outcome_results")
+            # .prefetch_related("call_purposes__outcome_results__outcome_reason_results")
             .prefetch_related("call_sentiments")
             .prefetch_related("assigned_agent")
             .prefetch_related("callaudio_set")
+            .prefetch_related("calltranscript_set")
             .prefetch_related(
                 Prefetch(
                     "mentioned_companies", queryset=CallMentionedCompany.objects.distinct("call_id", "keyword"), to_attr="mentioned_company_distinct_keywords"
