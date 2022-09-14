@@ -1,10 +1,9 @@
 import logging
 import re
-from typing import Any, Dict, List, Union
+from typing import Dict, List, Union
 
 from django.conf import settings
 from django.db import DatabaseError, transaction
-from django.db.models import Exists, OuterRef, Prefetch
 from django.http import Http404, HttpResponseBadRequest
 from django.shortcuts import redirect
 from django_filters.rest_framework import (
@@ -26,24 +25,12 @@ from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from twilio.base.exceptions import TwilioException
 
-from calls.analytics.intents.models import (
-    CallMentionedCompany,
-    CallMentionedInsurance,
-    CallMentionedProcedure,
-    CallMentionedProduct,
-    CallMentionedSymptom,
-    CallOutcome,
-    CallOutcomeReason,
-    CallPurpose,
-)
-from calls.analytics.participants.models import AgentAssignedCall, AgentEngagedWith
 from calls.filters import (
     CallSearchFilter,
     CallsFilter,
     CallTranscriptsFilter,
     CallTranscriptsSearchFilter,
 )
-from calls.models import CallAudio, CallTranscript
 from calls.publishers import (
     publish_call_audio_partial_saved,
     publish_call_audio_saved,
@@ -57,7 +44,6 @@ from core.file_upload import FileToUpload
 from core.models import Agent
 
 from .field_choices import (
-    AudioCodecType,
     CallAudioFileStatusTypes,
     CallConnectionTypes,
     CallDirectionTypes,
@@ -135,64 +121,17 @@ class CallViewset(viewsets.ModelViewSet):
     )  # note: these must be kept up to date with settings.py values!
 
     def get_queryset(self):
-        # from peerlogic.debugging import enable_orm_query_logging
-        # enable_orm_query_logging()
-
-        query_set = Call.objects.none()
+        calls_qs = Call.objects.none()
 
         if self.request.user.is_staff or self.request.user.is_superuser:
-            query_set = Call.objects.all()
+            calls_qs = Call.objects.all()
         elif self.request.method in SAFE_METHODS:
             # Can see any practice's calls if you are an assigned agent to a practice
             practice_ids = Agent.objects.filter(user=self.request.user).values_list("practice_id", flat=True)
-            query_set = Call.objects.filter(practice__id__in=practice_ids)
+            calls_qs = Call.objects.filter(practice__id__in=practice_ids)
 
-        query_set = (
-            query_set.prefetch_related(
-                Prefetch("engaged_in_calls", queryset=AgentEngagedWith.objects.order_by("modified_at"), to_attr="agent_engaged_with_by_modified_at")
-            )
-            .prefetch_related(
-                Prefetch(
-                    "call_purposes",
-                    queryset=CallPurpose.objects.distinct("call_id", "call_purpose_type").prefetch_related("outcome_results__outcome_reason_results"),
-                    to_attr="call_purpose_distinct_purpose_types",
-                )
-            )
-            .prefetch_related("call_sentiments")
-            .prefetch_related("assigned_agent")
-            .prefetch_related("callaudio_set")
-            .prefetch_related("calltranscript_set")
-            .prefetch_related(
-                Prefetch(
-                    "mentioned_companies", queryset=CallMentionedCompany.objects.distinct("call_id", "keyword"), to_attr="mentioned_company_distinct_keywords"
-                )
-            )
-            .prefetch_related(
-                Prefetch(
-                    "mentioned_products", queryset=CallMentionedProduct.objects.distinct("call_id", "keyword"), to_attr="mentioned_product_distinct_keywords"
-                )
-            )
-            .prefetch_related(
-                Prefetch(
-                    "mentioned_procedures",
-                    queryset=CallMentionedProcedure.objects.distinct("call_id", "keyword"),
-                    to_attr="mentioned_procedure_distinct_keywords",
-                )
-            )
-            .prefetch_related(
-                Prefetch(
-                    "mentioned_insurances",
-                    queryset=CallMentionedInsurance.objects.distinct("call_id", "keyword"),
-                    to_attr="mentioned_insurance_distinct_keywords",
-                )
-            )
-            .prefetch_related(
-                Prefetch(
-                    "mentioned_symptoms", queryset=CallMentionedSymptom.objects.distinct("call_id", "keyword"), to_attr="mentioned_symptom_distinct_keywords"
-                )
-            )
-        )
-        # TODO: Figure out total_value annotation below
+        query_set = CallSerializer.apply_queryset_prefetches(calls_qs)
+        # TODO: Figure out total_value annotation below?
 
         return query_set.order_by("-call_start_time")
 

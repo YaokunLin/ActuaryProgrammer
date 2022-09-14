@@ -1,11 +1,20 @@
 import logging
-from typing import Dict, List, Optional
+from typing import Optional
 
-from django.db.models import QuerySet
+from django.db.models import Prefetch, QuerySet
 from django_countries.serializers import CountryFieldMixin
 from rest_framework import serializers
 from rest_framework.utils.serializer_helpers import ReturnDict
 
+from calls.analytics.intents.models import (
+    CallMentionedCompany,
+    CallMentionedInsurance,
+    CallMentionedProcedure,
+    CallMentionedProduct,
+    CallMentionedSymptom,
+    CallPurpose,
+)
+from calls.analytics.participants.models import AgentEngagedWith
 from calls.analytics.participants.serializers import AgentAssignedCallSerializer
 from calls.inline_serializers import (
     InlineAgentEngagedWithSerializer,
@@ -17,9 +26,7 @@ from calls.inline_serializers import (
     InlineCallPurposeSerializer,
     InlineCallSentimentSerializer,
 )
-from peerlogic.settings import PEERLOGIC_API_URL
-
-from .models import (
+from calls.models import (
     Call,
     CallAudio,
     CallAudioPartial,
@@ -30,6 +37,7 @@ from .models import (
     CallTranscriptPartial,
     TelecomCallerNameInfo,
 )
+from peerlogic.settings import PEERLOGIC_API_URL
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -60,6 +68,54 @@ class CallSerializer(serializers.ModelSerializer):
     total_value = serializers.ReadOnlyField()
 
     domain = serializers.CharField(required=False)  # TODO: deprecate
+
+    @staticmethod
+    def apply_queryset_prefetches(calls_qs: QuerySet) -> QuerySet:
+        return (
+            calls_qs.prefetch_related(
+                Prefetch("engaged_in_calls", queryset=AgentEngagedWith.objects.order_by("modified_at"), to_attr="agent_engaged_with_by_modified_at")
+            )
+            .prefetch_related(
+                Prefetch(
+                    "call_purposes",
+                    queryset=CallPurpose.objects.distinct("call_id", "call_purpose_type").prefetch_related("outcome_results__outcome_reason_results"),
+                    to_attr="call_purpose_distinct_purpose_types",
+                )
+            )
+            .prefetch_related("call_sentiments")
+            .prefetch_related("assigned_agent")
+            .prefetch_related("callaudio_set")
+            .prefetch_related("calltranscript_set")
+            .prefetch_related(
+                Prefetch(
+                    "mentioned_companies", queryset=CallMentionedCompany.objects.distinct("call_id", "keyword"), to_attr="mentioned_company_distinct_keywords"
+                )
+            )
+            .prefetch_related(
+                Prefetch(
+                    "mentioned_products", queryset=CallMentionedProduct.objects.distinct("call_id", "keyword"), to_attr="mentioned_product_distinct_keywords"
+                )
+            )
+            .prefetch_related(
+                Prefetch(
+                    "mentioned_procedures",
+                    queryset=CallMentionedProcedure.objects.distinct("call_id", "keyword"),
+                    to_attr="mentioned_procedure_distinct_keywords",
+                )
+            )
+            .prefetch_related(
+                Prefetch(
+                    "mentioned_insurances",
+                    queryset=CallMentionedInsurance.objects.distinct("call_id", "keyword"),
+                    to_attr="mentioned_insurance_distinct_keywords",
+                )
+            )
+            .prefetch_related(
+                Prefetch(
+                    "mentioned_symptoms", queryset=CallMentionedSymptom.objects.distinct("call_id", "keyword"), to_attr="mentioned_symptom_distinct_keywords"
+                )
+            )
+        )
 
     def get_engaged_in_calls(self, call: Call):
         engaged_in_call = []
