@@ -258,6 +258,7 @@ INSTALLED_APPS = [
     "ml",
     "netsapiens_integration",
     "jive_integration",
+    "ringcentral_integration",
     "reminders",
     "fixture_magic",
 ]

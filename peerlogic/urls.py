@@ -30,6 +30,7 @@ admin.site.site_header = "Peerlogic API Admin Portal"
 integration_url_patterns = [
     path("netsapiens/", include("netsapiens_integration.urls", namespace="netsapiens")),
     path("jive/", include("jive_integration.urls", namespace="jive")),
+    path("ringcentral/", include("ringcentral_integration.urls", namespace="ringcentral"))
 ]
 
 urlpatterns = [
