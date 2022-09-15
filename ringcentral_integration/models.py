@@ -3,7 +3,7 @@ from django_extensions.db.fields import ShortUUIDField
 
 from core.abstract_models import AuditTrailModel
 
-# Create your models here.
+
 class RingCentralSessionEvent(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     sequence = models.CharField(null=False, blank=False, max_length=255)
