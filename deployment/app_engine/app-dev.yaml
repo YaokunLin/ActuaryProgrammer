@@ -37,4 +37,4 @@ handlers:
 # [END django_app]
 
 vpc_access_connector:
-  name: projects/peerlogic-api-prod/locations/us-west3/connectors/uw3-1
+  name: projects/peerlogic-api-dev/locations/us-west4/connectors/uw4-1

@@ -24,7 +24,7 @@ file: [peerlogic-api LOCAL  starter .env file](https://start.1password.com/open/
 Initialize Postgres and create the peerlogic database, without tables:
 
 ```bash
-docker-compose up postgres
+docker-compose up -d postgres
 ```
 
 Apply the structure of the tables to the database.
@@ -50,7 +50,29 @@ After initial build and api and postgres are running, start it all up:
 
 `docker-compose up`
 
-<!-- TODO: Generate fixtures to play with locally) -->
+Now it's time to [load data into your local database](fixtures/README.md)
+
+Auth0 Association:
+
+Find your user with @peerlogic.com in the Auth0 User [Local or Development environment user management dashboard](https://manage.auth0.com/dashboard/us/dev-ea57un9z/users)
+
+Grab your Auth0 user id (copy the entire thing including the `auth0|` prefix).
+
+Other environments:
+* [Stage](https://manage.auth0.com/dashboard/us/stage-peerlogic/users)
+* [Production](https://manage.auth0.com/dashboard/us/peerlogic/users)
+![alt text](docs/auth_setup_1.png "Find your user in the list")
+
+Then, associate your Auth0 User by navigating to the [admin](http://localhost:8000/admin/core/user/). Use your credentials of admin and password set above.
+
+In the DJANGO admin if you're not listed, Add a new user and give your information.
+
+Otherwise, click on your User's ID to edit your information.
+
+* Ensure is_staff or is_superuser is set to True.
+* add or update your Auth0 user id copied above into your Django / Peerlogic API user.
+
+Save it.
 
 All done!
 

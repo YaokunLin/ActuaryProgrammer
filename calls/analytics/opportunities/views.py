@@ -1,84 +1,63 @@
-import datetime
 import logging
-from collections import defaultdict
-from typing import Any, Dict, List, Optional, Tuple, cast
+from typing import Any, Dict, List, Optional
 
-import pandas as pd
-from django.db.models import Avg, Count, Q, QuerySet, Sum
-from django.db.models.functions import TruncDate, TruncHour, TruncWeek
-from django_pandas.io import read_frame
+from django.db.models import Q, QuerySet
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_control, cache_page
+from django.views.decorators.vary import vary_on_headers
 from rest_framework import status, views
-from rest_framework.request import Request
 from rest_framework.response import Response
 
+from calls.analytics.aggregates import (
+    calculate_call_count_opportunities,
+    calculate_call_counts,
+    calculate_call_counts_and_opportunities_per_user,
+    calculate_zero_filled_call_counts_by_day,
+    convert_call_counts_to_by_week,
+)
 from calls.analytics.intents.field_choices import CallOutcomeTypes
 from calls.analytics.participants.field_choices import NonAgentEngagementPersonaTypes
 from calls.field_choices import CallDirectionTypes
 from calls.models import Call
-from calls.validation import validate_call_dates
-from core.models import Agent, Practice, PracticeGroup
+from calls.validation import (
+    ALL_FILTER_NAME,
+    get_validated_call_dates,
+    get_validated_call_direction,
+    get_validated_organization_id,
+    get_validated_practice_id,
+)
+from core.models import Practice
+from peerlogic.settings import (
+    ANALYTICS_CACHE_VARY_ON_HEADERS,
+    CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS,
+    CACHE_TIME_ANALYTICS_SECONDS,
+)
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
 
-
-def get_validated_practice_id(request: Request) -> Tuple[Optional[str], Optional[Dict[str, str]]]:
-    param_name = "practice__id"
-    practice_id = request.query_params.get(param_name)
-    invalid_error = {param_name: f"Invalid {param_name}='{practice_id}'"}
-
-    if not practice_id:
-        return None, None
-
-    if request.user.is_staff or request.user.is_superuser:
-        if Practice.objects.filter(id=practice_id).exists():
-            return practice_id, None
-        return None, invalid_error
-
-    # Can see any practice's resources if you are an assigned agent to a practice
-    allowed_practice_ids = Agent.objects.filter(user=request.user).values_list(param_name, flat=True)
-    if practice_id not in allowed_practice_ids:
-        return None, invalid_error
-
-    return practice_id, None
-
-
-def get_validated_practice_group_id(request: Request) -> Tuple[Optional[str], Optional[Dict[str, str]]]:
-    param_name = "practice_group__id"
-    practice_group_id = request.query_params.get(param_name)
-    invalid_error = {param_name: f"Invalid {param_name}='{practice_group_id}'"}
-
-    if not practice_group_id:
-        return None, None
-
-    if request.user.is_staff or request.user.is_superuser:
-        if PracticeGroup.objects.filter(id=practice_group_id).exists():
-            return practice_group_id, None
-        return None, invalid_error
-
-    # Can see any practice's resources if you are an assigned agent to a practice
-    allowed_practice_group_ids = Agent.objects.filter(user=request.user).values_list("practice__practice_group__id", flat=True)
-    if practice_group_id not in allowed_practice_group_ids:
-        return None, {param_name: f"Invalid {param_name}='{practice_group_id}'"}
-
-    return practice_group_id, None
+REVENUE_PER_WINBACK_USD = 10_000
 
 
 class CallMetricsView(views.APIView):
+    @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
+    @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
+    @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
-        valid_practice_group_id, practice_group_errors = get_validated_practice_group_id(request=request)
-        dates_info = validate_call_dates(query_data=request.query_params)
+        valid_organization_id, organization_errors = get_validated_organization_id(request=request)
+        valid_call_direction, call_direction_errors = get_validated_call_direction(request=request)
+        dates_info = get_validated_call_dates(query_data=request.query_params)
         dates_errors = dates_info.get("errors")
 
         errors = {}
         if practice_errors:
             errors.update(practice_errors)
-        if practice_group_errors:
-            errors.update(practice_group_errors)
-        if not practice_errors and not practice_group_errors and bool(valid_practice_id) == bool(valid_practice_group_id):
-            error_message = "practice__id or practice__group_id must be provided, but not both."
-            errors.update({"practice__id": error_message, "practice__group_id": error_message})
+        if organization_errors:
+            errors.update(organization_errors)
+        if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id):
+            error_message = "practice__id or practice__organization_id must be provided, but not both."
+            errors.update({"practice__id": error_message, "practice__organization_id": error_message})
         if dates_errors:
             errors.update(dates_errors)
         if errors:
@@ -88,9 +67,9 @@ class CallMetricsView(views.APIView):
         if valid_practice_id:
             practice_filter = {"practice__id": valid_practice_id}
 
-        practice_group_filter = {}
-        if valid_practice_group_id:
-            practice_group_filter = {"practice__practice_group_id": valid_practice_group_id}
+        organization_filter = {}
+        if valid_organization_id:
+            organization_filter = {"practice__organization_id": valid_organization_id}
 
         # date filters
         dates = dates_info.get("dates")
@@ -98,287 +77,73 @@ class CallMetricsView(views.APIView):
         call_start_time__lte = dates[1]
         dates_filter = {"call_start_time__gte": call_start_time__gte, "call_start_time__lte": call_start_time__lte}
 
-        analytics = get_call_counts_for_outbound(dates_filter, practice_filter, practice_group_filter)
+        # TODO: include filters to REST API for other call directions (Inbound)
+        call_direction_filter = {}
+        if valid_call_direction == ALL_FILTER_NAME:
+            call_direction_filter = {}  # stating explicitly even though it is initialized above
+        elif valid_call_direction:
+            call_direction_filter = {"call_direction": valid_call_direction}
+        else:
+            # TODO: Default to no filter after dependency is removed
+            pass  # call_direction_filter = {"call_direction": CallDirectionTypes.OUTBOUND}
+
+        analytics = get_call_counts(dates_filter, practice_filter, organization_filter, call_direction_filter)
 
         return Response({"results": analytics})
 
 
-def get_call_counts_for_outbound(
+def get_call_counts(
     dates_filter: Optional[Dict[str, str]],
     practice_filter: Optional[Dict[str, str]],
-    practice_group_filter: Optional[Dict[str, str]],
+    organization_filter: Optional[Dict[str, str]],
+    call_direction_filter: Optional[Dict[str, str]],
 ) -> Dict[str, Any]:
-    analytics = {}
+    start_date_str = dates_filter["call_start_time__gte"]
+    end_date_str = dates_filter["call_start_time__lte"]
 
     # set re-usable filters
-    filters = Q(call_direction=CallDirectionTypes.OUTBOUND) & Q(**dates_filter) & Q(**practice_filter) & Q(**practice_group_filter)
+    filters = Q(**call_direction_filter) & Q(**dates_filter) & Q(**practice_filter) & Q(**organization_filter)
 
     # set re-usable filtered queryset
     calls_qs = Call.objects.filter(filters)
 
-    # perform call counts
-    analytics["calls_overall"] = calculate_call_counts(calls_qs)
-    analytics["calls_overall"]["call_sentiment_counts"] = calculate_call_sentiments(calls_qs)
+    analytics = {
+        "calls_overall": calculate_call_counts(calls_qs, True),  # perform call counts
+        "opportunities": calculate_call_count_opportunities(calls_qs, start_date_str, end_date_str),
+        # TODO: PTECH-1240
+        # "calls_per_user": calculate_call_counts_per_user(calls_qs),  # call counts per caller (agent) phone number
+        # "calls_per_user_by_date_and_hour": calculate_call_counts_per_user_by_date_and_hour(calls_qs),  # call counts per caller (agent) phone number over time
+        # "non_agent_engagement_types": calculate_call_non_agent_engagement_type_counts(calls_qs),  # call counts for non agents
+    }
 
-    # call counts per caller (agent) phone number
-    analytics["calls_per_user"] = calculate_per_user_call_counts(calls_qs)
-
-    # call counts per caller (agent) phone number over time
-    analytics["calls_per_user_by_date_and_hour"] = calculate_call_counts_per_user_time_series(calls_qs)
-
-    # call counts for non agents
-    analytics["non_agent_engagement_types"] = calculate_outbound_call_non_agent_engagement_type_counts(calls_qs)
-
-    if practice_group_filter:
-        practice_group_id = practice_group_filter.get("practice__practice_group_id")
-        per_practice_averages = {}
-        call_sentiment_counts = {}
-        num_practices = Practice.objects.filter(practice_group_id=practice_group_id).count()
-
-        calls_overall = analytics["calls_overall"]
-        per_practice_averages["call_total"] = calls_overall["call_total"] / num_practices
-        per_practice_averages["call_connected_total"] = calls_overall["call_connected_total"] / num_practices
-        per_practice_averages.update(calculate_call_count_durations_averages_per_practice(calls_qs))
-
-        sentiments_types = ("not_applicable", "positive", "neutral", "negative")
-        for sentiment_type in sentiments_types:
-            call_sentiment_counts[sentiment_type] = calls_overall["call_sentiment_counts"].get(sentiment_type, 0) / num_practices
-
-        per_practice_averages["call_sentiment_counts"] = call_sentiment_counts
-        analytics["per_practice_averages"] = per_practice_averages
-
+    # TODO: PTECH-1240
+    # if organization_filter:
+    #     analytics["calls_per_practice"] = calculate_call_breakdown_per_practice(
+    #         calls_qs, organization_filter.get("practice__organization_id"), analytics["calls_overall"]
+    #     )
     return analytics
 
 
-#
-# Overall Call Counts
-#
-def calculate_call_counts(calls_qs: QuerySet) -> Dict:
-    # get call counts
-    count_analytics = calls_qs.aggregate(
-        call_total=Count("id"),
-        call_connected_total=Count("call_connection", filter=Q(call_connection="connected")),
-        call_seconds_total=Sum("duration_seconds"),
-        call_seconds_average=Avg("duration_seconds"),
-    )
-
-    return count_analytics
-
-
-def calculate_call_count_durations_averages_per_practice(calls_qs: QuerySet) -> Dict:
-    # TODO: Maybe this is unnecessary and we can just do simple math :thnk:
-    call_seconds_total = (
-        calls_qs.values("practice_id").annotate(sum_duration_sec=Sum("duration_seconds")).aggregate(Avg("sum_duration_sec"))["sum_duration_sec__avg"]
-    )
-    call_seconds_average = (
-        calls_qs.values("practice_id").annotate(avg_duration_sec=Avg("duration_seconds")).aggregate(Avg("avg_duration_sec"))["avg_duration_sec__avg"]
-    )
-
-    return {"call_seconds_total": call_seconds_total, "call_seconds_average": call_seconds_average}
-
-
-def calculate_call_sentiments(calls_qs: QuerySet) -> Dict:
-    call_sentiment_score_key = "call_sentiments__caller_sentiment_score"
-    call_sentiment_analytics_qs = calls_qs.values(call_sentiment_score_key).annotate(count=Count(call_sentiment_score_key))
-
-    call_sentiment_counts = convert_count_results(call_sentiment_analytics_qs, call_sentiment_score_key, "count")
-    return call_sentiment_counts
-
-
-def calculate_outbound_call_non_agent_engagement_type_counts(calls_qs: QuerySet) -> Dict:
-    non_agent_engagement_key = "engaged_in_calls__non_agent_engagement_persona_type"
-    non_agent_engagement_qs = calls_qs.values(non_agent_engagement_key).annotate(count=Count(non_agent_engagement_key))
-
-    non_agent_engagement_counts = convert_count_results(non_agent_engagement_qs, non_agent_engagement_key, "count")
-    return non_agent_engagement_counts
-
-
-def _calculate_call_counts_per_field(calls_qs: QuerySet, field_name: str) -> Dict:
-    analytics = {}
-
-    # group by field name first
-    calls_qs = calls_qs.values(field_name)
-
-    # calculate and convert
-    analytics["call_total"] = calls_qs.annotate(count=Count("id")).order_by("-count")
-    analytics["call_total"] = convert_count_results(analytics["call_total"], field_name, "count")
-
-    analytics["call_connected_total"] = calls_qs.filter(call_connection="connected").annotate(count=Count("id")).order_by("-count")
-    analytics["call_connected_total"] = convert_count_results(analytics["call_connected_total"], field_name, "count")
-
-    analytics["call_seconds_total"] = calls_qs.annotate(call_seconds_total=Sum("duration_seconds")).order_by("-call_seconds_total")
-    analytics["call_seconds_total"] = convert_count_results(analytics["call_seconds_total"], field_name, "call_seconds_total")
-
-    analytics["call_seconds_average"] = calls_qs.annotate(call_seconds_average=Avg("duration_seconds")).order_by("-call_seconds_average")
-    analytics["call_seconds_average"] = convert_count_results(analytics["call_seconds_average"], field_name, "call_seconds_average")
-
-    analytics["call_sentiment_counts"] = (
-        calls_qs.values(field_name, "call_sentiments__caller_sentiment_score")
-        .annotate(call_sentiment_count=Count("call_sentiments__caller_sentiment_score"))
-        .values(field_name, "call_sentiments__caller_sentiment_score", "call_sentiment_count")
-        .order_by(field_name)
-    )
-    analytics["call_sentiment_counts"] = read_frame(analytics["call_sentiment_counts"])
-    analytics["call_sentiment_counts"] = (
-        analytics["call_sentiment_counts"]
-        .groupby(field_name)[["call_sentiments__caller_sentiment_score", "call_sentiment_count"]]
-        .apply(lambda x: x.to_dict(orient="records"))
-        .apply(lambda x: convert_count_results(x, "call_sentiments__caller_sentiment_score", "call_sentiment_count"))
-        .to_dict()
-    )
-
-    return analytics
-
-
-def calculate_per_practice_call_counts(calls_qs: QuerySet) -> Dict:
-    return _calculate_call_counts_per_field(calls_qs, "practice_id")
-
-
-def calculate_per_user_call_counts(calls_qs: QuerySet) -> Dict:
-    return _calculate_call_counts_per_field(calls_qs, "sip_caller_number")
-
-
-#
-# Call Counts - Per Field Time Series
-#
-def _calculate_call_counts_per_field_time_series(calls_qs: QuerySet, field_name: str) -> Dict:
-    analytics = {}
-
-    # group by field name first
-    calls_qs = calls_qs.values(field_name)
-
-    # calculate
-    analytics["calls_total"] = (
-        calls_qs.annotate(call_date_hour=TruncHour("call_start_time"))
-        .values(field_name, "call_date_hour")
-        .annotate(call_total=Count("id"))
-        .values(field_name, "call_date_hour", "call_total")
-        .order_by(field_name, "call_date_hour")
-    )
-    analytics["calls_total"] = read_frame(analytics["calls_total"])
-    analytics["calls_total"] = (
-        analytics["calls_total"].groupby(field_name)[["call_date_hour", "call_total"]].apply(lambda x: x.to_dict(orient="records")).to_dict()
-    )
-
-    analytics["call_connected_total"] = (
-        calls_qs.filter(call_connection="connected")
-        .annotate(call_date_hour=TruncHour("call_start_time"))
-        .values(field_name, "call_date_hour")
-        .annotate(call_total=Count("id"))
-        .values(field_name, "call_date_hour", "call_total")
-        .order_by(field_name, "call_date_hour")
-    )
-    analytics["call_connected_total"] = read_frame(analytics["call_connected_total"])
-    analytics["call_connected_total"] = (
-        analytics["call_connected_total"].groupby(field_name)[["call_date_hour", "call_total"]].apply(lambda x: x.to_dict(orient="records")).to_dict()
-    )
-
-    analytics["call_seconds_total"] = (
-        calls_qs.annotate(call_date_hour=TruncHour("call_start_time"))
-        .values(field_name, "call_date_hour")
-        .annotate(call_seconds_total=Sum("duration_seconds"))
-        .values(field_name, "call_date_hour", "call_seconds_total")
-        .order_by(field_name, "call_date_hour")
-    )
-    analytics["call_seconds_total"] = read_frame(analytics["call_seconds_total"])
-    analytics["call_seconds_total"] = (
-        analytics["call_seconds_total"].groupby(field_name)[["call_date_hour", "call_seconds_total"]].apply(lambda x: x.to_dict(orient="records")).to_dict()
-    )
-
-    analytics["call_seconds_average"] = (
-        calls_qs.annotate(call_date_hour=TruncHour("call_start_time"))
-        .values(field_name, "call_date_hour")
-        .annotate(call_seconds_average=Avg("duration_seconds"))
-        .values(field_name, "call_date_hour", "call_seconds_average")
-        .order_by(field_name, "call_date_hour")
-    )
-    analytics["call_seconds_average"] = read_frame(analytics["call_seconds_average"])
-    analytics["call_seconds_average"] = (
-        analytics["call_seconds_average"].groupby(field_name)[["call_date_hour", "call_seconds_average"]].apply(lambda x: x.to_dict(orient="records")).to_dict()
-    )
-
-    analytics["call_sentiment_counts"] = (
-        calls_qs.annotate(call_date_hour=TruncHour("call_start_time"))
-        .values(field_name, "call_date_hour", "call_sentiments__caller_sentiment_score")
-        .annotate(call_sentiment_count=Count("call_sentiments__caller_sentiment_score"))
-        .values(field_name, "call_date_hour", "call_sentiments__caller_sentiment_score", "call_sentiment_count")
-        .order_by(field_name, "call_date_hour")
-    )
-    analytics["call_sentiment_counts"] = read_frame(analytics["call_sentiment_counts"])
-    analytics["call_sentiment_counts"] = (
-        analytics["call_sentiment_counts"]
-        .groupby(field_name)[["call_date_hour", "call_sentiment_count"]]
-        .apply(lambda x: x.to_dict(orient="records"))
-        .to_dict()
-    )
-
-    return analytics
-
-
-def calculate_call_counts_per_user_time_series(calls_qs: QuerySet) -> Dict:
-    return _calculate_call_counts_per_field_time_series(calls_qs, "sip_caller_number")
-
-
-def convert_count_results(qs: QuerySet, key_with_value_for_key: str, key_with_value_for_values: str) -> Dict:
-    """
-    Convert results from a standard QS result of:
-        [
-            {column_name_1: value_1, column_name_2: value_2},
-            {column_name_1: value_1b, column_name_2: value_2b},
-        ]
-        to:
-        {
-            "value_1": "value_2"
-            "value_1b": "value_2b"
-        }
-    """
-    result = []
-
-    for item_dict in qs:
-        new_dict = create_dict_from_key_values(item_dict, key_with_value_for_key, key_with_value_for_values)
-        result.append(new_dict)
-
-    return merge_list_of_dicts_to_dict(result)
-
-
-def create_dict_from_key_values(d: Dict, key_with_value_for_key: str, key_with_value_for_value: str) -> Dict:
-    """
-    Create a new dictionary by using the keys specified to create a new key: value pair. Used typically for QS modification:
-        {column_name_1: value_1, column_name_2: value_2}
-        to:
-        {"value_1": "value_2"}
-    """
-    return {d[key_with_value_for_key]: d[key_with_value_for_value]}
-
-
-def merge_list_of_dicts_to_dict(l: List[Dict]) -> Dict:
-    """
-    Merges dictionaries together. Doesn't care about stomping on keys that already exist.
-    """
-    dict_new = {}
-    for dict_sub in l:
-        dict_new.update(dict_sub)
-
-    return dict_new
-
-
-class NewPatientWinbacksView(views.APIView):
+class OpportunitiesPerUserView(views.APIView):
     QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME = {"call_start_time__gte": "call_start_time_after", "call_start_time__lte": "call_start_time_before"}
 
+    @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
+    @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
+    @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
-        valid_practice_group_id, practice_group_errors = get_validated_practice_group_id(request=request)
-        dates_info = validate_call_dates(query_data=request.query_params)
+        valid_organization_id, organization_errors = get_validated_organization_id(request=request)
+        dates_info = get_validated_call_dates(query_data=request.query_params)
         dates_errors = dates_info.get("errors")
 
         errors = {}
         if practice_errors:
             errors.update(practice_errors)
-        if practice_group_errors:
-            errors.update(practice_group_errors)
-        if not practice_errors and not practice_group_errors and bool(valid_practice_id) == bool(valid_practice_group_id):
-            error_message = "practice__id or practice__group_id must be provided, but not both."
-            errors.update({"practice__id": error_message, "practice__group_id": error_message})
+        if organization_errors:
+            errors.update(organization_errors)
+        if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id):
+            error_message = "practice__id or practice__organization_id must be provided, but not both."
+            errors.update({"practice__id": error_message, "practice__organization_id": error_message})
         if dates_errors:
             errors.update(dates_errors)
         if errors:
@@ -389,9 +154,65 @@ class NewPatientWinbacksView(views.APIView):
         if valid_practice_id:
             practice_filter = {"practice__id": valid_practice_id}
 
-        practice_group_filter = {}
-        if valid_practice_group_id:
-            practice_group_filter = {"practice__practice_group__id": valid_practice_group_id}
+        # TODO: PTECH-1240
+        # organization_filter = {}
+        # if valid_organization_id:
+        #     organization_filter = {"practice__organization__id": valid_organization_id}
+
+        # date filters
+        dates = dates_info.get("dates")
+        call_start_time__gte = dates[0]
+        call_start_time__lte = dates[1]
+        dates_filter = {"call_start_time__gte": call_start_time__gte, "call_start_time__lte": call_start_time__lte}
+
+        filters = Q(**dates_filter) & Q(**practice_filter) & Q(call_direction=CallDirectionTypes.INBOUND)
+        calls_qs = Call.objects.filter(filters)
+
+        aggregates = {
+            "agent": calculate_call_counts_and_opportunities_per_user(calls_qs),  # call counts per caller (agent) phone number
+        }
+
+        display_filters = {
+            self.QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME["call_start_time__gte"]: call_start_time__gte,
+            self.QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME["call_start_time__lte"]: call_start_time__lte,
+        }
+
+        return Response({"filters": display_filters, "results": aggregates})
+
+
+class NewPatientOpportunitiesView(views.APIView):
+    QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME = {"call_start_time__gte": "call_start_time_after", "call_start_time__lte": "call_start_time_before"}
+
+    @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
+    @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
+    @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
+    def get(self, request, format=None):
+        valid_practice_id, practice_errors = get_validated_practice_id(request=request)
+        valid_organization_id, organization_errors = get_validated_organization_id(request=request)
+        dates_info = get_validated_call_dates(query_data=request.query_params)
+        dates_errors = dates_info.get("errors")
+
+        errors = {}
+        if practice_errors:
+            errors.update(practice_errors)
+        if organization_errors:
+            errors.update(organization_errors)
+        if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id):
+            error_message = "practice__id or practice__organization_id must be provided, but not both."
+            errors.update({"practice__id": error_message, "practice__organization_id": error_message})
+        if dates_errors:
+            errors.update(dates_errors)
+        if errors:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data=errors)
+
+        # practice filter
+        practice_filter = {}
+        if valid_practice_id:
+            practice_filter = {"practice__id": valid_practice_id}
+
+        organization_filter = {}
+        if valid_organization_id:
+            organization_filter = {"practice__organization__id": valid_organization_id}
 
         # date filters
         dates = dates_info.get("dates")
@@ -406,49 +227,47 @@ class NewPatientWinbacksView(views.APIView):
             engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT,
             **dates_filter,
             **practice_filter,
-            **practice_group_filter,
+            **organization_filter,
         )
+        aggregates["new_patient_opportunities_total"] = new_patient_opportunities_qs.count()
         aggregates["new_patient_opportunities_time_series"] = _calculate_new_patient_opportunities_time_series(new_patient_opportunities_qs, dates[0], dates[1])
 
-        winback_opportunities_total_qs = new_patient_opportunities_qs.filter(
-            call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.FAILURE, **dates_filter, **practice_filter, **practice_group_filter
-        )
-        winback_opportunities_won_qs = Call.objects.filter(
-            call_direction=CallDirectionTypes.OUTBOUND,
+        new_patient_opportunities_won_qs = Call.objects.filter(
+            call_direction=CallDirectionTypes.INBOUND,
             engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT,
             call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.SUCCESS,
             **dates_filter,
             **practice_filter,
-            **practice_group_filter,
+            **organization_filter,
         )
-        winback_opportunities_lost_qs = Call.objects.filter(
-            call_direction=CallDirectionTypes.OUTBOUND,
+        aggregates["new_patient_opportunities_won_total"] = new_patient_opportunities_won_qs.count()
+
+        new_patient_opportunities_lost_qs = Call.objects.filter(
+            call_direction=CallDirectionTypes.INBOUND,
             engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT,
             call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.FAILURE,
             **dates_filter,
             **practice_filter,
-            **practice_group_filter,
+            **organization_filter,
         )
-        aggregates["winback_opportunities_time_series"] = _calculate_winback_time_series(
-            winback_opportunities_total_qs, winback_opportunities_won_qs, winback_opportunities_lost_qs, dates[0], dates[1]
-        )
+        aggregates["new_patient_opportunities_lost_total"] = new_patient_opportunities_lost_qs.count()
 
-        aggregates["new_patient_opportunities_total"] = new_patient_opportunities_qs.count()
-        aggregates["winback_opportunities_total"] = winback_opportunities_total_qs.count()
-        aggregates["winback_opportunities_won"] = winback_opportunities_won_qs.count()
-        aggregates["winback_opportunities_lost"] = winback_opportunities_lost_qs.count()
-        aggregates["winback_opportunities_attempted"] = aggregates.get("winback_opportunities_won", 0) + aggregates.get("winback_opportunities_lost", 0)
-        aggregates["winback_opportunities_open"] = aggregates.get("winback_opportunities_total", 0) - aggregates.get("winback_opportunities_attempted", 0)
+        # conversion
+        if aggregates["new_patient_opportunities_total"] == 0:  # check for divide by zer0
+            aggregates["new_patient_opportunities_conversion_rate_total"] = 0
+        else:
+            aggregates["new_patient_opportunities_conversion_rate_total"] = (
+                aggregates["new_patient_opportunities_won_total"] / aggregates["new_patient_opportunities_total"]
+            )
 
-        if practice_group_filter:
+        # TODO: PTECH-1240
+        if organization_filter:
             per_practice_averages = {}
-            num_practices = Practice.objects.filter(practice_group_id=valid_practice_group_id).count()
+            num_practices = Practice.objects.filter(organization_id=valid_organization_id).count()
             per_practice_averages["new_patient_opportunities"] = aggregates["new_patient_opportunities_total"] / num_practices
-            per_practice_averages["winback_opportunities_total"] = aggregates["winback_opportunities_total"] / num_practices
-            per_practice_averages["winback_opportunities_won"] = aggregates["winback_opportunities_won"] / num_practices
-            per_practice_averages["winback_opportunities_lost"] = aggregates["winback_opportunities_lost"] / num_practices
-            per_practice_averages["winback_opportunities_attempted"] = aggregates["winback_opportunities_attempted"] / num_practices
-            per_practice_averages["winback_opportunities_open"] = aggregates["winback_opportunities_open"] / num_practices
+            per_practice_averages["new_patient_opportunities_won"] = aggregates["new_patient_opportunities_won_total"] / num_practices
+            per_practice_averages["new_patient_opportunities_lost"] = aggregates["new_patient_opportunities_lost_total"] / num_practices
+            aggregates["new_patient_opportunities_conversion_rate"] = aggregates["new_patient_opportunities_conversion_rate_total"] / num_practices
             aggregates["per_practice_averages"] = per_practice_averages
 
         # display syntactic sugar
@@ -460,43 +279,104 @@ class NewPatientWinbacksView(views.APIView):
         return Response({"filters": display_filters, "results": aggregates})
 
 
-def _get_call_count_per_week(qs: QuerySet) -> List[Dict]:
-    return list(qs.annotate(date=TruncWeek("call_start_time")).values("date").annotate(value=Count("id")).values("date", "value").order_by("date"))
+class NewPatientWinbacksView(views.APIView):
+    QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME = {"call_start_time__gte": "call_start_time_after", "call_start_time__lte": "call_start_time_before"}
 
+    @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
+    @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
+    @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
+    def get(self, request, format=None):
+        valid_practice_id, practice_errors = get_validated_practice_id(request=request)
+        valid_organization_id, organization_errors = get_validated_organization_id(request=request)
+        dates_info = get_validated_call_dates(query_data=request.query_params)
+        dates_errors = dates_info.get("errors")
 
-def _get_call_count_per_day(qs: QuerySet) -> List[Dict]:
-    return list(qs.annotate(date=TruncDate("call_start_time")).values("date").annotate(value=Count("id")).values("date", "value").order_by("date"))
+        errors = {}
+        if practice_errors:
+            errors.update(practice_errors)
+        if organization_errors:
+            errors.update(organization_errors)
+        if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id):
+            error_message = "practice__id or practice__organization_id must be provided, but not both."
+            errors.update({"practice__id": error_message, "practice__organization_id": error_message})
+        if dates_errors:
+            errors.update(dates_errors)
+        if errors:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data=errors)
 
+        # practice filter
+        practice_filter = {}
+        if valid_practice_id:
+            practice_filter = {"practice__id": valid_practice_id}
 
-def _get_monday(date_str: str, previous: bool = False) -> str:
-    """
-    If previous is False, returns the next or current Monday
-    If previous is True, returns the previous or current Monday
-    """
-    date_format = "%Y-%m-%d"
-    date = datetime.datetime.strptime(date_str, date_format).date()
-    if date.weekday():
-        date = date + datetime.timedelta(days=-date.weekday(), weeks=-1 if previous else 0)
-    return date.strftime(date_format)
+        organization_filter = {}
+        if valid_organization_id:
+            organization_filter = {"practice__organization__id": valid_organization_id}
 
+        # date filters
+        dates = dates_info.get("dates")
+        call_start_time__gte = dates[0]
+        call_start_time__lte = dates[1]
+        dates_filter = {"call_start_time__gte": call_start_time__gte, "call_start_time__lte": call_start_time__lte}
 
-def _fill_zeroes(data: List[Dict], start_date: str, end_date: str, frequency_days=1) -> List[Dict]:
-    """
-    Ensures a given list of timeseries entries contain values for all dates in the expected range.
-    Missing values are filled with zero.
-    """
-    date_field_name = "date"
-    value_field_name = "value"
-    date_format = "%Y-%m-%d"
-    date_range = pd.date_range(start_date, end_date, name=date_field_name, freq=f"{frequency_days}D")
-    if not data:
-        return [{date_field_name: i.strftime(date_format), value_field_name: 0} for i in date_range]
-    data_by_date = {i[date_field_name].strftime(date_format): i[value_field_name] for i in data}
-    out = []
-    for timestamp in date_range:
-        date_str = timestamp.strftime(date_format)
-        out.append({date_field_name: date_str, value_field_name: data_by_date.get(date_str, 0)})
-    return out
+        # aggregate analytics
+        aggregates = {}
+        new_patient_opportunities_qs = Call.objects.filter(
+            call_direction=CallDirectionTypes.INBOUND,
+            engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT,
+            **dates_filter,
+            **practice_filter,
+            **organization_filter,
+        )
+
+        winback_opportunities_total_qs = new_patient_opportunities_qs.filter(
+            call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.FAILURE, **dates_filter, **practice_filter, **organization_filter
+        )
+        winback_opportunities_won_qs = Call.objects.filter(
+            call_direction=CallDirectionTypes.OUTBOUND,
+            engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT,
+            call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.SUCCESS,
+            **dates_filter,
+            **practice_filter,
+            **organization_filter,
+        )
+        winback_opportunities_lost_qs = Call.objects.filter(
+            call_direction=CallDirectionTypes.OUTBOUND,
+            engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT,
+            call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.FAILURE,
+            **dates_filter,
+            **practice_filter,
+            **organization_filter,
+        )
+        aggregates["winback_opportunities_time_series"] = _calculate_winback_time_series(
+            winback_opportunities_total_qs, winback_opportunities_won_qs, winback_opportunities_lost_qs, dates[0], dates[1]
+        )
+        aggregates["winback_opportunities_total"] = winback_opportunities_total_qs.count()
+        aggregates["winback_opportunities_won"] = winback_opportunities_won_qs.count()
+        aggregates["winback_opportunities_revenue_dollars"] = aggregates["winback_opportunities_won"] * REVENUE_PER_WINBACK_USD
+        aggregates["winback_opportunities_lost"] = winback_opportunities_lost_qs.count()
+        aggregates["winback_opportunities_attempted"] = aggregates.get("winback_opportunities_won", 0) + aggregates.get("winback_opportunities_lost", 0)
+        aggregates["winback_opportunities_open"] = aggregates.get("winback_opportunities_total", 0) - aggregates.get("winback_opportunities_attempted", 0)
+
+        # TODO: PTECH-1240
+        # if organization_filter:
+        #     num_practices = Practice.objects.filter(organization_id=valid_organization_id).count()
+        #     aggregates["per_practice_averages"] = {
+        #         "winback_opportunities_total": aggregates["winback_opportunities_total"] / num_practices,
+        #         "winback_opportunities_won": aggregates["winback_opportunities_won"] / num_practices,
+        #         "winback_opportunities_revenue": aggregates["winback_opportunities_revenue"] / num_practices,
+        #         "winback_opportunities_lost": aggregates["winback_opportunities_lost"] / num_practices,
+        #         "winback_opportunities_attempted": aggregates["winback_opportunities_attempted"] / num_practices,
+        #         "winback_opportunities_open": aggregates["winback_opportunities_open"] / num_practices,
+        #     }
+
+        # display syntactic sugar
+        display_filters = {
+            self.QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME["call_start_time__gte"]: call_start_time__gte,
+            self.QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME["call_start_time__lte"]: call_start_time__lte,
+        }
+
+        return Response({"filters": display_filters, "results": aggregates})
 
 
 def _calculate_winback_time_series(winbacks_total_qs: QuerySet, winbacks_won_qs: QuerySet, winbacks_lost_qs: QuerySet, start_date: str, end_date: str) -> Dict:
@@ -506,26 +386,25 @@ def _calculate_winback_time_series(winbacks_total_qs: QuerySet, winbacks_won_qs:
     def get_winbacks_attempted_breakdown(won: List[Dict], lost: List[Dict]) -> List[Dict]:
         wins_by_date = {i["date"]: i["value"] for i in won}
         lost_by_date = {i["date"]: i["value"] for i in lost}
-        all_dates = set(wins_by_date.keys()).union(lost_by_date)
+        all_dates = sorted(list(set(wins_by_date.keys()).union(lost_by_date)))
         return [{"date": d, "value": wins_by_date.get(d, 0) + lost_by_date.get(d, 0)} for d in all_dates]
 
-    winbacks_won_per_day = _get_call_count_per_day(winbacks_won_qs)
-    winbacks_lost_per_day = _get_call_count_per_day(winbacks_lost_qs)
-    per_day["total"] = _fill_zeroes(_get_call_count_per_day(winbacks_total_qs), start_date, end_date)
-    per_day["won"] = _fill_zeroes(winbacks_won_per_day, start_date, end_date)
-    per_day["lost"] = _fill_zeroes(winbacks_lost_per_day, start_date, end_date)
-    per_day["attempted"] = _fill_zeroes(get_winbacks_attempted_breakdown(winbacks_won_per_day, winbacks_lost_per_day), start_date, end_date)
+    winbacks_total_per_day = calculate_zero_filled_call_counts_by_day(winbacks_total_qs, start_date, end_date)
+    winbacks_won_per_day = calculate_zero_filled_call_counts_by_day(winbacks_won_qs, start_date, end_date)
+    winbacks_revenue_per_day = [{"date": d["date"], "value": d["value"] * REVENUE_PER_WINBACK_USD} for d in winbacks_won_per_day]
+    winbacks_lost_per_day = calculate_zero_filled_call_counts_by_day(winbacks_lost_qs, start_date, end_date)
+    winbacks_attempted_per_day = get_winbacks_attempted_breakdown(winbacks_won_per_day, winbacks_lost_per_day)
+    per_day["total"] = winbacks_total_per_day
+    per_day["won"] = winbacks_won_per_day
+    per_day["revenue_dollars"] = winbacks_revenue_per_day
+    per_day["lost"] = winbacks_lost_per_day
+    per_day["attempted"] = winbacks_attempted_per_day
 
-    start_date_week = _get_monday(start_date)
-    end_date_week = _get_monday(end_date, previous=True)
-    winbacks_won_per_week = _get_call_count_per_week(winbacks_won_qs)
-    winbacks_lost_per_week = _get_call_count_per_week(winbacks_lost_qs)
-    per_week["total"] = _fill_zeroes(_get_call_count_per_week(winbacks_total_qs), start_date_week, end_date_week, frequency_days=7)
-    per_week["won"] = _fill_zeroes(winbacks_won_per_week, start_date_week, end_date_week, frequency_days=7)
-    per_week["lost"] = _fill_zeroes(winbacks_lost_per_week, start_date_week, end_date_week, frequency_days=7)
-    per_week["attempted"] = _fill_zeroes(
-        get_winbacks_attempted_breakdown(winbacks_won_per_week, winbacks_lost_per_week), start_date_week, end_date_week, frequency_days=7
-    )
+    per_week["total"] = convert_call_counts_to_by_week(winbacks_total_per_day)
+    per_week["won"] = convert_call_counts_to_by_week(winbacks_won_per_day)
+    per_week["revenue_dollars"] = convert_call_counts_to_by_week(winbacks_revenue_per_day)
+    per_week["lost"] = convert_call_counts_to_by_week(winbacks_lost_per_day)
+    per_week["attempted"] = convert_call_counts_to_by_week(winbacks_attempted_per_day)
 
     return {
         "per_day": per_day,
@@ -538,7 +417,7 @@ def _calculate_new_patient_opportunities_time_series(opportunities_qs: QuerySet,
     per_week = {}
 
     won_qs = opportunities_qs.filter(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.SUCCESS)
-    missed_qs = opportunities_qs.filter(went_to_voicemail=True)  # TODO Kyle: This is probably wrong
+    lost_qs = opportunities_qs.filter(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.FAILURE)
 
     def get_conversion_rates_breakdown(total: List[Dict], won: List[Dict]) -> List[Dict]:
         conversion_rates = []
@@ -552,21 +431,19 @@ def _calculate_new_patient_opportunities_time_series(opportunities_qs: QuerySet,
             conversion_rates.append({"date": date, "value": rate})
         return conversion_rates
 
-    total_per_day = _get_call_count_per_day(opportunities_qs)
-    won_per_day = _get_call_count_per_day(won_qs)
-    per_day["total"] = _fill_zeroes(total_per_day, start_date, end_date)
-    per_day["won"] = _fill_zeroes(won_per_day, start_date, end_date)
-    per_day["missed"] = _fill_zeroes(_get_call_count_per_day(missed_qs), start_date, end_date)
-    per_day["conversion_rate"] = _fill_zeroes(get_conversion_rates_breakdown(total_per_day, won_per_day), start_date, end_date)
+    total_per_day = calculate_zero_filled_call_counts_by_day(opportunities_qs, start_date, end_date)
+    won_per_day = calculate_zero_filled_call_counts_by_day(won_qs, start_date, end_date)
+    lost_per_day = calculate_zero_filled_call_counts_by_day(lost_qs, start_date, end_date)
+    conversion_rate_per_day = get_conversion_rates_breakdown(total_per_day, won_per_day)
+    per_day["total"] = total_per_day
+    per_day["won"] = won_per_day
+    per_day["lost"] = lost_per_day
+    per_day["conversion_rate"] = conversion_rate_per_day
 
-    start_date_week = _get_monday(start_date)
-    end_date_week = _get_monday(end_date, previous=True)
-    total_per_week = _get_call_count_per_week(opportunities_qs)
-    won_per_week = _get_call_count_per_week(won_qs)
-    per_week["total"] = _fill_zeroes(total_per_week, start_date_week, end_date_week, frequency_days=7)
-    per_week["won"] = _fill_zeroes(won_per_week, start_date_week, end_date_week, frequency_days=7)
-    per_week["missed"] = _fill_zeroes(_get_call_count_per_week(missed_qs), start_date_week, end_date_week, frequency_days=7)
-    per_week["conversion_rate"] = _fill_zeroes(get_conversion_rates_breakdown(total_per_week, won_per_week), start_date_week, end_date_week, frequency_days=7)
+    per_week["total"] = convert_call_counts_to_by_week(total_per_day)
+    per_week["won"] = convert_call_counts_to_by_week(won_per_day)
+    per_week["lost"] = convert_call_counts_to_by_week(lost_per_day)
+    per_week["conversion_rate"] = convert_call_counts_to_by_week(conversion_rate_per_day)
 
     return {
         "per_day": per_day,

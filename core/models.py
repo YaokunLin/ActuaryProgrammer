@@ -1,7 +1,14 @@
+from django.contrib.auth.models import (
+    AbstractUser,
+    Permission,
+    _user_get_permissions,
+    _user_has_module_perms,
+    _user_has_perm,
+)
 from django.db import models
-from django.contrib.auth.models import AbstractUser, Permission, _user_get_permissions, _user_has_perm, _user_has_module_perms
 from django.utils.translation import gettext_lazy as _
 from django_extensions.db.fields import ShortUUIDField
+from localflavor.us.models import USStateField
 from phonenumber_field.modelfields import PhoneNumberField
 
 from core.abstract_models import AuditTrailModel
@@ -113,7 +120,9 @@ class Practice(AuditTrailModel):
         null=True, blank=False, default=False
     )  # practices are active or inactive based upon whether we've approved their submission and whether they're paid up
 
-    practice_group = models.ForeignKey("PracticeGroup", null=True, blank=True, on_delete=models.SET_NULL)
+    address_us_state = USStateField(blank=True, default="AZ")  # yes, it's a char field behind the scenes
+
+    organization = models.ForeignKey("core.Organization", null=True, blank=True, on_delete=models.SET_NULL)
 
     objects = PracticeManager()
 
@@ -131,7 +140,7 @@ class Practice(AuditTrailModel):
     objects = PracticeManager()
 
 
-class PracticeGroup(AuditTrailModel):
+class Organization(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     name = models.CharField(_("name"), max_length=150)
 
@@ -193,3 +202,34 @@ class UserPatient(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
+
+
+class InsuranceProvider(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    name = models.CharField(blank=True, max_length=255, unique=True)
+
+
+class InsuranceProviderPhoneNumber(AuditTrailModel):
+    """
+    Temporary surrogate for TelecomCallerNameInfo, probably
+    """
+
+    phone_number = PhoneNumberField(primary_key=True)
+    insurance_provider = models.ForeignKey(InsuranceProvider, null=False, on_delete=models.CASCADE)
+
+
+class MarketingCampaignPhoneNumber(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    practice = models.ForeignKey(
+        "core.Practice",
+        on_delete=models.CASCADE,
+        verbose_name="The practice that owns the marketing number",
+        related_name="campaign_telephone_numbers",
+        null=False,
+    )
+    name = models.CharField(max_length=128, blank=False, null=False)
+    phone_number = PhoneNumberField(blank=False, null=False)
+    description = models.CharField(max_length=255, blank=True, null=False)
+
+    class Meta:
+        unique_together = ("practice_id", "phone_number")

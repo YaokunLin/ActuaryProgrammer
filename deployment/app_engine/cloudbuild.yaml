@@ -21,7 +21,7 @@ steps:
 
   - id: "Default App Engine Deploy"
     name: "gcr.io/cloud-builders/gcloud"
-    args: ["app", "deploy", "/workspace/app.yaml"]
+    args: ["app", "deploy", "$_DEPLOY_YAML_FILE"]
     timeout: "1600s"
 
   - id: "django_migrate service App Engine Deploy"
@@ -49,7 +49,21 @@ steps:
       - '-c'
       - |
         curl $(gcloud app services browse django-createsuperuser --no-launch-browser --format='value(url)')
+    timeout: "1600s"
 
+  - id: "Remove elder app versions"
+    name: "gcr.io/cloud-builders/gcloud"
+    entrypoint: "bash"
+    args:
+      - '-c'
+      - |
+        for service in default django-migrate django-createsuperuser; do \
+        versions=$(gcloud app versions list --service "$service" --sort-by '~VERSION.ID' --format 'value(VERSION.ID)' | sed 1,15d) \
+        && for version in $versions; do gcloud app versions delete "$version" --service "$service" --quiet; done; done
+    timeout: "90s"
+tags: ['complete']
+
+timeout: "1600s"
 
   # disable until we get it working - need asgi
   # - id: "celery-beat service App Engine Deploy"
@@ -61,5 +75,3 @@ steps:
   #   name: "gcr.io/cloud-builders/gcloud"
   #   args: ["app", "deploy", "/workspace/celery_worker.yaml"]
   #   timeout: "1600s"
-
-

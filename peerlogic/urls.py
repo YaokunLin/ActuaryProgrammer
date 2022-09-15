@@ -20,10 +20,9 @@ from calls.urls import urlpatterns as calls_urlpatterns
 from care.urls import urlpatterns as care_urlpatterns
 from core.urls import urlpatterns as core_urlpatterns
 from etl.urls import urlpatterns as etl_urlpatterns
-from ml.urls import urlpatterns as ml_urlpatterns
 from inbox.urls import urlpatterns as inbox_urlpatterns
+from ml.urls import urlpatterns as ml_urlpatterns
 from reminders.urls import urlpatterns as reminders_urlpatterns
-
 
 admin.site.site_header = "Peerlogic API Admin Portal"
 
@@ -34,6 +33,7 @@ integration_url_patterns = [
 ]
 
 urlpatterns = [
+    path("admin/clearcache/", include("clearcache.urls")),
     path("admin/", admin.site.urls),
     path("api-docs/", include("rest_framework.urls", namespace="rest_framework")),
     path("api/integrations/", include(integration_url_patterns)),

@@ -73,6 +73,11 @@ services:
           - WAIT_HOST_CONNECT_TIMEOUT=30
           - DB_HOST=postgres
 
+  redis:
+    image: redis:6
+    ports:
+     - 6379:6379
+
 #   worker:
 #       build: .
 #       command: ["celery", "-A", "peerlogic", "worker", "-l", "INFO"]
@@ -112,8 +117,3 @@ services:
 #           - USE_CLOUD_SQL_AUTH_PROXY=False
 #           - CELERY_BROKER_URL=redis://redis:6379/0
 #           - CELERY_RESULT_BACKEND=redis://redis:6379/0
-
-#   redis:
-#     image: redis:4-alpine
-#     ports:
-#       - 6379:6379

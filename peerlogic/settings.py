@@ -11,21 +11,17 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
 
-from datetime import timedelta
 import io
 import logging
 import os
+from datetime import timedelta
 
 import boto3 as boto3
-from dotenv import load_dotenv
-from google.cloud import (
-    pubsub_v1,
-    secretmanager,
-    storage,
-)
 import requests
+from corsheaders.defaults import default_headers as cors_default_allowed_headers
+from dotenv import load_dotenv
+from google.cloud import pubsub_v1, secretmanager, storage
 from requests.auth import HTTPBasicAuth
-
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -79,6 +75,7 @@ ALLOWED_HOSTS = ["127.0.0.1", "localhost", os.getenv("DJANGO_ALLOWED_HOSTS", "*"
 if GKE_APPLICATION == "True":
     ALLOWED_HOSTS.append(os.getenv("KUBERNETES_SERVICE_HOST"))
 
+PEERLOGIC_API_URL = os.getenv("PEERLOGIC_API_URL", "http://localhost:8000/api")
 PEERLOGIC_VOIP_PROVIDER_ID = os.getenv("PEERLOGIC_VOIP_PROVIDER_ID", "drFoXEnEwrN28Gowp3CoRN")
 PEERLOGIC_PRACTICE_ID = os.getenv("PEERLOGIC_PRACTICE_ID", "bpQY6L8zE96SVqCUXTPYq3")
 PEERLOGIC_PRACTICE_TELECOM_ID = os.getenv("PEERLOGIC_PRACTICE_TELECOM_ID", "N8UBbUVQ4nM3BUZPcZUBdN")
@@ -161,6 +158,10 @@ else:
 
 # CORS
 CORS_ALLOW_ALL_ORIGINS = True
+
+CORS_ALLOW_HEADERS = list(cors_default_allowed_headers) + [
+    "Timezone",
+]
 # TODO: Figure out how to pass lists via .env files
 # CORS_ALLOWED_ORIGIN_REGEXES = [r"^https://\w+\.peerlogic\.tech$", r"^https://peerlogic\.tech$", r"^http://localhost:8080$", r"^app://\..*$"]
 
@@ -235,6 +236,7 @@ else:
 # Application definition
 
 INSTALLED_APPS = [
+    "clearcache",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -275,6 +277,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django_userforeignkey.middleware.UserForeignKeyMiddleware",
+    "peerlogic.middleware.TimezoneMiddleware",
 ]
 
 ROOT_URLCONF = "peerlogic.urls"
@@ -419,6 +422,30 @@ else:  # app engine or local
     STATICFILES_DIRS = []
 # [END staticurl]
 
+# Caching
+# TODO: PTECH-1240
+# TODO: Use a different env var after the demo
+ANALYTICS_CACHE_VARY_ON_HEADERS = ("Timezone",)
+CACHE_NAME_AUTH_IN_MEMORY = "memory-auth"
+CACHE_REDIS_URL = os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0")
+CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS = int(os.getenv("CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS", 300))  # Default 5 minutes
+CACHE_TIME_ANALYTICS_SECONDS = int(os.getenv("CACHE_TIME_ANALYTICS_SECONDS", 900))  # Default 15 Minutes
+CACHE_TIME_AUTH_MEMORY_SECONDS = int(os.getenv("CACHE_TIME_AUTH_MEMORY_SECONDS", 30))
+CACHE_TIME_AUTH_REDIS_SECONDS = int(os.getenv("CACHE_TIME_AUTH_REDIS_SECONDS", 90))
+
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": CACHE_REDIS_URL,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "SOCKET_CONNECT_TIMEOUT": 5,  # seconds
+            "SOCKET_TIMEOUT": 5,  # seconds
+        },
+    },
+    CACHE_NAME_AUTH_IN_MEMORY: {"BACKEND": "django.core.cache.backends.locmem.LocMemCache", "LOCATION": "auth"},
+}
 
 # Celery Configuration Options
 CELERY_ENABLE_UTC = True
