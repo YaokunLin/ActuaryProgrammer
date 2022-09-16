@@ -53,7 +53,7 @@ def publish_leg_b_ready_event(
     publisher: pubsub_v1.PublisherClient = settings.PUBLISHER,
 ) -> pubsub_v1.publisher.futures.Future:
 
-    if not event.get("remove"):
+    if event.get("remove") != "yes":
         log.info(f"Detected leg b ready event that will be ignored instead of published. event: '{event}'")
         return None
 
