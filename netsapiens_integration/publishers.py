@@ -6,7 +6,6 @@ from google.cloud import pubsub_v1
 
 from core.pubsub_helpers import publish_event
 
-
 # Get an instance of a logger
 log = logging.getLogger(__name__)
 
@@ -55,6 +54,7 @@ def publish_leg_b_ready_event(
 ) -> pubsub_v1.publisher.futures.Future:
 
     if not (event.get("remove") == "yes" and event.get("term_leg_tag")):
+        log.info(f"Detected leg b ready event that will be ignored instead of published. event: '{event}'")
         return None
 
     event_attributes = {
