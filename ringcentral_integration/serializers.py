@@ -16,7 +16,6 @@ class RingCentralSessionEventSerializer(serializers.ModelSerializer):
         fields = "__all__"
     
     def create(self, validated_data: Dict):
-        print(validated_data)
         instance = super().create(validated_data)
 
         return instance
