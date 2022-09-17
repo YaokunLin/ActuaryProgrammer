@@ -2,11 +2,12 @@ import hashlib
 import logging
 import uuid
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Optional
 
 import requests
 import urllib.parse
 
+from django.conf import settings
 from django.utils import timezone
 from requests.auth import HTTPBasicAuth, AuthBase
 
@@ -41,7 +42,7 @@ class _Authentication(AuthBase):
     _authentication_url: str = "https://authentication.logmeininc.com"
     _goto_api_url: str = "https://api.getgo.com"
 
-    def __init__(self, client_id: str, client_secret: str, refresh_token: str):
+    def __init__(self, client_id: str, client_secret: str, refresh_token: Optional[str] = None):
         self._client_id = client_id
         self._client_secret = client_secret
         self._refresh_token = refresh_token
@@ -87,16 +88,13 @@ class _Authentication(AuthBase):
 
         https://developer.goto.com/guides/HowTos/03_HOW_accessToken/
         """
+
         resp: requests.Response = requests.request(
             method="post",
             url=urllib.parse.urljoin(self._authentication_url, "/oauth/token"),
             auth=HTTPBasicAuth(self._client_id, self._client_secret),
-            headers={"Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json"},
-            data={
-                "grant_type": "authorization_code",
-                "code": code,
-                "redirect_uri": redirect_uri,
-            },
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            data={"grant_type": "authorization_code", "code": code, "redirect_uri": redirect_uri, "client_id": self._client_id},
         )
 
         self.__parse_token_response(resp)
@@ -105,12 +103,19 @@ class _Authentication(AuthBase):
         """
         Assume a json response with a minimum of an `access_token` and `refresh_token` key.
         """
-        resp.raise_for_status()
+        try:
+            resp.raise_for_status()
+        except Exception as e:
+            msg = f"Problem occurred parsing token response"
+            if resp is not None and resp.text:
+                msg = f"{msg}. Response text: '{resp.text}'"
+            raise Exception(msg)
 
         body = resp.json()
 
         try:
             self._access_token = body["access_token"]
+            self._principal = body["principal"]  # email address associated to the account
             self._refresh_token = body["refresh_token"]
             self.__token_expires_at = (datetime.utcnow() + timedelta(seconds=body["expires_in"])).timestamp()
         except (KeyError, IndexError) as exc:
@@ -124,7 +129,7 @@ class JiveClient:
     __auth: _Authentication
     __session: requests.Session
 
-    def __init__(self, client_id: str, client_secret: str, refresh_token: str, api_base_url: str = ""):
+    def __init__(self, client_id: str, client_secret: str, refresh_token: Optional[str] = None, api_base_url: str = ""):
         self.__auth = _Authentication(client_id=client_id, client_secret=client_secret, refresh_token=refresh_token)
 
         self.__session = requests.Session()
@@ -136,6 +141,14 @@ class JiveClient:
     @property
     def refresh_token(self):
         return self.__auth.refresh_token
+
+    @property
+    def access_token(self):
+        return self.__auth._access_token
+
+    @property
+    def principal(self):
+        return self.__auth._principal
 
     def exchange_code(self, code: str, request_uri: str):
         """

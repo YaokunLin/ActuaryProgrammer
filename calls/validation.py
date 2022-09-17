@@ -46,7 +46,7 @@ def get_validated_call_dates(query_data: Dict) -> Dict:
 
     return {"dates": dates, "errors": errors}
 
-
+# TODO: move to core app
 def get_validated_practice_id(request: Request) -> Tuple[Optional[str], Optional[Dict[str, str]]]:
     param_name = "practice__id"
     practice_id = request.query_params.get(param_name)

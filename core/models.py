@@ -176,7 +176,7 @@ class PracticeTelecom(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     voip_provider = models.ForeignKey(VoipProvider, on_delete=models.SET_NULL, null=True)
     practice = models.OneToOneField(Practice, on_delete=models.CASCADE, related_name="practice_telecom")
-    domain = models.CharField(max_length=80, db_index=True)
+    domain = models.CharField(max_length=80, db_index=True, blank=True) # TODO: move to Netsapiens App specific datamodel
     phone_sms = PhoneNumberField(blank=True)
     phone_callback = PhoneNumberField(blank=True)
 

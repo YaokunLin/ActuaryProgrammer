@@ -1,4 +1,5 @@
 import base64
+from contextlib import suppress
 import functools
 import io
 import json
@@ -13,16 +14,33 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
+from rest_framework.response import Response
 
 from calls.field_choices import CallDirectionTypes, SupportedAudioMimeTypes, CallAudioFileStatusTypes
 from calls.models import Call, CallPartial, CallAudioPartial
 from calls.publishers import publish_call_audio_partial_saved
 from core.field_choices import VoipProviderIntegrationTypes
 from core.models import PracticeTelecom
+from core.validation import get_validated_practice_telecom
 from jive_integration.jive_client.client import JiveClient, Line
 from jive_integration.models import JiveConnection, JiveLine, JiveChannel, JiveSession, JiveCallPartial
+
+# Get an instance of a logger
+log = logging.getLogger(__name__)
+
+
+def generate_redirect_uri(request):
+    return request.build_absolute_uri(reverse("jive_integration:authentication-callback"))
+
+
+def generate_jive_callback_url(
+    request: Request,
+    jive_authorization_url: str = settings.JIVE_AUTHORIZATION_URL,
+    jive_client_id: str = settings.JIVE_CLIENT_ID,
+):
+    return f"{jive_authorization_url}?client_id={jive_client_id}&response_type=code&redirect_uri={generate_redirect_uri(request)}"
 
 
 @api_view(["POST"])
@@ -102,39 +120,68 @@ def webhook(request):
 
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
 def authentication_connect(request: Request):
     """
     This view returns a redirect to initialize the connect flow with the Jive API.  Users will be redirected to Jive's
     application to confirm access to Peerlogic's systems.
 
-    https://developer.goto.com/guides/HowTos/03_HOW_accessToken/
+    https://developer.goto.com/guides/Authentication/03_HOW_accessToken/
     """
-    return HttpResponseRedirect(
-        redirect_to=f"https://authentication.logmeininc.com/oauth/authorize?client_id={settings.JIVE_CLIENT_ID}&response_type=code&redirect_uri={request.build_absolute_uri(reverse('jive_integration:authentication-callback'))}"
-    )
+    return HttpResponseRedirect(redirect_to=generate_jive_callback_url(request))
 
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
+def authentication_connect_url(request: Request):
+    """
+    This view returns the url to initialize the connect flow with the Jive API.  This is informational to understand what url
+    a client must call to present the user Jive's application to confim access to Peerlogic's systems
+
+    https://developer.goto.com/guides/Authentication/03_HOW_accessToken/
+    """
+    return Response(status=200, data={"url": generate_jive_callback_url(request)})
+
+
+@api_view(["GET"])
+@authentication_classes([])
+@permission_classes([AllowAny])
 def authentication_callback(request: Request):
     """
     This view will exchange the given authentication code for an access token from the Jive authentication API.
     Refresh tokens are stored on `JiveConnection` objects and linked to a practice.  If a connection object is not
     found for the given user one will be created.
 
-    https://developer.goto.com/guides/HowTos/03_HOW_accessToken/
+    https://developer.goto.com/guides/Authentication/03_HOW_accessToken/
     """
-    connection: JiveConnection
-    try:
-        connection = JiveConnection.objects.get(practice_telecom__practice__agent__user_id=request.user.id)
-    except ObjectDoesNotExist:
-        practice = PracticeTelecom.objects.get(voip_provider__integration_type=VoipProviderIntegrationTypes.JIVE, practice__agent__user_id=request.user.id)
-        connection = JiveConnection(practice_telecom=practice)
+    authorization_code: str = request.query_params.get("code")
+    if not authorization_code:
+        return Response(status=404, data={"errors": {"code": "Missing from query parameters."}})
 
-    jive: JiveClient = JiveClient(client_id=settings.JIVE_CLIENT_ID, client_secret=settings.JIVE_CLIENT_SECRET, refresh_token=connection.refresh_token)
+    # Exchange the authorization code for an access token
+    log.info("Instantiating JiveClient.")
+    jive: JiveClient = JiveClient(client_id=settings.JIVE_CLIENT_ID, client_secret=settings.JIVE_CLIENT_SECRET)
+    log.info("Instantiated JiveClient.")
 
-    jive.exchange_code(request.query_params["code"], request.build_absolute_uri(reverse("jive_integration:authentication-callback")))
+    log.info("Exchanging authorization code for an access code.")
+    jive.exchange_code(authorization_code, generate_redirect_uri(request))
+    log.info("Exchanged authorization code for an access code.")
+
+    principal = jive.principal  # this is the email associated with user
+
+    if not principal:
+        return Response(status=404, data={"errors": {"principal": "Missing from exchange authorization code for access token response."}})
+
+    connection: JiveConnection = None
+
+    with suppress(JiveConnection.DoesNotExist):
+        connection = JiveConnection.objects.get(practice_telecom__practice__agent__user__email=principal)
+
+    if not connection:
+        # TODO: deal with users with multiple practices (Organizations ACL)
+        practice_telecom, errors = get_validated_practice_telecom(voip_provider__integration_type=VoipProviderIntegrationTypes.JIVE, email=principal)
+        if not practice_telecom:
+            log.info(f"No practice telecom has set up for this Jive customer with user email or principal='{principal}'")
+            return Response(status=404, data=errors)
+        connection = JiveConnection(practice_telecom=practice_telecom)
 
     connection.refresh_token = jive.refresh_token
 
