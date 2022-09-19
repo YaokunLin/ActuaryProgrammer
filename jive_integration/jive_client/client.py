@@ -86,7 +86,9 @@ class _Authentication(AuthBase):
         """
         Exchange the given authorization code for a refresh and access token.
 
-        https://developer.goto.com/guides/HowTos/03_HOW_accessToken/
+        https://developer.goto.com/Authentication/#section/Authorization-Flows/Authorization-Code-Grant
+
+        Scroll to 2. Exchange the authorization code for an access token
         """
 
         resp: requests.Response = requests.request(

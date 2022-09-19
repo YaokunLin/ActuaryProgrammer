@@ -5,7 +5,7 @@ import io
 import json
 import logging
 from datetime import datetime, timedelta
-from typing import Set
+from typing import Optional, Set
 
 import dateutil.parser
 from django.conf import settings
@@ -120,12 +120,15 @@ def webhook(request):
 
 
 @api_view(["GET"])
+@renderer_classes([])
 def authentication_connect(request: Request):
     """
     This view returns a redirect to initialize the connect flow with the Jive API.  Users will be redirected to Jive's
     application to confirm access to Peerlogic's systems.
 
     https://developer.goto.com/guides/Authentication/03_HOW_accessToken/
+    https://developer.goto.com/Authentication/#section/Authorization-Flows/Authorization-Code-Grant
+    Scroll to 1. Redirect the user to our authorization URL
     """
     return HttpResponseRedirect(redirect_to=generate_jive_callback_url(request))
 
@@ -137,6 +140,8 @@ def authentication_connect_url(request: Request):
     a client must call to present the user Jive's application to confim access to Peerlogic's systems
 
     https://developer.goto.com/guides/Authentication/03_HOW_accessToken/
+    https://developer.goto.com/Authentication/#section/Authorization-Flows/Authorization-Code-Grant
+    Scroll to 1. Redirect the user to our authorization URL
     """
     return Response(status=200, data={"url": generate_jive_callback_url(request)})
 
@@ -152,7 +157,7 @@ def authentication_callback(request: Request):
 
     https://developer.goto.com/guides/Authentication/03_HOW_accessToken/
     """
-    authorization_code: str = request.query_params.get("code")
+    authorization_code: Optional[str] = request.query_params.get("code")
     if not authorization_code:
         return Response(status=404, data={"errors": {"code": "Missing from query parameters."}})
 
