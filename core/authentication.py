@@ -62,18 +62,22 @@ class NetsapiensJSONWebTokenAuthentication(BaseAuthentication):
         """
 
         # extract token
-        jwt_token = self.validate_header_and_get_token_value(request)
+        token = self.validate_header_and_get_token_value(request)
+
+        if not token or len(token) > 64:
+            # HEREBEDRAGONS: NETSAPIENS tokens are seemingly all 32-length bearer tokens at present, not long JWTs
+            return None
 
         redis_cache = cache
         memory_cache = caches[CACHE_NAME_AUTH_IN_MEMORY]
-        cache_key = f"{self.__class__.__name__}{jwt_token}"
+        cache_key = f"{self.__class__.__name__}{token}"
         cached_result = memory_cache.get(cache_key, None)
         bad_token_cache_value = {"bad_token": True}
         if cached_result is None:
             cached_result = redis_cache.get(cache_key, None)
             if cached_result is None:
                 try:
-                    response = self.introspect_token(jwt_token)
+                    response = self.introspect_token(token)
                 except AuthenticationFailed:
                     log.info("Netsapiens Authentication failed. Trying the next Authentication class.")
                     payload = bad_token_cache_value
