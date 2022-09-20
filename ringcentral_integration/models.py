@@ -1,7 +1,24 @@
 from django.db import models
+
 from django_extensions.db.fields import ShortUUIDField
 
-from django.db import models
+from core.abstract_models import AuditTrailModel
+
+
+class RingCentralAPICredentials(AuditTrailModel):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    voip_provider = models.ForeignKey("core.VoipProvider", on_delete=models.CASCADE)
+    
+    api_url = models.CharField(max_length=2048, blank=True)
+    client_id = models.CharField(max_length=64, blank=True)
+    client_secret = models.CharField(max_length=64, blank=True)
+    username = models.CharField(max_length=63, blank=True)
+    password = models.CharField(max_length=255, blank=True)
+
+    active = models.BooleanField(null=True, blank=False, default=False)  # whether these credentials are active for usage
+
+    class Meta:
+        verbose_name_plural = "RingCentralAPICredentials"
 
 
 class RingCentralSessionEvent(models.Model):
