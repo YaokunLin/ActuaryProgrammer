@@ -63,13 +63,13 @@ def webhook(request):
     # 2. Extract raw subscription event (get rid of JiveCallPartial)
     # 3. Update or create CDR / Call log if needed
     # 4. Create Peerlogic call on announce
-    # 5.Update Peerlogic call on withdraw
+    # 5. Update Peerlogic call on withdraw
     # 6. Verify Call Partial exists
     # 7. Update or Create Call Audio Partial
 
     # THEN:
     # Re-do all of this with the Pub/sub and Cloud Function architecture
-    # instead of abusing this webhook and losing everything if something fails or we can't scale this subscription.
+    # instead of abusing this webhook and losing everything if something fails or we can't scale this endpoint with the traffic.
 
     # We only care about hangup events because the recording will be ready
     if content["type"] == "announce":
