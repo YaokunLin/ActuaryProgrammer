@@ -19,15 +19,15 @@ class Line:
     Given lines are constantly being used to compare sets of data this abstraction allows us to easily compare them.
     """
 
-    def __init__(self, line_id: str, organization_id: str):
+    def __init__(self, line_id: str, source_organization_jive_id: str):
         self.line_id = line_id
-        self.organization_id = organization_id
+        self.source_organization_jive_id = source_organization_jive_id
 
     def __hash__(self):
-        return hash(self.line_id + self.organization_id)
+        return hash(self.line_id + self.source_organization_jive_id)
 
     def __eq__(self, other):
-        return self.line_id == other.line_id and self.organization_id == other.source_organization_jive_id
+        return self.line_id == other.line_id and self.source_organization_jive_id == other.source_organization_jive_id
 
 
 class APIResponseException(Exception):
@@ -45,6 +45,7 @@ class _Authentication(AuthBase):
     def __init__(self, client_id: str, client_secret: str, refresh_token: Optional[str] = None):
         self._client_id = client_id
         self._client_secret = client_secret
+        self._access_token = None
         self._refresh_token = refresh_token
 
     def __call__(self, r: requests.Request):
@@ -116,10 +117,10 @@ class _Authentication(AuthBase):
         body = resp.json()
 
         try:
-            self._access_token = body["access_token"]
-            self._principal = body["principal"]  # email address associated to the account
-            self._refresh_token = body["refresh_token"]
-            self.__token_expires_at = (datetime.utcnow() + timedelta(seconds=body["expires_in"])).timestamp()
+            self._access_token: str = body["access_token"]
+            self._principal: Optional[str] = body.get("principal")  # email address associated to the account
+            self._refresh_token: str = body["refresh_token"]
+            self.__token_expires_at: float = (datetime.utcnow() + timedelta(seconds=body["expires_in"])).timestamp()
         except (KeyError, IndexError) as exc:
             logging.debug(f"invalid token response: {resp.content}")
             raise APIResponseException("failed to parse token response") from exc
@@ -196,7 +197,9 @@ class JiveClient:
         """
         Extend the channel lifetime by the default value configured by the Jive API
         """
-        resp = self.__request(method="put", url=f"https://api.jive.com/notification-channel/v1/channels/{channel.name}/{channel.external_id}/channel-lifetime")
+        resp = self.__request(
+            method="put", url=f"https://api.jive.com/notification-channel/v1/channels/{channel.name}/{channel.source_jive_id}/channel-lifetime"
+        )
 
         resp.raise_for_status()
 
@@ -211,7 +214,7 @@ class JiveClient:
 
         dependency: channelID not channel Id
         """
-        resp = self.__request(method="post", url="https://realtime.jive.com/v2/session", json={"channelId": channel.external_id})
+        resp = self.__request(method="post", url="https://realtime.jive.com/v2/session", json={"channelId": channel.source_jive_id})
 
         resp.raise_for_status()
 
@@ -231,11 +234,15 @@ class JiveClient:
         self.__request(
             method="post",
             url=session.url + "/subscriptions",
-            json=[{"id": line.line_id, "type": "dialog", "entity": {"id": line.line_id, "type": "line.v2", "account": line.organization_id}} for line in lines],
+            json=[
+                {"id": line.line_id, "type": "dialog", "entity": {"id": line.line_id, "type": "line.v2", "account": line.source_organization_jive_id}}
+                for line in lines
+            ],
         ).raise_for_status()
 
         JiveLine.objects.bulk_create(
-            [JiveLine(session=session, external_id=line.line_id, organization_id=line.organization_id) for line in lines], ignore_conflicts=True
+            [JiveLine(session=session, source_jive_id=line.line_id, source_organization_jive_id=line.source_organization_jive_id) for line in lines],
+            ignore_conflicts=True,
         )
 
     def list_lines(self) -> List[Line]:
@@ -254,7 +261,7 @@ class JiveClient:
 
         try:
             for item in body["items"]:
-                lines.append(Line(line_id=item["id"], organization_id=item["organization"]["id"]))
+                lines.append(Line(line_id=item["id"], source_organization_jive_id=item["organization"]["id"]))
         except KeyError as exc:
             raise APIResponseException("failed to parse list lines response") from exc
 
