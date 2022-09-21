@@ -8,7 +8,6 @@ from calls.analytics.benchmarks.views import (
 from calls.analytics.insurance_providers.views import (
     InsuranceProviderCallMetricsView,
     InsuranceProviderInteractionsView,
-    InsuranceProviderMentionedView,
 )
 from calls.analytics.intents.views import (
     CallMentionedCompanyViewset,
@@ -116,7 +115,6 @@ urlpatterns = [
     path(r"mentioned-procedures/", CallMentionedProcedureDistinctView.as_view(), name="mentioned-procedures"),
     # Call Aggregates
     path(r"calls/aggregates/insurance-provider-interactions/", InsuranceProviderInteractionsView.as_view(), name="insurance-provider-interactions"),
-    path(r"calls/aggregates/insurance-providers-mentioned/", InsuranceProviderMentionedView.as_view(), name="insurance-providers-mentioned"),
     path(r"calls/aggregates/new-patient-opportunities/", NewPatientOpportunitiesView.as_view(), name="new-patient-opportunities"),
     path(r"calls/aggregates/new-patient-winback-opportunities/", NewPatientWinbacksView.as_view(), name="new-patient-winback-opportunities"),
     path(r"calls/aggregates/call-counts/", CallMetricsView.as_view(), name="call-counts"),
