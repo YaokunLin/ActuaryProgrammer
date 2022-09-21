@@ -35,6 +35,9 @@ def get_validated_call_dates(query_data: Dict) -> Dict:
     except Exception as e:
         errors["call_start_time_before"] = str(e)
 
+    if errors:
+        return {"dates": None, "errors": errors}
+
     # Validate the input dates
     dates = validate_dates(call_start_time_after, call_start_time_before)
 
@@ -45,6 +48,7 @@ def get_validated_call_dates(query_data: Dict) -> Dict:
         log.error(internal_msg)
 
     return {"dates": dates, "errors": errors}
+
 
 # TODO: move to core app
 def get_validated_practice_id(request: Request) -> Tuple[Optional[str], Optional[Dict[str, str]]]:

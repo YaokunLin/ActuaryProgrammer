@@ -21,9 +21,7 @@ from calls.analytics.aggregates import (
     convert_to_call_counts_and_durations_by_weekday,
     get_call_counts_and_durations_by_weekday_and_hour,
 )
-from calls.analytics.intents.field_choices import CallOutcomeTypes
 from calls.analytics.query_filters import OUTBOUND_FILTER, SUCCESS_FILTER
-from calls.field_choices import CallDirectionTypes
 from calls.models import Call
 from calls.validation import (
     get_validated_call_dates,

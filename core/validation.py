@@ -1,16 +1,13 @@
 import logging
-from datetime import datetime, timedelta
-import json
 import time
+from datetime import datetime, timedelta
 from typing import Dict, Optional, Tuple
 
 from django.conf import settings
+from rest_framework.request import Request
 
 from core.field_choices import VoipProviderIntegrationTypes
 from core.models import Agent, Practice, PracticeTelecom
-
-from rest_framework.request import Request
-
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -22,8 +19,7 @@ def validate_date_format(date=None):
         if date != None:
             time.strptime(date, "%Y-%m-%d")
     except Exception as e:
-        errorDateFormatMessage = json.dumps({"Message": "Invalid date format. " + str(e)})
-        raise Exception(errorDateFormatMessage)
+        raise Exception(f"Invalid date format. {e}")
 
 
 def validate_dates(from_date=None, to_date=None):

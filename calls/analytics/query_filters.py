@@ -32,4 +32,5 @@ NEW_PATIENT_FILTER = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAg
 OPPORTUNITIES_FILTER = NEW_APPOINTMENT_FILTER & (EXISTING_PATIENT_FILTER | NEW_PATIENT_FILTER)
 
 # Benchmarks
-BENCHMARK_PRACTICES_FILTER = Q(practice__include_in_benchmarks=True)
+BENCHMARK_PRACTICE_CALLS_FILTER = Q()  # TODO Kyle: Q(practice__include_in_benchmarks=True)
+BENCHMARK_PRACTICE_FILTER = Q()  # TODO Kyle: Q(include_in_benchmarks=True)
