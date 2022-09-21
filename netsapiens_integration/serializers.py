@@ -83,7 +83,7 @@ class NetsapiensCdr2ExtractSerializer(serializers.ModelSerializer):
                 practice_id=practice_id,
                 voip_provider_id=voip_provider_id,
                 call_connection=instance.calculate_connected_or_missed_call(),
-                went_to_voicemail=instance.went_to_voicemail(),
+                went_to_voicemail=instance.calculate_went_to_voicemail(),
                 event=self.to_representation(instance),
             )
 

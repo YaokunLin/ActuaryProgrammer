@@ -274,6 +274,6 @@ class NetsapiensCdr2Extract(AuditTrailModel):
             return "missed"
         return "connected"
 
-    def went_to_voicemail(self) -> bool:
+    def calculate_went_to_voicemail(self) -> bool:
         """Whether the call ended at the voicemail box to record a voicemail."""
         return self.cdrr_term_to_uri.lower() == "vmail"
