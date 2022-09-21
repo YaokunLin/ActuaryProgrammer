@@ -40,9 +40,9 @@ REVENUE_PER_WINBACK_USD = 10_000
 
 
 class CallMetricsView(views.APIView):
-    @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
-    @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
-    @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
+    # @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
+    # @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
+    # @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
         valid_organization_id, organization_errors = get_validated_organization_id(request=request)

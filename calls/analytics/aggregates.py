@@ -28,7 +28,7 @@ from django_pandas.io import read_frame
 
 from calls.analytics.intents.field_choices import CallOutcomeTypes, CallPurposeTypes
 from calls.analytics.participants.field_choices import NonAgentEngagementPersonaTypes
-from calls.field_choices import CallConnectionTypes
+from calls.field_choices import CallConnectionTypes, CallDirectionTypes
 from core.models import Practice
 
 # Get an instance of a logger
@@ -54,6 +54,11 @@ def calculate_call_counts(calls_qs: QuerySet, include_by_weekday_breakdown: bool
         )
     )
 
+    analytics["call_sentiment_counts"] = calculate_call_sentiments(calls_qs)
+    analytics["call_direction_counts"] = calculate_call_directions(calls_qs)
+    analytics["naept_counts"] = calculate_naept(calls_qs)
+    analytics["purpose_counts"] = calculate_purpose(calls_qs)
+
     if include_by_weekday_breakdown:
         analytics["calls_by_weekday"] = {
             "call_total": convert_to_call_counts_only(
@@ -73,7 +78,6 @@ def calculate_call_counts(calls_qs: QuerySet, include_by_weekday_breakdown: bool
             ),
         }
 
-    analytics["call_sentiment_counts"] = calculate_call_sentiments(calls_qs)
     return analytics
 
 
@@ -494,7 +498,61 @@ def calculate_call_sentiments(calls_qs: QuerySet) -> Dict:
     call_sentiment_analytics_qs = calls_qs.values(call_sentiment_score_key).annotate(count=Count(call_sentiment_score_key))
 
     call_sentiment_counts = convert_count_results(call_sentiment_analytics_qs, call_sentiment_score_key, "count")
+    if None in call_sentiment_counts:
+        del call_sentiment_counts[None]
     return call_sentiment_counts
+
+
+def calculate_call_directions(calls_qs: QuerySet) -> Dict:
+    data = {
+        CallDirectionTypes.INBOUND.value: 0,
+        CallDirectionTypes.OUTBOUND.value: 0,
+        CallDirectionTypes.INTERNAL.value: 0,
+    }
+    data.update(convert_count_results(calls_qs.values("call_direction").annotate(count=Count("id")), "call_direction", "count"))
+    return data
+
+
+def calculate_naept(calls_qs: QuerySet) -> Dict:
+    data = {
+        NonAgentEngagementPersonaTypes.CONTRACTOR_VENDOR.value: 0,
+        NonAgentEngagementPersonaTypes.EXISTING_PATIENT.value: 0,
+        NonAgentEngagementPersonaTypes.INSURANCE_PROVIDER.value: 0,
+        NonAgentEngagementPersonaTypes.NEW_PATIENT.value: 0,
+        NonAgentEngagementPersonaTypes.OTHERS.value: 0,
+    }
+    data.update(
+        convert_count_results(
+            calls_qs.values("engaged_in_calls__non_agent_engagement_persona_type").annotate(count=Count("id")),
+            "engaged_in_calls__non_agent_engagement_persona_type",
+            "count",
+        )
+    )
+    if None in data:
+        data["not_applicable"] = data[None]
+        del data[None]
+    return data
+
+
+def calculate_purpose(calls_qs: QuerySet) -> Dict:
+    data = {
+        CallPurposeTypes.BILLING.value: 0,
+        CallPurposeTypes.CONFIRM_APPOINTMENT.value: 0,
+        CallPurposeTypes.INSURANCE_AUTHORIZATION.value: 0,
+        CallPurposeTypes.INSURANCE_CLAIM.value: 0,
+        CallPurposeTypes.INSURANCE_VERIFICATION.value: 0,
+        CallPurposeTypes.NEW_APPOINTMENT.value: 0,
+        CallPurposeTypes.OTHERS.value: 0,
+        CallPurposeTypes.PRICING.value: 0,
+        CallPurposeTypes.RESCHEDULE.value: 0,
+    }
+    data.update(
+        convert_count_results(calls_qs.values("call_purposes__call_purpose_type").annotate(count=Count("id")), "call_purposes__call_purpose_type", "count")
+    )
+    if None in data:
+        data["not_applicable"] = data[None]
+        del data[None]
+    return data
 
 
 def calculate_call_breakdown_per_practice(calls_qs: QuerySet, organization_id: str, overall_call_counts_data: Dict) -> Dict:

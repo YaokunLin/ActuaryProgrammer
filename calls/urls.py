@@ -1,6 +1,10 @@
 from django.urls import include, path
 from rest_framework_nested import routers
 
+from calls.analytics.benchmarks.views import (
+    InboundCallerTypesBenchmarks,
+    OpportunitiesBenchmarks,
+)
 from calls.analytics.insurance_providers.views import (
     InsuranceProviderCallMetricsView,
     InsuranceProviderInteractionsView,
@@ -30,6 +34,13 @@ from calls.analytics.opportunities.views import (
 from calls.analytics.participants.views import (
     AgentAssignedCallViewSet,
     AgentEngagedWithViewset,
+)
+from calls.analytics.top_mentions.views import (
+    TopCompaniesMentionedView,
+    TopInsurancesMentionedView,
+    TopProceduresMentionedView,
+    TopProductsMentionedView,
+    TopSymptomsMentionedView,
 )
 from calls.analytics.transcripts.views import (
     CallLongestPauseViewset,
@@ -114,6 +125,15 @@ urlpatterns = [
     path(
         r"calls/aggregates/outbound-insurance-provider-call-counts/", InsuranceProviderCallMetricsView.as_view(), name="outbound-insurance-provider-call-counts"
     ),
+    # Top Call Mentions
+    path(r"calls/top-mentions/companies/", TopCompaniesMentionedView.as_view(), name="top-mentioned-companies"),
+    path(r"calls/top-mentions/insurances/", TopInsurancesMentionedView.as_view(), name="top-mentioned-insurances"),
+    path(r"calls/top-mentions/procedures/", TopProceduresMentionedView.as_view(), name="top-mentioned-procedures"),
+    path(r"calls/top-mentions/products/", TopProductsMentionedView.as_view(), name="top-mentioned-products"),
+    path(r"calls/top-mentions/symptoms/", TopSymptomsMentionedView.as_view(), name="top-mentioned-symptoms"),
+    # Benchmarks
+    path(r"calls/benchmarks/opportunities/", OpportunitiesBenchmarks.as_view(), name="opportunities-benchmarks"),
+    path(r"calls/benchmarks/inbound-caller-types/", InboundCallerTypesBenchmarks.as_view(), name="inbound-caller-types-benchmarks"),
     # Routers
     path(r"", include(calls_app_root_router.urls)),
     path(r"", include(call_router.urls)),
