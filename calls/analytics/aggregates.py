@@ -26,9 +26,21 @@ from django.db.models.functions import (
 )
 from django_pandas.io import read_frame
 
-from calls.analytics.intents.field_choices import CallOutcomeTypes, CallPurposeTypes
+from calls.analytics.intents.field_choices import CallPurposeTypes
 from calls.analytics.participants.field_choices import NonAgentEngagementPersonaTypes
-from calls.field_choices import CallConnectionTypes, CallDirectionTypes
+from calls.analytics.query_filters import (
+    ANSWERED_FILTER,
+    CONNECTED_FILTER,
+    EXISTING_PATIENT_FILTER,
+    FAILURE_FILTER,
+    MISSED_FILTER,
+    NEW_APPOINTMENT_FILTER,
+    NEW_PATIENT_FILTER,
+    OPPORTUNITIES_FILTER,
+    SUCCESS_FILTER,
+    WENT_TO_VOICEMAIL_FILTER,
+)
+from calls.field_choices import CallDirectionTypes
 from core.models import Practice
 
 # Get an instance of a logger
@@ -36,21 +48,15 @@ log = logging.getLogger(__name__)
 
 
 def calculate_call_counts(calls_qs: QuerySet, include_by_weekday_breakdown: bool = False) -> Dict:
-    connected_filter = Q(call_connection=CallConnectionTypes.CONNECTED)
-    answered_filters = connected_filter & Q(went_to_voicemail=False)
-    went_to_voicemail_filter = Q(went_to_voicemail=True)
-    missed_filter = Q(call_connection=CallConnectionTypes.MISSED)
-
-    # get call counts
     analytics = dict(
         calls_qs.aggregate(
             call_total=Count("id"),
-            call_connected_total=Count("call_connection", filter=connected_filter),
+            call_connected_total=Count("call_connection", filter=CONNECTED_FILTER),
             call_seconds_total=Sum("duration_seconds"),
             call_seconds_average=Avg("duration_seconds"),
-            call_answered_total=Count("id", filter=answered_filters),
-            call_voicemail_total=Count("id", filter=went_to_voicemail_filter),
-            call_missed_total=Count("id", filter=missed_filter),
+            call_answered_total=Count("id", filter=ANSWERED_FILTER),
+            call_voicemail_total=Count("id", filter=WENT_TO_VOICEMAIL_FILTER),
+            call_missed_total=Count("id", filter=MISSED_FILTER),
         )
     )
 
@@ -65,16 +71,16 @@ def calculate_call_counts(calls_qs: QuerySet, include_by_weekday_breakdown: bool
                 convert_to_call_counts_and_durations_by_weekday(get_call_counts_and_durations_by_weekday_and_hour(calls_qs))
             ),
             "call_connected_total": convert_to_call_counts_only(
-                convert_to_call_counts_and_durations_by_weekday(get_call_counts_and_durations_by_weekday_and_hour(calls_qs.filter(connected_filter)))
+                convert_to_call_counts_and_durations_by_weekday(get_call_counts_and_durations_by_weekday_and_hour(calls_qs.filter(CONNECTED_FILTER)))
             ),
             "call_answered_total": convert_to_call_counts_only(
-                convert_to_call_counts_and_durations_by_weekday(get_call_counts_and_durations_by_weekday_and_hour(calls_qs.filter(answered_filters)))
+                convert_to_call_counts_and_durations_by_weekday(get_call_counts_and_durations_by_weekday_and_hour(calls_qs.filter(ANSWERED_FILTER)))
             ),
             "call_voicemail_total": convert_to_call_counts_only(
-                convert_to_call_counts_and_durations_by_weekday(get_call_counts_and_durations_by_weekday_and_hour(calls_qs.filter(went_to_voicemail_filter)))
+                convert_to_call_counts_and_durations_by_weekday(get_call_counts_and_durations_by_weekday_and_hour(calls_qs.filter(WENT_TO_VOICEMAIL_FILTER)))
             ),
             "call_missed_total": convert_to_call_counts_only(
-                convert_to_call_counts_and_durations_by_weekday(get_call_counts_and_durations_by_weekday_and_hour(calls_qs.filter(missed_filter)))
+                convert_to_call_counts_and_durations_by_weekday(get_call_counts_and_durations_by_weekday_and_hour(calls_qs.filter(MISSED_FILTER)))
             ),
         }
 
@@ -82,23 +88,17 @@ def calculate_call_counts(calls_qs: QuerySet, include_by_weekday_breakdown: bool
 
 
 def calculate_call_count_opportunities(calls_qs: QuerySet, start_date_str: str, end_date_str: str) -> Dict:
-    new_appointment_filter = Q(call_purposes__call_purpose_type=CallPurposeTypes.NEW_APPOINTMENT)
-    won_filter = Q(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.SUCCESS)
-    lost_filter = Q(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.FAILURE)
-    existing_patient_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.EXISTING_PATIENT)
-    new_patient_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT)
+    opportunities_total_qs = calls_qs.filter(OPPORTUNITIES_FILTER)
+    opportunities_existing_patient_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & EXISTING_PATIENT_FILTER)
+    opportunities_new_patient_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & NEW_PATIENT_FILTER)
 
-    opportunities_total_qs = calls_qs.filter(new_appointment_filter & (existing_patient_filter | new_patient_filter))
-    opportunities_existing_patient_qs = calls_qs.filter(new_appointment_filter & existing_patient_filter)
-    opportunities_new_patient_qs = calls_qs.filter(new_appointment_filter & new_patient_filter)
+    opportunities_won_total_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & SUCCESS_FILTER & (EXISTING_PATIENT_FILTER | NEW_PATIENT_FILTER))
+    opportunities_won_existing_patient_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & SUCCESS_FILTER & EXISTING_PATIENT_FILTER)
+    opportunities_won_new_patient_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & SUCCESS_FILTER & NEW_PATIENT_FILTER)
 
-    opportunities_won_total_qs = calls_qs.filter(new_appointment_filter & won_filter & (existing_patient_filter | new_patient_filter))
-    opportunities_won_existing_patient_qs = calls_qs.filter(new_appointment_filter & won_filter & existing_patient_filter)
-    opportunities_won_new_patient_qs = calls_qs.filter(new_appointment_filter & won_filter & new_patient_filter)
-
-    opportunities_lost_total_qs = calls_qs.filter(new_appointment_filter & lost_filter & (existing_patient_filter | new_patient_filter))
-    opportunities_lost_existing_patient_qs = calls_qs.filter(new_appointment_filter & lost_filter & existing_patient_filter)
-    opportunities_lost_new_patient_qs = calls_qs.filter(new_appointment_filter & lost_filter & new_patient_filter)
+    opportunities_lost_total_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & FAILURE_FILTER & (EXISTING_PATIENT_FILTER | NEW_PATIENT_FILTER))
+    opportunities_lost_existing_patient_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & FAILURE_FILTER & EXISTING_PATIENT_FILTER)
+    opportunities_lost_new_patient_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & FAILURE_FILTER & NEW_PATIENT_FILTER)
 
     def get_conversion_rates_breakdown(total: List[Dict], won: List[Dict]) -> List[Dict]:
         conversion_rates = []
@@ -257,20 +257,14 @@ def calculate_call_counts_and_opportunities_per_user(calls_qs: QuerySet) -> Dict
         calls_qs.filter(call_connection="missed").values(field_name).annotate(call_missed_count=Count("id")).values(field_name, "call_missed_count")
     )
 
-    # opportunity totals
-    new_appointment_filter = Q(call_purposes__call_purpose_type=CallPurposeTypes.NEW_APPOINTMENT)
-    won_filter = Q(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.SUCCESS)
-    existing_patient_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.EXISTING_PATIENT)
-    new_patient_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT)
-
     opportunities_total_qs = (
-        calls_qs.filter(new_appointment_filter & (existing_patient_filter | new_patient_filter))
+        calls_qs.filter(NEW_APPOINTMENT_FILTER & (EXISTING_PATIENT_FILTER | NEW_PATIENT_FILTER))
         .values(field_name)
         .annotate(opportunities_total_count=Count("id"))
         .values(field_name, "opportunities_total_count")
     )
     opportunities_won_qs = (
-        calls_qs.filter(new_appointment_filter & won_filter & (existing_patient_filter | new_patient_filter))
+        calls_qs.filter(NEW_APPOINTMENT_FILTER & SUCCESS_FILTER & (EXISTING_PATIENT_FILTER | NEW_PATIENT_FILTER))
         .values(field_name)
         .annotate(opportunities_won_count=Count("id"))
         .values(field_name, "opportunities_won_count")

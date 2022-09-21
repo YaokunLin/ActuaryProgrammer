@@ -22,6 +22,7 @@ from calls.analytics.aggregates import (
     get_call_counts_and_durations_by_weekday_and_hour,
 )
 from calls.analytics.intents.field_choices import CallOutcomeTypes
+from calls.analytics.query_filters import OUTBOUND_FILTER, SUCCESS_FILTER
 from calls.field_choices import CallDirectionTypes
 from calls.models import Call
 from calls.validation import (
@@ -64,7 +65,7 @@ class InsuranceProviderInteractionsView(views.APIView):
             return Response({"insurance_provider_name": "Invalid insurance_provider_name"}, status=status.HTTP_400_BAD_REQUEST)
 
         all_filters = (
-            Q(call_direction=CallDirectionTypes.OUTBOUND)
+            OUTBOUND_FILTER
             & Q(call_start_time__gte=timezone.now() - timedelta(days=self.LOOKBACK_DAYS))
             & Q(sip_callee_number__in=insurance_provider.insuranceproviderphonenumber_set.only("phone_number"))
             & Q(duration_seconds__gte=timedelta(seconds=self.CALL_DURATION_MINIMUM_SECONDS))
@@ -226,13 +227,7 @@ class InsuranceProviderCallMetricsView(views.APIView):
             insurance_provider_phone_number_filter = Q(sip_callee_number__in=insurance_provider.insuranceproviderphonenumber_set.only("phone_number"))
         else:
             insurance_provider_phone_number_filter = Q(sip_callee_number__in=InsuranceProviderPhoneNumber.objects.only("phone_number").all())
-        all_filters = (
-            Q(call_direction=CallDirectionTypes.OUTBOUND)
-            & Q(**dates_filter)
-            & Q(**practice_filter)
-            & Q(**organization_filter)
-            & insurance_provider_phone_number_filter
-        )
+        all_filters = OUTBOUND_FILTER & Q(**dates_filter) & Q(**practice_filter) & Q(**organization_filter) & insurance_provider_phone_number_filter
         calls_qs = Call.objects.filter(all_filters)
 
         data_by_weekday_and_hour = get_call_counts_and_durations_by_weekday_and_hour(calls_qs)
@@ -254,7 +249,7 @@ class InsuranceProviderCallMetricsView(views.APIView):
         data_per_phone_number = calculate_call_counts_per_field(calls_qs, "sip_callee_number")
 
         # Successes ---
-        successes_qs = calls_qs.filter(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.SUCCESS).values("sip_callee_number")
+        successes_qs = calls_qs.filter(SUCCESS_FILTER).values("sip_callee_number")
         data_per_phone_number["call_success_total"] = successes_qs.annotate(count=Count("id")).order_by("-count")
         data_per_phone_number["call_success_total"] = convert_count_results(data_per_phone_number["call_success_total"], "sip_callee_number", "count")
 
