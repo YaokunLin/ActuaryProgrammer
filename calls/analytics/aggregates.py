@@ -498,23 +498,13 @@ def calculate_call_sentiments(calls_qs: QuerySet) -> Dict:
 
 
 def calculate_call_directions(calls_qs: QuerySet) -> Dict:
-    data = {
-        CallDirectionTypes.INBOUND.value: 0,
-        CallDirectionTypes.OUTBOUND.value: 0,
-        CallDirectionTypes.INTERNAL.value: 0,
-    }
+    data = {k: 0 for k in CallDirectionTypes}
     data.update(convert_count_results(calls_qs.values("call_direction").annotate(count=Count("id")), "call_direction", "count"))
     return data
 
 
 def calculate_naept(calls_qs: QuerySet) -> Dict:
-    data = {
-        NonAgentEngagementPersonaTypes.CONTRACTOR_VENDOR.value: 0,
-        NonAgentEngagementPersonaTypes.EXISTING_PATIENT.value: 0,
-        NonAgentEngagementPersonaTypes.INSURANCE_PROVIDER.value: 0,
-        NonAgentEngagementPersonaTypes.NEW_PATIENT.value: 0,
-        NonAgentEngagementPersonaTypes.OTHERS.value: 0,
-    }
+    data = {k: 0 for k in NonAgentEngagementPersonaTypes}
     data.update(
         convert_count_results(
             calls_qs.values("engaged_in_calls__non_agent_engagement_persona_type").annotate(count=Count("id")),
@@ -529,17 +519,7 @@ def calculate_naept(calls_qs: QuerySet) -> Dict:
 
 
 def calculate_purpose(calls_qs: QuerySet) -> Dict:
-    data = {
-        CallPurposeTypes.BILLING.value: 0,
-        CallPurposeTypes.CONFIRM_APPOINTMENT.value: 0,
-        CallPurposeTypes.INSURANCE_AUTHORIZATION.value: 0,
-        CallPurposeTypes.INSURANCE_CLAIM.value: 0,
-        CallPurposeTypes.INSURANCE_VERIFICATION.value: 0,
-        CallPurposeTypes.NEW_APPOINTMENT.value: 0,
-        CallPurposeTypes.OTHERS.value: 0,
-        CallPurposeTypes.PRICING.value: 0,
-        CallPurposeTypes.RESCHEDULE.value: 0,
-    }
+    data = {k: 0 for k in CallPurposeTypes}
     data.update(
         convert_count_results(calls_qs.values("call_purposes__call_purpose_type").annotate(count=Count("id")), "call_purposes__call_purpose_type", "count")
     )
