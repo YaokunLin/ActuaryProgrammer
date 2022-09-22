@@ -2,8 +2,8 @@ from django.urls import include, path
 from rest_framework_nested import routers
 
 from calls.analytics.benchmarks.views import (
-    InboundCallerTypesBenchmarks,
-    OpportunitiesBenchmarks,
+    InboundCallerTypesBenchmarksView,
+    OpportunitiesBenchmarksView,
 )
 from calls.analytics.insurance_providers.views import (
     InsuranceProviderCallMetricsView,
@@ -25,10 +25,11 @@ from calls.analytics.interactions.views import (
     AgentCallScoreViewset,
 )
 from calls.analytics.opportunities.views import (
-    CallMetricsView,
+    CallCountsView,
     NewPatientOpportunitiesView,
     NewPatientWinbacksView,
     OpportunitiesPerUserView,
+    OpportunitiesView,
 )
 from calls.analytics.participants.views import (
     AgentAssignedCallViewSet,
@@ -117,8 +118,9 @@ urlpatterns = [
     path(r"calls/aggregates/insurance-provider-interactions/", InsuranceProviderInteractionsView.as_view(), name="insurance-provider-interactions"),
     path(r"calls/aggregates/new-patient-opportunities/", NewPatientOpportunitiesView.as_view(), name="new-patient-opportunities"),
     path(r"calls/aggregates/new-patient-winback-opportunities/", NewPatientWinbacksView.as_view(), name="new-patient-winback-opportunities"),
-    path(r"calls/aggregates/call-counts/", CallMetricsView.as_view(), name="call-counts"),
-    path(r"calls/aggregates/outbound-call-counts/", CallMetricsView.as_view(), name="outbound-call-counts"),
+    path(r"calls/aggregates/call-counts/", CallCountsView.as_view(), name="call-counts"),
+    path(r"calls/aggregates/opportunity-values/", OpportunitiesView.as_view(), name="opportunity-values"),
+    path(r"calls/aggregates/outbound-call-counts/", CallCountsView.as_view(), name="outbound-call-counts"),
     path(r"calls/aggregates/opportunities-per-user/", OpportunitiesPerUserView.as_view(), name="opportunities-per-user"),
     path(
         r"calls/aggregates/outbound-insurance-provider-call-counts/", InsuranceProviderCallMetricsView.as_view(), name="outbound-insurance-provider-call-counts"
@@ -130,8 +132,8 @@ urlpatterns = [
     path(r"calls/top-mentions/products/", TopProductsMentionedView.as_view(), name="top-mentioned-products"),
     path(r"calls/top-mentions/symptoms/", TopSymptomsMentionedView.as_view(), name="top-mentioned-symptoms"),
     # Benchmarks
-    path(r"calls/benchmarks/opportunities/", OpportunitiesBenchmarks.as_view(), name="opportunities-benchmarks"),
-    path(r"calls/benchmarks/inbound-caller-types/", InboundCallerTypesBenchmarks.as_view(), name="inbound-caller-types-benchmarks"),
+    path(r"calls/benchmarks/opportunities/", OpportunitiesBenchmarksView.as_view(), name="opportunities-benchmarks"),
+    path(r"calls/benchmarks/inbound-caller-types/", InboundCallerTypesBenchmarksView.as_view(), name="inbound-caller-types-benchmarks"),
     # Routers
     path(r"", include(calls_app_root_router.urls)),
     path(r"", include(call_router.urls)),

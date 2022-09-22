@@ -1,11 +1,12 @@
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
-from django.db.models import Q, QuerySet
+from django.db.models import Count, Q, QuerySet
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_control, cache_page
 from django.views.decorators.vary import vary_on_headers
 from rest_framework import status, views
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from calls.analytics.aggregates import (
@@ -15,10 +16,12 @@ from calls.analytics.aggregates import (
     calculate_zero_filled_call_counts_by_day,
     convert_call_counts_to_by_week,
 )
+from calls.analytics.constants import AVG_VALUE_PER_APPOINTMENT_USD
 from calls.analytics.query_filters import (
     FAILURE_FILTER,
     INBOUND_FILTER,
     NEW_PATIENT_FILTER,
+    OPPORTUNITIES_FILTER,
     OUTBOUND_FILTER,
     SUCCESS_FILTER,
 )
@@ -43,7 +46,7 @@ log = logging.getLogger(__name__)
 REVENUE_PER_WINBACK_USD = 10_000
 
 
-class CallMetricsView(views.APIView):
+class CallCountsView(views.APIView):
     @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
     @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
     @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
@@ -94,6 +97,63 @@ class CallMetricsView(views.APIView):
         analytics = get_call_counts(dates_filter, practice_filter, organization_filter, call_direction_filter)
 
         return Response({"results": analytics})
+
+
+class OpportunitiesView(views.APIView):
+    @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
+    @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
+    @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
+    def get(self, request, format=None):
+        calls_qs = self._get_queryset_or_error_response(request, extra_filter=INBOUND_FILTER)
+        if isinstance(calls_qs, Response):
+            return calls_qs
+
+        opportunities_qs = calls_qs.filter(OPPORTUNITIES_FILTER)
+        opportunities_by_outcome = opportunities_qs.values("call_purposes__outcome_results__call_outcome_type").annotate(count=Count("id"))
+        d = {r["call_purposes__outcome_results__call_outcome_type"]: r["count"] for r in opportunities_by_outcome}
+
+        total_count = opportunities_qs.count()
+        won_count = d.get("success", 0)
+        lost_count = d.get("failure", 0)
+        n_a_count = total_count - (won_count + lost_count)
+        opportunity_counts = {
+            "total": total_count,
+            "won": won_count,
+            "lost": lost_count,
+            "not_applicable": n_a_count,
+        }
+        opportunity_values = {
+            "total": total_count * AVG_VALUE_PER_APPOINTMENT_USD,
+            "won": won_count * AVG_VALUE_PER_APPOINTMENT_USD,
+            "lost": lost_count * AVG_VALUE_PER_APPOINTMENT_USD,
+            "not_applicable": n_a_count * AVG_VALUE_PER_APPOINTMENT_USD,
+        }
+        results = {
+            "counts": opportunity_counts,
+            "values": opportunity_values,
+        }
+        return Response(results)
+
+    @staticmethod
+    def _get_queryset_or_error_response(request: Request, extra_filter: Optional[Q] = None) -> Union[Response, QuerySet]:
+        if extra_filter is None:
+            extra_filter = Q()
+
+        dates_info = get_validated_call_dates(query_data=request.query_params)
+        dates_errors = dates_info.get("errors")
+
+        errors = {}
+        if dates_errors:
+            errors.update(dates_errors)
+        if errors:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data=errors)
+
+        # date filters
+        dates = dates_info.get("dates")
+        call_start_time__gte = dates[0]
+        call_start_time__lte = dates[1]
+        dates_filter = {"call_start_time__gte": call_start_time__gte, "call_start_time__lte": call_start_time__lte}
+        return Call.objects.filter(**dates_filter).filter(extra_filter)
 
 
 def get_call_counts(

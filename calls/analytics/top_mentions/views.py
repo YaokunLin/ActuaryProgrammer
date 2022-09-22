@@ -10,12 +10,16 @@ from rest_framework import status, views
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from calls.analytics.participants.field_choices import NonAgentEngagementPersonaTypes
+from calls.analytics.query_filters import (
+    BENCHMARK_PRACTICE_CALLS_FILTER,
+    NAEPT_PATIENT_FILTER,
+)
 from calls.models import Call
 from calls.validation import (
     get_validated_call_dates,
     get_validated_organization_id,
     get_validated_practice_id,
+    get_validated_query_param_bool,
 )
 from peerlogic.settings import (
     ANALYTICS_CACHE_VARY_ON_HEADERS,
@@ -40,6 +44,7 @@ class _TopMentionedViewBase(views.APIView):
         with suppress(Exception):
             size = max(0, min(50, int(request.query_params.get("size", size))))
 
+        is_benchmark = get_validated_query_param_bool(request, "benchmark", False)
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
         valid_organization_id, organization_errors = get_validated_organization_id(request=request)
         dates_info = get_validated_call_dates(query_data=request.query_params)
@@ -50,39 +55,34 @@ class _TopMentionedViewBase(views.APIView):
             errors.update(practice_errors)
         if organization_errors:
             errors.update(organization_errors)
-        if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id):
-            error_message = "practice__id or organization__id must be provided, but not both."
-            errors.update({"practice__id": error_message, "organization__id": error_message})
+        if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id) and not is_benchmark:
+            error_message = "practice__id or organization__id or benchmark must be provided, but not more than one of them."
+            errors.update({"practice__id": error_message, "organization__id": error_message, "benchmark": error_message})
+        elif is_benchmark and valid_practice_id or valid_organization_id:
+            error_message = "practice__id or organization__id or benchmark must be provided, but not more than one of them."
+            errors.update({"practice__id": error_message, "organization__id": error_message, "benchmark": error_message})
         if dates_errors:
             errors.update(dates_errors)
         if errors:
             return Response(status=status.HTTP_400_BAD_REQUEST, data=errors)
 
-        practice_filter = {}
-        if valid_practice_id:
-            practice_filter = {"practice__id": valid_practice_id}
-
-        organization_filter = {}
-        if valid_organization_id:
-            organization_filter = {"practice__organization_id": valid_organization_id}
+        practice_filter = Q()
+        organization_filter = Q()
+        if is_benchmark:
+            practice_filter = BENCHMARK_PRACTICE_CALLS_FILTER
+        else:
+            if valid_practice_id:
+                practice_filter = Q(practice__id=valid_practice_id)
+            if valid_organization_id:
+                organization_filter = Q(practice__organization_id=valid_organization_id)
 
         # date filters
         dates = dates_info.get("dates")
         call_start_time__gte = dates[0]
         call_start_time__lte = dates[1]
-        dates_filter = {"call_start_time__gte": call_start_time__gte, "call_start_time__lte": call_start_time__lte}
+        dates_filter = Q(call_start_time__gte=call_start_time__gte, call_start_time__lte=call_start_time__lte)
 
-        all_filters = (
-            Q(
-                engaged_in_calls__non_agent_engagement_persona_type__in=[
-                    NonAgentEngagementPersonaTypes.NEW_PATIENT,
-                    NonAgentEngagementPersonaTypes.EXISTING_PATIENT,
-                ]
-            )
-            & Q(**dates_filter)
-            & Q(**practice_filter)
-            & Q(**organization_filter)
-        )
+        all_filters = NAEPT_PATIENT_FILTER & dates_filter & practice_filter & organization_filter
         return Response(self._get_top_mentions(all_filters, self._RESOURCE_NAME, size))
 
     def _get_top_mentions(self, call_filters: Q, resource_name: str, size: int) -> Dict:

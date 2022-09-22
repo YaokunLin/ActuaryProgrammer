@@ -28,6 +28,7 @@ from calls.validation import (
     get_validated_insurance_provider,
     get_validated_organization_id,
     get_validated_practice_id,
+    get_validated_query_param_bool,
 )
 from core.models import InsuranceProviderPhoneNumber
 from peerlogic.settings import (
@@ -54,10 +55,7 @@ class InsuranceProviderInteractionsView(views.APIView):
     @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
         insurance_provider = get_validated_insurance_provider(request)
-        try:
-            verbose = request.query_params.get("verbose", "False").lower() in {"true", "1", "t", "alex"}
-        except Exception:
-            verbose = False
+        verbose = get_validated_query_param_bool(request, "verbose", False)
 
         if insurance_provider is None:
             return Response({"insurance_provider_name": "Invalid insurance_provider_name"}, status=status.HTTP_400_BAD_REQUEST)

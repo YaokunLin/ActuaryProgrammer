@@ -62,8 +62,8 @@ def calculate_call_counts(calls_qs: QuerySet, include_by_weekday_breakdown: bool
 
     analytics["call_sentiment_counts"] = calculate_call_sentiments(calls_qs)
     analytics["call_direction_counts"] = calculate_call_directions(calls_qs)
-    analytics["naept_counts"] = calculate_naept(calls_qs)
-    analytics["purpose_counts"] = calculate_purpose(calls_qs)
+    analytics["call_naept_counts"] = calculate_naept(calls_qs)
+    analytics["call_purpose_counts"] = calculate_purpose(calls_qs)
 
     if include_by_weekday_breakdown:
         analytics["calls_by_weekday"] = {

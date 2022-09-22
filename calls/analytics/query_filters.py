@@ -29,7 +29,8 @@ EXISTING_PATIENT_FILTER = Q(engaged_in_calls__non_agent_engagement_persona_type=
 NEW_PATIENT_FILTER = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT)
 
 # Compound
-OPPORTUNITIES_FILTER = NEW_APPOINTMENT_FILTER & (EXISTING_PATIENT_FILTER | NEW_PATIENT_FILTER)
+NAEPT_PATIENT_FILTER = EXISTING_PATIENT_FILTER | NEW_PATIENT_FILTER
+OPPORTUNITIES_FILTER = NEW_APPOINTMENT_FILTER & NAEPT_PATIENT_FILTER
 
 # Benchmarks
 BENCHMARK_PRACTICE_CALLS_FILTER = Q()  # TODO Kyle: Q(practice__include_in_benchmarks=True)

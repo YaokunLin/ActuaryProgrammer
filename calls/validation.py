@@ -131,3 +131,14 @@ def get_validated_insurance_provider(request: Request) -> Optional[InsuranceProv
     except InsuranceProvider.DoesNotExist:
         log.info("Found no insurance provider with name: %s", insurance_provider_name)
         return None
+
+
+def get_validated_query_param_bool(request: Request, param_name: str, default_value: bool = False) -> bool:
+    param_value = request.query_params.get(param_name, None)
+    if param_value is None:
+        return default_value
+
+    if param_value and param_value.lower() in ("true", "1", "t"):
+        return True
+
+    return False

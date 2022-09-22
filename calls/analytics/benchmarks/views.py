@@ -9,13 +9,13 @@ from rest_framework import status, views
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from calls.analytics.aggregates import calculate_naept
-from calls.analytics.intents.field_choices import CallPurposeTypes
-from calls.analytics.participants.field_choices import NonAgentEngagementPersonaTypes
+from calls.analytics.aggregates import calculate_call_counts, calculate_naept
+from calls.analytics.constants import AVG_VALUE_PER_APPOINTMENT_USD
 from calls.analytics.query_filters import (
     BENCHMARK_PRACTICE_CALLS_FILTER,
     BENCHMARK_PRACTICE_FILTER,
     INBOUND_FILTER,
+    OPPORTUNITIES_FILTER,
 )
 from calls.models import Call
 from calls.validation import get_validated_call_dates
@@ -30,11 +30,7 @@ from peerlogic.settings import (
 log = logging.getLogger(__name__)
 
 
-# TODO: This is totally fudged
-_AVG_VALUE_PER_APPOINTMENT_USD = 838.88
-
-
-class OpportunitiesBenchmarks(views.APIView):
+class OpportunitiesBenchmarksView(views.APIView):
     @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
     @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
     @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
@@ -44,12 +40,8 @@ class OpportunitiesBenchmarks(views.APIView):
             return calls_qs
 
         benchmark_practices_count = _get_benchmark_practices_count()
+        opportunities_qs = calls_qs.filter(OPPORTUNITIES_FILTER)
 
-        new_appointment_filter = Q(call_purposes__call_purpose_type=CallPurposeTypes.NEW_APPOINTMENT)
-        existing_patient_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.EXISTING_PATIENT)
-        new_patient_filter = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT)
-
-        opportunities_qs = calls_qs.filter(new_appointment_filter & (existing_patient_filter | new_patient_filter))
         opportunities_by_outcome = opportunities_qs.values("call_purposes__outcome_results__call_outcome_type").annotate(count=Count("id"))
         d = {r["call_purposes__outcome_results__call_outcome_type"]: r["count"] for r in opportunities_by_outcome}
 
@@ -64,10 +56,10 @@ class OpportunitiesBenchmarks(views.APIView):
             "not_applicable": n_a_count / benchmark_practices_count,
         }
         average_opportunity_values = {
-            "total": total_count / benchmark_practices_count * _AVG_VALUE_PER_APPOINTMENT_USD,
-            "won": won_count / benchmark_practices_count * _AVG_VALUE_PER_APPOINTMENT_USD,
-            "lost": lost_count / benchmark_practices_count * _AVG_VALUE_PER_APPOINTMENT_USD,
-            "not_applicable": n_a_count / benchmark_practices_count * _AVG_VALUE_PER_APPOINTMENT_USD,
+            "total": total_count / benchmark_practices_count * AVG_VALUE_PER_APPOINTMENT_USD,
+            "won": won_count / benchmark_practices_count * AVG_VALUE_PER_APPOINTMENT_USD,
+            "lost": lost_count / benchmark_practices_count * AVG_VALUE_PER_APPOINTMENT_USD,
+            "not_applicable": n_a_count / benchmark_practices_count * AVG_VALUE_PER_APPOINTMENT_USD,
         }
 
         results = {
@@ -77,7 +69,7 @@ class OpportunitiesBenchmarks(views.APIView):
         return Response(results)
 
 
-class InboundCallerTypesBenchmarks(views.APIView):
+class InboundCallerTypesBenchmarksView(views.APIView):
     @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
     @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
     @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
@@ -93,6 +85,29 @@ class InboundCallerTypesBenchmarks(views.APIView):
             total_calls_by_naept[k] = v / benchmark_practices_count
 
         return Response(calculate_naept(calls_qs))
+
+
+class CallCountBenchmarksView(views.APIView):
+    @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
+    @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
+    @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
+    def get(self, request, format=None):
+        calls_qs = _get_queryset_or_error_response(request)
+        if isinstance(calls_qs, Response):
+            return calls_qs
+
+        benchmark_practices_count = _get_benchmark_practices_count()
+        call_counts = calculate_call_counts(calls_qs)
+        for section_name in {"call_total", "call_connected_total", "call_seconds_total", "call_answered_total", "call_voicemail_total", "call_missed_total"}:
+            call_counts[section_name] = call_counts[section_name] / benchmark_practices_count
+        total = call_counts["total"]
+        call_counts["call_seconds_average"] = call_counts["call_seconds_average"] / total if total else 0
+        for section_name in {"call_sentiment_counts", "call_direction_counts", "call_naept_counts", "call_purpose_counts"}:
+            section = call_counts[section_name]
+            for k, v in section.items():
+                section[k] = section[v] / benchmark_practices_count
+
+        return Response(calculate_call_counts(calls_qs))
 
 
 def _get_queryset_or_error_response(request: Request, extra_filter: Optional[Q] = None) -> Union[Response, QuerySet]:
