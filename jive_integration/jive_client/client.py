@@ -2,11 +2,12 @@ import hashlib
 import logging
 import uuid
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Optional
 
 import requests
 import urllib.parse
 
+from django.conf import settings
 from django.utils import timezone
 from requests.auth import HTTPBasicAuth, AuthBase
 
@@ -18,15 +19,15 @@ class Line:
     Given lines are constantly being used to compare sets of data this abstraction allows us to easily compare them.
     """
 
-    def __init__(self, line_id: str, organization_id: str):
+    def __init__(self, line_id: str, source_organization_jive_id: str):
         self.line_id = line_id
-        self.organization_id = organization_id
+        self.source_organization_jive_id = source_organization_jive_id
 
     def __hash__(self):
-        return hash(self.line_id + self.organization_id)
+        return hash(self.line_id + self.source_organization_jive_id)
 
     def __eq__(self, other):
-        return self.line_id == other.line_id and self.organization_id == other.source_organization_jive_id
+        return self.line_id == other.line_id and self.source_organization_jive_id == other.source_organization_jive_id
 
 
 class APIResponseException(Exception):
@@ -41,9 +42,10 @@ class _Authentication(AuthBase):
     _authentication_url: str = "https://authentication.logmeininc.com"
     _goto_api_url: str = "https://api.getgo.com"
 
-    def __init__(self, client_id: str, client_secret: str, refresh_token: str):
+    def __init__(self, client_id: str, client_secret: str, refresh_token: Optional[str] = None):
         self._client_id = client_id
         self._client_secret = client_secret
+        self._access_token = None
         self._refresh_token = refresh_token
 
     def __call__(self, r: requests.Request):
@@ -85,18 +87,17 @@ class _Authentication(AuthBase):
         """
         Exchange the given authorization code for a refresh and access token.
 
-        https://developer.goto.com/guides/HowTos/03_HOW_accessToken/
+        https://developer.goto.com/Authentication/#section/Authorization-Flows/Authorization-Code-Grant
+
+        Scroll to 2. Exchange the authorization code for an access token
         """
+
         resp: requests.Response = requests.request(
             method="post",
             url=urllib.parse.urljoin(self._authentication_url, "/oauth/token"),
             auth=HTTPBasicAuth(self._client_id, self._client_secret),
-            headers={"Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json"},
-            data={
-                "grant_type": "authorization_code",
-                "code": code,
-                "redirect_uri": redirect_uri,
-            },
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            data={"grant_type": "authorization_code", "code": code, "redirect_uri": redirect_uri, "client_id": self._client_id},
         )
 
         self.__parse_token_response(resp)
@@ -105,14 +106,21 @@ class _Authentication(AuthBase):
         """
         Assume a json response with a minimum of an `access_token` and `refresh_token` key.
         """
-        resp.raise_for_status()
+        try:
+            resp.raise_for_status()
+        except Exception as e:
+            msg = f"Problem occurred parsing token response"
+            if resp is not None and resp.text:
+                msg = f"{msg}. Response text: '{resp.text}'"
+            raise Exception(msg)
 
         body = resp.json()
 
         try:
-            self._access_token = body["access_token"]
-            self._refresh_token = body["refresh_token"]
-            self.__token_expires_at = (datetime.utcnow() + timedelta(seconds=body["expires_in"])).timestamp()
+            self._access_token: str = body["access_token"]
+            self._principal: Optional[str] = body.get("principal")  # email address associated to the account
+            self._refresh_token: str = body["refresh_token"]
+            self.__token_expires_at: float = (datetime.utcnow() + timedelta(seconds=body["expires_in"])).timestamp()
         except (KeyError, IndexError) as exc:
             logging.debug(f"invalid token response: {resp.content}")
             raise APIResponseException("failed to parse token response") from exc
@@ -124,7 +132,7 @@ class JiveClient:
     __auth: _Authentication
     __session: requests.Session
 
-    def __init__(self, client_id: str, client_secret: str, refresh_token: str, api_base_url: str = ""):
+    def __init__(self, client_id: str, client_secret: str, refresh_token: Optional[str] = None, api_base_url: str = ""):
         self.__auth = _Authentication(client_id=client_id, client_secret=client_secret, refresh_token=refresh_token)
 
         self.__session = requests.Session()
@@ -136,6 +144,14 @@ class JiveClient:
     @property
     def refresh_token(self):
         return self.__auth.refresh_token
+
+    @property
+    def access_token(self):
+        return self.__auth._access_token
+
+    @property
+    def principal(self):
+        return self.__auth._principal
 
     def exchange_code(self, code: str, request_uri: str):
         """
@@ -181,7 +197,9 @@ class JiveClient:
         """
         Extend the channel lifetime by the default value configured by the Jive API
         """
-        resp = self.__request(method="put", url=f"https://api.jive.com/notification-channel/v1/channels/{channel.name}/{channel.external_id}/channel-lifetime")
+        resp = self.__request(
+            method="put", url=f"https://api.jive.com/notification-channel/v1/channels/{channel.name}/{channel.source_jive_id}/channel-lifetime"
+        )
 
         resp.raise_for_status()
 
@@ -196,7 +214,7 @@ class JiveClient:
 
         dependency: channelID not channel Id
         """
-        resp = self.__request(method="post", url="https://realtime.jive.com/v2/session", json={"channelId": channel.external_id})
+        resp = self.__request(method="post", url="https://realtime.jive.com/v2/session", json={"channelId": channel.source_jive_id})
 
         resp.raise_for_status()
 
@@ -216,11 +234,15 @@ class JiveClient:
         self.__request(
             method="post",
             url=session.url + "/subscriptions",
-            json=[{"id": line.line_id, "type": "dialog", "entity": {"id": line.line_id, "type": "line.v2", "account": line.organization_id}} for line in lines],
+            json=[
+                {"id": line.line_id, "type": "dialog", "entity": {"id": line.line_id, "type": "line.v2", "account": line.source_organization_jive_id}}
+                for line in lines
+            ],
         ).raise_for_status()
 
         JiveLine.objects.bulk_create(
-            [JiveLine(session=session, external_id=line.line_id, organization_id=line.organization_id) for line in lines], ignore_conflicts=True
+            [JiveLine(session=session, source_jive_id=line.line_id, source_organization_jive_id=line.source_organization_jive_id) for line in lines],
+            ignore_conflicts=True,
         )
 
     def list_lines(self) -> List[Line]:
@@ -239,7 +261,7 @@ class JiveClient:
 
         try:
             for item in body["items"]:
-                lines.append(Line(line_id=item["id"], organization_id=item["organization"]["id"]))
+                lines.append(Line(line_id=item["id"], source_organization_jive_id=item["organization"]["id"]))
         except KeyError as exc:
             raise APIResponseException("failed to parse list lines response") from exc
 
