@@ -1,12 +1,18 @@
 import logging
-from core.abstract_models import AuditTrailModel
+
 from django.db import models
 from django_extensions.db.fields import ShortUUIDField
+
+from core.abstract_models import AuditTrailModel
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
 
-from calls.analytics.intents.field_choices import CallPurposeTypes, CallOutcomeTypes, CallOutcomeReasonTypes
+from calls.analytics.intents.field_choices import (
+    CallOutcomeReasonTypes,
+    CallOutcomeTypes,
+    CallPurposeTypes,
+)
 
 
 class CallPurpose(AuditTrailModel):
@@ -27,8 +33,8 @@ class CallOutcome(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     call_outcome_type = models.CharField(choices=CallOutcomeTypes.choices, max_length=50, db_index=True, blank=True)
     call_purpose = models.ForeignKey(
-        CallPurpose, on_delete=models.SET_NULL, verbose_name="The source purpose for this outcome", related_name="outcome_results", null=True
-    )
+        CallPurpose, unique=True, on_delete=models.SET_NULL, verbose_name="The source purpose for this outcome", related_name="outcome_results", null=True
+    )  # TODO: make a history table to capture older values / older runs
     raw_call_outcome_model_run_id = models.CharField(max_length=22)
     call_outcome_model_run = models.ForeignKey(
         "ml.MLModelResultHistory",
