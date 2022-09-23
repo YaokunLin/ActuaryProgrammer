@@ -14,7 +14,7 @@ from ringcentral import SDK
 from ringcentral_integration.publishers import publish_call_discounted_event
 from django.utils import timezone
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.views import APIView
@@ -30,6 +30,10 @@ from core.setup_user_and_practice import (
     save_user_activity_and_token,
     setup_practice,
     setup_user
+)
+
+from .serializers import (
+    AdminRingCentralAPICredentialsSerializer
 )
 
 from google.api_core.exceptions import PermissionDenied
@@ -94,7 +98,8 @@ def webhook(request):
         #
         # PROCESSING
         #
-
+        
+        # ToDo get active calls to determine Record ID
         try:
             log.info(f"[RingCentral] Publishing call disconnected events for: telephony_session_id: '{session['telephonySessionId']}' and account_id: '{session['parties'][0]['accountId']}'")
             publish_call_discounted_event(
@@ -109,7 +114,6 @@ def webhook(request):
     return HttpResponse(status=200)
 
 
-
 class LoginView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
@@ -121,7 +125,6 @@ class LoginView(APIView):
         }
 
         ringcentral_access_token_response = None
-        print(request)
         try:
             grant_type = request.data.get("grant_type")
             handler = grant_handler_map.get(grant_type, default_handler)
@@ -144,8 +147,7 @@ class LoginView(APIView):
 
         username = request.data.get("username")
         password = request.data.get("password")
-        ringcentral_account_id = request.data.get("ringcentral_account_id")
-        ringcentral_api_client = self._get_ringcentral_client_secret(username, ringcentral_account_id)
+        ringcentral_api_client = self._get_ringcentral_client_secret(username, password)
 
         log.info(f"User is attempting login. username='{username}'.")
 
@@ -153,7 +155,7 @@ class LoginView(APIView):
             log.info(f"Bad Request detected for login. Missing one or more required fields.")
             raise ParseError()
 
-        rcsdk = SDK( ringcentral_account_id,
+        rcsdk = SDK( ringcentral_api_client.client_id,
              ringcentral_api_client.client_secret,
              ringcentral_api_client.api_url )
         platform = rcsdk.platform()
@@ -169,8 +171,8 @@ class LoginView(APIView):
 
         return Response(status=200, data=response_json)
 
-    def _get_ringcentral_client_secret(self, username, ringcentral_account_id):
-        ringcentral_api_credentials = RingCentralAPICredentials.objects.get(username=username, client_id=ringcentral_account_id)
+    def _get_ringcentral_client_secret(self, username, password):
+        ringcentral_api_credentials = RingCentralAPICredentials.objects.get(username=username, password=password)
         return ringcentral_api_credentials
     
     def _setup_user_and_save_activity(self, username, ringcentral_auth_token: RingCentralAuthToken) -> None:
@@ -196,3 +198,12 @@ class LoginView(APIView):
                 create_user_telecom(user)
                 practice, _ = setup_practice('')
                 create_agent(user, practice)
+
+
+@authentication_classes([])
+@permission_classes([AllowAny]) # TODO CHANGE THIS 
+class AdminRingCentralAPICredentialsViewset(viewsets.ModelViewSet):
+    queryset = RingCentralAPICredentials.objects.all().order_by("voip_provider", "active", "-created_at")
+    serializer_class = AdminRingCentralAPICredentialsSerializer
+
+    filterset_fields = ["voip_provider", "active"]

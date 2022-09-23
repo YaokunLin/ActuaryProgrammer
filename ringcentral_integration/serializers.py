@@ -4,6 +4,7 @@ from typing import Dict
 from rest_framework import serializers
 
 from .models import (
+    RingCentralAPICredentials,
     RingCentralSessionEvent
 )
 
@@ -19,3 +20,22 @@ class RingCentralSessionEventSerializer(serializers.ModelSerializer):
         instance = super().create(validated_data)
 
         return instance
+    
+class AdminRingCentralAPICredentialsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RingCentralAPICredentials
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
+        fields = [
+            "id",
+            "created_by",
+            "created_at",
+            "modified_by",
+            "modified_at",
+            "voip_provider",
+            "api_url",
+            "client_id",
+            "client_secret",
+            "username",
+            "password",
+            "active",
+        ]

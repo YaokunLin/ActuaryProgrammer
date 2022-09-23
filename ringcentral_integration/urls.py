@@ -3,13 +3,15 @@ from rest_framework import routers
 
 from .views import (
     webhook,
-    LoginView
+    LoginView,
+    AdminRingCentralAPICredentialsViewset
 )
 
 
 app_name = "ringcentral_integration"
 
 router = routers.DefaultRouter()
+router.register(r"admin/api-credentials", AdminRingCentralAPICredentialsViewset)
 
 urlpatterns = [
     path("", include(router.urls)),
