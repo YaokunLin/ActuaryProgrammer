@@ -34,6 +34,10 @@ class CallPurposeViewset(viewsets.ModelViewSet):
     serializer_class = CallPurposeSerializer
     filter_fields = ["call_purpose_type", "call__id"]
 
+    def get_queryset(self):
+        queryset = super().get_queryset().filter(call_id=self.kwargs.get("call_pk"))
+        return queryset
+
 
 class CallOutcomeViewset(viewsets.ModelViewSet):
     queryset = CallOutcome.objects.all().order_by("-modified_at")
