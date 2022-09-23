@@ -17,7 +17,7 @@ class AgentEngagedWith(AuditTrailModel):
     # TODO: rename this related name 'engaged_in_calls' to something that makes more sense
     call = models.ForeignKey(
         "Call", unique=True, on_delete=models.CASCADE, verbose_name="The call engaged with", related_name="engaged_in_calls"
-    )  # TODO: remove unique constraint and make history tables
+    )  # TODO: make a history table to capture older values / older runs
     non_agent_engagement_persona_type = models.CharField(choices=NonAgentEngagementPersonaTypes.choices, max_length=50, blank=True)
 
     # Blankable - Sometimes we determine type outside of running a model, and it's all app-side logic. For instance, Business CNAM lookup instead of a model
