@@ -25,7 +25,7 @@ def deduplicate_agentengagedwith(apps, schema_editor):
         aews_to_remove = aews[1:]  # take all older ones
         for aew in aews_to_remove:
             aew_id = aew.id
-            log.info(f"Deleting duplicate agent engaged with with id='{aew_id}'")
+            log.info(f"Deleting duplicate agent engaged with with id='{aew_id}' type={aew.non_agent_engagement_persona_type}")
             aew.delete()
             aews_removed.append(aew_id)
 
