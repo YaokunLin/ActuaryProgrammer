@@ -9,7 +9,7 @@ from core.models import Agent
 class AgentAssignedCall(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     agent = models.ForeignKey(Agent, on_delete=models.CASCADE, related_name="assigned_calls")
-    call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="Call assigned to agent", related_name="assigned_agent")
+    call = models.ForeignKey("Call", unique=True, on_delete=models.CASCADE, verbose_name="Call assigned to agent", related_name="assigned_agent")
 
 
 class AgentEngagedWith(AuditTrailModel):
