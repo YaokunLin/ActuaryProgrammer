@@ -9,7 +9,7 @@ from rest_framework import status, views
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from calls.analytics.aggregates import calculate_call_counts, calculate_naept
+from calls.analytics.aggregates import calculate_call_counts
 from calls.analytics.constants import AVG_VALUE_PER_APPOINTMENT_USD
 from calls.analytics.query_filters import (
     BENCHMARK_PRACTICE_CALLS_FILTER,
@@ -18,7 +18,7 @@ from calls.analytics.query_filters import (
     OPPORTUNITIES_FILTER,
 )
 from calls.models import Call
-from calls.validation import get_validated_call_dates
+from calls.validation import get_validated_call_dates, get_validated_call_direction
 from core.models import Practice
 from peerlogic.settings import (
     ANALYTICS_CACHE_VARY_ON_HEADERS,
@@ -69,25 +69,7 @@ class OpportunitiesBenchmarksView(views.APIView):
         return Response(results)
 
 
-class InboundCallerTypesBenchmarksView(views.APIView):
-    @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
-    @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
-    @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
-    def get(self, request, format=None):
-        calls_qs = _get_queryset_or_error_response(request, extra_filter=INBOUND_FILTER)
-        if isinstance(calls_qs, Response):
-            return calls_qs
-
-        benchmark_practices_count = _get_benchmark_practices_count()
-        total_calls_by_naept = calculate_naept(calls_qs)
-
-        for k, v in total_calls_by_naept.items():
-            total_calls_by_naept[k] = v / benchmark_practices_count
-
-        return Response(calculate_naept(calls_qs))
-
-
-class CallCountBenchmarksView(views.APIView):
+class CallCountsBenchmarksView(views.APIView):
     @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
     @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
     @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
@@ -100,14 +82,12 @@ class CallCountBenchmarksView(views.APIView):
         call_counts = calculate_call_counts(calls_qs)
         for section_name in {"call_total", "call_connected_total", "call_seconds_total", "call_answered_total", "call_voicemail_total", "call_missed_total"}:
             call_counts[section_name] = call_counts[section_name] / benchmark_practices_count
-        total = call_counts["total"]
-        call_counts["call_seconds_average"] = call_counts["call_seconds_average"] / total if total else 0
         for section_name in {"call_sentiment_counts", "call_direction_counts", "call_naept_counts", "call_purpose_counts"}:
             section = call_counts[section_name]
             for k, v in section.items():
-                section[k] = section[v] / benchmark_practices_count
+                section[k] = v / benchmark_practices_count
 
-        return Response(calculate_call_counts(calls_qs))
+        return Response(call_counts)
 
 
 def _get_queryset_or_error_response(request: Request, extra_filter: Optional[Q] = None) -> Union[Response, QuerySet]:
@@ -117,9 +97,13 @@ def _get_queryset_or_error_response(request: Request, extra_filter: Optional[Q] 
     dates_info = get_validated_call_dates(query_data=request.query_params)
     dates_errors = dates_info.get("errors")
 
+    valid_call_direction, call_drection_errors = get_validated_call_direction(request)
+
     errors = {}
     if dates_errors:
         errors.update(dates_errors)
+    if call_drection_errors:
+        errors.update(call_drection_errors)
     if errors:
         return Response(status=status.HTTP_400_BAD_REQUEST, data=errors)
 
@@ -127,8 +111,13 @@ def _get_queryset_or_error_response(request: Request, extra_filter: Optional[Q] 
     dates = dates_info.get("dates")
     call_start_time__gte = dates[0]
     call_start_time__lte = dates[1]
-    dates_filter = {"call_start_time__gte": call_start_time__gte, "call_start_time__lte": call_start_time__lte}
-    return Call.objects.filter(**dates_filter).filter(BENCHMARK_PRACTICE_CALLS_FILTER & extra_filter)
+    dates_filter = Q(call_start_time__gte=call_start_time__gte, call_start_time__lte=call_start_time__lte)
+
+    call_direction_filter = Q()
+    if valid_call_direction:
+        call_direction_filter = Q(call_direction=valid_call_direction)
+
+    return Call.objects.filter(BENCHMARK_PRACTICE_CALLS_FILTER & dates_filter & call_direction_filter & extra_filter)
 
 
 def _get_benchmark_practices_count() -> int:

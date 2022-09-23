@@ -17,6 +17,7 @@ from calls.analytics.query_filters import (
 from calls.models import Call
 from calls.validation import (
     get_validated_call_dates,
+    get_validated_call_direction,
     get_validated_organization_id,
     get_validated_practice_id,
     get_validated_query_param_bool,
@@ -45,6 +46,7 @@ class _TopMentionedViewBase(views.APIView):
             size = max(0, min(50, int(request.query_params.get("size", size))))
 
         is_benchmark = get_validated_query_param_bool(request, "benchmark", False)
+        valid_call_direction, call_drection_errors = get_validated_call_direction(request)
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
         valid_organization_id, organization_errors = get_validated_organization_id(request=request)
         dates_info = get_validated_call_dates(query_data=request.query_params)
@@ -55,6 +57,8 @@ class _TopMentionedViewBase(views.APIView):
             errors.update(practice_errors)
         if organization_errors:
             errors.update(organization_errors)
+        if call_drection_errors:
+            errors.update(call_drection_errors)
         if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id) and not is_benchmark:
             error_message = "practice__id or organization__id or benchmark must be provided, but not more than one of them."
             errors.update({"practice__id": error_message, "organization__id": error_message, "benchmark": error_message})
@@ -82,7 +86,11 @@ class _TopMentionedViewBase(views.APIView):
         call_start_time__lte = dates[1]
         dates_filter = Q(call_start_time__gte=call_start_time__gte, call_start_time__lte=call_start_time__lte)
 
-        all_filters = NAEPT_PATIENT_FILTER & dates_filter & practice_filter & organization_filter
+        call_direction_filter = Q()
+        if valid_call_direction:
+            call_direction_filter = Q(call_direction=valid_call_direction)
+
+        all_filters = NAEPT_PATIENT_FILTER & dates_filter & practice_filter & organization_filter & call_direction_filter
         return Response(self._get_top_mentions(all_filters, self._RESOURCE_NAME, size))
 
     def _get_top_mentions(self, call_filters: Q, resource_name: str, size: int) -> Dict:

@@ -2,7 +2,7 @@ from django.urls import include, path
 from rest_framework_nested import routers
 
 from calls.analytics.benchmarks.views import (
-    InboundCallerTypesBenchmarksView,
+    CallCountsBenchmarksView,
     OpportunitiesBenchmarksView,
 )
 from calls.analytics.insurance_providers.views import (
@@ -133,7 +133,7 @@ urlpatterns = [
     path(r"calls/top-mentions/symptoms/", TopSymptomsMentionedView.as_view(), name="top-mentioned-symptoms"),
     # Benchmarks
     path(r"calls/benchmarks/opportunities/", OpportunitiesBenchmarksView.as_view(), name="opportunities-benchmarks"),
-    path(r"calls/benchmarks/inbound-caller-types/", InboundCallerTypesBenchmarksView.as_view(), name="inbound-caller-types-benchmarks"),
+    path(r"calls/benchmarks/call-counts/", CallCountsBenchmarksView.as_view(), name="call-counts-benchmarks"),
     # Routers
     path(r"", include(calls_app_root_router.urls)),
     path(r"", include(call_router.urls)),

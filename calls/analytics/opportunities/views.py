@@ -86,13 +86,8 @@ class CallCountsView(views.APIView):
 
         # TODO: include filters to REST API for other call directions (Inbound)
         call_direction_filter = {}
-        if valid_call_direction == ALL_FILTER_NAME:
-            call_direction_filter = {}  # stating explicitly even though it is initialized above
-        elif valid_call_direction:
+        if valid_call_direction:
             call_direction_filter = {"call_direction": valid_call_direction}
-        else:
-            # TODO: Default to no filter after dependency is removed
-            pass  # call_direction_filter = {"call_direction": CallDirectionTypes.OUTBOUND}
 
         analytics = get_call_counts(dates_filter, practice_filter, organization_filter, call_direction_filter)
 

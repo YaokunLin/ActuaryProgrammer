@@ -72,27 +72,16 @@ def get_validated_practice_id(request: Request) -> Tuple[Optional[str], Optional
     return practice_id, None
 
 
-def get_validated_call_direction(request: Request) -> Tuple[Optional[str], Optional[Dict[str, str]]]:
-    # TODO: Remove ALL_FILTER_NAME; all is a stop-gap; since its parent was originally using only outbound calls
-    # see note in calls/analytics/opportunities/views.py#CallMetricsView
+def get_validated_call_direction(request: Request, default: Optional[str] = None) -> Tuple[Optional[str], Optional[Dict[str, str]]]:
     param_name = "call_direction"
     call_direction = request.query_params.get(param_name)
     invalid_error = {param_name: f"Invalid {param_name}='{call_direction}'"}
 
-    valid_call_directions = {i[0] for i in CallDirectionTypes.choices}
-    valid_call_directions.add(ALL_FILTER_NAME)
-    if call_direction not in valid_call_directions:
-        return None, invalid_error
+    if call_direction is None:
+        return default, None
 
-    return call_direction, None
-
-
-def get_validated_call_purpose(request: Request) -> Tuple[Optional[str], Optional[Dict[str, str]]]:
-    param_name = "call_direction"
-    call_direction = request.query_params.get(param_name)
-    invalid_error = {param_name: f"Invalid {param_name}='{call_direction}'"}
-
-    if call_direction not in CallDirectionTypes.choices or call_direction != ALL_FILTER_NAME:
+    call_direction = call_direction.lower()
+    if call_direction not in CallDirectionTypes:
         return None, invalid_error
 
     return call_direction, None
