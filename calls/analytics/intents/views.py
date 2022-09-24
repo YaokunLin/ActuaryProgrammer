@@ -45,6 +45,7 @@ class CallOutcomeViewset(viewsets.ModelViewSet):
     filter_fields = ["call_outcome_type", "call_purpose__id", "call_purpose__call__id"]
 
     def get_queryset(self):
+        # TODO: probably nest outcomes underneath a purpose
         queryset = super().get_queryset().filter(call_purpose__call_id=self.kwargs.get("call_pk"))
         return queryset
 
