@@ -43,6 +43,12 @@ def reduplicate_outcomes(apps, schema_editor):
     pass
 
 
+#
+# Unlike the de-duplication for Agent Engaged With. This deletion has to be separate from the alter table of the subsequent migration otherwise there is an
+# error.
+#
+
+
 class Migration(migrations.Migration):
 
     dependencies = [

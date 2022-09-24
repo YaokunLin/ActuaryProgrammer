@@ -28,6 +28,12 @@ class CallPurpose(AuditTrailModel):
         null=True,
     )
 
+    class Meta:
+        unique_together = (
+            "call",
+            "call_purpose_type",
+        )
+
 
 class CallOutcome(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
