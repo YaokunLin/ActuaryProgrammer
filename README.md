@@ -4,8 +4,6 @@
 
 ## TODO
 
-ddebiase test push to development
-
 ## Docker
 
 Make sure to run these commands from the root of the project.
