@@ -50,16 +50,16 @@ class OpportunitiesBenchmarksView(views.APIView):
         lost_count = d.get("failure", 0)
         open_count = total_count - (won_count + lost_count)
         average_opportunity_counts = {
-            "total": total_count / benchmark_practices_count,
-            "won": won_count / benchmark_practices_count,
-            "lost": lost_count / benchmark_practices_count,
-            "open": open_count / benchmark_practices_count,
+            "total": benchmark_practices_count and total_count / benchmark_practices_count or 0,
+            "won": benchmark_practices_count and won_count / benchmark_practices_count or 0,
+            "lost": benchmark_practices_count and lost_count / benchmark_practices_count or 0,
+            "open": benchmark_practices_count and open_count / benchmark_practices_count or 0,
         }
         average_opportunity_values = {
-            "total": total_count / benchmark_practices_count * AVG_VALUE_PER_APPOINTMENT_USD,
-            "won": won_count / benchmark_practices_count * AVG_VALUE_PER_APPOINTMENT_USD,
-            "lost": lost_count / benchmark_practices_count * AVG_VALUE_PER_APPOINTMENT_USD,
-            "open": open_count / benchmark_practices_count * AVG_VALUE_PER_APPOINTMENT_USD,
+            "total": benchmark_practices_count and total_count / benchmark_practices_count * AVG_VALUE_PER_APPOINTMENT_USD or 0,
+            "won": benchmark_practices_count and won_count / benchmark_practices_count * AVG_VALUE_PER_APPOINTMENT_USD or 0,
+            "lost": benchmark_practices_count and lost_count / benchmark_practices_count * AVG_VALUE_PER_APPOINTMENT_USD or 0,
+            "open": benchmark_practices_count and open_count / benchmark_practices_count * AVG_VALUE_PER_APPOINTMENT_USD or 0,
         }
 
         results = {
@@ -81,11 +81,11 @@ class CallCountsBenchmarksView(views.APIView):
         benchmark_practices_count = _get_benchmark_practices_count()
         call_counts = calculate_call_counts(calls_qs)
         for section_name in {"call_total", "call_connected_total", "call_seconds_total", "call_answered_total", "call_voicemail_total", "call_missed_total"}:
-            call_counts[section_name] = call_counts[section_name] / benchmark_practices_count
+            call_counts[section_name] = benchmark_practices_count and call_counts[section_name] / benchmark_practices_count or 0
         for section_name in {"call_sentiment_counts", "call_direction_counts", "call_naept_counts", "call_purpose_counts"}:
             section = call_counts[section_name]
             for k, v in section.items():
-                section[k] = v / benchmark_practices_count
+                section[k] = benchmark_practices_count and v / benchmark_practices_count or 0
 
         return Response(call_counts)
 

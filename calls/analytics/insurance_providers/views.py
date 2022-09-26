@@ -128,7 +128,11 @@ class InsuranceProviderInteractionsView(views.APIView):
             most_efficient_weekday = most_efficient_day[weekday_label]
             most_efficient_hour = most_efficient_day[most_efficient_hour_label]
             most_efficient_hour_data = data_by_weekday_and_hour[most_efficient_weekday][per_hour_label][most_efficient_hour]
-            average_duration_at_most_efficient_day_hour = most_efficient_hour_data[total_call_duration_label] / most_efficient_hour_data[call_count_label]
+            average_duration_at_most_efficient_day_hour = (
+                most_efficient_hour_data[call_count_label]
+                and most_efficient_hour_data[total_call_duration_label] / most_efficient_hour_data[call_count_label]
+                or 0
+            )
             return_data = {
                 weekday_label: most_efficient_weekday,
                 hour_label: most_efficient_hour,
@@ -273,7 +277,7 @@ class InsuranceProviderCallMetricsView(views.APIView):
         data_per_insurance_provider_name["call_success_rate"] = dict()
         for k, v in data_per_insurance_provider_name["call_total"].items():
             success_count = data_per_insurance_provider_name["call_success_total"].get(k, None)
-            data_per_insurance_provider_name["call_success_rate"][k] = success_count / v if success_count else 0
+            data_per_insurance_provider_name["call_success_rate"][k] = v and success_count / v or 0
 
         return {
             "calls_per_insurance_provider": data_per_insurance_provider_name,
@@ -341,12 +345,12 @@ class InsuranceProviderCallMetricsView(views.APIView):
                     for subkey, subvalue in v.items():
                         if is_time_series_breakdown:
                             for subvalue_key, subvalue_value in subvalue.items():
-                                subvalue[subvalue_key] = subvalue_value / num_phone_numbers
+                                subvalue[subvalue_key] = num_phone_numbers and subvalue_value / num_phone_numbers or 0
                             new_value[subkey] = subvalue
                         else:
-                            new_value[subkey] = subvalue / num_phone_numbers
+                            new_value[subkey] = num_phone_numbers and subvalue / num_phone_numbers or 0
                 else:
-                    new_value = v / num_phone_numbers
+                    new_value = num_phone_numbers and v / num_phone_numbers or 0
                 data_per_provider[insurance_provider] = new_value
 
         if is_time_series_breakdown:

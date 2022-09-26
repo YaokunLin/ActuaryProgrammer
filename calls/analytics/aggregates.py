@@ -108,7 +108,7 @@ def calculate_call_count_opportunities(calls_qs: QuerySet, start_date_str: str, 
             total_for_date = total_per_date_mapping[date]
             rate = 0
             if total_for_date:
-                rate = record["value"] / total_per_date_mapping[date]
+                rate = total_per_date_mapping[date] and record["value"] / total_per_date_mapping[date] or 0
             conversion_rates.append({"date": date, "value": rate})
         return conversion_rates
 
@@ -150,9 +150,9 @@ def calculate_call_count_opportunities(calls_qs: QuerySet, start_date_str: str, 
         "new": convert_call_counts_to_by_month(won_by_day_new_patient),
     }
     opportunities["conversion_rate"] = {
-        "total": opportunities["won"]["total"] / opportunities["total"] if opportunities["total"] else 0,
-        "existing": opportunities["won"]["existing"] / opportunities["existing"] if opportunities["existing"] else 0,
-        "new": opportunities["won"]["new"] / opportunities["new"] if opportunities["new"] else 0,
+        "total": opportunities["total"] and opportunities["won"]["total"] / opportunities["total"] or 0,
+        "existing": opportunities["existing"] and opportunities["won"]["existing"] / opportunities["existing"] or 0,
+        "new": opportunities["new"] and opportunities["won"]["new"] / opportunities["new"] or 0,
     }
     opportunities["conversion_rate_by_week"] = {
         "total": get_conversion_rates_breakdown(opportunities["total_by_week"]["total"], opportunities["won_by_week"]["total"]),
@@ -535,15 +535,14 @@ def calculate_call_breakdown_per_practice(calls_qs: QuerySet, organization_id: s
     per_practice_averages = {}
     call_sentiment_counts = {}
     num_practices = Practice.objects.filter(organization_id=organization_id).count()
-    if num_practices:
-        per_practice_averages["call_count"] = overall_call_counts_data["call_total"] / num_practices
-        per_practice_averages["call_connected_count"] = overall_call_counts_data["call_connected_total"] / num_practices
-        per_practice_averages["call_seconds_total"] = overall_call_counts_data["call_seconds_total"] / num_practices
-        per_practice_averages["call_seconds_average"] = overall_call_counts_data["call_seconds_average"] / num_practices
+    per_practice_averages["call_count"] = num_practices and overall_call_counts_data["call_total"] / num_practices or 0
+    per_practice_averages["call_connected_count"] = num_practices and overall_call_counts_data["call_connected_total"] / num_practices or 0
+    per_practice_averages["call_seconds_total"] = num_practices and overall_call_counts_data["call_seconds_total"] / num_practices or 0
+    per_practice_averages["call_seconds_average"] = num_practices and overall_call_counts_data["call_seconds_average"] / num_practices or 0
 
-        sentiments_types = ("not_applicable", "positive", "neutral", "negative")
-        for sentiment_type in sentiments_types:
-            call_sentiment_counts[sentiment_type] = overall_call_counts_data["call_sentiment_counts"].get(sentiment_type, 0) / num_practices
+    sentiments_types = ("not_applicable", "positive", "neutral", "negative")
+    for sentiment_type in sentiments_types:
+        call_sentiment_counts[sentiment_type] = num_practices and overall_call_counts_data["call_sentiment_counts"].get(sentiment_type, 0) / num_practices or 0
 
     per_practice_averages["call_sentiment_counts"] = call_sentiment_counts
     per_practice["averages"] = per_practice_averages
@@ -650,9 +649,9 @@ def get_call_counts_and_durations_by_weekday_and_hour(calls_qs: QuerySet) -> Dic
             # Per hour, calculate efficiency, average call duration and average hold duration
             call_count = data_for_hour[call_count_label]
             total_seconds = data_for_hour[total_call_duration_label].total_seconds()
-            data_for_hour[efficiency_label] = data_for_hour[call_count_label] / total_seconds if total_seconds else 0
-            data_for_hour[average_call_duration_label] = data_for_hour[total_call_duration_label].total_seconds() / call_count if call_count else 0
-            data_for_hour[average_hold_duration_label] = data_for_hour[total_hold_duration_label].total_seconds() / call_count if call_count else 0
+            data_for_hour[efficiency_label] = total_seconds and data_for_hour[call_count_label] / total_seconds or 0
+            data_for_hour[average_call_duration_label] = call_count and data_for_hour[total_call_duration_label].total_seconds() / call_count or 0
+            data_for_hour[average_hold_duration_label] = call_count and data_for_hour[total_hold_duration_label].total_seconds() / call_count or 0
 
     return data_by_weekday_and_hour
 
@@ -677,10 +676,7 @@ def convert_to_call_counts_and_durations_by_weekday(call_counts_and_durations_by
 
     for d in data_by_weekday.values():
         call_count = d[call_count_label]
-        if call_count:
-            d[average_call_duration_label] = d[total_call_duration_label] / call_count
-        else:
-            d[average_call_duration_label] = 0
+        d[average_call_duration_label] = call_count and d[total_call_duration_label] / call_count or 0
 
     return data_by_weekday
 
@@ -705,10 +701,7 @@ def convert_to_call_counts_and_durations_by_hour(call_counts_and_durations_by_we
 
     for d in data_by_hour.values():
         call_count = d[call_count_label]
-        if call_count:
-            d[average_call_duration_label] = d[total_call_duration_label] / call_count
-        else:
-            d[average_call_duration_label] = 0
+        d[average_call_duration_label] = call_count and d[total_call_duration_label] / call_count or 0
 
     return data_by_hour
 

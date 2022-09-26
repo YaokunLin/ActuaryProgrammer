@@ -287,21 +287,21 @@ class NewPatientOpportunitiesView(views.APIView):
         new_patient_opportunities_lost_qs = calls_qs.filter(NEW_PATIENT_FILTER & INBOUND_FILTER & FAILURE_FILTER)
         aggregates["new_patient_opportunities_lost_total"] = new_patient_opportunities_lost_qs.count()
 
-        # conversion
-        if aggregates["new_patient_opportunities_total"] == 0:  # check for divide by zer0
-            aggregates["new_patient_opportunities_conversion_rate_total"] = 0
-        else:
-            aggregates["new_patient_opportunities_conversion_rate_total"] = (
-                aggregates["new_patient_opportunities_won_total"] / aggregates["new_patient_opportunities_total"]
-            )
+        aggregates["new_patient_opportunities_conversion_rate_total"] = (
+            aggregates["new_patient_opportunities_total"]
+            and aggregates["new_patient_opportunities_won_total"] / aggregates["new_patient_opportunities_total"]
+            or 0
+        )
 
         if organization_filter:
             per_practice_averages = {}
             num_practices = Practice.objects.filter(organization_id=valid_organization_id).count()
-            per_practice_averages["new_patient_opportunities"] = aggregates["new_patient_opportunities_total"] / num_practices
-            per_practice_averages["new_patient_opportunities_won"] = aggregates["new_patient_opportunities_won_total"] / num_practices
-            per_practice_averages["new_patient_opportunities_lost"] = aggregates["new_patient_opportunities_lost_total"] / num_practices
-            aggregates["new_patient_opportunities_conversion_rate"] = aggregates["new_patient_opportunities_conversion_rate_total"] / num_practices
+            per_practice_averages["new_patient_opportunities"] = num_practices and aggregates["new_patient_opportunities_total"] / num_practices or 0
+            per_practice_averages["new_patient_opportunities_won"] = num_practices and aggregates["new_patient_opportunities_won_total"] / num_practices or 0
+            per_practice_averages["new_patient_opportunities_lost"] = num_practices and aggregates["new_patient_opportunities_lost_total"] / num_practices or 0
+            aggregates["new_patient_opportunities_conversion_rate"] = (
+                num_practices and aggregates["new_patient_opportunities_conversion_rate_total"] / num_practices or 0
+            )
             aggregates["per_practice_averages"] = per_practice_averages
 
         # display syntactic sugar
@@ -425,9 +425,7 @@ def _calculate_new_patient_opportunities_time_series(opportunities_qs: QuerySet,
         for record in won:
             date = record["date"]
             total_for_date = total_per_date_mapping[date]
-            rate = 0
-            if total_for_date:
-                rate = record["value"] / total_per_date_mapping[date]
+            rate = total_for_date and record["value"] / total_per_date_mapping[date] or 0
             conversion_rates.append({"date": date, "value": rate})
         return conversion_rates
 
