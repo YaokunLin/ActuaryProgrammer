@@ -18,7 +18,6 @@ def deduplicate_purposes(apps, schema_editor):
 
     cps_removed = []
     for call in calls:
-        log.info(call)
         if not hasattr(call, "call_purposes"):
             log.info(f"Ignoring call that has no purposes: {call.id}")
             continue
@@ -31,7 +30,7 @@ def deduplicate_purposes(apps, schema_editor):
         # TODO: delete call_outcome_reasons
 
         purpose_type_to_purpose = defaultdict(list)
-        for cp in call.call_purposes.all():
+        for cp in call.call_purposes.order_by("-modified_at").all():
             purpose_type_to_purpose[cp.call_purpose_type].append(cp)
 
         log.info(purpose_type_to_purpose)
@@ -40,6 +39,15 @@ def deduplicate_purposes(apps, schema_editor):
             for cp in cps_to_remove:
                 cp_id = cp.id
                 log.info(f"Deleting duplicate call_purpose with id='{cp_id}' type={cp.call_purpose_type}")
+                cos = [co for co in cp.outcome_results.all()]
+                for co in cos:
+                    co_id = co.id
+                    log.info(f"Deleting duplicate call_outcome with id='{co_id}' type={co.call_outcome_type}")
+
+                    cors = [cor for cor in co.outcome_reason_results.all()]
+                    for cor in cors:
+                        cor.delete()
+
                 cp.delete()
                 cps_removed.append(cp_id)
 
