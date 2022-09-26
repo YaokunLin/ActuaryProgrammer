@@ -494,6 +494,7 @@ def calculate_call_sentiments(calls_qs: QuerySet) -> Dict:
 
     data.update(convert_count_results(call_sentiment_analytics_qs, call_sentiment_score_key, "count"))
     if None in data:
+        data[SentimentTypes.NOT_APPLICABLE.value] = (data[SentimentTypes.NOT_APPLICABLE.value] or 0) + (data[None] or 0)
         del data[None]
     return data
 
