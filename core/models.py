@@ -119,7 +119,7 @@ class Practice(AuditTrailModel):
     active = models.BooleanField(
         null=True, blank=False, default=False
     )  # practices are active or inactive based upon whether we've approved their submission and whether they're paid up
-    # include_in_benchmarks = models.BooleanField(default=False)  TODO Kyle: Uncomment
+    include_in_benchmarks = models.BooleanField(default=False)
 
     address_us_state = USStateField(blank=True, default="AZ")  # yes, it's a char field behind the scenes
 

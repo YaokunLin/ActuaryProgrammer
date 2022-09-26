@@ -24,7 +24,7 @@ NEW_APPOINTMENT_FILTER = Q(call_purposes__call_purpose_type=CallPurposeTypes.NEW
 FAILURE_FILTER = Q(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.FAILURE)
 SUCCESS_FILTER = Q(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.SUCCESS)
 
-# Non-agent Engagement Personal Type
+# Non-agent Engagement Persona Type
 EXISTING_PATIENT_FILTER = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.EXISTING_PATIENT)
 NEW_PATIENT_FILTER = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.NEW_PATIENT)
 
@@ -33,5 +33,5 @@ NAEPT_PATIENT_FILTER = EXISTING_PATIENT_FILTER | NEW_PATIENT_FILTER
 OPPORTUNITIES_FILTER = NEW_APPOINTMENT_FILTER & NAEPT_PATIENT_FILTER
 
 # Benchmarks
-BENCHMARK_PRACTICE_CALLS_FILTER = Q()  # TODO Kyle: Q(practice__include_in_benchmarks=True)
-BENCHMARK_PRACTICE_FILTER = Q()  # TODO Kyle: Q(include_in_benchmarks=True)
+BENCHMARK_PRACTICE_CALLS_FILTER = Q(practice__include_in_benchmarks=True)
+BENCHMARK_PRACTICE_FILTER = Q(include_in_benchmarks=True)

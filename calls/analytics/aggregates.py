@@ -40,7 +40,7 @@ from calls.analytics.query_filters import (
     SUCCESS_FILTER,
     WENT_TO_VOICEMAIL_FILTER,
 )
-from calls.field_choices import CallDirectionTypes
+from calls.field_choices import CallDirectionTypes, SentimentTypes
 from core.models import Practice
 
 # Get an instance of a logger
@@ -488,13 +488,14 @@ def convert_count_results(qs: QuerySet, key_with_value_for_key: str, key_with_va
 
 
 def calculate_call_sentiments(calls_qs: QuerySet) -> Dict:
+    data = {k: 0 for k in SentimentTypes}
     call_sentiment_score_key = "call_sentiments__caller_sentiment_score"
     call_sentiment_analytics_qs = calls_qs.values(call_sentiment_score_key).annotate(count=Count(call_sentiment_score_key))
 
-    call_sentiment_counts = convert_count_results(call_sentiment_analytics_qs, call_sentiment_score_key, "count")
-    if None in call_sentiment_counts:
-        del call_sentiment_counts[None]
-    return call_sentiment_counts
+    data.update(convert_count_results(call_sentiment_analytics_qs, call_sentiment_score_key, "count"))
+    if None in data:
+        del data[None]
+    return data
 
 
 def calculate_call_directions(calls_qs: QuerySet) -> Dict:

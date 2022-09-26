@@ -110,18 +110,18 @@ class OpportunitiesView(views.APIView):
         total_count = opportunities_qs.count()
         won_count = d.get("success", 0)
         lost_count = d.get("failure", 0)
-        n_a_count = total_count - (won_count + lost_count)
+        open_count = total_count - (won_count + lost_count)
         opportunity_counts = {
             "total": total_count,
             "won": won_count,
             "lost": lost_count,
-            "not_applicable": n_a_count,
+            "open": open_count,
         }
         opportunity_values = {
             "total": total_count * AVG_VALUE_PER_APPOINTMENT_USD,
             "won": won_count * AVG_VALUE_PER_APPOINTMENT_USD,
             "lost": lost_count * AVG_VALUE_PER_APPOINTMENT_USD,
-            "not_applicable": n_a_count * AVG_VALUE_PER_APPOINTMENT_USD,
+            "open": open_count * AVG_VALUE_PER_APPOINTMENT_USD,
         }
         results = {
             "counts": opportunity_counts,

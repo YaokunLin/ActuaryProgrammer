@@ -48,18 +48,18 @@ class OpportunitiesBenchmarksView(views.APIView):
         total_count = opportunities_qs.count()
         won_count = d.get("success", 0)
         lost_count = d.get("failure", 0)
-        n_a_count = total_count - (won_count + lost_count)
+        open_count = total_count - (won_count + lost_count)
         average_opportunity_counts = {
             "total": total_count / benchmark_practices_count,
             "won": won_count / benchmark_practices_count,
             "lost": lost_count / benchmark_practices_count,
-            "not_applicable": n_a_count / benchmark_practices_count,
+            "open": open_count / benchmark_practices_count,
         }
         average_opportunity_values = {
             "total": total_count / benchmark_practices_count * AVG_VALUE_PER_APPOINTMENT_USD,
             "won": won_count / benchmark_practices_count * AVG_VALUE_PER_APPOINTMENT_USD,
             "lost": lost_count / benchmark_practices_count * AVG_VALUE_PER_APPOINTMENT_USD,
-            "not_applicable": n_a_count / benchmark_practices_count * AVG_VALUE_PER_APPOINTMENT_USD,
+            "open": open_count / benchmark_practices_count * AVG_VALUE_PER_APPOINTMENT_USD,
         }
 
         results = {
@@ -97,13 +97,13 @@ def _get_queryset_or_error_response(request: Request, extra_filter: Optional[Q] 
     dates_info = get_validated_call_dates(query_data=request.query_params)
     dates_errors = dates_info.get("errors")
 
-    valid_call_direction, call_drection_errors = get_validated_call_direction(request)
+    valid_call_direction, call_direction_errors = get_validated_call_direction(request)
 
     errors = {}
     if dates_errors:
         errors.update(dates_errors)
-    if call_drection_errors:
-        errors.update(call_drection_errors)
+    if call_direction_errors:
+        errors.update(call_direction_errors)
     if errors:
         return Response(status=status.HTTP_400_BAD_REQUEST, data=errors)
 
