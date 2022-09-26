@@ -1,6 +1,5 @@
 from django.db import models
 from django.urls import reverse
-
 from django_extensions.db.fields import ShortUUIDField
 
 from core.abstract_models import AuditTrailModel
@@ -138,10 +137,14 @@ class NetsapiensCdr2Extract(AuditTrailModel):
     type = models.IntegerField(max_length=1, null=True)  # e.g. "1", based on CdrDomain.201904_d
     cdr_id = models.CharField(max_length=42, blank=True, null=True)  # e.g."1642816606d99fbc563c6f77ff6ab363a644d87c5b"
     orig_sub = models.CharField(max_length=42, blank=True, null=True)
-    orig_from_uri = models.CharField(max_length=127, blank=True, null=True)  # e.g. "sip:4807984575@67.231.3.4", length modified 2022-06-24 to fix 63 char error in prod
+    orig_from_uri = models.CharField(
+        max_length=127, blank=True, null=True
+    )  # e.g. "sip:4807984575@67.231.3.4", length modified 2022-06-24 to fix 63 char error in prod
     orig_from_name = models.CharField(max_length=127, blank=True, null=True)  # e.g. "PAULA MALLEY", length modified 2022-06-24 to fix 63 char error in prod
     orig_to_user = models.CharField(max_length=127, blank=True, null=True)  # e.g. "6232952005", length modified 2022-06-24 to fix 63 char error in prod
-    orig_req_uri = models.CharField(max_length=127, blank=True, null=True)  # e.g. "sip:6232952005@core1-phx.peerlogic.com", length modified 2022-06-24 to fix 63 char error in prod
+    orig_req_uri = models.CharField(
+        max_length=127, blank=True, null=True
+    )  # e.g. "sip:6232952005@core1-phx.peerlogic.com", length modified 2022-06-24 to fix 63 char error in prod
     orig_req_user = models.CharField(max_length=127, blank=True, null=True)  # e.g. "6232952005", length modified 2022-06-24 to fix 63 char error in prod
     by_sub = models.CharField(max_length=127, blank=True, null=True)  # e.g. "4001", length modified 2022-06-24 to fix 63 char error in prod
     term_sub = models.CharField(max_length=63, blank=True, null=True)  # e.g. "1100"
@@ -164,16 +167,32 @@ class NetsapiensCdr2Extract(AuditTrailModel):
     cdrr_orig_sub = models.CharField(max_length=42, blank=True, null=True)  # REDUNDANT: "orig_sub": null
     cdrr_orig_domain = models.CharField(max_length=127, blank=True, null=True)  # length modified 2022-06-24 to fix 63 char error in prod
     cdrr_orig_group = models.CharField(max_length=127, blank=True, null=True)  # length modified 2022-06-24 to fix 63 char error in prod
-    cdrr_orig_from_uri = models.CharField(max_length=127, blank=True, null=True)  # REDUNDANT: "orig_from_uri": "sip:4807984575@67.231.3.4", length modified 2022-06-24 to fix 63 char error in prod
-    cdrr_orig_from_name = models.CharField(max_length=127, blank=True, null=True)  # REDUNDANT: "orig_from_name": "PAULA MALLEY", length modified 2022-06-24 to fix 63 char error in prod
+    cdrr_orig_from_uri = models.CharField(
+        max_length=127, blank=True, null=True
+    )  # REDUNDANT: "orig_from_uri": "sip:4807984575@67.231.3.4", length modified 2022-06-24 to fix 63 char error in prod
+    cdrr_orig_from_name = models.CharField(
+        max_length=127, blank=True, null=True
+    )  # REDUNDANT: "orig_from_name": "PAULA MALLEY", length modified 2022-06-24 to fix 63 char error in prod
     cdrr_orig_from_user = models.CharField(max_length=127, blank=True, null=True)  # e.g. "4807984575", length modified 2022-06-24 to fix 63 char error in prod
     cdrr_orig_from_host = models.CharField(max_length=127, blank=True, null=True)  # e.g. "67.231.3.4", length modified 2022-06-24 to fix 63 char error in prod
-    cdrr_orig_req_uri = models.CharField(max_length=127, blank=True, null=True)  # REDUNDANT: "orig_req_uri": "sip:6232952005@core1-phx.peerlogic.com", length modified 2022-06-24 to fix 63 char error in prod
-    cdrr_orig_req_user = models.CharField(max_length=127, blank=True, null=True)  # REDUNDANT: "orig_req_user": "6232952005", length modified 2022-06-24 to fix 63 char error in prod
-    cdrr_orig_req_host = models.CharField(max_length=127, blank=True, null=True)  # e.g. "core1-phx.peerlogic.com", length modified 2022-06-24 to fix 63 char error in prod
-    cdrr_orig_to_uri = models.CharField(max_length=127, blank=True, null=True)  # e.g. "sip:6232952005@core1-phx.peerlogic.com", length modified 2022-06-24 to fix 63 char error in prod
-    cdrr_orig_to_user = models.CharField(max_length=127, blank=True, null=True)  # REDUNDANT: "orig_to_user": "6232952005", length modified 2022-06-24 to fix 63 char error in prod
-    cdrr_orig_to_host = models.CharField(max_length=127, blank=True, null=True)  # e.g. "core1-phx.peerlogic.com", length modified 2022-06-24 to fix 63 char error in prod
+    cdrr_orig_req_uri = models.CharField(
+        max_length=127, blank=True, null=True
+    )  # REDUNDANT: "orig_req_uri": "sip:6232952005@core1-phx.peerlogic.com", length modified 2022-06-24 to fix 63 char error in prod
+    cdrr_orig_req_user = models.CharField(
+        max_length=127, blank=True, null=True
+    )  # REDUNDANT: "orig_req_user": "6232952005", length modified 2022-06-24 to fix 63 char error in prod
+    cdrr_orig_req_host = models.CharField(
+        max_length=127, blank=True, null=True
+    )  # e.g. "core1-phx.peerlogic.com", length modified 2022-06-24 to fix 63 char error in prod
+    cdrr_orig_to_uri = models.CharField(
+        max_length=127, blank=True, null=True
+    )  # e.g. "sip:6232952005@core1-phx.peerlogic.com", length modified 2022-06-24 to fix 63 char error in prod
+    cdrr_orig_to_user = models.CharField(
+        max_length=127, blank=True, null=True
+    )  # REDUNDANT: "orig_to_user": "6232952005", length modified 2022-06-24 to fix 63 char error in prod
+    cdrr_orig_to_host = models.CharField(
+        max_length=127, blank=True, null=True
+    )  # e.g. "core1-phx.peerlogic.com", length modified 2022-06-24 to fix 63 char error in prod
     cdrr_by_action = models.CharField(max_length=31, blank=True, null=True)  # e.g. "QueueSDispatch"
     cdrr_by_sub = models.CharField(max_length=63, blank=True, null=True)  # REDUNDANT: "by_sub": "4001"
     cdrr_by_domain = models.CharField(max_length=63, blank=True, null=True)  # e.g. "pleasantdental-peoria"
@@ -183,9 +202,15 @@ class NetsapiensCdr2Extract(AuditTrailModel):
     cdrr_term_callid = models.CharField(max_length=127, blank=True, null=True, db_index=True)  # e.g. "20220122015647001366-8d8a5d555a2bdaa84182cb8f8d613b03"
     cdrr_term_ip = models.CharField(max_length=63, blank=True, null=True)  # e.g. "98.174.249.67"
     cdrr_term_match = models.CharField(max_length=127, blank=True, null=True)  # e.g. "sip:1100@pleasantdental-peoria"
-    cdrr_term_sub = models.CharField(max_length=127, blank=True, null=True)  # REDUNDANT: "term_sub": "1100", length modified 2022-06-24 to fix 63 char error in prod
-    cdrr_term_domain = models.CharField(max_length=127, blank=True, null=True)  # e.g. "pleasantdental-peoria", length modified 2022-06-24 to fix 63 char error in prod
-    cdrr_term_to_uri = models.CharField(max_length=127, blank=True, null=True)  # REDUNDANT: "term_to_uri": "sip:1100@pleasantdental-peoria", length modified 2022-06-24 to fix 63 char error in prod
+    cdrr_term_sub = models.CharField(
+        max_length=127, blank=True, null=True
+    )  # REDUNDANT: "term_sub": "1100", length modified 2022-06-24 to fix 63 char error in prod
+    cdrr_term_domain = models.CharField(
+        max_length=127, blank=True, null=True
+    )  # e.g. "pleasantdental-peoria", length modified 2022-06-24 to fix 63 char error in prod
+    cdrr_term_to_uri = models.CharField(
+        max_length=127, blank=True, null=True
+    )  # REDUNDANT: "term_to_uri": "sip:1100@pleasantdental-peoria", length modified 2022-06-24 to fix 63 char error in prod
     cdrr_term_group = models.CharField(max_length=127, blank=True, null=True)  # e.g. "Front Office", length modified 2022-06-24 to fix 63 char error in prod
     cdrr_time_start = models.DateTimeField(null=True)  # "time_start": "1642816607" of this segment / partial
     cdrr_time_ringing = models.DateTimeField(null=True)  # e.g. "1642816607"
@@ -221,8 +246,12 @@ class NetsapiensCdr2Extract(AuditTrailModel):
     cdrr_reason = models.CharField(max_length=64, blank=True, null=True)
     cdrr_notes = models.TextField(blank=True, null=True)
     cdrr_pac = models.CharField(max_length=31, blank=True, null=True)
-    cdrr_orig_logi_uri = models.CharField(max_length=127, blank=True, null=True)  # e.g. "sip:4807984575@67.231.3.4", length modified 2022-06-24 to fix 63 char error in prod
-    cdrr_term_logi_uri = models.CharField(max_length=127, blank=True, null=True)  # e.g. "sip:16232952005@pleasantdental-peoria", length modified 2022-06-24 to fix 63 char error in prod
+    cdrr_orig_logi_uri = models.CharField(
+        max_length=127, blank=True, null=True
+    )  # e.g. "sip:4807984575@67.231.3.4", length modified 2022-06-24 to fix 63 char error in prod
+    cdrr_term_logi_uri = models.CharField(
+        max_length=127, blank=True, null=True
+    )  # e.g. "sip:16232952005@pleasantdental-peoria", length modified 2022-06-24 to fix 63 char error in prod
     cdrr_batch_tim_beg = models.IntegerField(max_length=16, null=True)  # e.g. "1642816606"  The same across all cdr partials for a call, matches time_start
     cdrr_batch_tim_ans = models.IntegerField(max_length=16, null=True)  # e.g. "1642816606"  The same across all cdr partials for a call, matches time_start?
     cdrr_batch_hold = models.IntegerField(max_length=15, null=True)  # e.g. "0"  Aggregate hold time so far
@@ -238,3 +267,13 @@ class NetsapiensCdr2Extract(AuditTrailModel):
     cdrr_by_territory = models.CharField(max_length=45, blank=True, null=True)  # e.g. "Peerlogic"
     cdrr_term_territory = models.CharField(max_length=45, blank=True, null=True)  # e.g. "Peerlogic"
     cdrr_term_site = models.CharField(max_length=45, blank=True, null=True)
+
+    def calculate_connected_or_missed_call(self) -> str:
+        """Determine if the call connected / was answered or was ultimately missed. We MIGHT only know this based upon the last cdr in the batch."""
+        if self.type == 2:
+            return "missed"
+        return "connected"
+
+    def calculate_went_to_voicemail(self) -> bool:
+        """Whether the call ended at the voicemail box to record a voicemail."""
+        return self.cdrr_term_to_uri.lower() == "vmail"

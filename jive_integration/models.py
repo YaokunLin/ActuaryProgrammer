@@ -34,7 +34,7 @@ class JiveChannel(models.Model):
     connection = models.ForeignKey(JiveConnection, null=False, on_delete=models.CASCADE)
 
     name = ShortUUIDField(unique=True)
-    external_id = models.CharField(unique=True, max_length=256)
+    source_jive_id = models.CharField(unique=True, max_length=256)
     signature = models.CharField(max_length=64, unique=True, blank=False, null=False)
     expires_at = models.DateTimeField(null=False)
     active = models.BooleanField(default=True, null=False)
@@ -76,4 +76,4 @@ class JiveCallPartial(models.Model):
     id = ShortUUIDField(primary_key=True, editable=False)
 
     start_time = models.DateTimeField()
-    external_id = models.CharField(null=False, blank=False, max_length=255)
+    source_jive_id = models.CharField(null=False, blank=False, max_length=255)
