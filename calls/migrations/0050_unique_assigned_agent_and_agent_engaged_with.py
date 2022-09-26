@@ -21,7 +21,7 @@ def deduplicate_agentengagedwith(apps, schema_editor):
             log.info(f"Ignoring call that has no engaged_in_calls: {call.id}")
             continue
 
-        aews = [aew for aew in call.engaged_in_calls.order_by("modified_at")]
+        aews = [aew for aew in call.engaged_in_calls.order_by("-modified_at")]
         aews_to_remove = aews[1:]  # take all older ones
         for aew in aews_to_remove:
             aew_id = aew.id
