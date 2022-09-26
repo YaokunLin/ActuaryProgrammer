@@ -53,7 +53,7 @@ def deduplicate_purposes(apps, schema_editor):
                     cors = [cor for cor in co.outcome_reason_results.iterator()]
                     for cor in cors:
                         cor_id = cor.id
-                        log.info(f"Deleting related call_outcome_result with id='{cor_id}'")
+                        log.info(f"Deleting related call_outcome_reason with id='{cor_id}'")
                         cor.delete()
                         cors_removed.append(cor_id)
 
