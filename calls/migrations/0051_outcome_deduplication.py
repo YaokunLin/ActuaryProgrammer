@@ -22,7 +22,7 @@ def deduplicate_outcomes(apps, schema_editor):
             log.info(f"Ignoring call_purpose that has no outcome_results: {cp.id}")
             continue
 
-        cos = [co for co in cp.outcome_results.order_by("modified_at")]
+        cos = [co for co in cp.outcome_results.order_by("-modified_at")]
         cos_to_remove = cos[1:]  # take all older ones
         for co in cos_to_remove:
             co_id = co.id
