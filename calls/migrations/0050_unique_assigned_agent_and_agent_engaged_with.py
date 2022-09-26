@@ -13,7 +13,7 @@ def deduplicate_agentengagedwith(apps, schema_editor):
     We can't import the model directly as it may be a newer version than this migration expects. We use the historical version.
     """
     Call = apps.get_model("calls", "Call")
-    calls = Call.objects.iterator().prefetch_related("engaged_in_calls")
+    calls = Call.objects.iterator()
 
     aews_removed = []
     for call in calls:
