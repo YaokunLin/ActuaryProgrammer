@@ -17,41 +17,55 @@ def deduplicate_purposes(apps, schema_editor):
     calls = Call.objects.all().prefetch_related("call_purposes")
 
     cps_removed = []
+    cos_removed = []
+    cors_removed = []
     for call in calls:
         if not hasattr(call, "call_purposes"):
             log.info(f"Ignoring call that has no purposes: {call.id}")
             continue
 
         # slice by type
-        # TODO: order by modified_at
         # slice every non-first element
         # iterate and delete
-        # TODO: delete call_outcomes
-        # TODO: delete call_outcome_reasons
+        # delete call_outcomes
+        # delete call_outcome_reasons
 
         purpose_type_to_purpose = defaultdict(list)
         for cp in call.call_purposes.order_by("-modified_at").all():
             purpose_type_to_purpose[cp.call_purpose_type].append(cp)
 
-        log.info(purpose_type_to_purpose)
         for _, cps in purpose_type_to_purpose.items():
             cps_to_remove = cps[1:]
             for cp in cps_to_remove:
                 cp_id = cp.id
                 log.info(f"Deleting duplicate call_purpose with id='{cp_id}' type={cp.call_purpose_type}")
+
+                # call outcomes are allowed nullable foreign references, we have to clean them up
+                # could we wait until the end and select all with null reference? yes, but we wouldn't
+                # know whether we were cleaning up artifacts of other processes that may be from other
+                # bugs
                 cos = [co for co in cp.outcome_results.all()]
                 for co in cos:
                     co_id = co.id
-                    log.info(f"Deleting duplicate call_outcome with id='{co_id}' type={co.call_outcome_type}")
+                    log.info(f"Deleting related call_outcome with id='{co_id}'")
 
+                    # outcomes_reasons are allowed nullable foreign references, we have to clean them up
                     cors = [cor for cor in co.outcome_reason_results.all()]
                     for cor in cors:
+                        cor_id = cor.id
+                        log.info(f"Deleting related call_outcome_result with id='{cor_id}'")
                         cor.delete()
+                        cors_removed.append(cor_id)
+
+                    co.delete()
+                    cos_removed.append(co_id)
 
                 cp.delete()
                 cps_removed.append(cp_id)
 
     log.info(f"Deleted duplicate call_purpose records with ids: {cps_removed}")
+    log.info(f"Deleted related call_outcomes records with ids: {cos_removed}")
+    log.info(f"Deleted related call_outcome_reason records with ids: {cors_removed}")
 
 
 def reduplicate_purposes(apps, schema_editor):
