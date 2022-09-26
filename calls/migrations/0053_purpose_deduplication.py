@@ -31,7 +31,7 @@ def deduplicate_purposes(apps, schema_editor):
         # delete call_outcome_reasons
 
         purpose_type_to_purpose = defaultdict(list)
-        for cp in call.call_purposes.order_by("-modified_at").all():
+        for cp in call.call_purposes.order_by("-modified_at").iterator():
             purpose_type_to_purpose[cp.call_purpose_type].append(cp)
 
         for _, cps in purpose_type_to_purpose.items():
@@ -44,13 +44,13 @@ def deduplicate_purposes(apps, schema_editor):
                 # could we wait until the end and select all with null reference? yes, but we wouldn't
                 # know whether we were cleaning up artifacts of other processes that may be from other
                 # bugs
-                cos = [co for co in cp.outcome_results.all()]
+                cos = [co for co in cp.outcome_results.iterator()]
                 for co in cos:
                     co_id = co.id
                     log.info(f"Deleting related call_outcome with id='{co_id}'")
 
                     # outcomes_reasons are allowed nullable foreign references, we have to clean them up
-                    cors = [cor for cor in co.outcome_reason_results.all()]
+                    cors = [cor for cor in co.outcome_reason_results.iterator()]
                     for cor in cors:
                         cor_id = cor.id
                         log.info(f"Deleting related call_outcome_result with id='{cor_id}'")

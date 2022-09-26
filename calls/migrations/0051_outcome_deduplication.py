@@ -28,7 +28,7 @@ def deduplicate_outcomes(apps, schema_editor):
             co_id = co.id
             log.info(f"Deleting duplicate call_outcome with id='{co_id}' type={co.call_outcome_type}")
 
-            cors = [cor for cor in co.outcome_reason_results.all()]
+            cors = [cor for cor in co.outcome_reason_results.iterator()]
             for cor in cors:
                 cor.delete()
 
