@@ -13,10 +13,10 @@ def deduplicate_outcomes(apps, schema_editor):
     We can't import the model directly as it may be a newer version than this migration expects. We use the historical version.
     """
     CallPurpose = apps.get_model("calls", "CallPurpose")
-    cps = CallPurpose.objects.all().prefetch_related("outcome_results")
+    cps = CallPurpose.objects.iterator()
 
     cos_removed = []
-    # cors_removed = []
+    cors_removed = []
     for cp in cps:
         if not hasattr(cp, "outcome_results"):
             log.info(f"Ignoring call_purpose that has no outcome_results: {cp.id}")
