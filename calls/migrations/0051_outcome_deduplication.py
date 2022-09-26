@@ -30,12 +30,16 @@ def deduplicate_outcomes(apps, schema_editor):
 
             cors = [cor for cor in co.outcome_reason_results.iterator()]
             for cor in cors:
+                cor_id = cor.id
+                log.info(f"Deleting related call_outcome_reason with id='{cor_id}'")
                 cor.delete()
+                cors_removed.append(cor_id)
 
             co.delete()
             cos_removed.append(co_id)
 
-    log.info(f"Deleted duplicate agent engaged with records with ids: {cos_removed}")
+    log.info(f"Deleted duplicate outcomes with ids: {cos_removed}")
+    log.info(f"Deleted related call_outcome_reason records with ids: {cors_removed}")
 
 
 def reduplicate_outcomes(apps, schema_editor):
