@@ -1,5 +1,6 @@
 from rest_framework import viewsets
 from rest_framework.generics import ListAPIView
+
 from calls.analytics.intents.models import (
     CallMentionedCompany,
     CallMentionedInsurance,
@@ -22,8 +23,8 @@ from calls.analytics.intents.serializers import (
     CallMentionedProductWriteSerializer,
     CallMentionedSymptomReadSerializer,
     CallMentionedSymptomWriteSerializer,
-    CallOutcomeSerializer,
     CallOutcomeReasonSerializer,
+    CallOutcomeSerializer,
     CallPurposeSerializer,
 )
 
@@ -33,11 +34,20 @@ class CallPurposeViewset(viewsets.ModelViewSet):
     serializer_class = CallPurposeSerializer
     filter_fields = ["call_purpose_type", "call__id"]
 
+    def get_queryset(self):
+        queryset = super().get_queryset().filter(call_id=self.kwargs.get("call_pk"))
+        return queryset
+
 
 class CallOutcomeViewset(viewsets.ModelViewSet):
     queryset = CallOutcome.objects.all().order_by("-modified_at")
     serializer_class = CallOutcomeSerializer
     filter_fields = ["call_outcome_type", "call_purpose__id", "call_purpose__call__id"]
+
+    def get_queryset(self):
+        # TODO: probably nest outcomes underneath a purpose
+        queryset = super().get_queryset().filter(call_purpose__call_id=self.kwargs.get("call_pk"))
+        return queryset
 
 
 class CallOutcomeReasonViewset(viewsets.ModelViewSet):
@@ -49,6 +59,7 @@ class CallOutcomeReasonViewset(viewsets.ModelViewSet):
 #
 # Mentioned Viewsets
 #
+
 
 class CallMentionedCompanyViewset(viewsets.ModelViewSet):
     queryset = CallMentionedCompany.objects.all().order_by("-modified_at")
@@ -67,6 +78,7 @@ class CallMentionedCompanyViewset(viewsets.ModelViewSet):
         queryset = super().get_queryset().filter(call=self.kwargs.get("call_pk"))
         return queryset
 
+
 class CallMentionedInsuranceViewset(viewsets.ModelViewSet):
     queryset = CallMentionedInsurance.objects.all().order_by("-modified_at")
     filter_fields = ["call__id", "keyword"]
@@ -84,6 +96,7 @@ class CallMentionedInsuranceViewset(viewsets.ModelViewSet):
         queryset = super().get_queryset().filter(call=self.kwargs.get("call_pk"))
         return queryset
 
+
 class CallMentionedProcedureViewset(viewsets.ModelViewSet):
     queryset = CallMentionedProcedure.objects.all().order_by("-modified_at")
     filter_fields = ["call__id", "keyword"]
@@ -100,6 +113,7 @@ class CallMentionedProcedureViewset(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset().filter(call=self.kwargs.get("call_pk"))
         return queryset
+
 
 class CallMentionedProcedureDistinctView(ListAPIView):
     queryset = CallMentionedProcedure.objects.all().distinct("keyword")

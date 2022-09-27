@@ -24,7 +24,7 @@ def publish_leg_b_ready_events(
 
     for event in events:
         # One of the leg-b's is finished only when these requirements are true,
-        # otherwise the leg-b is still on-going and hasn't been finished yet.
+        # otherwise the leg-b is still ongoing and hasn't been finished yet.
 
         publish_future = publish_leg_b_ready_event(
             netsapiens_call_subscription_id=netsapiens_call_subscription_id,
@@ -40,6 +40,7 @@ def publish_leg_b_ready_events(
         publish_futures.append(publish_future)
         cdrs_published.append(event)
 
+    # TODO: why is cdrs_published always empty in logging?
     log.info(f"Published messages {cdrs_published} with error handler to {topic_path_leg_b_finished}. Only fully finished leg b CDRs")
     return publish_futures
 
