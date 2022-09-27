@@ -1,4 +1,5 @@
 import logging
+from copy import deepcopy
 from typing import Any, Dict, List, Optional, Union
 
 from django.db.models import Count, Q, QuerySet
@@ -102,24 +103,19 @@ class OpportunitiesView(views.APIView):
         dates_errors = dates_info.get("errors")
 
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
-        valid_organization_id, organization_errors = get_validated_organization_id(request=request)
 
         errors = {}
         if practice_errors:
             errors.update(practice_errors)
-        if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id):
-            error_message = "practice__id or organization__id must be provided, but not both."
-            errors.update({"practice__id": error_message, "organization__id": error_message})
+        if not practice_errors and not valid_practice_id:
+            errors.update({"practice__id": "practice__id must be provided"})
         if dates_errors:
             errors.update(dates_errors)
         if errors:
             return Response(status=status.HTTP_400_BAD_REQUEST, data=errors)
 
-        practice_filter = Q()
-        practice = None
-        if valid_practice_id:
-            practice = Practice.objects.get(id=valid_practice_id)
-            practice_filter = Q(practice__id=valid_practice_id)
+        practice = Practice.objects.get(id=valid_practice_id)
+        practice_filter = Q(practice__id=valid_practice_id)
 
         dates = dates_info.get("dates")
         dates_filter = Q(call_start_time__gte=dates[0], call_start_time__lte=dates[1])
@@ -127,16 +123,19 @@ class OpportunitiesView(views.APIView):
         opportunities_qs = Call.objects.filter(practice_filter & dates_filter & INBOUND_FILTER & OPPORTUNITIES_FILTER)
         results = self._calculate_opportunities_analytics(opportunities_qs)
 
-        if practice and practice.organization_id:
+        if practice.organization_id:
+            num_practices = Practice.objects.filter(organization_id=practice.organization_id).count()
             org_opportunities_qs = Call.objects.filter(
                 Q(practice__organization_id=practice.organization_id) & dates_filter & INBOUND_FILTER & OPPORTUNITIES_FILTER
             )
-            results["organization"] = self._calculate_opportunities_analytics(org_opportunities_qs)
+            results["organization"] = self._calculate_opportunities_analytics(org_opportunities_qs, num_practices)
+        else:
+            results["organization"] = deepcopy(results)
 
         return Response(results)
 
     @staticmethod
-    def _calculate_opportunities_analytics(opportunities_qs: QuerySet) -> Dict:
+    def _calculate_opportunities_analytics(opportunities_qs: QuerySet, num_practices_for_average: Optional[int] = None) -> Dict:
         opportunities_by_outcome = opportunities_qs.values("call_purposes__outcome_results__call_outcome_type").annotate(count=Count("id"))
         d = {r["call_purposes__outcome_results__call_outcome_type"]: r["count"] for r in opportunities_by_outcome}
 
@@ -144,6 +143,11 @@ class OpportunitiesView(views.APIView):
         won_count = d.get("success", 0)
         lost_count = d.get("failure", 0)
         open_count = total_count - (won_count + lost_count)
+        if num_practices_for_average:
+            total_count = total_count / num_practices_for_average
+            won_count = won_count / num_practices_for_average
+            lost_count = lost_count / num_practices_for_average
+            open_count = open_count / num_practices_for_average
         opportunity_counts = {
             "total": total_count,
             "won": won_count,
