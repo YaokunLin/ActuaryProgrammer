@@ -10,9 +10,6 @@ from core.validation import validate_date_format, validate_dates
 # Get an instance of a logger
 log = logging.getLogger(__name__)
 
-# TODO: remove, see note in calls/analytics/opportunities/views.py#CallMetricsView
-ALL_FILTER_NAME = "all"
-
 
 def get_validated_call_dates(query_data: Dict) -> Dict:
     """Check if the input dates are of the format YYYY-MM-DD"""

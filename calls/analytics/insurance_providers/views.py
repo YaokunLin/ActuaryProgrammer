@@ -202,8 +202,8 @@ class InsuranceProviderCallMetricsView(views.APIView):
         if organization_errors:
             errors.update(organization_errors)
         if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id):
-            error_message = "practice__id or practice__organization_id must be provided, but not both."
-            errors.update({"practice__id": error_message, "practice__organization_id": error_message})
+            error_message = "practice__id or organization__id must be provided, but not both."
+            errors.update({"practice__id": error_message, "organization__id": error_message})
         if dates_errors:
             errors.update(dates_errors)
         if errors:

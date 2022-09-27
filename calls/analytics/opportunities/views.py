@@ -27,7 +27,6 @@ from calls.analytics.query_filters import (
 )
 from calls.models import Call
 from calls.validation import (
-    ALL_FILTER_NAME,
     get_validated_call_dates,
     get_validated_call_direction,
     get_validated_organization_id,
@@ -63,8 +62,8 @@ class CallCountsView(views.APIView):
         if organization_errors:
             errors.update(organization_errors)
         if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id):
-            error_message = "practice__id or practice__organization_id must be provided, but not both."
-            errors.update({"practice__id": error_message, "practice__organization_id": error_message})
+            error_message = "practice__id or organization__id must be provided, but not both."
+            errors.update({"practice__id": error_message, "organization__id": error_message})
         if dates_errors:
             errors.update(dates_errors)
         if errors:
@@ -99,11 +98,45 @@ class OpportunitiesView(views.APIView):
     @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
     @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
-        calls_qs = self._get_queryset_or_error_response(request, extra_filter=INBOUND_FILTER)
-        if isinstance(calls_qs, Response):
-            return calls_qs
+        dates_info = get_validated_call_dates(query_data=request.query_params)
+        dates_errors = dates_info.get("errors")
 
-        opportunities_qs = calls_qs.filter(OPPORTUNITIES_FILTER)
+        valid_practice_id, practice_errors = get_validated_practice_id(request=request)
+        valid_organization_id, organization_errors = get_validated_organization_id(request=request)
+
+        errors = {}
+        if practice_errors:
+            errors.update(practice_errors)
+        if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id):
+            error_message = "practice__id or organization__id must be provided, but not both."
+            errors.update({"practice__id": error_message, "organization__id": error_message})
+        if dates_errors:
+            errors.update(dates_errors)
+        if errors:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data=errors)
+
+        practice_filter = Q()
+        practice = None
+        if valid_practice_id:
+            practice = Practice.objects.get(id=valid_practice_id)
+            practice_filter = Q(practice__id=valid_practice_id)
+
+        dates = dates_info.get("dates")
+        dates_filter = Q(call_start_time__gte=dates[0], call_start_time__lte=dates[1])
+
+        opportunities_qs = Call.objects.filter(practice_filter & dates_filter & INBOUND_FILTER & OPPORTUNITIES_FILTER)
+        results = self._calculate_opportunities_analytics(opportunities_qs)
+
+        if practice and practice.organization_id:
+            org_opportunities_qs = Call.objects.filter(
+                Q(practice__organization_id=practice.organization_id) & dates_filter & INBOUND_FILTER & OPPORTUNITIES_FILTER
+            )
+            results["organization"] = self._calculate_opportunities_analytics(org_opportunities_qs)
+
+        return Response(results)
+
+    @staticmethod
+    def _calculate_opportunities_analytics(opportunities_qs: QuerySet) -> Dict:
         opportunities_by_outcome = opportunities_qs.values("call_purposes__outcome_results__call_outcome_type").annotate(count=Count("id"))
         d = {r["call_purposes__outcome_results__call_outcome_type"]: r["count"] for r in opportunities_by_outcome}
 
@@ -123,32 +156,10 @@ class OpportunitiesView(views.APIView):
             "lost": lost_count * AVG_VALUE_PER_APPOINTMENT_USD,
             "open": open_count * AVG_VALUE_PER_APPOINTMENT_USD,
         }
-        results = {
+        return {
             "counts": opportunity_counts,
             "values": opportunity_values,
         }
-        return Response(results)
-
-    @staticmethod
-    def _get_queryset_or_error_response(request: Request, extra_filter: Optional[Q] = None) -> Union[Response, QuerySet]:
-        if extra_filter is None:
-            extra_filter = Q()
-
-        dates_info = get_validated_call_dates(query_data=request.query_params)
-        dates_errors = dates_info.get("errors")
-
-        errors = {}
-        if dates_errors:
-            errors.update(dates_errors)
-        if errors:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data=errors)
-
-        # date filters
-        dates = dates_info.get("dates")
-        call_start_time__gte = dates[0]
-        call_start_time__lte = dates[1]
-        dates_filter = {"call_start_time__gte": call_start_time__gte, "call_start_time__lte": call_start_time__lte}
-        return Call.objects.filter(**dates_filter).filter(extra_filter)
 
 
 def get_call_counts(
@@ -201,8 +212,8 @@ class OpportunitiesPerUserView(views.APIView):
         if organization_errors:
             errors.update(organization_errors)
         if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id):
-            error_message = "practice__id or practice__organization_id must be provided, but not both."
-            errors.update({"practice__id": error_message, "practice__organization_id": error_message})
+            error_message = "practice__id or organization__id must be provided, but not both."
+            errors.update({"practice__id": error_message, "organization__id": error_message})
         if dates_errors:
             errors.update(dates_errors)
         if errors:
@@ -252,8 +263,8 @@ class NewPatientOpportunitiesView(views.APIView):
         if organization_errors:
             errors.update(organization_errors)
         if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id):
-            error_message = "practice__id or practice__organization_id must be provided, but not both."
-            errors.update({"practice__id": error_message, "practice__organization_id": error_message})
+            error_message = "practice__id or organization__id must be provided, but not both."
+            errors.update({"practice__id": error_message, "organization__id": error_message})
         if dates_errors:
             errors.update(dates_errors)
         if errors:
@@ -331,8 +342,8 @@ class NewPatientWinbacksView(views.APIView):
         if organization_errors:
             errors.update(organization_errors)
         if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id):
-            error_message = "practice__id or practice__organization_id must be provided, but not both."
-            errors.update({"practice__id": error_message, "practice__organization_id": error_message})
+            error_message = "practice__id or organization__id must be provided, but not both."
+            errors.update({"practice__id": error_message, "organization__id": error_message})
         if dates_errors:
             errors.update(dates_errors)
         if errors:
