@@ -14,7 +14,7 @@ def deduplicate_purposes(apps, schema_editor):
     """
 
     Call = apps.get_model("calls", "Call")
-    calls = Call.objects.all().prefetch_related("call_purposes")
+    calls = Call.objects.iterator()
 
     cps_removed = []
     cos_removed = []
