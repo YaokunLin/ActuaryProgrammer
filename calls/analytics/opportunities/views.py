@@ -1,12 +1,12 @@
 import logging
-from typing import Any, Dict, List, Optional, Union
+from copy import deepcopy
+from typing import Any, Dict, List, Optional
 
 from django.db.models import Count, Q, QuerySet
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_control, cache_page
 from django.views.decorators.vary import vary_on_headers
 from rest_framework import status, views
-from rest_framework.request import Request
 from rest_framework.response import Response
 
 from calls.analytics.aggregates import (
@@ -21,13 +21,13 @@ from calls.analytics.query_filters import (
     FAILURE_FILTER,
     INBOUND_FILTER,
     NEW_PATIENT_FILTER,
+    NEW_PATIENT_OPPORTUNITIES_FILTER,
     OPPORTUNITIES_FILTER,
     OUTBOUND_FILTER,
     SUCCESS_FILTER,
 )
 from calls.models import Call
 from calls.validation import (
-    ALL_FILTER_NAME,
     get_validated_call_dates,
     get_validated_call_direction,
     get_validated_organization_id,
@@ -63,8 +63,8 @@ class CallCountsView(views.APIView):
         if organization_errors:
             errors.update(organization_errors)
         if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id):
-            error_message = "practice__id or practice__organization_id must be provided, but not both."
-            errors.update({"practice__id": error_message, "practice__organization_id": error_message})
+            error_message = "practice__id or organization__id must be provided, but not both."
+            errors.update({"practice__id": error_message, "organization__id": error_message})
         if dates_errors:
             errors.update(dates_errors)
         if errors:
@@ -89,9 +89,41 @@ class CallCountsView(views.APIView):
         if valid_call_direction:
             call_direction_filter = {"call_direction": valid_call_direction}
 
-        analytics = get_call_counts(dates_filter, practice_filter, organization_filter, call_direction_filter)
+        analytics = self.get_call_counts(dates_filter, practice_filter, organization_filter, call_direction_filter)
 
         return Response({"results": analytics})
+
+    @staticmethod
+    def get_call_counts(
+        dates_filter: Optional[Dict[str, str]],
+        practice_filter: Optional[Dict[str, str]],
+        organization_filter: Optional[Dict[str, str]],
+        call_direction_filter: Optional[Dict[str, str]],
+    ) -> Dict[str, Any]:
+        start_date_str = dates_filter["call_start_time__gte"]
+        end_date_str = dates_filter["call_start_time__lte"]
+
+        # set re-usable filters
+        filters = Q(**call_direction_filter) & Q(**dates_filter) & Q(**practice_filter) & Q(**organization_filter)
+
+        # set re-usable filtered queryset
+        calls_qs = Call.objects.filter(filters)
+
+        analytics = {
+            "calls_overall": calculate_call_counts(calls_qs, True),  # perform call counts
+            "opportunities": calculate_call_count_opportunities(calls_qs, start_date_str, end_date_str),
+            # TODO: PTECH-1240
+            # "calls_per_user": calculate_call_counts_per_user(calls_qs),  # call counts per caller (agent) phone number
+            # "calls_per_user_by_date_and_hour": calculate_call_counts_per_user_by_date_and_hour(calls_qs),  # call counts per caller (agent) phone number over time
+            # "non_agent_engagement_types": calculate_call_non_agent_engagement_type_counts(calls_qs),  # call counts for non agents
+        }
+
+        # TODO: PTECH-1240
+        # if organization_filter:
+        #     analytics["calls_per_practice"] = calculate_call_breakdown_per_practice(
+        #         calls_qs, organization_filter.get("practice__organization_id"), analytics["calls_overall"]
+        #     )
+        return analytics
 
 
 class OpportunitiesView(views.APIView):
@@ -99,11 +131,43 @@ class OpportunitiesView(views.APIView):
     @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
     @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
-        calls_qs = self._get_queryset_or_error_response(request, extra_filter=INBOUND_FILTER)
-        if isinstance(calls_qs, Response):
-            return calls_qs
+        dates_info = get_validated_call_dates(query_data=request.query_params)
+        dates_errors = dates_info.get("errors")
 
-        opportunities_qs = calls_qs.filter(OPPORTUNITIES_FILTER)
+        valid_practice_id, practice_errors = get_validated_practice_id(request=request)
+
+        errors = {}
+        if practice_errors:
+            errors.update(practice_errors)
+        if not practice_errors and not valid_practice_id:
+            errors.update({"practice__id": "practice__id must be provided"})
+        if dates_errors:
+            errors.update(dates_errors)
+        if errors:
+            return Response(status=status.HTTP_400_BAD_REQUEST, data=errors)
+
+        practice = Practice.objects.get(id=valid_practice_id)
+        practice_filter = Q(practice__id=valid_practice_id)
+
+        dates = dates_info.get("dates")
+        dates_filter = Q(call_start_time__gte=dates[0], call_start_time__lte=dates[1])
+
+        opportunities_qs = Call.objects.filter(practice_filter & dates_filter & INBOUND_FILTER & OPPORTUNITIES_FILTER)
+        results = self._calculate_opportunities_analytics(opportunities_qs)
+
+        if practice.organization_id:
+            num_practices = Practice.objects.filter(organization_id=practice.organization_id).count()
+            org_opportunities_qs = Call.objects.filter(
+                Q(practice__organization_id=practice.organization_id) & dates_filter & INBOUND_FILTER & OPPORTUNITIES_FILTER
+            )
+            results["organization"] = self._calculate_opportunities_analytics(org_opportunities_qs, num_practices)
+        else:
+            results["organization"] = deepcopy(results)
+
+        return Response(results)
+
+    @staticmethod
+    def _calculate_opportunities_analytics(opportunities_qs: QuerySet, num_practices_for_average: Optional[int] = None) -> Dict:
         opportunities_by_outcome = opportunities_qs.values("call_purposes__outcome_results__call_outcome_type").annotate(count=Count("id"))
         d = {r["call_purposes__outcome_results__call_outcome_type"]: r["count"] for r in opportunities_by_outcome}
 
@@ -111,6 +175,11 @@ class OpportunitiesView(views.APIView):
         won_count = d.get("success", 0)
         lost_count = d.get("failure", 0)
         open_count = total_count - (won_count + lost_count)
+        if num_practices_for_average:
+            total_count = total_count / num_practices_for_average
+            won_count = won_count / num_practices_for_average
+            lost_count = lost_count / num_practices_for_average
+            open_count = open_count / num_practices_for_average
         opportunity_counts = {
             "total": total_count,
             "won": won_count,
@@ -123,64 +192,10 @@ class OpportunitiesView(views.APIView):
             "lost": lost_count * AVG_VALUE_PER_APPOINTMENT_USD,
             "open": open_count * AVG_VALUE_PER_APPOINTMENT_USD,
         }
-        results = {
+        return {
             "counts": opportunity_counts,
             "values": opportunity_values,
         }
-        return Response(results)
-
-    @staticmethod
-    def _get_queryset_or_error_response(request: Request, extra_filter: Optional[Q] = None) -> Union[Response, QuerySet]:
-        if extra_filter is None:
-            extra_filter = Q()
-
-        dates_info = get_validated_call_dates(query_data=request.query_params)
-        dates_errors = dates_info.get("errors")
-
-        errors = {}
-        if dates_errors:
-            errors.update(dates_errors)
-        if errors:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data=errors)
-
-        # date filters
-        dates = dates_info.get("dates")
-        call_start_time__gte = dates[0]
-        call_start_time__lte = dates[1]
-        dates_filter = {"call_start_time__gte": call_start_time__gte, "call_start_time__lte": call_start_time__lte}
-        return Call.objects.filter(**dates_filter).filter(extra_filter)
-
-
-def get_call_counts(
-    dates_filter: Optional[Dict[str, str]],
-    practice_filter: Optional[Dict[str, str]],
-    organization_filter: Optional[Dict[str, str]],
-    call_direction_filter: Optional[Dict[str, str]],
-) -> Dict[str, Any]:
-    start_date_str = dates_filter["call_start_time__gte"]
-    end_date_str = dates_filter["call_start_time__lte"]
-
-    # set re-usable filters
-    filters = Q(**call_direction_filter) & Q(**dates_filter) & Q(**practice_filter) & Q(**organization_filter)
-
-    # set re-usable filtered queryset
-    calls_qs = Call.objects.filter(filters)
-
-    analytics = {
-        "calls_overall": calculate_call_counts(calls_qs, True),  # perform call counts
-        "opportunities": calculate_call_count_opportunities(calls_qs, start_date_str, end_date_str),
-        # TODO: PTECH-1240
-        # "calls_per_user": calculate_call_counts_per_user(calls_qs),  # call counts per caller (agent) phone number
-        # "calls_per_user_by_date_and_hour": calculate_call_counts_per_user_by_date_and_hour(calls_qs),  # call counts per caller (agent) phone number over time
-        # "non_agent_engagement_types": calculate_call_non_agent_engagement_type_counts(calls_qs),  # call counts for non agents
-    }
-
-    # TODO: PTECH-1240
-    # if organization_filter:
-    #     analytics["calls_per_practice"] = calculate_call_breakdown_per_practice(
-    #         calls_qs, organization_filter.get("practice__organization_id"), analytics["calls_overall"]
-    #     )
-    return analytics
 
 
 class OpportunitiesPerUserView(views.APIView):
@@ -201,8 +216,8 @@ class OpportunitiesPerUserView(views.APIView):
         if organization_errors:
             errors.update(organization_errors)
         if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id):
-            error_message = "practice__id or practice__organization_id must be provided, but not both."
-            errors.update({"practice__id": error_message, "practice__organization_id": error_message})
+            error_message = "practice__id or organization__id must be provided, but not both."
+            errors.update({"practice__id": error_message, "organization__id": error_message})
         if dates_errors:
             errors.update(dates_errors)
         if errors:
@@ -252,39 +267,40 @@ class NewPatientOpportunitiesView(views.APIView):
         if organization_errors:
             errors.update(organization_errors)
         if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id):
-            error_message = "practice__id or practice__organization_id must be provided, but not both."
-            errors.update({"practice__id": error_message, "practice__organization_id": error_message})
+            error_message = "practice__id or organization__id must be provided, but not both."
+            errors.update({"practice__id": error_message, "organization__id": error_message})
         if dates_errors:
             errors.update(dates_errors)
         if errors:
             return Response(status=status.HTTP_400_BAD_REQUEST, data=errors)
 
         # practice filter
-        practice_filter = {}
+        practice_filter = Q()
         if valid_practice_id:
-            practice_filter = {"practice__id": valid_practice_id}
+            practice_filter = Q(practice_id=valid_practice_id)
 
-        organization_filter = {}
+        organization_filter = Q()
         if valid_organization_id:
-            organization_filter = {"practice__organization__id": valid_organization_id}
+            organization_filter = Q(practice__organization_id=valid_organization_id)
 
         # date filters
         dates = dates_info.get("dates")
         call_start_time__gte = dates[0]
         call_start_time__lte = dates[1]
-        dates_filter = {"call_start_time__gte": call_start_time__gte, "call_start_time__lte": call_start_time__lte}
+        dates_filter = Q(call_start_time__gte=call_start_time__gte, call_start_time__lte=call_start_time__lte)
 
-        calls_qs = Call.objects.filter(**dates_filter, **practice_filter, **organization_filter)
+        base_filters = dates_filter & practice_filter & organization_filter & NEW_PATIENT_OPPORTUNITIES_FILTER & INBOUND_FILTER
+
         # aggregate analytics
         aggregates = {}
-        new_patient_opportunities_qs = calls_qs.filter(NEW_PATIENT_FILTER & INBOUND_FILTER)
+        new_patient_opportunities_qs = Call.objects.filter(base_filters)
         aggregates["new_patient_opportunities_total"] = new_patient_opportunities_qs.count()
         aggregates["new_patient_opportunities_time_series"] = _calculate_new_patient_opportunities_time_series(new_patient_opportunities_qs, dates[0], dates[1])
 
-        new_patient_opportunities_won_qs = calls_qs.filter(NEW_PATIENT_FILTER & INBOUND_FILTER & SUCCESS_FILTER)
+        new_patient_opportunities_won_qs = Call.objects.filter(base_filters & SUCCESS_FILTER)
         aggregates["new_patient_opportunities_won_total"] = new_patient_opportunities_won_qs.count()
 
-        new_patient_opportunities_lost_qs = calls_qs.filter(NEW_PATIENT_FILTER & INBOUND_FILTER & FAILURE_FILTER)
+        new_patient_opportunities_lost_qs = Call.objects.filter(base_filters & FAILURE_FILTER)
         aggregates["new_patient_opportunities_lost_total"] = new_patient_opportunities_lost_qs.count()
 
         aggregates["new_patient_opportunities_conversion_rate_total"] = (
@@ -331,8 +347,8 @@ class NewPatientWinbacksView(views.APIView):
         if organization_errors:
             errors.update(organization_errors)
         if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id):
-            error_message = "practice__id or practice__organization_id must be provided, but not both."
-            errors.update({"practice__id": error_message, "practice__organization_id": error_message})
+            error_message = "practice__id or organization__id must be provided, but not both."
+            errors.update({"practice__id": error_message, "organization__id": error_message})
         if dates_errors:
             errors.update(dates_errors)
         if errors:
