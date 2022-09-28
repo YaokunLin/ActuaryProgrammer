@@ -277,7 +277,7 @@ class InsuranceProviderCallMetricsView(views.APIView):
         data_per_insurance_provider_name["call_success_rate"] = dict()
         for k, v in data_per_insurance_provider_name["call_total"].items():
             success_count = data_per_insurance_provider_name["call_success_total"].get(k, None)
-            data_per_insurance_provider_name["call_success_rate"][k] = v and success_count / v or 0
+            data_per_insurance_provider_name["call_success_rate"][k] = v and (success_count or 0) / v or 0
 
         return {
             "calls_per_insurance_provider": data_per_insurance_provider_name,
