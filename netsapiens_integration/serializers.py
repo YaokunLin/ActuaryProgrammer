@@ -5,6 +5,7 @@ from rest_framework import serializers
 
 from core.models import PracticeTelecom
 from core.serializers import UnixEpochDateField
+
 from .models import (
     NetsapiensAPICredentials,
     NetsapiensCallSubscription,
@@ -12,10 +13,9 @@ from .models import (
     NetsapiensCdr2Extract,
 )
 from .publishers import (
-    publish_netsapiens_cdr_saved_event,
     publish_netsapiens_cdr_linked_to_call_partial_event,
+    publish_netsapiens_cdr_saved_event,
 )
-
 
 log = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ class NetsapiensCdr2ExtractSerializer(serializers.ModelSerializer):
     time_start = UnixEpochDateField(required=False)
     time_answer = UnixEpochDateField(required=False)
     time_release = UnixEpochDateField(required=False)
-    
+
     cdrr_time_start = UnixEpochDateField(required=False)
     cdrr_time_answer = UnixEpochDateField(required=False)
     cdrr_time_release = UnixEpochDateField(required=False)
@@ -78,8 +78,13 @@ class NetsapiensCdr2ExtractSerializer(serializers.ModelSerializer):
             practice_telecom: PracticeTelecom = instance.netsapiens_call_subscription.practice_telecom
             practice_id = practice_telecom.practice.id
             voip_provider_id = practice_telecom.voip_provider.id
+
             publish_netsapiens_cdr_linked_to_call_partial_event(
-                practice_id=practice_id, voip_provider_id=voip_provider_id, event=self.to_representation(instance)
+                practice_id=practice_id,
+                voip_provider_id=voip_provider_id,
+                call_connection=instance.calculate_connected_or_missed_call(),
+                went_to_voicemail=instance.calculate_went_to_voicemail(),
+                event=self.to_representation(instance),
             )
 
         return instance

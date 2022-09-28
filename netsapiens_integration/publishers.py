@@ -6,7 +6,6 @@ from google.cloud import pubsub_v1
 
 from core.pubsub_helpers import publish_event
 
-
 # Get an instance of a logger
 log = logging.getLogger(__name__)
 
@@ -25,7 +24,7 @@ def publish_leg_b_ready_events(
 
     for event in events:
         # One of the leg-b's is finished only when these requirements are true,
-        # otherwise the leg-b is still on-going and hasn't been finished yet.
+        # otherwise the leg-b is still ongoing and hasn't been finished yet.
 
         publish_future = publish_leg_b_ready_event(
             netsapiens_call_subscription_id=netsapiens_call_subscription_id,
@@ -41,6 +40,7 @@ def publish_leg_b_ready_events(
         publish_futures.append(publish_future)
         cdrs_published.append(event)
 
+    # TODO: why is cdrs_published always empty in logging?
     log.info(f"Published messages {cdrs_published} with error handler to {topic_path_leg_b_finished}. Only fully finished leg b CDRs")
     return publish_futures
 
@@ -54,7 +54,8 @@ def publish_leg_b_ready_event(
     publisher: pubsub_v1.PublisherClient = settings.PUBLISHER,
 ) -> pubsub_v1.publisher.futures.Future:
 
-    if not (event.get("remove") == "yes" and event.get("term_leg_tag")):
+    if event.get("remove") != "yes":
+        log.info(f"Detected leg b ready event that will be ignored instead of published. event: '{event}'")
         return None
 
     event_attributes = {
@@ -79,15 +80,20 @@ def publish_netsapiens_cdr_saved_event(
 def publish_netsapiens_cdr_linked_to_call_partial_event(
     practice_id: str,
     voip_provider_id: str,
+    call_connection: str,
+    went_to_voicemail: str,
     event: Dict,
     topic_path_netsapiens_cdr_linked_to_call_partial: str = settings.PUBSUB_TOPIC_PATH_NETSAPIENS_CDR_LINKED_TO_CALL_PARTIAL,
     publisher: pubsub_v1.PublisherClient = settings.PUBLISHER,
 ) -> pubsub_v1.publisher.futures.Future:
 
     description_human_readable = """Event indicates the following are true: 1. peerlogic call exist (call was created, call was updated) # 2. peerlogic call partial exists (partial was created, partial was updated) # 3. cdr2 has been linked to call and call partial # 4. netsapiens audio is available to download"""
+
     event_attributes = {
         "practice_id": practice_id,
         "voip_provider_id": voip_provider_id,
+        "call_connection": call_connection,
+        "went_to_voicemail": str(went_to_voicemail),  # All attributes being published to Pub/Sub must be sent as text strings.
         "description_human_readable": description_human_readable,
     }
 
