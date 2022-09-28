@@ -22,7 +22,7 @@ authors = []
 python = "^3.7.9"
 argon2-cffi = "16.1.0"
 boto3 = "1.24.9"
-celery = "5.0.2"
+celery = "5.2.2"
 cryptography = ">=35.0.0"
 Django = ">=3.0"
 django-celery-beat = "2.1.0"
