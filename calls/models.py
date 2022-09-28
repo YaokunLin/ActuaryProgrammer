@@ -41,7 +41,7 @@ log = logging.getLogger(__name__)
 class Call(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     call_start_time = models.DateTimeField()
-    call_end_time = models.DateTimeField()
+    call_end_time = models.DateTimeField(null=True)  # May be still in progress
     duration_seconds = models.DurationField()
     connect_duration_seconds = models.DurationField(null=True)
     progress_time_seconds = models.DurationField(null=True)
@@ -171,7 +171,7 @@ class CallPartial(AuditTrailModel):
     call = models.ForeignKey(Call, on_delete=models.CASCADE)
     # TODO: sip_callee_extension?
     # TODO: sip_caller_extension?
-    time_interaction_started = models.DateTimeField()
+    time_interaction_started = models.DateTimeField(null=True)  # Some integrations don't have a way to tell the start time yet
     time_interaction_ended = models.DateTimeField()
 
     class Meta:
