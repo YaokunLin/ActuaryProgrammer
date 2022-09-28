@@ -21,6 +21,7 @@ from calls.analytics.query_filters import (
     FAILURE_FILTER,
     INBOUND_FILTER,
     NEW_PATIENT_FILTER,
+    NEW_PATIENT_OPPORTUNITIES_FILTER,
     OPPORTUNITIES_FILTER,
     OUTBOUND_FILTER,
     SUCCESS_FILTER,
@@ -88,9 +89,41 @@ class CallCountsView(views.APIView):
         if valid_call_direction:
             call_direction_filter = {"call_direction": valid_call_direction}
 
-        analytics = get_call_counts(dates_filter, practice_filter, organization_filter, call_direction_filter)
+        analytics = self.get_call_counts(dates_filter, practice_filter, organization_filter, call_direction_filter)
 
         return Response({"results": analytics})
+
+    @staticmethod
+    def get_call_counts(
+        dates_filter: Optional[Dict[str, str]],
+        practice_filter: Optional[Dict[str, str]],
+        organization_filter: Optional[Dict[str, str]],
+        call_direction_filter: Optional[Dict[str, str]],
+    ) -> Dict[str, Any]:
+        start_date_str = dates_filter["call_start_time__gte"]
+        end_date_str = dates_filter["call_start_time__lte"]
+
+        # set re-usable filters
+        filters = Q(**call_direction_filter) & Q(**dates_filter) & Q(**practice_filter) & Q(**organization_filter)
+
+        # set re-usable filtered queryset
+        calls_qs = Call.objects.filter(filters)
+
+        analytics = {
+            "calls_overall": calculate_call_counts(calls_qs, True),  # perform call counts
+            "opportunities": calculate_call_count_opportunities(calls_qs, start_date_str, end_date_str),
+            # TODO: PTECH-1240
+            # "calls_per_user": calculate_call_counts_per_user(calls_qs),  # call counts per caller (agent) phone number
+            # "calls_per_user_by_date_and_hour": calculate_call_counts_per_user_by_date_and_hour(calls_qs),  # call counts per caller (agent) phone number over time
+            # "non_agent_engagement_types": calculate_call_non_agent_engagement_type_counts(calls_qs),  # call counts for non agents
+        }
+
+        # TODO: PTECH-1240
+        # if organization_filter:
+        #     analytics["calls_per_practice"] = calculate_call_breakdown_per_practice(
+        #         calls_qs, organization_filter.get("practice__organization_id"), analytics["calls_overall"]
+        #     )
+        return analytics
 
 
 class OpportunitiesView(views.APIView):
@@ -163,38 +196,6 @@ class OpportunitiesView(views.APIView):
             "counts": opportunity_counts,
             "values": opportunity_values,
         }
-
-
-def get_call_counts(
-    dates_filter: Optional[Dict[str, str]],
-    practice_filter: Optional[Dict[str, str]],
-    organization_filter: Optional[Dict[str, str]],
-    call_direction_filter: Optional[Dict[str, str]],
-) -> Dict[str, Any]:
-    start_date_str = dates_filter["call_start_time__gte"]
-    end_date_str = dates_filter["call_start_time__lte"]
-
-    # set re-usable filters
-    filters = Q(**call_direction_filter) & Q(**dates_filter) & Q(**practice_filter) & Q(**organization_filter)
-
-    # set re-usable filtered queryset
-    calls_qs = Call.objects.filter(filters)
-
-    analytics = {
-        "calls_overall": calculate_call_counts(calls_qs, True),  # perform call counts
-        "opportunities": calculate_call_count_opportunities(calls_qs, start_date_str, end_date_str),
-        # TODO: PTECH-1240
-        # "calls_per_user": calculate_call_counts_per_user(calls_qs),  # call counts per caller (agent) phone number
-        # "calls_per_user_by_date_and_hour": calculate_call_counts_per_user_by_date_and_hour(calls_qs),  # call counts per caller (agent) phone number over time
-        # "non_agent_engagement_types": calculate_call_non_agent_engagement_type_counts(calls_qs),  # call counts for non agents
-    }
-
-    # TODO: PTECH-1240
-    # if organization_filter:
-    #     analytics["calls_per_practice"] = calculate_call_breakdown_per_practice(
-    #         calls_qs, organization_filter.get("practice__organization_id"), analytics["calls_overall"]
-    #     )
-    return analytics
 
 
 class OpportunitiesPerUserView(views.APIView):
@@ -274,31 +275,32 @@ class NewPatientOpportunitiesView(views.APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST, data=errors)
 
         # practice filter
-        practice_filter = {}
+        practice_filter = Q()
         if valid_practice_id:
-            practice_filter = {"practice__id": valid_practice_id}
+            practice_filter = Q(practice_id=valid_practice_id)
 
-        organization_filter = {}
+        organization_filter = Q()
         if valid_organization_id:
-            organization_filter = {"practice__organization__id": valid_organization_id}
+            organization_filter = Q(practice__organization_id=valid_organization_id)
 
         # date filters
         dates = dates_info.get("dates")
         call_start_time__gte = dates[0]
         call_start_time__lte = dates[1]
-        dates_filter = {"call_start_time__gte": call_start_time__gte, "call_start_time__lte": call_start_time__lte}
+        dates_filter = Q(call_start_time__gte=call_start_time__gte, call_start_time__lte=call_start_time__lte)
 
-        calls_qs = Call.objects.filter(**dates_filter, **practice_filter, **organization_filter)
+        base_filters = dates_filter & practice_filter & organization_filter & NEW_PATIENT_OPPORTUNITIES_FILTER & INBOUND_FILTER
+
         # aggregate analytics
         aggregates = {}
-        new_patient_opportunities_qs = calls_qs.filter(NEW_PATIENT_FILTER & INBOUND_FILTER)
+        new_patient_opportunities_qs = Call.objects.filter(base_filters)
         aggregates["new_patient_opportunities_total"] = new_patient_opportunities_qs.count()
         aggregates["new_patient_opportunities_time_series"] = _calculate_new_patient_opportunities_time_series(new_patient_opportunities_qs, dates[0], dates[1])
 
-        new_patient_opportunities_won_qs = calls_qs.filter(NEW_PATIENT_FILTER & INBOUND_FILTER & SUCCESS_FILTER)
+        new_patient_opportunities_won_qs = Call.objects.filter(base_filters & SUCCESS_FILTER)
         aggregates["new_patient_opportunities_won_total"] = new_patient_opportunities_won_qs.count()
 
-        new_patient_opportunities_lost_qs = calls_qs.filter(NEW_PATIENT_FILTER & INBOUND_FILTER & FAILURE_FILTER)
+        new_patient_opportunities_lost_qs = Call.objects.filter(base_filters & FAILURE_FILTER)
         aggregates["new_patient_opportunities_lost_total"] = new_patient_opportunities_lost_qs.count()
 
         aggregates["new_patient_opportunities_conversion_rate_total"] = (
