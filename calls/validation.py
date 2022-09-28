@@ -10,9 +10,6 @@ from core.validation import validate_date_format, validate_dates
 # Get an instance of a logger
 log = logging.getLogger(__name__)
 
-# TODO: remove, see note in calls/analytics/opportunities/views.py#CallMetricsView
-ALL_FILTER_NAME = "all"
-
 
 def get_validated_call_dates(query_data: Dict) -> Dict:
     """Check if the input dates are of the format YYYY-MM-DD"""
@@ -35,6 +32,9 @@ def get_validated_call_dates(query_data: Dict) -> Dict:
     except Exception as e:
         errors["call_start_time_before"] = str(e)
 
+    if errors:
+        return {"dates": None, "errors": errors}
+
     # Validate the input dates
     dates = validate_dates(call_start_time_after, call_start_time_before)
 
@@ -45,6 +45,7 @@ def get_validated_call_dates(query_data: Dict) -> Dict:
         log.error(internal_msg)
 
     return {"dates": dates, "errors": errors}
+
 
 # TODO: move to core app
 def get_validated_practice_id(request: Request) -> Tuple[Optional[str], Optional[Dict[str, str]]]:
@@ -68,27 +69,16 @@ def get_validated_practice_id(request: Request) -> Tuple[Optional[str], Optional
     return practice_id, None
 
 
-def get_validated_call_direction(request: Request) -> Tuple[Optional[str], Optional[Dict[str, str]]]:
-    # TODO: Remove ALL_FILTER_NAME; all is a stop-gap; since its parent was originally using only outbound calls
-    # see note in calls/analytics/opportunities/views.py#CallMetricsView
+def get_validated_call_direction(request: Request, default: Optional[str] = None) -> Tuple[Optional[str], Optional[Dict[str, str]]]:
     param_name = "call_direction"
     call_direction = request.query_params.get(param_name)
     invalid_error = {param_name: f"Invalid {param_name}='{call_direction}'"}
 
-    valid_call_directions = {i[0] for i in CallDirectionTypes.choices}
-    valid_call_directions.add(ALL_FILTER_NAME)
-    if call_direction not in valid_call_directions:
-        return None, invalid_error
+    if call_direction is None:
+        return default, None
 
-    return call_direction, None
-
-
-def get_validated_call_purpose(request: Request) -> Tuple[Optional[str], Optional[Dict[str, str]]]:
-    param_name = "call_direction"
-    call_direction = request.query_params.get(param_name)
-    invalid_error = {param_name: f"Invalid {param_name}='{call_direction}'"}
-
-    if call_direction not in CallDirectionTypes.choices or call_direction != ALL_FILTER_NAME:
+    call_direction = call_direction.lower()
+    if call_direction not in CallDirectionTypes:
         return None, invalid_error
 
     return call_direction, None
@@ -127,3 +117,14 @@ def get_validated_insurance_provider(request: Request) -> Optional[InsuranceProv
     except InsuranceProvider.DoesNotExist:
         log.info("Found no insurance provider with name: %s", insurance_provider_name)
         return None
+
+
+def get_validated_query_param_bool(request: Request, param_name: str, default_value: bool = False) -> bool:
+    param_value = request.query_params.get(param_name, None)
+    if param_value is None:
+        return default_value
+
+    if param_value and param_value.lower() in ("true", "1", "t"):
+        return True
+
+    return False
