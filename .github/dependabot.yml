@@ -5,7 +5,8 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-    open-pull-requests-limit: 10
+    # Disable version updates for npm dependencies
+    open-pull-requests-limit: 0
     ignore:
       - dependency-name: "numpy"
         versions: ["1.21"]
