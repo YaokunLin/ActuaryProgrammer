@@ -1,5 +1,4 @@
 import logging
-from pprint import pprint
 import re
 from datetime import datetime
 from typing import Dict
@@ -68,17 +67,5 @@ class JiveSubscriptionEventExtractSerializer(serializers.ModelSerializer):
 
         if not incoming_data.get("peerlogic_call_id"):
             return_value.update({"peerlogic_call_id": ""})  # conform to Django's blankable charfields as opposed to null fields
-
-        print("return_value")
-        pprint(return_value)
-
-        return return_value
-
-    def _snake_and_flatten_data_callee_and_data_caller(self, prefix, callee_or_caller_dictionary):
-        return_value = {}
-        for key, value in callee_or_caller_dictionary.items():
-            model_field_snaked = pattern.sub("_", key).lower()
-            model_field_snaked = f"{prefix}_{model_field_snaked}"
-            return_value.update({model_field_snaked: value})
 
         return return_value

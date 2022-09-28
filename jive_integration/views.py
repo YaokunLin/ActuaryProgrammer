@@ -24,7 +24,7 @@ from core.validation import get_validated_practice_telecom
 from jive_integration.jive_client.client import JiveClient, Line
 from jive_integration.serializers import JiveSubscriptionEventExtractSerializer
 from jive_integration.models import JiveConnection, JiveLine, JiveChannel, JiveSession
-from jive_integration.utils import get_call_id_from_previous_announce_event, is_first_withdraw_event
+from jive_integration.utils import get_call_id_from_previous_announce_event
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -67,11 +67,6 @@ def webhook(request):
     subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
     subscription_event_data = subscription_event_serializer.validated_data
 
-    start_time: datetime = subscription_event_data.get("data_created")
-
-    print("START TIME")
-    print(start_time)
-
     if not subscription_event_serializer_is_valid:
         log.exception(f"Error from subscription_event_serializer validation from entity_id {entity_id}: {subscription_event_serializer.errors}")
         return Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": subscription_event_serializer.errors})
@@ -101,31 +96,32 @@ def webhook(request):
 
     if content["type"] == "announce":
         log.info("Received jive announce event.")
-        # TODO: Fix, this is creating 2 - 3 duplicate Peerlogic calls per actual call taking place.
-        if start_time:
-            log.info(f"Creating Peerlogic Call object with start_time='{start_time}'.")
-            callee_number = content["data"]["callee"]["number"]
-            caller_number = content["data"]["caller"]["number"]
-            callee_key = "sip_callee_number"
-            caller_key = "sip_caller_number"
-            if len(callee_number) != 10:
-                callee_key = "sip_callee_extension"
-            if len(caller_number) != 10:
-                caller_key = "sip_callee_extension"
+        start_time: datetime = dateutil.parser.isoparser().isoparse(req["timestamp"])
+        log.info(f"Creating Peerlogic Call object with start_time='{start_time}'.")
+        callee_number = content["data"]["callee"]["number"]
+        caller_number = content["data"]["caller"]["number"]
+        callee_key = "sip_callee_number"
+        caller_key = "sip_caller_number"
+        if len(callee_number) != 10:
+            callee_key = "sip_callee_extension"
+        if len(caller_number) != 10:
+            caller_key = "sip_caller_extension"
 
-            call_fields = {
-                "practice": line.session.channel.connection.practice_telecom.practice,
-                "call_start_time": start_time,
-                "duration_seconds": timedelta(seconds=0),
-                "call_direction": direction,
-                callee_key: callee_number,
-                caller_key: caller_number,
-            }
+        call_fields = {
+            "practice": line.session.channel.connection.practice_telecom.practice,
+            "call_start_time": start_time,
+            "duration_seconds": timedelta(seconds=0),
+            "call_direction": direction,
+            callee_key: callee_number,
+            "sip_callee_name": content["data"]["callee"]["name"],
+            caller_key: caller_number,
+            "sip_caller_name": content["data"]["caller"]["name"],
+        }
 
-            peerlogic_call = Call.objects.create(**call_fields)
-            log.info(f"Created Peerlogic Call object with id='{peerlogic_call.id}'.")
+        peerlogic_call = Call.objects.create(**call_fields)
+        log.info(f"Created Peerlogic Call object with id='{peerlogic_call.id}'.")
 
-            subscription_event_data.update({"peerlogic_call_id": peerlogic_call.id})
+        subscription_event_data.update({"peerlogic_call_id": peerlogic_call.id})
         subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
         subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
 
@@ -145,21 +141,6 @@ def webhook(request):
         subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
         subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
 
-        if is_first_withdraw_event(content["entityId"]):
-            log.info("Saving first withdraw event. Will get recording on subsequent withdraw event.")
-            subscription_event_serializer.save()
-            return HttpResponse(202)
-
-        log.info("Recording will be ready if anyone spoke.")
-
-        log.info("Updating Peerlogic call end time and duration.")
-        peerlogic_call = Call.objects.get(pk=call_id)
-        peerlogic_call.call_end_time = subscription_event_data.get("data_created")
-        peerlogic_call.duration_seconds = timezone.make_aware(peerlogic_call.call_end_time) - peerlogic_call.call_start_time
-        log.info(
-            f"Updated Peerlogic call end time and duration: peerlogic_call.call_end_time='{peerlogic_call.call_end_time}', peerlogic_call.duration_seconds='{peerlogic_call.duration_seconds}'"
-        )
-
         log.info(f"Retrieving recordings from jive.")
         recordings = []
         for recording in content["data"]["recordings"]:
@@ -173,24 +154,32 @@ def webhook(request):
         for recording in recordings:
             ord = recording[0]
             filename = recording[1]
+            end_time: datetime = dateutil.parser.isoparser().isoparse(req["timestamp"])
+
+            log.info("Updating Peerlogic call end time and duration.")
+            peerlogic_call = Call.objects.get(pk=call_id)
+            peerlogic_call.call_end_time = end_time
+            peerlogic_call.duration_seconds = peerlogic_call.call_end_time - peerlogic_call.call_start_time
+            peerlogic_call.save()
+            log.info(
+                f"Updated Peerlogic call end time and duration: peerlogic_call.call_end_time='{peerlogic_call.call_end_time}', peerlogic_call.duration_seconds='{peerlogic_call.duration_seconds}'"
+            )
 
             log.info(
                 f"Creating Peerlogic CallPartial with peerlogic_call.id='{peerlogic_call.id}', time_interaction_started='{peerlogic_call.call_start_time}' and time_interaction_ended='{ord}'."
             )
             # TODO: Get previous call partials for call and see if we need to update the time_interaction started. We only get end times.
             # Double-check with transfers
-            cp = CallPartial.objects.create(call=peerlogic_call, time_interaction_started=peerlogic_call.call_start_time, time_interaction_ended=ord)
+            cp = CallPartial.objects.create(call=peerlogic_call, time_interaction_started=peerlogic_call.call_start_time, time_interaction_ended=end_time)
             log.info(
-                f"Created Peerlogic CallPartial with cp.id='{cp.id}', peerlogic_call.id='{peerlogic_call.id}', time_interaction_started='{peerlogic_call.call_start_time}' and entime_interaction_endedd_time='{ord}'."
+                f"Created Peerlogic CallPartial with cp.id='{cp.id}', peerlogic_call.id='{peerlogic_call.id}', time_interaction_started='{peerlogic_call.call_start_time}' and entime_interaction_endedd_time='{end_time}'."
             )
 
             log.info(f"Creating Peerlogic CallAudioPartial with cp.id='{cp.id}', peerlogic_call.id='{peerlogic_call.id}'")
             cap = CallAudioPartial.objects.create(
                 call_partial=cp, mime_type=SupportedAudioMimeTypes.AUDIO_WAV, status=CallAudioFileStatusTypes.RETRIEVAL_FROM_PROVIDER_IN_PROGRESS
             )
-            log.info(
-                f"Created Peerlogic CallAudioPartial with cap.id='{cap.id}', cp.id='{cp.id}', peerlogic_call.id='{peerlogic_call.id}', start_time='{ord}' and end_time='{ord}'."
-            )
+            log.info(f"Created Peerlogic CallAudioPartial with cap.id='{cap.id}', cp.id='{cp.id}', peerlogic_call.id='{peerlogic_call.id}'.")
 
             # TODO: publish_leg_b_ready_event which does the below functionality with retries,
             # since the recording is not always available in S3 yet even though it's listed in the event
