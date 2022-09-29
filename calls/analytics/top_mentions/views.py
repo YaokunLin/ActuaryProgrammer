@@ -10,8 +10,10 @@ from rest_framework import status, views
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from calls.analytics.aggregates import safe_divide
 from calls.analytics.query_filters import (
     BENCHMARK_PRACTICE_CALLS_FILTER,
+    BENCHMARK_PRACTICE_FILTER,
     NAEPT_PATIENT_FILTER,
 )
 from calls.models import Call
@@ -22,6 +24,7 @@ from calls.validation import (
     get_validated_practice_id,
     get_validated_query_param_bool,
 )
+from core.models import Practice
 from peerlogic.settings import (
     ANALYTICS_CACHE_VARY_ON_HEADERS,
     CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS,
@@ -91,9 +94,9 @@ class _TopMentionedViewBase(views.APIView):
             call_direction_filter = Q(call_direction=valid_call_direction)
 
         all_filters = NAEPT_PATIENT_FILTER & dates_filter & practice_filter & organization_filter & call_direction_filter
-        return Response(self._get_top_mentions(all_filters, self._RESOURCE_NAME, size))
+        return Response(self._get_top_mentions(all_filters, self._RESOURCE_NAME, size, is_benchmark))
 
-    def _get_top_mentions(self, call_filters: Q, resource_name: str, size: int) -> Dict:
+    def _get_top_mentions(self, call_filters: Q, resource_name: str, size: int, is_benchmark: bool) -> Dict:
         mentioned_resource_name = f"mentioned_{resource_name}"
         mentioned_resource_keyword = f"{mentioned_resource_name}__keyword"
         count_label = "count"
@@ -102,6 +105,11 @@ class _TopMentionedViewBase(views.APIView):
         top_mentions = calls_qs.values(mentioned_resource_keyword).annotate(count=Count("id")).order_by(f"-{count_label}")[:size]
         top_mentions = [{"keyword": i[mentioned_resource_keyword], count_label: i[count_label]} for i in top_mentions]
         self._normalize_values(top_mentions)
+        if is_benchmark:
+            num_benchmark_practices = Practice.objects.filter(BENCHMARK_PRACTICE_FILTER).count()
+            for i in top_mentions:
+                i[count_label] = safe_divide(i[count_label], num_benchmark_practices, should_round=True, round_places=None)
+
         return {"top_mentions": top_mentions}
 
     @staticmethod

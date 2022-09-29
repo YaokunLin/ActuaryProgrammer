@@ -15,6 +15,8 @@ from calls.analytics.aggregates import (
     calculate_call_counts_and_opportunities_per_user,
     calculate_zero_filled_call_counts_by_day,
     convert_call_counts_to_by_week,
+    round_if_float,
+    safe_divide,
 )
 from calls.analytics.constants import AVG_VALUE_PER_APPOINTMENT_USD
 from calls.analytics.query_filters import (
@@ -176,10 +178,10 @@ class OpportunitiesView(views.APIView):
         lost_count = d.get("failure", 0)
         open_count = total_count - (won_count + lost_count)
         if num_practices_for_average:
-            total_count = total_count / num_practices_for_average
-            won_count = won_count / num_practices_for_average
-            lost_count = lost_count / num_practices_for_average
-            open_count = open_count / num_practices_for_average
+            total_count = safe_divide(total_count, num_practices_for_average)
+            won_count = safe_divide(won_count, num_practices_for_average)
+            lost_count = safe_divide(lost_count, num_practices_for_average)
+            open_count = safe_divide(open_count, num_practices_for_average)
         opportunity_counts = {
             "total": total_count,
             "won": won_count,
@@ -187,10 +189,10 @@ class OpportunitiesView(views.APIView):
             "open": open_count,
         }
         opportunity_values = {
-            "total": total_count * AVG_VALUE_PER_APPOINTMENT_USD,
-            "won": won_count * AVG_VALUE_PER_APPOINTMENT_USD,
-            "lost": lost_count * AVG_VALUE_PER_APPOINTMENT_USD,
-            "open": open_count * AVG_VALUE_PER_APPOINTMENT_USD,
+            "total": round_if_float(total_count * AVG_VALUE_PER_APPOINTMENT_USD),
+            "won": round_if_float(won_count * AVG_VALUE_PER_APPOINTMENT_USD),
+            "lost": round_if_float(lost_count * AVG_VALUE_PER_APPOINTMENT_USD),
+            "open": round_if_float(open_count * AVG_VALUE_PER_APPOINTMENT_USD),
         }
         return {
             "counts": opportunity_counts,
@@ -303,21 +305,17 @@ class NewPatientOpportunitiesView(views.APIView):
         new_patient_opportunities_lost_qs = Call.objects.filter(base_filters & FAILURE_FILTER)
         aggregates["new_patient_opportunities_lost_total"] = new_patient_opportunities_lost_qs.count()
 
-        aggregates["new_patient_opportunities_conversion_rate_total"] = (
-            aggregates["new_patient_opportunities_total"]
-            and aggregates["new_patient_opportunities_won_total"] / aggregates["new_patient_opportunities_total"]
-            or 0
+        aggregates["new_patient_opportunities_conversion_rate_total"] = safe_divide(
+            aggregates["new_patient_opportunities_won_total"], aggregates["new_patient_opportunities_total"]
         )
 
         if organization_filter:
             per_practice_averages = {}
             num_practices = Practice.objects.filter(organization_id=valid_organization_id).count()
-            per_practice_averages["new_patient_opportunities"] = num_practices and aggregates["new_patient_opportunities_total"] / num_practices or 0
-            per_practice_averages["new_patient_opportunities_won"] = num_practices and aggregates["new_patient_opportunities_won_total"] / num_practices or 0
-            per_practice_averages["new_patient_opportunities_lost"] = num_practices and aggregates["new_patient_opportunities_lost_total"] / num_practices or 0
-            aggregates["new_patient_opportunities_conversion_rate"] = (
-                num_practices and aggregates["new_patient_opportunities_conversion_rate_total"] / num_practices or 0
-            )
+            per_practice_averages["new_patient_opportunities"] = safe_divide(aggregates["new_patient_opportunities_total"], num_practices)
+            per_practice_averages["new_patient_opportunities_won"] = safe_divide(aggregates["new_patient_opportunities_won_total"], num_practices)
+            per_practice_averages["new_patient_opportunities_lost"] = safe_divide(aggregates["new_patient_opportunities_lost_total"], num_practices)
+            aggregates["new_patient_opportunities_conversion_rate"] = safe_divide(aggregates["new_patient_opportunities_conversion_rate_total"], num_practices)
             aggregates["per_practice_averages"] = per_practice_averages
 
         # display syntactic sugar
@@ -441,7 +439,7 @@ def _calculate_new_patient_opportunities_time_series(opportunities_qs: QuerySet,
         for record in won:
             date = record["date"]
             total_for_date = total_per_date_mapping[date]
-            rate = total_for_date and record["value"] / total_per_date_mapping[date] or 0
+            rate = safe_divide(record["value"], total_for_date)
             conversion_rates.append({"date": date, "value": rate})
         return conversion_rates
 
