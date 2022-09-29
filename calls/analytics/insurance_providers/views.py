@@ -1,6 +1,5 @@
 import logging
 from collections import Counter
-from contextlib import suppress
 from datetime import timedelta
 from typing import Dict, Optional
 
@@ -22,15 +21,14 @@ from calls.analytics.aggregates import (
     convert_to_call_counts_and_durations_by_weekday,
     get_call_counts_and_durations_by_weekday_and_hour,
 )
-from calls.analytics.intents.field_choices import CallOutcomeTypes
-from calls.analytics.participants.field_choices import NonAgentEngagementPersonaTypes
-from calls.field_choices import CallDirectionTypes
+from calls.analytics.query_filters import OUTBOUND_FILTER, SUCCESS_FILTER
 from calls.models import Call
 from calls.validation import (
     get_validated_call_dates,
     get_validated_insurance_provider,
     get_validated_organization_id,
     get_validated_practice_id,
+    get_validated_query_param_bool,
 )
 from core.models import InsuranceProviderPhoneNumber
 from peerlogic.settings import (
@@ -38,16 +36,6 @@ from peerlogic.settings import (
     CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS,
     CACHE_TIME_ANALYTICS_SECONDS,
 )
-
-# TODO: PTECH-1240
-# from calls.analytics.aggregates import (
-#     calculate_call_breakdown_per_practice,
-#     calculate_call_counts_by_date_and_hour,
-#     calculate_call_counts_per_user,
-#     calculate_call_counts_per_user_by_date_and_hour,
-#     calculate_call_non_agent_engagement_type_counts,
-# )
-
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -67,16 +55,13 @@ class InsuranceProviderInteractionsView(views.APIView):
     @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
         insurance_provider = get_validated_insurance_provider(request)
-        try:
-            verbose = request.query_params.get("verbose", "False").lower() in {"true", "1", "t", "alex"}
-        except Exception:
-            verbose = False
+        verbose = get_validated_query_param_bool(request, "verbose", False)
 
         if insurance_provider is None:
             return Response({"insurance_provider_name": "Invalid insurance_provider_name"}, status=status.HTTP_400_BAD_REQUEST)
 
         all_filters = (
-            Q(call_direction=CallDirectionTypes.OUTBOUND)
+            OUTBOUND_FILTER
             & Q(call_start_time__gte=timezone.now() - timedelta(days=self.LOOKBACK_DAYS))
             & Q(sip_callee_number__in=insurance_provider.insuranceproviderphonenumber_set.only("phone_number"))
             & Q(duration_seconds__gte=timedelta(seconds=self.CALL_DURATION_MINIMUM_SECONDS))
@@ -143,7 +128,11 @@ class InsuranceProviderInteractionsView(views.APIView):
             most_efficient_weekday = most_efficient_day[weekday_label]
             most_efficient_hour = most_efficient_day[most_efficient_hour_label]
             most_efficient_hour_data = data_by_weekday_and_hour[most_efficient_weekday][per_hour_label][most_efficient_hour]
-            average_duration_at_most_efficient_day_hour = most_efficient_hour_data[total_call_duration_label] / most_efficient_hour_data[call_count_label]
+            average_duration_at_most_efficient_day_hour = (
+                most_efficient_hour_data[call_count_label]
+                and most_efficient_hour_data[total_call_duration_label] / most_efficient_hour_data[call_count_label]
+                or 0
+            )
             return_data = {
                 weekday_label: most_efficient_weekday,
                 hour_label: most_efficient_hour,
@@ -196,16 +185,12 @@ class InsuranceProviderInteractionsView(views.APIView):
         }
 
 
-class InsuranceProviderMentionedView(views.APIView):
+class InsuranceProviderCallMetricsView(views.APIView):
     @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
     @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
     @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
-        # TODO: Use app settings for pagination limits and use shared code for getting size here
-        size = 10
-        with suppress(Exception):
-            size = max(0, min(50, int(request.query_params.get("size", size))))
-
+        insurance_provider = get_validated_insurance_provider(request)
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
         valid_organization_id, organization_errors = get_validated_organization_id(request=request)
         dates_info = get_validated_call_dates(query_data=request.query_params)
@@ -238,87 +223,11 @@ class InsuranceProviderMentionedView(views.APIView):
         call_start_time__lte = dates[1]
         dates_filter = {"call_start_time__gte": call_start_time__gte, "call_start_time__lte": call_start_time__lte}
 
-        all_filters = (
-            Q(
-                engaged_in_calls__non_agent_engagement_persona_type__in=[
-                    NonAgentEngagementPersonaTypes.NEW_PATIENT,
-                    NonAgentEngagementPersonaTypes.EXISTING_PATIENT,
-                ]
-            )
-            & Q(**dates_filter)
-            & Q(**practice_filter)
-            & Q(**organization_filter)
-            & Q(mentioned_insurances__keyword__isnull=False)
-        )
-        calls_qs = Call.objects.select_related("mentioned_insurances").filter(all_filters)
-
-        # Limit to top "size"
-        top_mentions = calls_qs.values("mentioned_insurances__keyword").annotate(call_total=Count("id")).order_by("-call_total")[:size]
-        results = {"top_insurances_mentioned": [{"insurance": i["mentioned_insurances__keyword"], "count": i["call_total"]} for i in top_mentions]}
-        self._normalize_result_insurance_names(results)
-        return Response(results)
-
-    @staticmethod
-    def _normalize_result_insurance_names(results: Dict) -> None:
-        """
-        Modifies results in-place to strip excess whitespace and fix capitalization
-        """
-        for r in results["top_insurances_mentioned"]:
-            name = r["insurance"].strip()
-            if name and name[0].islower():
-                name = name.title()
-            r["insurance"] = name
-
-
-class InsuranceProviderCallMetricsView(views.APIView):
-    @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
-    @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
-    @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
-    def get(self, request, format=None):
-        insurance_provider = get_validated_insurance_provider(request)
-        valid_practice_id, practice_errors = get_validated_practice_id(request=request)
-        valid_organization_id, organization_errors = get_validated_organization_id(request=request)
-        dates_info = get_validated_call_dates(query_data=request.query_params)
-        dates_errors = dates_info.get("errors")
-
-        errors = {}
-        if practice_errors:
-            errors.update(practice_errors)
-        if organization_errors:
-            errors.update(organization_errors)
-        if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id):
-            error_message = "practice__id or practice__organization_id must be provided, but not both."
-            errors.update({"practice__id": error_message, "practice__organization_id": error_message})
-        if dates_errors:
-            errors.update(dates_errors)
-        if errors:
-            return Response(status=status.HTTP_400_BAD_REQUEST, data=errors)
-
-        practice_filter = {}
-        if valid_practice_id:
-            practice_filter = {"practice__id": valid_practice_id}
-
-        organization_filter = {}
-        if valid_organization_id:
-            organization_filter = {"practice__organization_id": valid_organization_id}
-
-        # date filters
-        dates = dates_info.get("dates")
-        call_start_time__gte = dates[0]
-        call_start_time__lte = dates[1]
-        dates_filter = {"call_start_time__gte": call_start_time__gte, "call_start_time__lte": call_start_time__lte}
-
         if insurance_provider:
             insurance_provider_phone_number_filter = Q(sip_callee_number__in=insurance_provider.insuranceproviderphonenumber_set.only("phone_number"))
         else:
             insurance_provider_phone_number_filter = Q(sip_callee_number__in=InsuranceProviderPhoneNumber.objects.only("phone_number").all())
-        all_filters = (
-            Q(call_direction=CallDirectionTypes.OUTBOUND)
-            & Q(**dates_filter)
-            & Q(**practice_filter)
-            & Q(**organization_filter)
-            & insurance_provider_phone_number_filter
-        )
+        all_filters = OUTBOUND_FILTER & Q(**dates_filter) & Q(**practice_filter) & Q(**organization_filter) & insurance_provider_phone_number_filter
         calls_qs = Call.objects.filter(all_filters)
 
         data_by_weekday_and_hour = get_call_counts_and_durations_by_weekday_and_hour(calls_qs)
@@ -326,13 +235,7 @@ class InsuranceProviderCallMetricsView(views.APIView):
         analytics = {
             "most_popular_weekday_and_hour": self._get_most_popular_weekday_and_hour(data_by_weekday_and_hour),
             "calls_overall": calculate_call_counts(calls_qs),
-            # TODO: PTECH-1240
-            # "calls_per_user": calculate_call_counts_per_user(calls_qs),
-            # "calls_per_user_by_date_and_hour": calculate_call_counts_per_user_by_date_and_hour(calls_qs),
-            # "non_agent_engagement_types": calculate_call_non_agent_engagement_type_counts(calls_qs),
         }
-        # TODO: PTECH-1240
-        # analytics["calls_by_date_and_hour"] = calculate_call_counts_by_date_and_hour(calls_qs)
         analytics["calls_by_weekday"] = convert_to_call_counts_and_durations_by_weekday(data_by_weekday_and_hour)
         analytics["calls_by_hour"] = convert_to_call_counts_and_durations_by_hour(data_by_weekday_and_hour)
         analytics["calls_by_weekday_and_hour"] = data_by_weekday_and_hour
@@ -340,20 +243,13 @@ class InsuranceProviderCallMetricsView(views.APIView):
         if calls_qs:
             analytics.update(**self.calculate_call_breakdown_per_insurance_provider(calls_qs))
 
-        # TODO: PTECH-1240
-        #
-        #     if organization_filter:
-        #         analytics["calls_per_practice"] = calculate_call_breakdown_per_practice(
-        #             calls_qs, organization_filter.get("practice__organization_id"), analytics["calls_overall"]
-        #         )
-
         return Response(analytics)
 
     def calculate_call_breakdown_per_insurance_provider(self, calls_qs: QuerySet) -> Dict:
         data_per_phone_number = calculate_call_counts_per_field(calls_qs, "sip_callee_number")
 
         # Successes ---
-        successes_qs = calls_qs.filter(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.SUCCESS).values("sip_callee_number")
+        successes_qs = calls_qs.filter(SUCCESS_FILTER).values("sip_callee_number")
         data_per_phone_number["call_success_total"] = successes_qs.annotate(count=Count("id")).order_by("-count")
         data_per_phone_number["call_success_total"] = convert_count_results(data_per_phone_number["call_success_total"], "sip_callee_number", "count")
 
@@ -381,14 +277,10 @@ class InsuranceProviderCallMetricsView(views.APIView):
         data_per_insurance_provider_name["call_success_rate"] = dict()
         for k, v in data_per_insurance_provider_name["call_total"].items():
             success_count = data_per_insurance_provider_name["call_success_total"].get(k, None)
-            data_per_insurance_provider_name["call_success_rate"][k] = success_count / v if success_count else 0
+            data_per_insurance_provider_name["call_success_rate"][k] = v and (success_count or 0) / v or 0
 
         return {
             "calls_per_insurance_provider": data_per_insurance_provider_name,
-            # TODO: PTECH-1240
-            # "calls_per_insurance_provider_by_date_and_hour": self.calculate_call_breakdown_per_insurance_provider_by_date_and_hour(
-            #     calls_qs, num_phone_numbers_per_insurance_provider, insurance_provider_per_phone_number
-            # ),
         }
 
     def calculate_call_breakdown_per_insurance_provider_by_date_and_hour(
@@ -453,12 +345,12 @@ class InsuranceProviderCallMetricsView(views.APIView):
                     for subkey, subvalue in v.items():
                         if is_time_series_breakdown:
                             for subvalue_key, subvalue_value in subvalue.items():
-                                subvalue[subvalue_key] = subvalue_value / num_phone_numbers
+                                subvalue[subvalue_key] = num_phone_numbers and subvalue_value / num_phone_numbers or 0
                             new_value[subkey] = subvalue
                         else:
-                            new_value[subkey] = subvalue / num_phone_numbers
+                            new_value[subkey] = num_phone_numbers and subvalue / num_phone_numbers or 0
                 else:
-                    new_value = v / num_phone_numbers
+                    new_value = num_phone_numbers and v / num_phone_numbers or 0
                 data_per_provider[insurance_provider] = new_value
 
         if is_time_series_breakdown:

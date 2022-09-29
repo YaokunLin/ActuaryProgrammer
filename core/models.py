@@ -119,6 +119,7 @@ class Practice(AuditTrailModel):
     active = models.BooleanField(
         null=True, blank=False, default=False
     )  # practices are active or inactive based upon whether we've approved their submission and whether they're paid up
+    include_in_benchmarks = models.BooleanField(default=False)
 
     address_us_state = USStateField(blank=True, default="AZ")  # yes, it's a char field behind the scenes
 
@@ -176,7 +177,7 @@ class PracticeTelecom(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     voip_provider = models.ForeignKey(VoipProvider, on_delete=models.SET_NULL, null=True)
     practice = models.OneToOneField(Practice, on_delete=models.CASCADE, related_name="practice_telecom")
-    domain = models.CharField(max_length=80, db_index=True, blank=True) # TODO: move to Netsapiens App specific datamodel
+    domain = models.CharField(max_length=80, db_index=True, blank=True)  # TODO: move to Netsapiens App specific datamodel
     phone_sms = PhoneNumberField(blank=True)
     phone_callback = PhoneNumberField(blank=True)
 
