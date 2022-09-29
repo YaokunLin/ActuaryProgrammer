@@ -9,7 +9,11 @@ from rest_framework import status, views
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from calls.analytics.aggregates import calculate_call_counts
+from calls.analytics.aggregates import (
+    calculate_call_counts,
+    round_if_float,
+    safe_divide,
+)
 from calls.analytics.constants import AVG_VALUE_PER_APPOINTMENT_USD
 from calls.analytics.query_filters import (
     BENCHMARK_PRACTICE_CALLS_FILTER,
@@ -50,16 +54,16 @@ class OpportunitiesBenchmarksView(views.APIView):
         lost_count = d.get("failure", 0)
         open_count = total_count - (won_count + lost_count)
         average_opportunity_counts = {
-            "total": benchmark_practices_count and total_count / benchmark_practices_count or 0,
-            "won": benchmark_practices_count and won_count / benchmark_practices_count or 0,
-            "lost": benchmark_practices_count and lost_count / benchmark_practices_count or 0,
-            "open": benchmark_practices_count and open_count / benchmark_practices_count or 0,
+            "total": safe_divide(total_count, benchmark_practices_count),
+            "won": safe_divide(won_count, benchmark_practices_count),
+            "lost": safe_divide(lost_count, benchmark_practices_count),
+            "open": safe_divide(open_count, benchmark_practices_count),
         }
         average_opportunity_values = {
-            "total": benchmark_practices_count and total_count / benchmark_practices_count * AVG_VALUE_PER_APPOINTMENT_USD or 0,
-            "won": benchmark_practices_count and won_count / benchmark_practices_count * AVG_VALUE_PER_APPOINTMENT_USD or 0,
-            "lost": benchmark_practices_count and lost_count / benchmark_practices_count * AVG_VALUE_PER_APPOINTMENT_USD or 0,
-            "open": benchmark_practices_count and open_count / benchmark_practices_count * AVG_VALUE_PER_APPOINTMENT_USD or 0,
+            "total": round_if_float(safe_divide(total_count, benchmark_practices_count, should_round=False) * AVG_VALUE_PER_APPOINTMENT_USD),
+            "won": round_if_float(safe_divide(won_count, benchmark_practices_count, should_round=False) * AVG_VALUE_PER_APPOINTMENT_USD),
+            "lost": round_if_float(safe_divide(lost_count, benchmark_practices_count, should_round=False) * AVG_VALUE_PER_APPOINTMENT_USD),
+            "open": round_if_float(safe_divide(open_count, benchmark_practices_count, should_round=False) * AVG_VALUE_PER_APPOINTMENT_USD),
         }
 
         results = {
@@ -81,11 +85,11 @@ class CallCountsBenchmarksView(views.APIView):
         benchmark_practices_count = _get_benchmark_practices_count()
         call_counts = calculate_call_counts(calls_qs)
         for section_name in {"call_total", "call_connected_total", "call_seconds_total", "call_answered_total", "call_voicemail_total", "call_missed_total"}:
-            call_counts[section_name] = benchmark_practices_count and call_counts[section_name] / benchmark_practices_count or 0
+            call_counts[section_name] = safe_divide(call_counts[section_name], benchmark_practices_count)
         for section_name in {"call_sentiment_counts", "call_direction_counts", "call_naept_counts", "call_purpose_counts"}:
             section = call_counts[section_name]
             for k, v in section.items():
-                section[k] = benchmark_practices_count and v / benchmark_practices_count or 0
+                section[k] = safe_divide(v, benchmark_practices_count)
 
         return Response(call_counts)
 

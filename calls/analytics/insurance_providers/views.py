@@ -20,6 +20,7 @@ from calls.analytics.aggregates import (
     convert_to_call_counts_and_durations_by_hour,
     convert_to_call_counts_and_durations_by_weekday,
     get_call_counts_and_durations_by_weekday_and_hour,
+    safe_divide,
 )
 from calls.analytics.query_filters import OUTBOUND_FILTER, SUCCESS_FILTER
 from calls.models import Call
@@ -128,10 +129,8 @@ class InsuranceProviderInteractionsView(views.APIView):
             most_efficient_weekday = most_efficient_day[weekday_label]
             most_efficient_hour = most_efficient_day[most_efficient_hour_label]
             most_efficient_hour_data = data_by_weekday_and_hour[most_efficient_weekday][per_hour_label][most_efficient_hour]
-            average_duration_at_most_efficient_day_hour = (
-                most_efficient_hour_data[call_count_label]
-                and most_efficient_hour_data[total_call_duration_label] / most_efficient_hour_data[call_count_label]
-                or 0
+            average_duration_at_most_efficient_day_hour = safe_divide(
+                most_efficient_hour_data[total_call_duration_label], most_efficient_hour_data[call_count_label]
             )
             return_data = {
                 weekday_label: most_efficient_weekday,
@@ -277,7 +276,7 @@ class InsuranceProviderCallMetricsView(views.APIView):
         data_per_insurance_provider_name["call_success_rate"] = dict()
         for k, v in data_per_insurance_provider_name["call_total"].items():
             success_count = data_per_insurance_provider_name["call_success_total"].get(k, None)
-            data_per_insurance_provider_name["call_success_rate"][k] = v and (success_count or 0) / v or 0
+            data_per_insurance_provider_name["call_success_rate"][k] = safe_divide((success_count or 0), v)
 
         return {
             "calls_per_insurance_provider": data_per_insurance_provider_name,
@@ -345,12 +344,12 @@ class InsuranceProviderCallMetricsView(views.APIView):
                     for subkey, subvalue in v.items():
                         if is_time_series_breakdown:
                             for subvalue_key, subvalue_value in subvalue.items():
-                                subvalue[subvalue_key] = num_phone_numbers and subvalue_value / num_phone_numbers or 0
+                                subvalue[subvalue_key] = safe_divide(subvalue_value, num_phone_numbers)
                             new_value[subkey] = subvalue
                         else:
-                            new_value[subkey] = num_phone_numbers and subvalue / num_phone_numbers or 0
+                            new_value[subkey] = safe_divide(subvalue, num_phone_numbers)
                 else:
-                    new_value = num_phone_numbers and v / num_phone_numbers or 0
+                    new_value = safe_divide(v, num_phone_numbers)
                 data_per_provider[insurance_provider] = new_value
 
         if is_time_series_breakdown:
