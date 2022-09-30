@@ -39,6 +39,14 @@ log = logging.getLogger(__name__)
 
 
 class Call(AuditTrailModel):
+    class Meta:
+        indexes = [
+            models.Index(fields=["sip_caller_extension"], name="sip_caller_extension_name"),
+            models.Index(fields=["sip_caller_number"], name="sip_caller_number_name"),
+            models.Index(fields=["sip_callee_extension"], name="sip_callee_extension_name"),
+            models.Index(fields=["sip_callee_number"], name="sip_callee_number_name"),
+        ]
+
     id = ShortUUIDField(primary_key=True, editable=False)
     call_start_time = models.DateTimeField()
     call_end_time = models.DateTimeField()
@@ -56,11 +64,11 @@ class Call(AuditTrailModel):
     )
     caller_id = models.ForeignKey("core.UserTelecom", on_delete=models.SET_NULL, null=True, related_name="calls_made")
     callee_id = models.ForeignKey("core.UserTelecom", on_delete=models.SET_NULL, null=True, related_name="calls_recieved")
-    sip_caller_extension = models.CharField(max_length=60, blank=True)
-    sip_caller_number = PhoneNumberField(blank=True)
+    sip_caller_extension = models.CharField(max_length=60, blank=True)  # This is indexed manually
+    sip_caller_number = PhoneNumberField(blank=True)  # This is indexed manually
     sip_caller_name = models.CharField(max_length=255, blank=True)
-    sip_callee_extension = models.CharField(max_length=60, blank=True)
-    sip_callee_number = PhoneNumberField(blank=True)
+    sip_callee_extension = models.CharField(max_length=60, blank=True)  # This is indexed manually
+    sip_callee_number = PhoneNumberField(blank=True)  # This is indexed manually
     sip_callee_name = models.CharField(max_length=255, blank=True)
     checked_voicemail = models.BooleanField(null=True)
     went_to_voicemail = models.BooleanField(null=True)

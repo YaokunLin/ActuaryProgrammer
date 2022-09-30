@@ -127,49 +127,50 @@ python-versions = "~=3.7"
 
 [[package]]
 name = "celery"
-version = "5.0.2"
+version = "5.2.2"
 description = "Distributed Task Queue."
 category = "main"
 optional = false
-python-versions = ">=3.6,"
+python-versions = ">=3.7,"
 
 [package.dependencies]
-billiard = ">=3.6.3.0,<4.0"
-click = ">=7.0"
+billiard = ">=3.6.4.0,<4.0"
+click = ">=8.0,<9.0"
 click-didyoumean = ">=0.0.3"
-click-repl = ">=0.1.6"
-kombu = ">=5.0.0,<6.0"
-pytz = ">0.0-dev"
+click-plugins = ">=1.1.1"
+click-repl = ">=0.2.0"
+kombu = ">=5.2.2,<6.0"
+pytz = ">0.dev.0"
 vine = ">=5.0.0,<6.0"
 
 [package.extras]
 arangodb = ["pyArango (>=1.3.2)"]
 auth = ["cryptography"]
-azureblockblob = ["azure-common (==1.1.5)", "azure-storage (==0.36.0)", "azure-storage-common (==1.1.0)"]
+azureblockblob = ["azure-storage-blob (==12.9.0)"]
 brotli = ["brotli (>=1.0.0)", "brotlipy (>=0.7.0)"]
 cassandra = ["cassandra-driver (<3.21.0)"]
-consul = ["python-consul"]
+consul = ["python-consul2"]
 cosmosdbsql = ["pydocumentdb (==2.3.2)"]
 couchbase = ["couchbase (>=3.0.0)"]
 couchdb = ["pycouchdb"]
 django = ["Django (>=1.11)"]
 dynamodb = ["boto3 (>=1.9.178)"]
 elasticsearch = ["elasticsearch"]
-eventlet = ["eventlet (>=0.26.1)"]
-gevent = ["gevent (>=1.0.0)"]
+eventlet = ["eventlet (>=0.32.0)"]
+gevent = ["gevent (>=1.5.0)"]
 librabbitmq = ["librabbitmq (>=1.5.0)"]
-lzma = ["backports.lzma"]
 memcache = ["pylibmc"]
-mongodb = ["pymongo[srv] (>=3.3.0)"]
+mongodb = ["pymongo[srv] (>=3.3.0,<3.12.1)"]
 msgpack = ["msgpack"]
 pymemcache = ["python-memcached"]
 pyro = ["pyro4"]
-redis = ["redis (>=3.2.0)"]
+pytest = ["pytest-celery"]
+redis = ["redis (>=3.4.1,<4.0.0)"]
 s3 = ["boto3 (>=1.9.125)"]
 slmq = ["softlayer-messaging (>=1.0.3)"]
 solar = ["ephem"]
 sqlalchemy = ["sqlalchemy"]
-sqs = ["boto3 (>=1.9.125)", "pycurl (==7.43.0.5)"]
+sqs = ["kombu"]
 tblib = ["tblib (>=1.3.0)", "tblib (>=1.5.0)"]
 yaml = ["PyYAML (>=3.10)"]
 zookeeper = ["kazoo (>=1.3.1)"]
@@ -232,6 +233,20 @@ python-versions = ">=3.6.2,<4.0.0"
 
 [package.dependencies]
 click = ">=7"
+
+[[package]]
+name = "click-plugins"
+version = "1.1.1"
+description = "An extension module for click to enable registering CLI commands via setuptools entry-points."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+click = ">=4.0"
+
+[package.extras]
+dev = ["coveralls", "pytest (>=3.6)", "pytest-cov", "wheel"]
 
 [[package]]
 name = "click-repl"
@@ -397,7 +412,7 @@ python-versions = ">=3.5"
 
 [[package]]
 name = "django-filter"
-version = "2.3.0"
+version = "2.4.0"
 description = "Django-filter is a reusable Django application for allowing users to filter querysets dynamically."
 category = "main"
 optional = false
@@ -1631,7 +1646,7 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.9"
-content-hash = "5e68bc680f2509a406ac26e3d92e586f951d49891d479ff0f11084afdb860e97"
+content-hash = "2a784c4ba9908c08a08128f272b1b57b8458000f70ca7d1b736660faf4205bf5"
 
 [metadata.files]
 amqp = [
@@ -1718,8 +1733,8 @@ cachetools = [
     {file = "cachetools-5.2.0.tar.gz", hash = "sha256:6a94c6402995a99c3970cc7e4884bb60b4a8639938157eeed436098bf9831757"},
 ]
 celery = [
-    {file = "celery-5.0.2-py3-none-any.whl", hash = "sha256:930c3acd55349d028c4e7104a7d377729cbcca19d9fce470c17172d9e7f9a8b6"},
-    {file = "celery-5.0.2.tar.gz", hash = "sha256:012c814967fe89e3f5d2cf49df2dba3de5f29253a7f4f2270e8fce6b901b4ebf"},
+    {file = "celery-5.2.2-py3-none-any.whl", hash = "sha256:5a68a351076cfac4f678fa5ffd898105c28825a2224902da006970005196d061"},
+    {file = "celery-5.2.2.tar.gz", hash = "sha256:2844eb040e915398623a43253a8e1016723442ece6b0751a3c416d8a2b34216f"},
 ]
 certifi = [
     {file = "certifi-2022.6.15-py3-none-any.whl", hash = "sha256:fe86415d55e84719d75f8b69414f6438ac3547d2078ab91b67e779ef69378412"},
@@ -1807,6 +1822,10 @@ click-didyoumean = [
     {file = "click-didyoumean-0.3.0.tar.gz", hash = "sha256:f184f0d851d96b6d29297354ed981b7dd71df7ff500d82fa6d11f0856bee8035"},
     {file = "click_didyoumean-0.3.0-py3-none-any.whl", hash = "sha256:a0713dc7a1de3f06bc0df5a9567ad19ead2d3d5689b434768a6145bff77c0667"},
 ]
+click-plugins = [
+    {file = "click-plugins-1.1.1.tar.gz", hash = "sha256:46ab999744a9d831159c3411bb0c79346d94a444df9a3a3742e9ed63645f264b"},
+    {file = "click_plugins-1.1.1-py2.py3-none-any.whl", hash = "sha256:5d262006d3222f5057fd81e1623d4443e41dcda5dc815c06b442aa3c02889fc8"},
+]
 click-repl = [
     {file = "click-repl-0.2.0.tar.gz", hash = "sha256:cd12f68d745bf6151210790540b4cb064c7b13e571bc64b6957d98d120dacfd8"},
     {file = "click_repl-0.2.0-py3-none-any.whl", hash = "sha256:94b3fbbc9406a236f176e0506524b2937e4b23b6f4c0c0b2a0a83f8a64e9194b"},
@@ -1880,8 +1899,8 @@ django-extensions = [
     {file = "django_extensions-3.0.5-py2.py3-none-any.whl", hash = "sha256:40d4b7aec7bbe66dda8704fbfaf2e1b7e04ec4aea6b10dcbd78d8af7c37bfddb"},
 ]
 django-filter = [
-    {file = "django-filter-2.3.0.tar.gz", hash = "sha256:11e63dd759835d9ba7a763926ffb2662cf8a6dcb4c7971a95064de34dbc7e5af"},
-    {file = "django_filter-2.3.0-py3-none-any.whl", hash = "sha256:616848eab6fc50193a1b3730140c49b60c57a3eda1f7fc57fa8505ac156c6c75"},
+    {file = "django-filter-2.4.0.tar.gz", hash = "sha256:84e9d5bb93f237e451db814ed422a3a625751cbc9968b484ecc74964a8696b06"},
+    {file = "django_filter-2.4.0-py3-none-any.whl", hash = "sha256:e00d32cebdb3d54273c48f4f878f898dced8d5dfaad009438fe61ebdf535ace1"},
 ]
 django-fixture-magic = [
     {file = "django-fixture-magic-0.1.5.tar.gz", hash = "sha256:d82a4d4f6ade078e942927b5157f0536d0cd0232adfeb943dced0858128dd734"},
