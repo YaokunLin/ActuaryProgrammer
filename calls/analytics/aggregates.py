@@ -1,7 +1,7 @@
 import datetime
 import logging
 from datetime import timedelta
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 import pandas as pd
 from django.db.models import (
@@ -108,7 +108,7 @@ def calculate_call_count_opportunities(calls_qs: QuerySet, start_date_str: str, 
             total_for_date = total_per_date_mapping[date]
             rate = 0
             if total_for_date:
-                rate = total_per_date_mapping[date] and record["value"] / total_per_date_mapping[date] or 0
+                rate = safe_divide(record["value"], total_per_date_mapping[date])
             conversion_rates.append({"date": date, "value": rate})
         return conversion_rates
 
@@ -150,9 +150,9 @@ def calculate_call_count_opportunities(calls_qs: QuerySet, start_date_str: str, 
         "new": convert_call_counts_to_by_month(won_by_day_new_patient),
     }
     opportunities["conversion_rate"] = {
-        "total": opportunities["total"] and opportunities["won"]["total"] / opportunities["total"] or 0,
-        "existing": opportunities["existing"] and opportunities["won"]["existing"] / opportunities["existing"] or 0,
-        "new": opportunities["new"] and opportunities["won"]["new"] / opportunities["new"] or 0,
+        "total": safe_divide(opportunities["won"]["total"], opportunities["total"]),
+        "existing": safe_divide(opportunities["won"]["existing"], opportunities["existing"]),
+        "new": safe_divide(opportunities["won"]["new"], opportunities["new"]),
     }
     opportunities["conversion_rate_by_week"] = {
         "total": get_conversion_rates_breakdown(opportunities["total_by_week"]["total"], opportunities["won_by_week"]["total"]),
@@ -536,14 +536,14 @@ def calculate_call_breakdown_per_practice(calls_qs: QuerySet, organization_id: s
     per_practice_averages = {}
     call_sentiment_counts = {}
     num_practices = Practice.objects.filter(organization_id=organization_id).count()
-    per_practice_averages["call_count"] = num_practices and overall_call_counts_data["call_total"] / num_practices or 0
-    per_practice_averages["call_connected_count"] = num_practices and overall_call_counts_data["call_connected_total"] / num_practices or 0
-    per_practice_averages["call_seconds_total"] = num_practices and overall_call_counts_data["call_seconds_total"] / num_practices or 0
-    per_practice_averages["call_seconds_average"] = num_practices and overall_call_counts_data["call_seconds_average"] / num_practices or 0
+    per_practice_averages["call_count"] = safe_divide(overall_call_counts_data["call_total"], num_practices)
+    per_practice_averages["call_connected_count"] = safe_divide(overall_call_counts_data["call_connected_total"], num_practices)
+    per_practice_averages["call_seconds_total"] = safe_divide(overall_call_counts_data["call_seconds_total"], num_practices)
+    per_practice_averages["call_seconds_average"] = safe_divide(overall_call_counts_data["call_seconds_average"], num_practices)
 
     sentiments_types = ("not_applicable", "positive", "neutral", "negative")
     for sentiment_type in sentiments_types:
-        call_sentiment_counts[sentiment_type] = num_practices and overall_call_counts_data["call_sentiment_counts"].get(sentiment_type, 0) / num_practices or 0
+        call_sentiment_counts[sentiment_type] = safe_divide(overall_call_counts_data["call_sentiment_counts"].get(sentiment_type, 0), num_practices)
 
     per_practice_averages["call_sentiment_counts"] = call_sentiment_counts
     per_practice["averages"] = per_practice_averages
@@ -650,9 +650,9 @@ def get_call_counts_and_durations_by_weekday_and_hour(calls_qs: QuerySet) -> Dic
             # Per hour, calculate efficiency, average call duration and average hold duration
             call_count = data_for_hour[call_count_label]
             total_seconds = data_for_hour[total_call_duration_label].total_seconds()
-            data_for_hour[efficiency_label] = total_seconds and data_for_hour[call_count_label] / total_seconds or 0
-            data_for_hour[average_call_duration_label] = call_count and data_for_hour[total_call_duration_label].total_seconds() / call_count or 0
-            data_for_hour[average_hold_duration_label] = call_count and data_for_hour[total_hold_duration_label].total_seconds() / call_count or 0
+            data_for_hour[efficiency_label] = safe_divide(data_for_hour[call_count_label], total_seconds)
+            data_for_hour[average_call_duration_label] = safe_divide(data_for_hour[total_call_duration_label].total_seconds(), call_count)
+            data_for_hour[average_hold_duration_label] = safe_divide(data_for_hour[total_hold_duration_label].total_seconds(), call_count)
 
     return data_by_weekday_and_hour
 
@@ -677,7 +677,7 @@ def convert_to_call_counts_and_durations_by_weekday(call_counts_and_durations_by
 
     for d in data_by_weekday.values():
         call_count = d[call_count_label]
-        d[average_call_duration_label] = call_count and d[total_call_duration_label] / call_count or 0
+        d[average_call_duration_label] = safe_divide(d[total_call_duration_label], call_count)
 
     return data_by_weekday
 
@@ -702,7 +702,7 @@ def convert_to_call_counts_and_durations_by_hour(call_counts_and_durations_by_we
 
     for d in data_by_hour.values():
         call_count = d[call_count_label]
-        d[average_call_duration_label] = call_count and d[total_call_duration_label] / call_count or 0
+        d[average_call_duration_label] = safe_divide(d[total_call_duration_label], call_count)
 
     return data_by_hour
 
@@ -767,3 +767,20 @@ def convert_call_counts_to_by_month(data_by_day: List[Dict]) -> List[Dict]:
     for i in monthly_data:
         i["date"] = i["date"].strftime(date_format)
     return monthly_data
+
+
+def safe_divide(dividend: int, divisor: int, default: int = 0, should_round: bool = True, round_places: Optional[int] = 2) -> Union[int, float]:
+    """
+    Divides, falling back to the provided default if the divisor is falsy.
+    Also rounds by default to 2 places if the result is a float.
+    """
+    result = divisor and dividend / divisor or default
+    if should_round:
+        result = round_if_float(result, round_places)
+    return result
+
+
+def round_if_float(number: Union[int, float], round_places: Optional[int] = 2) -> Union[int, float]:
+    if isinstance(number, float):
+        return round(number, round_places)
+    return number
