@@ -91,6 +91,9 @@ class CallCountsView(views.APIView):
         if valid_call_direction:
             call_direction_filter = {"call_direction": valid_call_direction}
 
+        practice = Practice.objects.get(id=valid_practice_id)
+        practice_filter = Q(practice__id=valid_practice_id)
+
         analytics = self.get_call_counts(dates_filter, practice_filter, organization_filter, call_direction_filter)
 
         return Response({"results": analytics})
