@@ -406,7 +406,7 @@ class NewPatientWinbacksView(views.APIView):
 
         calls_qs = Call.objects.filter(dates_filter & practice_filter & organization_filter)
 
-        winback_patient_phone_numbers = self.get_winback_opportunity_phone_numbers(calls_qs)
+        winback_patient_phone_numbers = self._get_winback_opportunity_phone_numbers(calls_qs)
         callee_number_filter = Q(sip_callee_number__in=winback_patient_phone_numbers)
 
         winback_opportunities_total_qs = self._filter_one_call_per_number(calls_qs.filter(INBOUND_WINBACK_OPPORTUNITY_FILTER))
@@ -473,7 +473,7 @@ class NewPatientWinbacksView(views.APIView):
         return calls_qs.filter(~Q(Exists(same_phone_number_later_time_qs)))
 
     @staticmethod
-    def get_winback_opportunity_phone_numbers(calls_qs: QuerySet):
+    def _get_winback_opportunity_phone_numbers(calls_qs: QuerySet):
         return calls_qs.filter(INBOUND_WINBACK_OPPORTUNITY_FILTER).values_list("sip_caller_number", flat=True).distinct()
 
     @staticmethod
@@ -489,11 +489,10 @@ class NewPatientWinbacksView(views.APIView):
             all_dates = sorted(list(set(wins_by_date.keys()).union(lost_by_date)))
             return [{"date": d, "value": wins_by_date.get(d, 0) + lost_by_date.get(d, 0)} for d in all_dates]
 
-        sip_callee_number_field_name = "sip_callee_number"
-        winbacks_total_per_day = calculate_zero_filled_call_counts_by_day(winbacks_total_qs, start_date, end_date, sip_callee_number_field_name)
-        winbacks_won_per_day = calculate_zero_filled_call_counts_by_day(winbacks_won_qs, start_date, end_date, sip_callee_number_field_name)
+        winbacks_total_per_day = calculate_zero_filled_call_counts_by_day(winbacks_total_qs, start_date, end_date)
+        winbacks_won_per_day = calculate_zero_filled_call_counts_by_day(winbacks_won_qs, start_date, end_date)
         winbacks_revenue_per_day = [{"date": d["date"], "value": d["value"] * REVENUE_PER_WINBACK_USD} for d in winbacks_won_per_day]
-        winbacks_lost_per_day = calculate_zero_filled_call_counts_by_day(winbacks_lost_qs, start_date, end_date, sip_callee_number_field_name)
+        winbacks_lost_per_day = calculate_zero_filled_call_counts_by_day(winbacks_lost_qs, start_date, end_date)
         winbacks_attempted_per_day = get_winbacks_attempted_breakdown(winbacks_won_per_day, winbacks_lost_per_day)
         per_day["total"] = winbacks_total_per_day
         per_day["won"] = winbacks_won_per_day
