@@ -74,44 +74,43 @@ class CallCountsView(views.APIView):
         if errors:
             return Response(status=status.HTTP_400_BAD_REQUEST, data=errors)
 
-        practice_filter = {}
+        practice_filter = Q()
         if valid_practice_id:
-            practice_filter = {"practice__id": valid_practice_id}
+            practice_filter = Q(practice__id=valid_practice_id)
 
-        organization_filter = {}
+        organization_filter = Q()
         if valid_organization_id:
-            organization_filter = {"practice__organization_id": valid_organization_id}
+            organization_filter = Q(practice__organization__id=valid_organization_id)
 
-        # date filters
         dates = dates_info.get("dates")
-        call_start_time__gte = dates[0]
-        call_start_time__lte = dates[1]
-        dates_filter = {"call_start_time__gte": call_start_time__gte, "call_start_time__lte": call_start_time__lte}
+        start_date_str = dates[0]
+        end_date_str = dates[1]
+        dates_filter = Q(call_start_time__gte=start_date_str, call_start_time__lte=end_date_str)
 
         # TODO: include filters to REST API for other call directions (Inbound)
         call_direction_filter = {}
         if valid_call_direction:
-            call_direction_filter = {"call_direction": valid_call_direction}
+            call_direction_filter = Q(call_direction=valid_call_direction)
 
-        practice = Practice.objects.get(id=valid_practice_id)
-        practice_filter = Q(practice__id=valid_practice_id)
+        # practice = Practice.objects.get(id=valid_practice_id)
+        # practice_filter = Q(practice__id=valid_practice_id)
 
-        analytics = self.get_call_counts(dates_filter, practice_filter, organization_filter, call_direction_filter)
+        analytics = self.get_call_counts(dates_filter, practice_filter, organization_filter, call_direction_filter, start_date_str, end_date_str)
 
         return Response({"results": analytics})
 
     @staticmethod
     def get_call_counts(
-        dates_filter: Optional[Dict[str, str]],
-        practice_filter: Optional[Dict[str, str]],
-        organization_filter: Optional[Dict[str, str]],
-        call_direction_filter: Optional[Dict[str, str]],
+        dates_filter: Q,
+        practice_filter: Q,
+        organization_filter: Q,
+        call_direction_filter: Q,
+        start_date_str: str,
+        end_date_str: str,
     ) -> Dict[str, Any]:
-        start_date_str = dates_filter["call_start_time__gte"]
-        end_date_str = dates_filter["call_start_time__lte"]
 
         # set re-usable filters
-        filters = Q(**call_direction_filter) & Q(**dates_filter) & Q(**practice_filter) & Q(**organization_filter)
+        filters = dates_filter & practice_filter & organization_filter & call_direction_filter
 
         # set re-usable filtered queryset
         calls_qs = Call.objects.filter(filters)
