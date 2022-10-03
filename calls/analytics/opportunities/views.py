@@ -429,7 +429,8 @@ class NewPatientWinbacksView(views.APIView):
         aggregates["winback_opportunities_revenue_dollars"] = aggregates["winback_opportunities_won"] * REVENUE_PER_WINBACK_USD
         aggregates["winback_opportunities_lost"] = winback_opportunities_lost_qs.count()
 
-        # Think of this more in terms of getting a breakdown of opportunities attempted vs open vs a count of attempts (not distinct to callee_number)
+        # Think of this more in terms of getting a breakdown of opportunities attempted vs open instead of
+        #     thinking of this as a count of attempts (not distinct to callee_number)
         aggregates["winback_opportunities_attempted"] = aggregates.get("winback_opportunities_won", 0) + aggregates.get("winback_opportunities_lost", 0)
         aggregates["winback_opportunities_open"] = aggregates.get("winback_opportunities_total", 0) - aggregates.get("winback_opportunities_attempted", 0)
         aggregates["winback_opportunities_time_series"] = self._calculate_winback_time_series(
