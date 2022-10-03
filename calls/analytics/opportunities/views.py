@@ -299,7 +299,9 @@ class NewPatientOpportunitiesView(views.APIView):
         aggregates = {}
         new_patient_opportunities_qs = Call.objects.filter(base_filters)
         aggregates["new_patient_opportunities_total"] = new_patient_opportunities_qs.count()
-        aggregates["new_patient_opportunities_time_series"] = _calculate_new_patient_opportunities_time_series(new_patient_opportunities_qs, dates[0], dates[1])
+        aggregates["new_patient_opportunities_time_series"] = self._calculate_new_patient_opportunities_time_series(
+            new_patient_opportunities_qs, dates[0], dates[1]
+        )
 
         new_patient_opportunities_won_qs = Call.objects.filter(base_filters & SUCCESS_FILTER)
         aggregates["new_patient_opportunities_won_total"] = new_patient_opportunities_won_qs.count()
@@ -327,6 +329,43 @@ class NewPatientOpportunitiesView(views.APIView):
         }
 
         return Response({"filters": display_filters, "results": aggregates})
+
+    @staticmethod
+    def _calculate_new_patient_opportunities_time_series(opportunities_qs: QuerySet, start_date: str, end_date: str) -> Dict:
+        per_day = {}
+        per_week = {}
+
+        won_qs = opportunities_qs.filter(SUCCESS_FILTER)
+        lost_qs = opportunities_qs.filter(FAILURE_FILTER)
+
+        def get_conversion_rates_breakdown(total: List[Dict], won: List[Dict]) -> List[Dict]:
+            conversion_rates = []
+            total_per_date_mapping = {i["date"]: i["value"] for i in total}
+            for record in won:
+                date = record["date"]
+                total_for_date = total_per_date_mapping[date]
+                rate = safe_divide(record["value"], total_for_date)
+                conversion_rates.append({"date": date, "value": rate})
+            return conversion_rates
+
+        total_per_day = calculate_zero_filled_call_counts_by_day(opportunities_qs, start_date, end_date)
+        won_per_day = calculate_zero_filled_call_counts_by_day(won_qs, start_date, end_date)
+        lost_per_day = calculate_zero_filled_call_counts_by_day(lost_qs, start_date, end_date)
+        conversion_rate_per_day = get_conversion_rates_breakdown(total_per_day, won_per_day)
+        per_day["total"] = total_per_day
+        per_day["won"] = won_per_day
+        per_day["lost"] = lost_per_day
+        per_day["conversion_rate"] = conversion_rate_per_day
+
+        per_week["total"] = convert_call_counts_to_by_week(total_per_day)
+        per_week["won"] = convert_call_counts_to_by_week(won_per_day)
+        per_week["lost"] = convert_call_counts_to_by_week(lost_per_day)
+        per_week["conversion_rate"] = convert_call_counts_to_by_week(conversion_rate_per_day)
+
+        return {
+            "per_day": per_day,
+            "per_week": per_week,
+        }
 
 
 class NewPatientWinbacksView(views.APIView):
@@ -471,40 +510,3 @@ class NewPatientWinbacksView(views.APIView):
             "per_day": per_day,
             "per_week": per_week,
         }
-
-
-def _calculate_new_patient_opportunities_time_series(opportunities_qs: QuerySet, start_date: str, end_date: str) -> Dict:
-    per_day = {}
-    per_week = {}
-
-    won_qs = opportunities_qs.filter(SUCCESS_FILTER)
-    lost_qs = opportunities_qs.filter(FAILURE_FILTER)
-
-    def get_conversion_rates_breakdown(total: List[Dict], won: List[Dict]) -> List[Dict]:
-        conversion_rates = []
-        total_per_date_mapping = {i["date"]: i["value"] for i in total}
-        for record in won:
-            date = record["date"]
-            total_for_date = total_per_date_mapping[date]
-            rate = safe_divide(record["value"], total_for_date)
-            conversion_rates.append({"date": date, "value": rate})
-        return conversion_rates
-
-    total_per_day = calculate_zero_filled_call_counts_by_day(opportunities_qs, start_date, end_date)
-    won_per_day = calculate_zero_filled_call_counts_by_day(won_qs, start_date, end_date)
-    lost_per_day = calculate_zero_filled_call_counts_by_day(lost_qs, start_date, end_date)
-    conversion_rate_per_day = get_conversion_rates_breakdown(total_per_day, won_per_day)
-    per_day["total"] = total_per_day
-    per_day["won"] = won_per_day
-    per_day["lost"] = lost_per_day
-    per_day["conversion_rate"] = conversion_rate_per_day
-
-    per_week["total"] = convert_call_counts_to_by_week(total_per_day)
-    per_week["won"] = convert_call_counts_to_by_week(won_per_day)
-    per_week["lost"] = convert_call_counts_to_by_week(lost_per_day)
-    per_week["conversion_rate"] = convert_call_counts_to_by_week(conversion_rate_per_day)
-
-    return {
-        "per_day": per_day,
-        "per_week": per_week,
-    }
