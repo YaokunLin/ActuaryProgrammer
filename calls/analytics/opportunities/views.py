@@ -1,6 +1,4 @@
-import collections.abc
 import logging
-import numbers
 from copy import deepcopy
 from functools import partial
 from typing import Any, Dict, List, Optional
@@ -18,6 +16,8 @@ from calls.analytics.aggregates import (
     calculate_call_counts_and_opportunities_per_user,
     calculate_zero_filled_call_counts_by_day,
     convert_call_counts_to_by_week,
+    divide_if_possible,
+    map_nested_objs,
     round_if_float,
     safe_divide,
 )
@@ -123,22 +123,6 @@ class CallCountsView(views.APIView):
         #         calls_qs, organization_filter.get("practice__organization_id"), analytics["calls_overall"]
         #     )
         return analytics
-
-
-def map_nested_objs(ob, func):
-    if isinstance(ob, collections.abc.Mapping):
-        return {k: map_nested_objs(v, func) for k, v in ob.items()}
-    if isinstance(ob, list):
-        return [map_nested_objs(i, func) for i in ob]
-
-    return func(ob)
-
-
-def divide_if_possible(number_to_divide_by, var):
-    try:
-        return safe_divide(var, number_to_divide_by)
-    except Exception:
-        return var
 
 
 class OpportunitiesView(views.APIView):

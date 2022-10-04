@@ -1,5 +1,7 @@
+import collections.abc
 import datetime
 import logging
+import numbers
 from datetime import timedelta
 from typing import Dict, List, Optional, Union
 
@@ -786,3 +788,19 @@ def round_if_float(number: Union[int, float], round_places: Optional[int] = 2) -
     if isinstance(number, float):
         return round(number, round_places)
     return number
+
+
+def map_nested_objs(ob, func):
+    if isinstance(ob, collections.abc.Mapping):
+        return {k: map_nested_objs(v, func) for k, v in ob.items()}
+    if isinstance(ob, list):
+        return [map_nested_objs(i, func) for i in ob]
+
+    return func(ob)
+
+
+def divide_if_possible(number_to_divide_by, var):
+    try:
+        return safe_divide(var, number_to_divide_by)
+    except Exception:
+        return var
