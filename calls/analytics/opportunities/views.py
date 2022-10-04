@@ -158,9 +158,9 @@ class OpportunitiesView(views.APIView):
             org_opportunities_qs = Call.objects.filter(
                 Q(practice__organization_id=practice.organization_id) & dates_filter & INBOUND_FILTER & OPPORTUNITIES_FILTER
             )
-            results["organization"] = self._calculate_opportunities_analytics(org_opportunities_qs, num_practices)
+            results["organization_averages"] = self._calculate_opportunities_analytics(org_opportunities_qs, num_practices)
         else:
-            results["organization"] = deepcopy(results)
+            results["organization_averages"] = deepcopy(results)
 
         return Response(results)
 
