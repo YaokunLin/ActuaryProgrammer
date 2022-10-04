@@ -16,7 +16,7 @@ from calls.analytics.aggregates import (
     calculate_call_counts_and_opportunities_per_user,
     calculate_zero_filled_call_counts_by_day,
     convert_call_counts_to_by_week,
-    divide_if_possible,
+    divide_safely_if_possible,
     map_nested_objs,
     round_if_float,
     safe_divide,
@@ -95,7 +95,7 @@ class CallCountsView(views.APIView):
             num_practices = Practice.objects.filter(organization_id=practice.organization_id).count()
             organization_filter = Q(practice__organization_id=organization_id)
             results["organization_averages"] = self.get_call_counts(base_filters & organization_filter, start_date_str, end_date_str)
-            results["organization_averages"] = map_nested_objs(obj=results["organization_averages"], func=partial(divide_if_possible, num_practices))
+            results["organization_averages"] = map_nested_objs(obj=results["organization_averages"], func=partial(divide_safely_if_possible, num_practices))
         else:
             results["organization_averages"] = deepcopy(results)
 

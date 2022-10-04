@@ -791,6 +791,7 @@ def round_if_float(number: Union[int, float], round_places: Optional[int] = 2) -
 
 
 def map_nested_objs(obj, func):
+    """ """
     if isinstance(obj, collections.abc.Mapping):
         return {k: map_nested_objs(v, func) for k, v in obj.items()}
     if isinstance(obj, list):
@@ -799,7 +800,12 @@ def map_nested_objs(obj, func):
     return func(obj)
 
 
-def divide_if_possible(number_to_divide_by, obj):
+def divide_safely_if_possible(number_to_divide_by, obj):
+    """
+    Attempt to divide the object by the divisor. If its possible the division occurs, otherwise return the number.
+    This division is safe and avoid division by zero.
+    This operates on anything that responds to division and not just integers and floats.
+    """
     try:
         return safe_divide(obj, number_to_divide_by)
     except Exception:
