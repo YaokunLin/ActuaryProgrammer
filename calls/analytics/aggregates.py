@@ -791,7 +791,10 @@ def round_if_float(number: Union[int, float], round_places: Optional[int] = 2) -
 
 
 def map_nested_objs(obj, func):
-    """ """
+    """
+    Maps the provides function against all values in the nested object (dictionary and lists). It will recursively follow all sub-dicitionaries and lists to an
+    arbitrary depth.
+    """
     if isinstance(obj, collections.abc.Mapping):
         return {k: map_nested_objs(v, func) for k, v in obj.items()}
     if isinstance(obj, list):
