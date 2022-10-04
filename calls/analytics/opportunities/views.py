@@ -79,7 +79,7 @@ class CallCountsView(views.APIView):
         end_date_str = dates[1]
         dates_filter = Q(call_start_time__gte=start_date_str, call_start_time__lte=end_date_str)
 
-        call_direction_filter = {}
+        call_direction_filter = Q()
         if valid_call_direction:
             call_direction_filter = Q(call_direction=valid_call_direction)
 
