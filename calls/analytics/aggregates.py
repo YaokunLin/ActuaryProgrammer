@@ -790,17 +790,17 @@ def round_if_float(number: Union[int, float], round_places: Optional[int] = 2) -
     return number
 
 
-def map_nested_objs(ob, func):
-    if isinstance(ob, collections.abc.Mapping):
-        return {k: map_nested_objs(v, func) for k, v in ob.items()}
-    if isinstance(ob, list):
-        return [map_nested_objs(i, func) for i in ob]
+def map_nested_objs(obj, func):
+    if isinstance(obj, collections.abc.Mapping):
+        return {k: map_nested_objs(v, func) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [map_nested_objs(i, func) for i in obj]
 
-    return func(ob)
+    return func(obj)
 
 
-def divide_if_possible(number_to_divide_by, var):
+def divide_if_possible(number_to_divide_by, obj):
     try:
-        return safe_divide(var, number_to_divide_by)
+        return safe_divide(obj, number_to_divide_by)
     except Exception:
-        return var
+        return obj
