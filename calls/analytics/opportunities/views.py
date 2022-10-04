@@ -405,13 +405,13 @@ class NewPatientWinbacksView(views.APIView):
 
         winback_opportunities_total_qs = self._filter_one_call_per_number(calls_qs.filter(INBOUND_WINBACK_OPPORTUNITY_FILTER))
         winback_opportunities_won_qs = self._filter_one_call_per_number(
-            calls_qs.filter(OUTBOUND_FILTER & SUCCESS_FILTER & callee_number_filter),
+            calls_qs.filter(OUTBOUND_FILTER & callee_number_filter & SUCCESS_FILTER),
             calls_qs.filter(OUTBOUND_FILTER & callee_number_filter),
             phone_number_field_name="sip_callee_number",
             earliest_or_latest="latest",
         )
         winback_opportunities_lost_qs = self._filter_one_call_per_number(
-            calls_qs.filter(OUTBOUND_FILTER & FAILURE_FILTER & callee_number_filter),
+            calls_qs.filter(OUTBOUND_FILTER & callee_number_filter & FAILURE_FILTER),
             calls_qs.filter(OUTBOUND_FILTER & callee_number_filter),
             phone_number_field_name="sip_callee_number",
             earliest_or_latest="latest",
