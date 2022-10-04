@@ -245,7 +245,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.postgres",
     "django.contrib.staticfiles",
-    "django_celery_beat",
+    # "django_celery_beat",  # TODO: PTECH-1295
     "django_extensions",
     "django_filters",
     "phonenumber_field",
