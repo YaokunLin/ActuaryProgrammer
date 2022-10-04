@@ -3,7 +3,7 @@ from copy import deepcopy
 from functools import partial
 from typing import Any, Dict, List, Optional
 
-from django.db.models import Count, Exists, OuterRef, Q, QuerySet, Subquery
+from django.db.models import Count, Exists, OuterRef, Q, QuerySet
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_control, cache_page
 from django.views.decorators.vary import vary_on_headers
@@ -29,7 +29,6 @@ from calls.analytics.query_filters import (
     FAILURE_FILTER,
     INBOUND_FILTER,
     INBOUND_WINBACK_OPPORTUNITY_FILTER,
-    NEW_PATIENT_FILTER,
     NEW_PATIENT_OPPORTUNITIES_FILTER,
     OPPORTUNITIES_FILTER,
     OUTBOUND_FILTER,
