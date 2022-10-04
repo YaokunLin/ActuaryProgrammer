@@ -1,5 +1,8 @@
+import collections.abc
 import logging
+import numbers
 from copy import deepcopy
+from functools import partial
 from typing import Any, Dict, List, Optional
 
 from django.db.models import Count, Exists, OuterRef, Q, QuerySet, Subquery
@@ -55,62 +58,52 @@ class CallCountsView(views.APIView):
     @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
     @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
-        valid_practice_id, practice_errors = get_validated_practice_id(request=request)
-        valid_organization_id, organization_errors = get_validated_organization_id(request=request)
-        valid_call_direction, call_direction_errors = get_validated_call_direction(request=request)
         dates_info = get_validated_call_dates(query_data=request.query_params)
         dates_errors = dates_info.get("errors")
+
+        valid_call_direction, call_direction_errors = get_validated_call_direction(request=request)
+
+        valid_practice_id, practice_errors = get_validated_practice_id(request=request)
 
         errors = {}
         if practice_errors:
             errors.update(practice_errors)
-        if organization_errors:
-            errors.update(organization_errors)
-        if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id):
-            error_message = "practice__id or organization__id must be provided, but not both."
-            errors.update({"practice__id": error_message, "organization__id": error_message})
+        if not practice_errors and not valid_practice_id:
+            errors.update({"practice__id": "practice__id must be provided"})
         if dates_errors:
             errors.update(dates_errors)
         if errors:
             return Response(status=status.HTTP_400_BAD_REQUEST, data=errors)
-
-        practice_filter = Q()
-        if valid_practice_id:
-            practice_filter = Q(practice__id=valid_practice_id)
-
-        organization_filter = Q()
-        if valid_organization_id:
-            organization_filter = Q(practice__organization__id=valid_organization_id)
 
         dates = dates_info.get("dates")
         start_date_str = dates[0]
         end_date_str = dates[1]
         dates_filter = Q(call_start_time__gte=start_date_str, call_start_time__lte=end_date_str)
 
-        # TODO: include filters to REST API for other call directions (Inbound)
         call_direction_filter = {}
         if valid_call_direction:
             call_direction_filter = Q(call_direction=valid_call_direction)
 
-        # practice = Practice.objects.get(id=valid_practice_id)
-        # practice_filter = Q(practice__id=valid_practice_id)
+        practice = Practice.objects.get(id=valid_practice_id)
+        practice_filter = Q(practice__id=valid_practice_id)
 
-        analytics = self.get_call_counts(dates_filter, practice_filter, organization_filter, call_direction_filter, start_date_str, end_date_str)
+        base_filters = dates_filter & call_direction_filter
+        practice_analytics = self.get_call_counts(base_filters & practice_filter, start_date_str, end_date_str)
+        results = practice_analytics
 
-        return Response({"results": analytics})
+        organization_id = practice.organization_id
+        if organization_id:
+            num_practices = Practice.objects.filter(organization_id=practice.organization_id).count()
+            organization_filter = Q(practice__organization_id=organization_id)
+            results["organization"] = self.get_call_counts(base_filters & organization_filter, start_date_str, end_date_str)
+            results["organization"] = map_nested_objs(ob=results["organization"], func=partial(divide_if_possible, num_practices))
+        else:
+            results["organization"] = deepcopy(results)
+
+        return Response({"results": results})
 
     @staticmethod
-    def get_call_counts(
-        dates_filter: Q,
-        practice_filter: Q,
-        organization_filter: Q,
-        call_direction_filter: Q,
-        start_date_str: str,
-        end_date_str: str,
-    ) -> Dict[str, Any]:
-
-        # set re-usable filters
-        filters = dates_filter & practice_filter & organization_filter & call_direction_filter
+    def get_call_counts(filters: Q, start_date_str: str, end_date_str: str) -> Dict[str, Any]:
 
         # set re-usable filtered queryset
         calls_qs = Call.objects.filter(filters)
@@ -130,6 +123,22 @@ class CallCountsView(views.APIView):
         #         calls_qs, organization_filter.get("practice__organization_id"), analytics["calls_overall"]
         #     )
         return analytics
+
+
+def map_nested_objs(ob, func):
+    if isinstance(ob, collections.abc.Mapping):
+        return {k: map_nested_objs(v, func) for k, v in ob.items()}
+    if isinstance(ob, list):
+        return [map_nested_objs(i, func) for i in ob]
+
+    return func(ob)
+
+
+def divide_if_possible(number_to_divide_by, var):
+    try:
+        return safe_divide(var, number_to_divide_by)
+    except Exception:
+        return var
 
 
 class OpportunitiesView(views.APIView):
