@@ -22,12 +22,15 @@ from calls.models import Call, CallPartial, CallAudioPartial
 from core.field_choices import VoipProviderIntegrationTypes
 from core.validation import get_validated_practice_telecom
 from jive_integration.jive_client.client import JiveClient, Line
+from jive_integration.publishers import publish_leg_b_ready_event
 from jive_integration.serializers import JiveSubscriptionEventExtractSerializer
 from jive_integration.models import JiveConnection, JiveLine, JiveChannel, JiveSession
 from jive_integration.utils import get_call_id_from_previous_announce_event
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
+
+US_TELEPHONE_NUMBER_DIGIT_LENGTH = 10
 
 
 def generate_redirect_uri(request):
@@ -48,7 +51,7 @@ def generate_jive_callback_url(
 def webhook(request):
     # https://api.jive.com/call-reports/v1/recordings/4428338e-826b-40af-b4a0-d01a2010f525?organizationId=af93983c-ec29-4aca-8516-b8ab36b587d1
 
-    # todo validate  print(line.session.channel.signature)
+    # TODO: validate using print(line.session.channel.signature)
     #
     log.info(f"Jive webhook: Headers: '{request.headers}' POST body '{request.body}'")
 
@@ -68,7 +71,7 @@ def webhook(request):
     subscription_event_data = subscription_event_serializer.validated_data
 
     if not subscription_event_serializer_is_valid:
-        log.exception(f"Error from subscription_event_serializer validation from entity_id {entity_id}: {subscription_event_serializer.errors}")
+        log.exception(f"Jive: Error from subscription_event_serializer validation from entity_id {entity_id}: {subscription_event_serializer.errors}")
         return Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": subscription_event_serializer.errors})
 
     direction: CallDirectionTypes
@@ -77,34 +80,24 @@ def webhook(request):
     else:
         direction = CallDirectionTypes.OUTBOUND
 
-    # TODO:
-
-    # 3. Update or create CDR / Call log if needed
-    # 5. Update Peerlogic call on withdraw
-    # 6. Create Call Partial
-    # 7. Create Call Audio Partial
-
-    # THEN:
-    # Re-do all of this with the Pub/sub and Cloud Function architecture
-    # instead of abusing this webhook and losing everything if something fails or we can't scale this endpoint with the traffic.
-
-    log.info(f"Getting JiveLine with subId='{content['subId']}' and originatorOrganizationId='{content['data']['originatorOrganizationId']}'")
+    log.info(f"Jive: Getting JiveLine with subId='{content['subId']}' and originatorOrganizationId='{content['data']['originatorOrganizationId']}'")
     line: JiveLine = JiveLine.objects.get(source_jive_id=content["subId"], source_organization_jive_id=content["data"]["originatorOrganizationId"])
-    log.info(f"Got JiveLine with subId='{content['subId']}' and originatorOrganizationId='{content['data']['originatorOrganizationId']}'")
+    log.info(f"Jive: Got JiveLine with subId='{content['subId']}' and originatorOrganizationId='{content['data']['originatorOrganizationId']}'")
 
     voip_provider_id = line.session.channel.connection.practice_telecom.voip_provider_id
 
+    # TODO: content["type"] should be a field choice type - will check these when we have documentation for understanding the options
     if content["type"] == "announce":
-        log.info("Received jive announce event.")
+        log.info("Jive: Received jive announce event.")
         start_time: datetime = dateutil.parser.isoparser().isoparse(req["timestamp"])
-        log.info(f"Creating Peerlogic Call object with start_time='{start_time}'.")
+        log.info(f"Jive: Creating Peerlogic Call object with start_time='{start_time}'.")
         callee_number = content["data"]["callee"]["number"]
         caller_number = content["data"]["caller"]["number"]
         callee_key = "sip_callee_number"
         caller_key = "sip_caller_number"
-        if len(callee_number) != 10:
+        if len(callee_number) != US_TELEPHONE_NUMBER_DIGIT_LENGTH:
             callee_key = "sip_callee_extension"
-        if len(caller_number) != 10:
+        if len(caller_number) != US_TELEPHONE_NUMBER_DIGIT_LENGTH:
             caller_key = "sip_caller_extension"
 
         call_fields = {
@@ -119,88 +112,80 @@ def webhook(request):
         }
 
         peerlogic_call = Call.objects.create(**call_fields)
-        log.info(f"Created Peerlogic Call object with id='{peerlogic_call.id}'.")
+        log.info(f"Jive: Created Peerlogic Call object with id='{peerlogic_call.id}'.")
 
         subscription_event_data.update({"peerlogic_call_id": peerlogic_call.id})
         subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
         subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
 
     elif content["type"] == "replace":
-        log.info("Received jive replace event.")
+        log.info("Jive: Received jive replace event.")
         call_id = get_call_id_from_previous_announce_event(content["oldId"])
         subscription_event_data.update({"peerlogic_call_id": call_id})
         subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
         subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
 
     elif content["type"] == "withdraw":
-        log.info("Received jive withdraw event.")
+        log.info("Jive: Received jive withdraw event.")
 
         call_id = get_call_id_from_previous_announce_event(content["entityId"])
-        log.info(f"Call ID is {call_id}")
+        log.info(f"Jive: Call ID is {call_id}")
         subscription_event_data.update({"peerlogic_call_id": call_id})
         subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
         subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
 
-        log.info(f"Retrieving recordings from jive.")
+        log.info(f"Jive: Examining recordings from jive.")
         recordings = []
         for recording in content["data"]["recordings"]:
+            filename_encoded = recording["filename"]
             filename = base64.b64decode(recording["filename"]).decode("utf-8")
             ord = dateutil.parser.isoparser().isoparse(filename.split("~", maxsplit=1)[0].split("/")[-1])
 
-            recordings.append([ord, filename])
+            recordings.append([ord, filename, filename_encoded])
 
         recordings = sorted(recordings, key=lambda r: r[0])
 
         for recording in recordings:
             ord = recording[0]
             filename = recording[1]
+            filename_encoded = recording[2]
             end_time: datetime = dateutil.parser.isoparser().isoparse(req["timestamp"])
 
-            log.info("Updating Peerlogic call end time and duration.")
+            log.info("Jive: Updating Peerlogic call end time and duration.")
             peerlogic_call = Call.objects.get(pk=call_id)
             peerlogic_call.call_end_time = end_time
             peerlogic_call.duration_seconds = peerlogic_call.call_end_time - peerlogic_call.call_start_time
             peerlogic_call.save()
             log.info(
-                f"Updated Peerlogic call end time and duration: peerlogic_call.call_end_time='{peerlogic_call.call_end_time}', peerlogic_call.duration_seconds='{peerlogic_call.duration_seconds}'"
+                f"Jive: Updated Peerlogic call end time and duration: peerlogic_call.call_end_time='{peerlogic_call.call_end_time}', peerlogic_call.duration_seconds='{peerlogic_call.duration_seconds}'"
             )
 
             log.info(
-                f"Creating Peerlogic CallPartial with peerlogic_call.id='{peerlogic_call.id}', time_interaction_started='{peerlogic_call.call_start_time}' and time_interaction_ended='{ord}'."
+                f"Jive: Creating Peerlogic CallPartial with peerlogic_call.id='{peerlogic_call.id}', time_interaction_started='{peerlogic_call.call_start_time}' and time_interaction_ended='{ord}'."
             )
             # TODO: Get previous call partials for call and see if we need to update the time_interaction started. We only get end times.
             # Double-check with transfers
             cp = CallPartial.objects.create(call=peerlogic_call, time_interaction_started=peerlogic_call.call_start_time, time_interaction_ended=end_time)
             log.info(
-                f"Created Peerlogic CallPartial with cp.id='{cp.id}', peerlogic_call.id='{peerlogic_call.id}', time_interaction_started='{peerlogic_call.call_start_time}' and entime_interaction_endedd_time='{end_time}'."
+                f"Jive: Created Peerlogic CallPartial with cp.id='{cp.id}', peerlogic_call.id='{peerlogic_call.id}', time_interaction_started='{peerlogic_call.call_start_time}' and entime_interaction_endedd_time='{end_time}'."
             )
 
-            log.info(f"Creating Peerlogic CallAudioPartial with cp.id='{cp.id}', peerlogic_call.id='{peerlogic_call.id}'")
+            log.info(f"Jive: Creating Peerlogic CallAudioPartial with cp.id='{cp.id}', peerlogic_call.id='{peerlogic_call.id}'")
             cap = CallAudioPartial.objects.create(
                 call_partial=cp, mime_type=SupportedAudioMimeTypes.AUDIO_WAV, status=CallAudioFileStatusTypes.RETRIEVAL_FROM_PROVIDER_IN_PROGRESS
             )
-            log.info(f"Created Peerlogic CallAudioPartial with cap.id='{cap.id}', cp.id='{cp.id}', peerlogic_call.id='{peerlogic_call.id}'.")
+            log.info(f"Jive: Created Peerlogic CallAudioPartial with cap.id='{cap.id}', cp.id='{cp.id}', peerlogic_call.id='{peerlogic_call.id}'.")
 
-            # TODO: publish_leg_b_ready_event which does the below functionality with retries,
-            # since the recording is not always available in S3 yet even though it's listed in the event
-            # psuedocode:
-            # publish_leg_b_ready_event(jive_call_subscription_id=content['subId'], voip_provider_id=voip_provider_id, {})
-
-            # with io.BytesIO() as buf:
-            #     log.info(
-            #         f"Retrieving Jive Recording from S3 bucket='{settings.JIVE_BUCKET_NAME}' for Peerlogic CallAudioPartial with cap.id='{cap.id}', peerlogic_call.id='{peerlogic_call.id}'"
-            #     )
-            #     settings.S3_CLIENT.download_fileobj(settings.JIVE_BUCKET_NAME, filename, buf)
-            #     log.info(
-            #         f"Retrieved Jive Recording from S3 bucket='{settings.JIVE_BUCKET_NAME}' for Peerlogic CallAudioPartial with cap.id='{cap.id}', peerlogic_call.id='{peerlogic_call.id}'"
-            #     )
-            #     log.info(
-            #         f"Writing Jive Recording to Peerlogic CallAudioPartial with cap.id='{cap.id}', peerlogic_call.id='{peerlogic_call.id}'"
-            #     )
-            #     cap.put_file(buf)
-            #     log.info(
-            #         f"Wrote Jive Recording to Peerlogic CallAudioPartial with cap.id='{cap.id}', peerlogic_call.id='{peerlogic_call.id}'"
-            #     )
+            publish_leg_b_ready_event(
+                jive_call_subscription_id=content["subId"],
+                voip_provider_id=voip_provider_id,
+                event={
+                    "jive_entity_id": content["entityId"],
+                    "peerlogic_call_id": peerlogic_call.id,
+                    "peerlogic_call_partial_id": cp.id,
+                    "filename": filename_encoded,
+                },
+            )
 
     subscription_event_serializer.save()
 

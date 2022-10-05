@@ -142,13 +142,13 @@ class JiveSubscriptionEventExtract(AuditTrailModel):
     jive_extract = models.JSONField()
 
     # Lengths except where commented with context are arbitrary due to not knowing the contract
-    type = models.CharField(max_length=128, db_index=True)
-    sub_id = models.CharField(max_length=36)  # uuid stored as a string
+    jive_type = models.CharField(max_length=128, db_index=True)
+    sub_id = models.CharField(max_length=36, db_index=True)  # uuid stored as a string
     # TODO: verify these look right
-    old_id = models.CharField(max_length=36)  # uuid stored as a string
-    new_id = models.CharField(max_length=36)  # uuid stored as a string
-    entity_id = models.CharField(max_length=128)
-    data_leg_id = models.CharField(max_length=36)  # uuid stored as a string
+    old_id = models.CharField(max_length=36, db_index=True)  # uuid stored as a string
+    new_id = models.CharField(max_length=36, db_index=True)  # uuid stored as a string
+    entity_id = models.CharField(max_length=128, db_index=True)
+    data_leg_id = models.CharField(max_length=36, db_index=True)  # uuid stored as a string
     data_created = models.DateTimeField()
     data_participant = models.CharField(max_length=128)
     data_callee_name = models.CharField(max_length=128)

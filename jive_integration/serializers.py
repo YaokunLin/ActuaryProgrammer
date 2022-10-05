@@ -11,7 +11,7 @@ from jive_integration.models import JiveSubscriptionEventExtract
 
 log = logging.getLogger(__name__)
 
-pattern = re.compile(r"(?<!^)(?=[A-Z])")
+CAMELCASE_REGEX_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
 
 
 class JiveSubscriptionEventExtractSerializer(serializers.ModelSerializer):
@@ -33,13 +33,16 @@ class JiveSubscriptionEventExtractSerializer(serializers.ModelSerializer):
         return_value.update({"jive_extract": incoming_data})
 
         for key, value in incoming_data.items():
-            model_field_snaked = pattern.sub("_", key).lower()
+            model_field_snaked = CAMELCASE_REGEX_PATTERN.sub("_", key).lower()
+            if key == "type":  # avoid problems with python type builtin
+                return_value.update({"jive_type": value})
             return_value.update({model_field_snaked: value})
 
+        # TODO: don't mutate or pop from return_value
         jive_data_dictionary = incoming_data.get("data")
         if jive_data_dictionary:
             for key, value in jive_data_dictionary.items():
-                model_field_snaked = pattern.sub("_", key).lower()
+                model_field_snaked = CAMELCASE_REGEX_PATTERN.sub("_", key).lower()
 
                 model_field_snaked = f"data_{model_field_snaked}"
                 return_value.update({model_field_snaked: value})
