@@ -1,9 +1,9 @@
 from django.urls import include, path
 from rest_framework_nested import routers
 
-from calls.analytics.benchmarks.views import (
-    CallCountsBenchmarksView,
-    OpportunitiesBenchmarksView,
+from calls.analytics.industry_averages.views import (
+    CallCountsIndustryAveragesView,
+    OpportunitiesIndustryAveragesView,
 )
 from calls.analytics.insurance_providers.views import (
     InsuranceProviderCallMetricsView,
@@ -115,7 +115,6 @@ urlpatterns = [
     # Distinct views
     path(r"mentioned-procedures/", CallMentionedProcedureDistinctView.as_view(), name="mentioned-procedures"),
     # Call Aggregates
-    path(r"calls/aggregates/insurance-provider-interactions/", InsuranceProviderInteractionsView.as_view(), name="insurance-provider-interactions"),
     path(r"calls/aggregates/new-patient-opportunities/", NewPatientOpportunitiesView.as_view(), name="new-patient-opportunities"),
     path(r"calls/aggregates/new-patient-winback-opportunities/", NewPatientWinbacksView.as_view(), name="new-patient-winback-opportunities"),
     path(r"calls/aggregates/call-counts/", CallCountsView.as_view(), name="call-counts"),
@@ -132,8 +131,13 @@ urlpatterns = [
     path(r"calls/top-mentions/products/", TopProductsMentionedView.as_view(), name="top-mentioned-products"),
     path(r"calls/top-mentions/symptoms/", TopSymptomsMentionedView.as_view(), name="top-mentioned-symptoms"),
     # Benchmarks
-    path(r"calls/benchmarks/opportunities/", OpportunitiesBenchmarksView.as_view(), name="opportunities-benchmarks"),
-    path(r"calls/benchmarks/call-counts/", CallCountsBenchmarksView.as_view(), name="call-counts-benchmarks"),
+    path(r"calls/industry-averages/opportunities/", OpportunitiesIndustryAveragesView.as_view(), name="opportunities-industry-averages"),
+    path(r"calls/industry-averages/call-counts/", CallCountsIndustryAveragesView.as_view(), name="call-counts-industry-averages"),
+    path(
+        r"calls/industry-averages/outbound-insurance-provider-call-counts/",
+        InsuranceProviderInteractionsView.as_view(),
+        name="outbound-insurance-provider-call-counts-industry-averages",
+    ),
     # Routers
     path(r"", include(calls_app_root_router.urls)),
     path(r"", include(call_router.urls)),

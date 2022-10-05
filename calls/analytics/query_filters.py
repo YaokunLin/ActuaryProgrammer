@@ -3,6 +3,7 @@ from django.db.models import Q
 from calls.analytics.intents.field_choices import CallOutcomeTypes, CallPurposeTypes
 from calls.analytics.participants.field_choices import NonAgentEngagementPersonaTypes
 from calls.field_choices import CallConnectionTypes, CallDirectionTypes
+from core.models import InsuranceProviderPhoneNumber
 
 # Connections
 CONNECTED_FILTER = Q(call_connection=CallConnectionTypes.CONNECTED)
@@ -35,6 +36,14 @@ NEW_PATIENT_OPPORTUNITIES_FILTER = NEW_APPOINTMENT_FILTER & NEW_PATIENT_FILTER
 INBOUND_WINBACK_OPPORTUNITY_FILTER = INBOUND_FILTER & NEW_PATIENT_OPPORTUNITIES_FILTER & FAILURE_FILTER
 
 
-# Benchmarks
-BENCHMARK_PRACTICE_CALLS_FILTER = Q(practice__include_in_benchmarks=True)
-BENCHMARK_PRACTICE_FILTER = Q(include_in_benchmarks=True)
+# Industry Averages
+INDUSTRY_AVERAGES_PRACTICE_CALLS_FILTER = Q(practice__include_in_benchmarks=True)
+INDUSTRY_AVERAGES_PRACTICE_FILTER = Q(include_in_benchmarks=True)
+
+
+# Insurance Providers
+def get_insurance_provider_callee_number_filter():
+    """
+    This filter is created on-demand since creating it involves a DB query
+    """
+    return Q(sip_callee_number__in=InsuranceProviderPhoneNumber.objects.only("phone_number"))
