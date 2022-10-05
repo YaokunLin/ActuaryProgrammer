@@ -17,7 +17,7 @@ from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from calls.field_choices import CallDirectionTypes, SupportedAudioMimeTypes, CallAudioFileStatusTypes
+from calls.field_choices import CallConnectionTypes, CallDirectionTypes, SupportedAudioMimeTypes, CallAudioFileStatusTypes
 from calls.models import Call, CallPartial, CallAudioPartial
 from core.field_choices import VoipProviderIntegrationTypes
 from core.validation import get_validated_practice_telecom
@@ -65,6 +65,7 @@ def webhook(request):
     except (json.JSONDecodeError, KeyError):
         return HttpResponse(status=406)
 
+    end_time: datetime = dateutil.parser.isoparser().isoparse(req["timestamp"])
     entity_id = content.get("entityId")
     subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=content)
     subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
@@ -134,7 +135,21 @@ def webhook(request):
         subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
         subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
 
-        log.info(f"Jive: Examining recordings from jive.")
+        recording_count = len(content["data"]["recordings"])
+        log.info(f"Jive: Found {recording_count} recordings.")
+
+        if recording_count == 0:
+            # TODO: call Jive API to see if there is a corresponding Voicemail
+            log.info("Jive: Updating Peerlogic call end time and duration.")
+            peerlogic_call = Call.objects.get(pk=call_id)
+            peerlogic_call.call_end_time = end_time
+            peerlogic_call.duration_seconds = peerlogic_call.call_end_time - peerlogic_call.call_start_time
+            peerlogic_call.call_connection = CallConnectionTypes.MISSED
+            peerlogic_call.save()
+            log.info(
+                f"Jive: Updated Peerlogic call with the following fields: peerlogic_call.call_connection='{peerlogic_call.call_connection}', peerlogic_call.call_end_time='{peerlogic_call.call_end_time}', peerlogic_call.duration_seconds='{peerlogic_call.duration_seconds}'"
+            )
+
         recordings = []
         for recording in content["data"]["recordings"]:
             filename_encoded = recording["filename"]
@@ -149,19 +164,19 @@ def webhook(request):
             ord = recording[0]
             filename = recording[1]
             filename_encoded = recording[2]
-            end_time: datetime = dateutil.parser.isoparser().isoparse(req["timestamp"])
 
             log.info("Jive: Updating Peerlogic call end time and duration.")
             peerlogic_call = Call.objects.get(pk=call_id)
             peerlogic_call.call_end_time = end_time
             peerlogic_call.duration_seconds = peerlogic_call.call_end_time - peerlogic_call.call_start_time
+            peerlogic_call.call_connection = CallConnectionTypes.CONNECTED
             peerlogic_call.save()
             log.info(
-                f"Jive: Updated Peerlogic call end time and duration: peerlogic_call.call_end_time='{peerlogic_call.call_end_time}', peerlogic_call.duration_seconds='{peerlogic_call.duration_seconds}'"
+                f"Jive: Updated Peerlogic call with the following fields: peerlogic_call.call_connection='{peerlogic_call.call_connection}', peerlogic_call.call_end_time='{peerlogic_call.call_end_time}', peerlogic_call.duration_seconds='{peerlogic_call.duration_seconds}'"
             )
 
             log.info(
-                f"Jive: Creating Peerlogic CallPartial with peerlogic_call.id='{peerlogic_call.id}', time_interaction_started='{peerlogic_call.call_start_time}' and time_interaction_ended='{ord}'."
+                f"Jive: Creating Peerlogic CallPartial with peerlogic_call.id='{peerlogic_call.id}',  time_interaction_started='{peerlogic_call.call_start_time}' and time_interaction_ended='{ord}'."
             )
             # TODO: Get previous call partials for call and see if we need to update the time_interaction started. We only get end times.
             # Double-check with transfers

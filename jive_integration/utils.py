@@ -7,6 +7,6 @@ log = logging.getLogger(__name__)
 
 def get_call_id_from_previous_announce_event(entity_id: str) -> str:
     try:
-        return JiveSubscriptionEventExtract.objects.get(type="announce", entity_id=entity_id).peerlogic_call_id
+        return JiveSubscriptionEventExtract.objects.get(jive_type="announce", entity_id=entity_id).peerlogic_call_id
     except JiveSubscriptionEventExtract.DoesNotExist:
         log.info(f"No JiveSubscriptionEventExtract found with type='announce' and given entity_id='{entity_id}'")

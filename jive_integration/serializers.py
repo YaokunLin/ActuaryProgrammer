@@ -36,7 +36,8 @@ class JiveSubscriptionEventExtractSerializer(serializers.ModelSerializer):
             model_field_snaked = CAMELCASE_REGEX_PATTERN.sub("_", key).lower()
             if key == "type":  # avoid problems with python type builtin
                 return_value.update({"jive_type": value})
-            return_value.update({model_field_snaked: value})
+            else:
+                return_value.update({model_field_snaked: value})
 
         # TODO: don't mutate or pop from return_value
         jive_data_dictionary = incoming_data.get("data")
