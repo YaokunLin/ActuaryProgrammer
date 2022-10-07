@@ -112,6 +112,7 @@ NETSAPIENS_INTEGRATION_CALL_ORIGID_MODEL_SUBSCRIPTION_IS_ENABLED = os.getenv(
     "NETSAPIENS_INTEGRATION_CALL_ORIGID_MODEL_SUBSCRIPTION_IS_ENABLED", "False"
 ).lower() in ("true", "1", "t")
 
+
 # Business Phone Number Detection
 # See FCC: https://www.fcc.gov/consumers/guides/what-toll-free-number-and-how-does-it-work
 TELECOM_AREA_CODES_TO_MARK_AS_BUSINESS_NUMBERS = os.getenv("AREA_CODES_TO_MARK_AS_BUSINESS_NUMBERS", ["800", "888", "877", "866", "855", "844", "833"])
@@ -471,6 +472,8 @@ CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", CELERY_BROKER_URL)
 # Admin
 X_FRAME_OPTIONS = "SAMEORIGIN"
 
+
+JIVE_AUTHORIZATION_URL = os.getenv("JIVE_AUTHORIZATION_URL", "https://authentication.logmeininc.com/oauth/authorize")
 JIVE_CLIENT_ID = os.getenv("JIVE_CLIENT_ID", "")
 JIVE_CLIENT_SECRET = os.getenv("JIVE_CLIENT_SECRET", "")
 
