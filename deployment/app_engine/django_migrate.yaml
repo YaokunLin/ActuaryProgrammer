@@ -6,5 +6,6 @@
 runtime: python37
 service: django-migrate
 entrypoint: "python3 manage.py migrate --noinput"
+instance_class: F4_1G
 
 # [END django_migrate]
