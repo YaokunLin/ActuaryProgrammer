@@ -9,11 +9,11 @@ from core.pubsub_helpers import publish_event
 log = logging.getLogger(__name__)
 
 
-def publish_call_discounted_event(
+def publish_call_create_call_record_event(
     ringcentral_telephony_session_id: str,
     practice_id: str,
     ringcentral_account_id: str,
-    topic_path_ringcentral_call_disconnected: str = settings.PUBSUB_TOPIC_PATH_RINGCENTRAL_CALL_DISCONNECTED,
+    topic_path_ringcentral_create_call_record: str = settings.PUBSUB_TOPIC_PATH_RINGCENTRAL_CREATE_CALL_RECORD,
     publisher: pubsub_v1.PublisherClient = settings.PUBLISHER,
 ): 
 
@@ -23,4 +23,28 @@ def publish_call_discounted_event(
         "ringcentral_account_id": ringcentral_account_id,
     }
 
-    return publish_event(event_attributes=event_attributes, event=[], topic_path=topic_path_ringcentral_call_disconnected, publisher=publisher)
+    log.info(settings.PUBSUB_TOPIC_PATH_RINGCENTRAL_CREATE_CALL_RECORD)
+    log.info(settings.PUBSUB_TOPIC_PATH_NETSAPIENS_LEG_B_FINISHED)
+    return publish_event(event_attributes=event_attributes, event="", topic_path=topic_path_ringcentral_create_call_record, publisher=publisher)
+
+def publish_ringcentral_create_call_audio_event(
+    voip_provider_id: str,
+    peerlogic_call_id: str,
+    peerlogic_call_partial_id: str,
+    ringcentral_recording_id: str,
+    topic_path_ringcentral_get_call_audio: str = settings.PUBSUB_TOPIC_PATH_RINGCENTRAL_GET_CALL_AUDIO,
+    publisher: pubsub_v1.PublisherClient = settings.PUBLISHER,
+) -> pubsub_v1.publisher.futures.Future:
+
+    event_attributes = {
+        "voip_provider_id": voip_provider_id,
+    }
+
+    # modify the event to fulfill downstream contract
+    event = {
+        "peerlogic_call_id": peerlogic_call_id,
+        "peerlogic_call_partial_id": peerlogic_call_partial_id,
+        "ringcentral_recording_id": ringcentral_recording_id,
+    }
+
+    return publish_event(event_attributes=event_attributes, event=event, topic_path=topic_path_ringcentral_get_call_audio, publisher=publisher)

@@ -3,14 +3,16 @@ import logging
 
 from django.db import transaction
 from django.http import HttpResponse, HttpRequest
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from .models import (
     RingCentralSessionEvent,
-    RingCentralAPICredentials
+    RingCentralAPICredentials,
+    RingCentralCallLeg
 )
 from pydantic import BaseModel
 from ringcentral import SDK
-from ringcentral_integration.publishers import publish_call_discounted_event
+from ringcentral_integration.publishers import publish_call_create_call_record_event
 from django.utils import timezone
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny
@@ -22,6 +24,7 @@ from rest_framework.exceptions import (
     ParseError,
     PermissionDenied,
 )
+from core.models import PracticeTelecom
 from core.setup_user_and_practice import (
     create_agent,
     create_user_telecom,
@@ -31,7 +34,8 @@ from core.setup_user_and_practice import (
 )
 
 from .serializers import (
-    AdminRingCentralAPICredentialsSerializer
+    AdminRingCentralAPICredentialsSerializer,
+    RingCentralCallLegSerializer
 )
 
 from google.api_core.exceptions import PermissionDenied
@@ -53,7 +57,7 @@ class RingCentralAuthToken(BaseModel):
 @api_view(["POST"])
 @authentication_classes([])
 @permission_classes([AllowAny])
-def webhook(request):
+def ringcentral_call_subscription_event_receiver_view(request, practice_telecom_id=None):
 
     # When creating the webhook, ringcentral expects the validation token it sends to be sent back to verify the endpoint
     if('Validation-Token' in request.headers):
@@ -61,7 +65,18 @@ def webhook(request):
         response.headers['Validation-Token'] = request.headers['Validation-Token']
         response.headers['Content-type'] = 'application/json'
         return response
-    
+
+    # validate practice telecom exists and is active
+    practice_telecom: PracticeTelecom = get_object_or_404(
+        PracticeTelecom.objects.select_related("practice", "voip_provider"), pk=practice_telecom_id, practice__active=True
+    )
+    log.info(f"Validated practice telecom with practice_telecom_id: '{practice_telecom_id}'")
+
+    log.info(f"Validating call_subscription for: call_subscription_id: '{call_subscription_id}'")
+    # validate an active subscription exists and is associated with the practice telecom, not referenced later, we just need the check
+    get_object_or_404(NetsapiensCallSubscription, pk=call_subscription_id, active=True)
+    log.info(f"Validated call_subscription for: call_subscription_id: '{call_subscription_id}'")
+
     try:
         req = json.loads(request.body)
         session = req['body']
@@ -100,8 +115,8 @@ def webhook(request):
         # ToDo get active calls to determine Record ID
         try:
             log.info(f"[RingCentral] Publishing call disconnected events for: telephony_session_id: '{session['telephonySessionId']}' and account_id: '{session['parties'][0]['accountId']}'")
-            publish_call_discounted_event(
-                ringcentral_telephony_session_id=session['telephonySessionId'], practice_id=0, ringcentral_account_id=session['parties'][0]['accountId']
+            publish_call_create_call_record_event(
+                ringcentral_telephony_session_id=session['telephonySessionId'], practice_id="0", ringcentral_account_id=session['parties'][0]['accountId']
             )
             log.info(f"Published leg b ready events for: telephony_session_id: '{session['telephonySessionId']}' and account_id: '{session['parties'][0]['accountId']}'")
         except PermissionDenied:
@@ -205,3 +220,7 @@ class AdminRingCentralAPICredentialsViewset(viewsets.ModelViewSet):
     serializer_class = AdminRingCentralAPICredentialsSerializer
 
     filterset_fields = ["voip_provider", "active"]
+
+class RingCentralCallLegViewset(viewsets.ModelViewSet):
+    queryset = RingCentralCallLeg.objects.all()
+    serializer_class = RingCentralCallLegSerializer
