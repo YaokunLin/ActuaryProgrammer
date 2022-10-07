@@ -118,6 +118,7 @@ class CallSerializer(serializers.ModelSerializer):
 
     def get_engaged_in_calls(self, call: Call):
         engaged_in_call = []
+        # TODO: Database constraints mean that we can only ever have one of these
         if hasattr(call, "agent_engaged_with_by_modified_at"):
             data = call.agent_engaged_with_by_modified_at
             if data:
