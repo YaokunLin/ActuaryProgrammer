@@ -176,7 +176,7 @@ class CallDetailsSerializer(CallSerializer):
         return call.latest_transcript_signed_url
 
 
-class CallNestedRouterBaseWriteSerializerMixin(object):
+class CallNestedRouterBaseWriteSerializerMixin(serializers.ModelSerializer):
     def create(self, validated_data):
         call = Call.objects.get(pk=self.context["view"].kwargs["call_pk"])
         validated_data["call"] = call
@@ -190,12 +190,7 @@ class CallNoteReadSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
 
 
-class CallNoteWriteSerializer(serializers.ModelSerializer):
-    def create(self, validated_data):
-        call = Call.objects.get(pk=self.context["view"].kwargs["call_pk"])
-        validated_data["call"] = call
-        return CallNote.objects.create(**validated_data)
-
+class CallNoteWriteSerializer(CallNestedRouterBaseWriteSerializerMixin):
     class Meta:
         model = CallNote
         fields = ["note"]
