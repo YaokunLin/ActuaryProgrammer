@@ -106,7 +106,7 @@ urlpatterns = [
     # Call Audio Partials (root)
     path(r"audio-partials/<pk>/", GetCallAudioPartial.as_view(), name="audio-partial"),
     path(r"audio-partials/", GetCallAudioPartials.as_view(), name="audio-partials"),
-    # Call Transctipt Partials (root)
+    # Call Transcript Partials (root)
     path(r"transcript-partials/<pk>/", GetCallTranscriptPartial.as_view(), name="transcript-partial"),
     path(r"transcript-partials/", GetCallTranscriptPartials.as_view(), name="transcript-partials"),
     # Distinct views
