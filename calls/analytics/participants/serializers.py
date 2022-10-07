@@ -30,7 +30,7 @@ class AgentEngagedWithWriteSerializer(serializers.ModelSerializer):
         # when we reprocess, update the existing neapt
         engaged_in_calls = call.engaged_in_calls
         if engaged_in_calls.count():
-            agent_engaged_with = engaged_in_calls.get()  # should only be one
+            agent_engaged_with = engaged_in_calls.first()  # should only be one
             return self.update(agent_engaged_with, validated_data)
 
         # first time processing
