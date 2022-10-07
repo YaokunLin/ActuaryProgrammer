@@ -1,16 +1,12 @@
 from rest_framework import serializers
 
+from calls.analytics.participants.models import AgentAssignedCall, AgentEngagedWith
 from calls.models import Call
-from calls.analytics.participants.models import (
-    AgentAssignedCall,
-    AgentEngagedWith,
-)
 from core.serializers import AgentSerializer
 
 
 class AgentAssignedCallSerializer(serializers.ModelSerializer):
     agent = AgentSerializer(required=False)
-
 
     class Meta:
         model = AgentAssignedCall
@@ -19,7 +15,6 @@ class AgentAssignedCallSerializer(serializers.ModelSerializer):
 
 
 class AgentEngagedWithReadSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = AgentEngagedWith
         fields = "__all__"
@@ -27,10 +22,15 @@ class AgentEngagedWithReadSerializer(serializers.ModelSerializer):
 
 
 class AgentEngagedWithWriteSerializer(serializers.ModelSerializer):
-
     def create(self, validated_data):
-        call = Call.objects.get(pk=self.context["view"].kwargs["call_pk"])
+        call: Call = Call.objects.get(pk=self.context["view"].kwargs["call_pk"])
         validated_data["call"] = call
+
+        engaged_in_calls = call.engaged_in_calls
+        if engaged_in_calls.count():
+            agent_engaged_with = engaged_in_calls.get()  # should only be one
+            return self.update(agent_engaged_with, validated_data)
+
         return AgentEngagedWith.objects.create(**validated_data)
 
     class Meta:
