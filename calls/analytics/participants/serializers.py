@@ -29,7 +29,7 @@ class AgentEngagedWithWriteSerializer(serializers.ModelSerializer):
         # there should only be one neapt for a call to ensure analytics / counting goes smoothly
         # when we reprocess, update the existing neapt
         engaged_in_calls = call.engaged_in_calls
-        if engaged_in_calls.count():
+        if engaged_in_calls.exists():
             agent_engaged_with = engaged_in_calls.first()  # should only be one
             return self.update(agent_engaged_with, validated_data)
 
