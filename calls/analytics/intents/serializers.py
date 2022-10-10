@@ -1,6 +1,6 @@
+from django.db import transaction
 from rest_framework import serializers
 
-from calls.serializers import CallNestedRouterBaseWriteSerializerMixin
 from calls.analytics.intents.models import (
     CallMentionedCompany,
     CallMentionedInsurance,
@@ -11,9 +11,15 @@ from calls.analytics.intents.models import (
     CallOutcomeReason,
     CallPurpose,
 )
+from calls.models import Call
+from calls.serializers import CallNestedRouterBaseWriteSerializerMixin
 
 
 class CallPurposeSerializer(serializers.ModelSerializer):
+    def get_unique_together_validators(self):
+        """Overriding method to disable unique together checks. Needed for full replacement of a CallPurpose."""
+        return []
+
     class Meta:
         model = CallPurpose
         fields = "__all__"
@@ -38,8 +44,8 @@ class CallOutcomeReasonSerializer(serializers.ModelSerializer):
 # Mentioned
 #
 
-class CallMentionedCompanyReadSerializer(serializers.ModelSerializer):
 
+class CallMentionedCompanyReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = CallMentionedCompany
         fields = "__all__"
@@ -47,7 +53,6 @@ class CallMentionedCompanyReadSerializer(serializers.ModelSerializer):
 
 
 class CallMentionedCompanyWriteSerializer(CallNestedRouterBaseWriteSerializerMixin, serializers.ModelSerializer):
-
     class Meta:
         model = CallMentionedCompany
         fields = ("id", "keyword", "created_by", "created_at", "modified_by", "modified_at")  # call is supplied by the viewset
@@ -55,7 +60,6 @@ class CallMentionedCompanyWriteSerializer(CallNestedRouterBaseWriteSerializerMix
 
 
 class CallMentionedInsuranceReadSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = CallMentionedInsurance
         fields = "__all__"
@@ -63,7 +67,6 @@ class CallMentionedInsuranceReadSerializer(serializers.ModelSerializer):
 
 
 class CallMentionedInsuranceWriteSerializer(CallNestedRouterBaseWriteSerializerMixin, serializers.ModelSerializer):
-
     class Meta:
         model = CallMentionedInsurance
         fields = ("id", "keyword", "created_by", "created_at", "modified_by", "modified_at")  # call is supplied by the viewset
@@ -71,7 +74,6 @@ class CallMentionedInsuranceWriteSerializer(CallNestedRouterBaseWriteSerializerM
 
 
 class CallMentionedProcedureReadSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = CallMentionedProcedure
         fields = "__all__"
@@ -79,7 +81,6 @@ class CallMentionedProcedureReadSerializer(serializers.ModelSerializer):
 
 
 class CallMentionedProcedureWriteSerializer(CallNestedRouterBaseWriteSerializerMixin, serializers.ModelSerializer):
-
     class Meta:
         model = CallMentionedProcedure
         fields = ("id", "keyword", "created_by", "created_at", "modified_by", "modified_at")  # call is supplied by the viewset
@@ -94,7 +95,6 @@ class CallMentionedProcedureKeywordOnlySerializer(serializers.ModelSerializer):
 
 
 class CallMentionedProductReadSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = CallMentionedProduct
         fields = "__all__"
@@ -102,7 +102,6 @@ class CallMentionedProductReadSerializer(serializers.ModelSerializer):
 
 
 class CallMentionedProductWriteSerializer(CallNestedRouterBaseWriteSerializerMixin, serializers.ModelSerializer):
-
     class Meta:
         model = CallMentionedProduct
         fields = ("id", "keyword", "created_by", "created_at", "modified_by", "modified_at")  # call is supplied by the viewset
@@ -110,7 +109,6 @@ class CallMentionedProductWriteSerializer(CallNestedRouterBaseWriteSerializerMix
 
 
 class CallMentionedSymptomReadSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = CallMentionedSymptom
         fields = "__all__"
@@ -118,7 +116,6 @@ class CallMentionedSymptomReadSerializer(serializers.ModelSerializer):
 
 
 class CallMentionedSymptomWriteSerializer(CallNestedRouterBaseWriteSerializerMixin, serializers.ModelSerializer):
-
     class Meta:
         model = CallMentionedSymptom
         fields = ("id", "keyword", "created_by", "created_at", "modified_by", "modified_at")  # call is supplied by the viewset
