@@ -23,18 +23,10 @@ class AgentEngagedWithReadSerializer(serializers.ModelSerializer):
 
 class AgentEngagedWithWriteSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
+        # get call and its id so that the payload doesn't need to specify it
         call: Call = Call.objects.get(pk=self.context["view"].kwargs["call_pk"])
         validated_data["call"] = call
-
-        # there should only be one neapt for a call to ensure analytics / counting goes smoothly
-        # when we reprocess, update the existing neapt
-        engaged_in_calls = call.engaged_in_calls
-        if engaged_in_calls.exists():
-            agent_engaged_with = engaged_in_calls.first()  # should only be one
-            return self.update(agent_engaged_with, validated_data)
-
-        # first time processing
-        return AgentEngagedWith.objects.create(**validated_data)
+        return super().create(validated_data)
 
     class Meta:
         model = AgentEngagedWith

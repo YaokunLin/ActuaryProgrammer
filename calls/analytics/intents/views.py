@@ -52,7 +52,7 @@ class CallPurposeViewset(viewsets.ModelViewSet):
 
             # delete existing CallPurpose objects
             call_purposes = call.call_purposes.all()
-            if call_purposes:
+            if call_purposes.exists():
                 call_purposes.delete()
 
             # create the new / replacement CallPurpose objects
