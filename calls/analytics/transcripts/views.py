@@ -1,4 +1,6 @@
-from rest_framework import viewsets
+from django.db import transaction
+from rest_framework import status, viewsets
+from rest_framework.response import Response
 
 from calls.analytics.transcripts.models import (
     CallLongestPause,
@@ -13,6 +15,7 @@ from calls.analytics.transcripts.serializers import (
     CallTranscriptFragmentSentimentSerializer,
     CallTranscriptFragmentSerializer,
 )
+from calls.models import Call
 
 
 class CallSentimentViewset(viewsets.ModelViewSet):
@@ -30,6 +33,26 @@ class CallSentimentViewset(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return super().get_queryset().filter(call=self.kwargs.get("call_pk"))
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        with transaction.atomic():
+            # get call to update
+            call: Call = Call.objects.get(pk=self.kwargs.get("call_pk"))
+
+            # there should only be one neapt for a call to ensure analytics / counting goes smoothly
+            # we err on the side of caution and retrieve all anyway
+            call_sentiments = call.call_sentiments.all()
+            if call_sentiments.exists():
+                call_sentiments.delete()
+
+                # create the new / replacement CallPurpose objects
+                self.perform_create(serializer)
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class CallTranscriptFragmentViewset(viewsets.ModelViewSet):
