@@ -1,5 +1,7 @@
+import collections.abc
 import datetime
 import logging
+import numbers
 from datetime import timedelta
 from typing import Dict, List, Optional, Union
 
@@ -714,8 +716,10 @@ def convert_to_call_counts_only(call_counts_and_durations: Dict) -> Dict:
     return {k: v["call_count"] for k, v in call_counts_and_durations.items()}
 
 
-def calculate_zero_filled_call_counts_by_day(calls_qs: QuerySet, start_date: str, end_date: str) -> List[Dict]:
-    data = list(calls_qs.annotate(date=TruncDate("call_start_time")).values("date").annotate(value=Count("id")).values("date", "value").order_by("date"))
+def calculate_zero_filled_call_counts_by_day(calls_qs: QuerySet, start_date: str, end_date: str, field_to_count: str = "id") -> List[Dict]:
+    data = list(
+        calls_qs.annotate(date=TruncDate("call_start_time")).values("date").annotate(value=Count(field_to_count)).values("date", "value").order_by("date")
+    )
     if not data:
         return []
 
@@ -782,5 +786,32 @@ def safe_divide(dividend: int, divisor: int, default: int = 0, should_round: boo
 
 def round_if_float(number: Union[int, float], round_places: Optional[int] = 2) -> Union[int, float]:
     if isinstance(number, float):
+        if number.is_integer():
+            return int(number)
         return round(number, round_places)
     return number
+
+
+def map_nested_objs(obj, func):
+    """
+    Maps the provides function against all values in the nested object (dictionary and lists). It will recursively follow all sub-dicitionaries and lists to an
+    arbitrary depth.
+    """
+    if isinstance(obj, collections.abc.Mapping):
+        return {k: map_nested_objs(v, func) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [map_nested_objs(i, func) for i in obj]
+
+    return func(obj)
+
+
+def divide_safely_if_possible(divisor, obj):
+    """
+    Attempt to divide the object by the divisor. If its possible the division occurs, otherwise return the number.
+    This division is safe and avoid division by zero.
+    This operates on anything that responds to division and not just integers and floats.
+    """
+    try:
+        return safe_divide(obj, divisor)
+    except Exception:
+        return obj
