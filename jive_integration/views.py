@@ -185,11 +185,9 @@ def webhook(request):
                 f"Jive: Created Peerlogic CallPartial with cp.id='{cp.id}', peerlogic_call.id='{peerlogic_call.id}', time_interaction_started='{peerlogic_call.call_start_time}' and entime_interaction_endedd_time='{end_time}'."
             )
 
-            log.info(f"Jive: Creating Peerlogic CallAudioPartial with cp.id='{cp.id}', peerlogic_call.id='{peerlogic_call.id}'")
-            cap = CallAudioPartial.objects.create(
-                call_partial=cp, mime_type=SupportedAudioMimeTypes.AUDIO_WAV, status=CallAudioFileStatusTypes.RETRIEVAL_FROM_PROVIDER_IN_PROGRESS
-            )
-            log.info(f"Jive: Created Peerlogic CallAudioPartial with cap.id='{cap.id}', cp.id='{cp.id}', peerlogic_call.id='{peerlogic_call.id}'.")
+            subscription_event_data.update({"peerlogic_call_partial_id": cp.id})
+            subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
+            subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
 
             publish_leg_b_ready_event(
                 jive_call_subscription_id=content["subId"],
