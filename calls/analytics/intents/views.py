@@ -1,5 +1,7 @@
-from rest_framework import viewsets
+from django.db import transaction
+from rest_framework import status, viewsets
 from rest_framework.generics import ListAPIView
+from rest_framework.response import Response
 
 from calls.analytics.intents.models import (
     CallMentionedCompany,
@@ -27,6 +29,7 @@ from calls.analytics.intents.serializers import (
     CallOutcomeSerializer,
     CallPurposeSerializer,
 )
+from calls.models import Call
 
 
 class CallPurposeViewset(viewsets.ModelViewSet):
@@ -37,6 +40,26 @@ class CallPurposeViewset(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset().filter(call_id=self.kwargs.get("call_pk"))
         return queryset
+
+    def create(self, request, *args, **kwargs):
+        # overridden to provide the ability to perform single or multiple object creation
+        serializer = self.get_serializer(data=request.data, many=isinstance(request.data, list))
+        serializer.is_valid(raise_exception=True)
+
+        with transaction.atomic():
+            # get call to update
+            call: Call = Call.objects.get(pk=self.kwargs.get("call_pk"))
+
+            # delete existing CallPurpose objects
+            call_purposes = call.call_purposes.all()
+            if call_purposes.exists():
+                call_purposes.delete()
+
+            # create the new / replacement CallPurpose objects
+            self.perform_create(serializer)
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class CallOutcomeViewset(viewsets.ModelViewSet):
