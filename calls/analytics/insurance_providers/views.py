@@ -155,7 +155,8 @@ class InsuranceProviderCallMetricsView(views.APIView):
             _CALLS_BY_WEEKDAY_LABEL: data_by_weekday,
             _CALLS_BY_HOUR_LABEL: data_by_hour,
         }
-        response_data.update(hour_extremes)
+        if hour_extremes:
+            response_data.update(hour_extremes)
         if calls_qs:
             response_data.update(**self.calculate_call_breakdown_per_insurance_provider(calls_qs))
 
@@ -351,7 +352,7 @@ def _get_weekday_and_hour_breakdowns(data_by_weekday_and_hour: Dict, count_divis
         analyzed_weekday_data = data_by_weekday_and_hour[weekday]
         data_by_weekday[weekday] = {
             _CALL_COUNT_LABEL: safe_divide(data[_CALL_COUNT_LABEL], count_divisor),
-            "percentage_of_weekly_calls": round_if_float(safe_divide(safe_divide(data[_CALL_COUNT_LABEL], total_calls), count_divisor) * 100),
+            "percentage_of_weekly_calls": round_if_float(safe_divide(data[_CALL_COUNT_LABEL], total_calls) * 100),
             _AVERAGE_CALL_DURATION_LABEL: data[_AVERAGE_CALL_DURATION_LABEL],
             _MOST_POPULAR_HOUR_LABEL: analyzed_weekday_data[_MOST_POPULAR_HOUR_LABEL],
             _MOST_POPULAR_HOUR_CALL_COUNT_LABEL: safe_divide(analyzed_weekday_data[_MOST_POPULAR_HOUR_CALL_COUNT_LABEL] or 0, count_divisor),
@@ -381,6 +382,9 @@ def _get_worst_and_best_hour_to_call(data_by_hour: Dict) -> Optional[Dict]:
         ],
         key=lambda x: x[_AVERAGE_CALL_DURATION_LABEL],
     )
+    if not hours_by_average_duration:
+        return {}
+
     return {
         "hour_with_shortest_average_call_duration": {
             _HOUR_LABEL: hours_by_average_duration[0][_HOUR_LABEL],
