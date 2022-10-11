@@ -12,8 +12,8 @@ from rest_framework.response import Response
 
 from calls.analytics.aggregates import safe_divide
 from calls.analytics.query_filters import (
-    BENCHMARK_PRACTICE_CALLS_FILTER,
-    BENCHMARK_PRACTICE_FILTER,
+    INDUSTRY_AVERAGES_PRACTICE_CALLS_FILTER,
+    INDUSTRY_AVERAGES_PRACTICE_FILTER,
     NAEPT_PATIENT_FILTER,
 )
 from calls.models import Call
@@ -48,7 +48,7 @@ class _TopMentionedViewBase(views.APIView):
         with suppress(Exception):
             size = max(0, min(50, int(request.query_params.get("size", size))))
 
-        is_benchmark = get_validated_query_param_bool(request, "benchmark", False)
+        is_industry_averages_request = get_validated_query_param_bool(request, "industry_average", False)
         valid_call_direction, call_direction_errors = get_validated_call_direction(request)
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
         valid_organization_id, organization_errors = get_validated_organization_id(request=request)
@@ -62,12 +62,12 @@ class _TopMentionedViewBase(views.APIView):
             errors.update(organization_errors)
         if call_direction_errors:
             errors.update(call_direction_errors)
-        if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id) and not is_benchmark:
-            error_message = "practice__id or organization__id or benchmark must be provided, but not more than one of them."
-            errors.update({"practice__id": error_message, "organization__id": error_message, "benchmark": error_message})
-        elif is_benchmark and valid_practice_id or valid_organization_id:
-            error_message = "practice__id or organization__id or benchmark must be provided, but not more than one of them."
-            errors.update({"practice__id": error_message, "organization__id": error_message, "benchmark": error_message})
+        if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id) and not is_industry_averages_request:
+            error_message = "practice__id or organization__id or industry_average must be provided, but not more than one of them."
+            errors.update({"practice__id": error_message, "organization__id": error_message, "industry_average": error_message})
+        elif is_industry_averages_request and valid_practice_id or valid_organization_id:
+            error_message = "practice__id or organization__id or industry_average must be provided, but not more than one of them."
+            errors.update({"practice__id": error_message, "organization__id": error_message, "industry_average": error_message})
         if dates_errors:
             errors.update(dates_errors)
         if errors:
@@ -75,8 +75,8 @@ class _TopMentionedViewBase(views.APIView):
 
         practice_filter = Q()
         organization_filter = Q()
-        if is_benchmark:
-            practice_filter = BENCHMARK_PRACTICE_CALLS_FILTER
+        if is_industry_averages_request:
+            practice_filter = INDUSTRY_AVERAGES_PRACTICE_CALLS_FILTER
         else:
             if valid_practice_id:
                 practice_filter = Q(practice__id=valid_practice_id)
@@ -94,9 +94,9 @@ class _TopMentionedViewBase(views.APIView):
             call_direction_filter = Q(call_direction=valid_call_direction)
 
         all_filters = NAEPT_PATIENT_FILTER & dates_filter & practice_filter & organization_filter & call_direction_filter
-        return Response(self._get_top_mentions(all_filters, self._RESOURCE_NAME, size, is_benchmark))
+        return Response(self._get_top_mentions(all_filters, self._RESOURCE_NAME, size, is_industry_averages_request))
 
-    def _get_top_mentions(self, call_filters: Q, resource_name: str, size: int, is_benchmark: bool) -> Dict:
+    def _get_top_mentions(self, call_filters: Q, resource_name: str, size: int, is_industry_averages_request: bool) -> Dict:
         mentioned_resource_name = f"mentioned_{resource_name}"
         mentioned_resource_keyword = f"{mentioned_resource_name}__keyword"
         count_label = "count"
@@ -105,10 +105,10 @@ class _TopMentionedViewBase(views.APIView):
         top_mentions = calls_qs.values(mentioned_resource_keyword).annotate(count=Count("id")).order_by(f"-{count_label}")[:size]
         top_mentions = [{"keyword": i[mentioned_resource_keyword], count_label: i[count_label]} for i in top_mentions]
         self._normalize_values(top_mentions)
-        if is_benchmark:
-            num_benchmark_practices = Practice.objects.filter(BENCHMARK_PRACTICE_FILTER).count()
+        if is_industry_averages_request:
+            num_industry_averages_practices = Practice.objects.filter(INDUSTRY_AVERAGES_PRACTICE_FILTER).count()
             for i in top_mentions:
-                i[count_label] = safe_divide(i[count_label], num_benchmark_practices, should_round=True, round_places=None)
+                i[count_label] = safe_divide(i[count_label], num_industry_averages_practices, should_round=True, round_places=None)
 
         return {"top_mentions": top_mentions}
 

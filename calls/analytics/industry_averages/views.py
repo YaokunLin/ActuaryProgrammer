@@ -16,9 +16,9 @@ from calls.analytics.aggregates import (
 )
 from calls.analytics.constants import AVG_VALUE_PER_APPOINTMENT_USD
 from calls.analytics.query_filters import (
-    BENCHMARK_PRACTICE_CALLS_FILTER,
-    BENCHMARK_PRACTICE_FILTER,
     INBOUND_FILTER,
+    INDUSTRY_AVERAGES_PRACTICE_CALLS_FILTER,
+    INDUSTRY_AVERAGES_PRACTICE_FILTER,
     OPPORTUNITIES_FILTER,
 )
 from calls.models import Call
@@ -34,16 +34,16 @@ from peerlogic.settings import (
 log = logging.getLogger(__name__)
 
 
-class OpportunitiesBenchmarksView(views.APIView):
+class OpportunitiesIndustryAveragesView(views.APIView):
     @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
     @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
     @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
-        calls_qs = _get_queryset_or_error_response(request, extra_filter=INBOUND_FILTER)
+        calls_qs = _get_queryset_or_error_response(request, extra_filter=INBOUND_FILTER, allow_call_direction_filter=False)
         if isinstance(calls_qs, Response):
             return calls_qs
 
-        benchmark_practices_count = _get_benchmark_practices_count()
+        industry_averages_practices_count = _get_industry_averages_practices_count()
         opportunities_qs = calls_qs.filter(OPPORTUNITIES_FILTER)
 
         opportunities_by_outcome = opportunities_qs.values("call_purposes__outcome_results__call_outcome_type").annotate(count=Count("id"))
@@ -54,16 +54,16 @@ class OpportunitiesBenchmarksView(views.APIView):
         lost_count = d.get("failure", 0)
         open_count = total_count - (won_count + lost_count)
         average_opportunity_counts = {
-            "total": safe_divide(total_count, benchmark_practices_count),
-            "won": safe_divide(won_count, benchmark_practices_count),
-            "lost": safe_divide(lost_count, benchmark_practices_count),
-            "open": safe_divide(open_count, benchmark_practices_count),
+            "total": safe_divide(total_count, industry_averages_practices_count),
+            "won": safe_divide(won_count, industry_averages_practices_count),
+            "lost": safe_divide(lost_count, industry_averages_practices_count),
+            "open": safe_divide(open_count, industry_averages_practices_count),
         }
         average_opportunity_values = {
-            "total": round_if_float(safe_divide(total_count, benchmark_practices_count, should_round=False) * AVG_VALUE_PER_APPOINTMENT_USD),
-            "won": round_if_float(safe_divide(won_count, benchmark_practices_count, should_round=False) * AVG_VALUE_PER_APPOINTMENT_USD),
-            "lost": round_if_float(safe_divide(lost_count, benchmark_practices_count, should_round=False) * AVG_VALUE_PER_APPOINTMENT_USD),
-            "open": round_if_float(safe_divide(open_count, benchmark_practices_count, should_round=False) * AVG_VALUE_PER_APPOINTMENT_USD),
+            "total": round_if_float(safe_divide(total_count, industry_averages_practices_count, should_round=False) * AVG_VALUE_PER_APPOINTMENT_USD),
+            "won": round_if_float(safe_divide(won_count, industry_averages_practices_count, should_round=False) * AVG_VALUE_PER_APPOINTMENT_USD),
+            "lost": round_if_float(safe_divide(lost_count, industry_averages_practices_count, should_round=False) * AVG_VALUE_PER_APPOINTMENT_USD),
+            "open": round_if_float(safe_divide(open_count, industry_averages_practices_count, should_round=False) * AVG_VALUE_PER_APPOINTMENT_USD),
         }
 
         results = {
@@ -73,7 +73,7 @@ class OpportunitiesBenchmarksView(views.APIView):
         return Response(results)
 
 
-class CallCountsBenchmarksView(views.APIView):
+class CallCountsIndustryAveragesView(views.APIView):
     @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
     @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
     @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
@@ -82,32 +82,36 @@ class CallCountsBenchmarksView(views.APIView):
         if isinstance(calls_qs, Response):
             return calls_qs
 
-        benchmark_practices_count = _get_benchmark_practices_count()
+        industry_averages_practices_count = _get_industry_averages_practices_count()
         call_counts = calculate_call_counts(calls_qs)
         for section_name in {"call_total", "call_connected_total", "call_seconds_total", "call_answered_total", "call_voicemail_total", "call_missed_total"}:
-            call_counts[section_name] = safe_divide(call_counts[section_name], benchmark_practices_count)
+            call_counts[section_name] = safe_divide(call_counts[section_name], industry_averages_practices_count)
         for section_name in {"call_sentiment_counts", "call_direction_counts", "call_naept_counts", "call_purpose_counts"}:
             section = call_counts[section_name]
             for k, v in section.items():
-                section[k] = safe_divide(v, benchmark_practices_count)
+                section[k] = safe_divide(v, industry_averages_practices_count)
 
         return Response(call_counts)
 
 
-def _get_queryset_or_error_response(request: Request, extra_filter: Optional[Q] = None) -> Union[Response, QuerySet]:
+def _get_queryset_or_error_response(request: Request, extra_filter: Optional[Q] = None, allow_call_direction_filter: bool = True) -> Union[Response, QuerySet]:
     if extra_filter is None:
         extra_filter = Q()
 
     dates_info = get_validated_call_dates(query_data=request.query_params)
     dates_errors = dates_info.get("errors")
 
-    valid_call_direction, call_direction_errors = get_validated_call_direction(request)
+    call_direction_filter = Q()
 
     errors = {}
     if dates_errors:
         errors.update(dates_errors)
-    if call_direction_errors:
-        errors.update(call_direction_errors)
+    if allow_call_direction_filter:
+        valid_call_direction, call_direction_errors = get_validated_call_direction(request)
+        if call_direction_errors:
+            errors.update(call_direction_errors)
+        elif valid_call_direction:
+            call_direction_filter = Q(call_direction=valid_call_direction)
     if errors:
         return Response(status=status.HTTP_400_BAD_REQUEST, data=errors)
 
@@ -117,12 +121,8 @@ def _get_queryset_or_error_response(request: Request, extra_filter: Optional[Q] 
     call_start_time__lte = dates[1]
     dates_filter = Q(call_start_time__gte=call_start_time__gte, call_start_time__lte=call_start_time__lte)
 
-    call_direction_filter = Q()
-    if valid_call_direction:
-        call_direction_filter = Q(call_direction=valid_call_direction)
-
-    return Call.objects.filter(BENCHMARK_PRACTICE_CALLS_FILTER & dates_filter & call_direction_filter & extra_filter)
+    return Call.objects.filter(INDUSTRY_AVERAGES_PRACTICE_CALLS_FILTER & dates_filter & call_direction_filter & extra_filter)
 
 
-def _get_benchmark_practices_count() -> int:
-    return Practice.objects.filter(BENCHMARK_PRACTICE_FILTER).count()
+def _get_industry_averages_practices_count() -> int:
+    return Practice.objects.filter(INDUSTRY_AVERAGES_PRACTICE_FILTER).count()
