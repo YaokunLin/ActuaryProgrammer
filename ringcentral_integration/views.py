@@ -107,12 +107,12 @@ def ringcentral_call_subscription_event_receiver_view(request, practice_telecom_
         stand_alone= session['parties'][0]['standAlone'],
     )
 
+    # ToDo still under investigation on if this is the proper disconect event to check
     if status_code == 'Disconnected' and session['parties'][0]['status'].get('reason') is None:
         #
         # PROCESSING
         #
         
-        # ToDo get active calls to determine Record ID
         try:
             log.info(f"[RingCentral] Publishing call disconnected events for: telephony_session_id: '{session['telephonySessionId']}' and account_id: '{session['parties'][0]['accountId']}'")
             publish_call_create_call_record_event(

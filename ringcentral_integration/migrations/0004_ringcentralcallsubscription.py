@@ -11,7 +11,6 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('core', '0018_auto_20221005_0001'),
         ('ringcentral_integration', '0003_ringcentralcallleg'),
     ]
 
