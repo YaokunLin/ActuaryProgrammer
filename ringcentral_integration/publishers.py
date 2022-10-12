@@ -11,7 +11,9 @@ log = logging.getLogger(__name__)
 
 def publish_call_create_call_record_event(
     ringcentral_telephony_session_id: str,
+    ringcentral_session_id: str,
     practice_id: str,
+    voip_provider_id: str,
     ringcentral_account_id: str,
     topic_path_ringcentral_create_call_record: str = settings.PUBSUB_TOPIC_PATH_RINGCENTRAL_CREATE_CALL_RECORD,
     publisher: pubsub_v1.PublisherClient = settings.PUBLISHER,
@@ -19,12 +21,12 @@ def publish_call_create_call_record_event(
 
     event_attributes = {
         "ringcentral_telephony_session_id": ringcentral_telephony_session_id,
+        "ringcentral_session_id": ringcentral_session_id,
         "practice_id": practice_id,
+        "voip_provider_id": voip_provider_id,
         "ringcentral_account_id": ringcentral_account_id,
     }
 
-    log.info(settings.PUBSUB_TOPIC_PATH_RINGCENTRAL_CREATE_CALL_RECORD)
-    log.info(settings.PUBSUB_TOPIC_PATH_NETSAPIENS_LEG_B_FINISHED)
     return publish_event(event_attributes=event_attributes, event="", topic_path=topic_path_ringcentral_create_call_record, publisher=publisher)
 
 def publish_ringcentral_create_call_audio_event(

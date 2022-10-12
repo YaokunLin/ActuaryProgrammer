@@ -41,25 +41,24 @@ class Command(BaseCommand):
 
             ringcentral_sdk = SDK(ringcentral_creds.client_id, ringcentral_creds.client_secret, ringcentral_creds.api_url)
             platform = ringcentral_sdk.platform()
-            self.stdout.write(f"Username '{ringcentral_creds.username}' and Password '{ringcentral_creds.password}'")
             platform.login(ringcentral_creds.username, '', ringcentral_creds.password)
 
             websocket_url = f"{options['peerlogic_root_api_url']}{ringcentral_call_subscription.call_subscription_uri}"
             event_subscription_payload = {
                 "eventFilters":["/restapi/v1.0/account/~/telephony/sessions"],
                 "deliveryMode":{"address":websocket_url,
-                "transportType":"WebHook"}
+                "transportType":"WebHook"},
+                "expiresIn":315360000 # 10 years
             }
             event_subscription_response = platform.post('/restapi/v1.0/subscription', event_subscription_payload)
 
             # attempt to get response content as json, get the first
             try:
-                event_subscription = event_subscription_response.json()[0]
+                event_subscription = event_subscription_response.json()
             except requests.exceptions.JSONDecodeError:
                 msg = "Problem attempting to retrieve JSON response for event subscription."
                 self.stdout.write(self.style.ERROR(msg))
                 raise Exception(msg)
-
-            ringcentral_call_subscription.source_id = event_subscription["id"]
+            ringcentral_call_subscription.source_id = event_subscription.id
             ringcentral_call_subscription.save()
             self.stdout.write(self.style.SUCCESS(f"Created netsapiens_call_subscription with source_id='{ringcentral_call_subscription.source_id}'"))

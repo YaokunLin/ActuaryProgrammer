@@ -18,7 +18,7 @@ router.register(r"call_legs", RingCentralCallLegViewset, basename="call-legs")
 urlpatterns = [
     path("", include(router.urls)),
     path(
-        "<practice_telecom_id>/call-subscription-receiver/",
+        "<practice_telecom_id>/<call_subscription_id>/call-subscription-receiver/",
         ringcentral_call_subscription_event_receiver_view,
         name="call-subscription-event-receiver",
     ),

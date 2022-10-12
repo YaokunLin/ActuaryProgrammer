@@ -228,11 +228,11 @@ def netsapiens_call_subscription_event_receiver_view(request, practice_telecom_i
     #
 
     try:
-        log.info(f"Publishing leg b ready events for: practice_telecom_id: '{practice_telecom_id}' and call_subscription_id: '{call_subscription_id}'")
+        log.info(f"Publishing create call events for: practice_telecom_id: '{practice_telecom_id}' and call_subscription_id: '{call_subscription_id}'")
         publish_leg_b_ready_events(
             netsapiens_call_subscription_id=call_subscription_id, practice_id=practice_id, voip_provider_id=voip_provider_id, events=saved_events
         )
-        log.info(f"Published leg b ready events for: practice_telecom_id: '{practice_telecom_id}' and call_subscription_id: '{call_subscription_id}'")
+        log.info(f"Published create call events for: practice_telecom_id: '{practice_telecom_id}' and call_subscription_id: '{call_subscription_id}'")
     except PermissionDenied:
         message = "Must add role 'roles/pubsub.publisher'. Exiting."
         log.exception(message)

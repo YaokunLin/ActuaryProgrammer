@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
                 ('modified_at', models.DateTimeField(auto_now=True, db_index=True)),
                 ('id', django_extensions.db.fields.ShortUUIDField(blank=True, editable=False, primary_key=True, serialize=False)),
-                ('source_id', models.CharField(blank=True, default='', help_text="Subscription ID for RingCentral on the Voip Provider's side. The source of the data / events", max_length=32)),
+                ('source_id', models.CharField(blank=True, default='', help_text="Subscription ID for RingCentral on the Voip Provider's side. The source of the data / events", max_length=255)),
                 ('active', models.BooleanField(default=True, null=True)),
                 ('created_by', django_userforeignkey.models.fields.UserForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='ringcentralcallsubscription_created', to=settings.AUTH_USER_MODEL, verbose_name='The user that is automatically assigned')),
                 ('modified_by', django_userforeignkey.models.fields.UserForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='ringcentralcallsubscription_modified', to=settings.AUTH_USER_MODEL, verbose_name='The user that is automatically assigned')),
