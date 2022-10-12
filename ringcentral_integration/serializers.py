@@ -19,7 +19,6 @@ log = logging.getLogger(__name__)
 class RingCentralSessionEventSerializer(serializers.ModelSerializer):
     class Meta:
         model = RingCentralSessionEvent
-        # read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at"]
         fields = "__all__"
     
     def create(self, validated_data: Dict):

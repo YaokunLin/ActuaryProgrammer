@@ -126,8 +126,8 @@ def ringcentral_call_subscription_event_receiver_view(request, practice_telecom_
         stand_alone= session['parties'][0]['standAlone'],
     )
 
-    # ToDo still under investigation on if this is the proper disconect event to check
-    if status_code == 'Disconnected' and session['parties'][0]['status'].get('reason') is None:
+    # TODO: still under investigation on if this is the proper disconect event to check
+    if status_code == 'Disconnected':
         #
         # PROCESSING
         #
@@ -146,6 +146,7 @@ def ringcentral_call_subscription_event_receiver_view(request, practice_telecom_
     return HttpResponse(status=200)
 
 
+# Note: this is not used but will kept for future reference
 class LoginView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
@@ -185,7 +186,7 @@ class LoginView(APIView):
 
         if not (username and password):
             log.info(f"Bad Request detected for login. Missing one or more required fields.")
-            raise ParseError()
+            raise ParseError(f"Bad Request detected for login. Missing one or more required fields.")
 
         rcsdk = SDK( ringcentral_api_client.client_id,
              ringcentral_api_client.client_secret,
@@ -232,8 +233,6 @@ class LoginView(APIView):
                 create_agent(user, practice)
 
 
-@authentication_classes([])
-@permission_classes([AllowAny]) # TODO CHANGE THIS 
 class AdminRingCentralAPICredentialsViewset(viewsets.ModelViewSet):
     queryset = RingCentralAPICredentials.objects.all().order_by("voip_provider", "active", "-created_at")
     serializer_class = AdminRingCentralAPICredentialsSerializer
