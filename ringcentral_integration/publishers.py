@@ -20,17 +20,20 @@ def publish_call_create_call_record_event(
 ): 
 
     event_attributes = {
-        "ringcentral_telephony_session_id": ringcentral_telephony_session_id,
-        "ringcentral_session_id": ringcentral_session_id,
         "practice_id": practice_id,
         "voip_provider_id": voip_provider_id,
-        "ringcentral_account_id": ringcentral_account_id,
     }
 
-    return publish_event(event_attributes=event_attributes, event="", topic_path=topic_path_ringcentral_create_call_record, publisher=publisher)
+    event = {
+        "ringcentral_telephony_session_id": ringcentral_telephony_session_id,
+        "ringcentral_session_id": ringcentral_session_id,
+    }
+
+    return publish_event(event_attributes=event_attributes, event=event, topic_path=topic_path_ringcentral_create_call_record, publisher=publisher)
 
 def publish_ringcentral_create_call_audio_event(
     voip_provider_id: str,
+    practice_id: str,
     peerlogic_call_id: str,
     peerlogic_call_partial_id: str,
     ringcentral_recording_id: str,
@@ -39,6 +42,7 @@ def publish_ringcentral_create_call_audio_event(
 ) -> pubsub_v1.publisher.futures.Future:
 
     event_attributes = {
+        "practice_id": practice_id,
         "voip_provider_id": voip_provider_id,
     }
 

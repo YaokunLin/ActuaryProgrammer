@@ -3,6 +3,7 @@ from typing import Dict
 
 from rest_framework import serializers
 from core.serializers import UnixEpochDateField
+from calls.models import Call
 
 from .models import (
     RingCentralAPICredentials,
@@ -55,12 +56,19 @@ class RingCentralCallLegSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def create(self, validated_data: Dict):
+        # Grab the Voip provider used in the create call function
+        voip_provider = validated_data.pop("voip_provider", None)
 
         # perform the create
         instance = super().create(validated_data=validated_data)
         log.info(validated_data)
+
+        peerlogic_call = Call.objects.get(validated_data['peerlogic_call_id'])
+        practice_id = peerlogic_call.practice.id
         if validated_data['recordings']:
             publish_ringcentral_create_call_audio_event(
+                voip_provider = voip_provider,
+                practice_id = practice_id,
                 peerlogic_call_id = validated_data['peerlogic_call_id'],
                 peerlogic_call_partial_id = instance.id,
                 ringcentral_recording_id = validated_data['ringcentral_recording_id'],
