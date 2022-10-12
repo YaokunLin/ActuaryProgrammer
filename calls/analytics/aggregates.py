@@ -786,6 +786,8 @@ def safe_divide(dividend: int, divisor: int, default: int = 0, should_round: boo
 
 def round_if_float(number: Union[int, float], round_places: Optional[int] = 2) -> Union[int, float]:
     if isinstance(number, float):
+        if number.is_integer():
+            return int(number)
         return round(number, round_places)
     return number
 

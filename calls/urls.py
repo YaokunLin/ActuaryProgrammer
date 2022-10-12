@@ -1,9 +1,9 @@
 from django.urls import include, path
 from rest_framework_nested import routers
 
-from calls.analytics.benchmarks.views import (
-    CallCountsBenchmarksView,
-    OpportunitiesBenchmarksView,
+from calls.analytics.industry_averages.views import (
+    CallCountsIndustryAveragesView,
+    OpportunitiesIndustryAveragesView,
 )
 from calls.analytics.insurance_providers.views import (
     InsuranceProviderCallMetricsView,
@@ -83,9 +83,6 @@ call_router.register(r"call-notes", CallNoteViewSet, basename="call-notes")
 call_router.register(r"mentioned-companies", CallMentionedCompanyViewset, basename="call-mentioned-companies")
 call_router.register(r"mentioned-insurances", CallMentionedInsuranceViewset, basename="call-mentioned-insurances")
 call_router.register(r"mentioned-procedures", CallMentionedProcedureViewset, basename="call-mentioned-procedures")
-call_router.register(
-    r"procedures-mentioned", CallMentionedProcedureViewset, basename="call-procedures-mentioned"
-)  # TODO, remove this once ml-stream-pipeline no longer needs backwards compatibility
 call_router.register(r"mentioned-products", CallMentionedProductViewset, basename="call-mentioned-products")
 call_router.register(r"mentioned-symptoms", CallMentionedSymptomViewset, basename="call-mentioned-symptoms")
 call_router.register(r"pauses", CallLongestPauseViewset, basename="call-pauses")
@@ -109,13 +106,12 @@ urlpatterns = [
     # Call Audio Partials (root)
     path(r"audio-partials/<pk>/", GetCallAudioPartial.as_view(), name="audio-partial"),
     path(r"audio-partials/", GetCallAudioPartials.as_view(), name="audio-partials"),
-    # Call Transctipt Partials (root)
+    # Call Transcript Partials (root)
     path(r"transcript-partials/<pk>/", GetCallTranscriptPartial.as_view(), name="transcript-partial"),
     path(r"transcript-partials/", GetCallTranscriptPartials.as_view(), name="transcript-partials"),
     # Distinct views
     path(r"mentioned-procedures/", CallMentionedProcedureDistinctView.as_view(), name="mentioned-procedures"),
     # Call Aggregates
-    path(r"calls/aggregates/insurance-provider-interactions/", InsuranceProviderInteractionsView.as_view(), name="insurance-provider-interactions"),
     path(r"calls/aggregates/new-patient-opportunities/", NewPatientOpportunitiesView.as_view(), name="new-patient-opportunities"),
     path(r"calls/aggregates/new-patient-winback-opportunities/", NewPatientWinbacksView.as_view(), name="new-patient-winback-opportunities"),
     path(r"calls/aggregates/call-counts/", CallCountsView.as_view(), name="call-counts"),
@@ -132,8 +128,13 @@ urlpatterns = [
     path(r"calls/top-mentions/products/", TopProductsMentionedView.as_view(), name="top-mentioned-products"),
     path(r"calls/top-mentions/symptoms/", TopSymptomsMentionedView.as_view(), name="top-mentioned-symptoms"),
     # Benchmarks
-    path(r"calls/benchmarks/opportunities/", OpportunitiesBenchmarksView.as_view(), name="opportunities-benchmarks"),
-    path(r"calls/benchmarks/call-counts/", CallCountsBenchmarksView.as_view(), name="call-counts-benchmarks"),
+    path(r"calls/industry-averages/opportunities/", OpportunitiesIndustryAveragesView.as_view(), name="opportunities-industry-averages"),
+    path(r"calls/industry-averages/call-counts/", CallCountsIndustryAveragesView.as_view(), name="call-counts-industry-averages"),
+    path(
+        r"calls/industry-averages/outbound-insurance-provider-call-counts/",
+        InsuranceProviderInteractionsView.as_view(),
+        name="outbound-insurance-provider-call-counts-industry-averages",
+    ),
     # Routers
     path(r"", include(calls_app_root_router.urls)),
     path(r"", include(call_router.urls)),
