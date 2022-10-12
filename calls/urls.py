@@ -83,9 +83,6 @@ call_router.register(r"call-notes", CallNoteViewSet, basename="call-notes")
 call_router.register(r"mentioned-companies", CallMentionedCompanyViewset, basename="call-mentioned-companies")
 call_router.register(r"mentioned-insurances", CallMentionedInsuranceViewset, basename="call-mentioned-insurances")
 call_router.register(r"mentioned-procedures", CallMentionedProcedureViewset, basename="call-mentioned-procedures")
-call_router.register(
-    r"procedures-mentioned", CallMentionedProcedureViewset, basename="call-procedures-mentioned"
-)  # TODO, remove this once ml-stream-pipeline no longer needs backwards compatibility
 call_router.register(r"mentioned-products", CallMentionedProductViewset, basename="call-mentioned-products")
 call_router.register(r"mentioned-symptoms", CallMentionedSymptomViewset, basename="call-mentioned-symptoms")
 call_router.register(r"pauses", CallLongestPauseViewset, basename="call-pauses")
@@ -109,7 +106,7 @@ urlpatterns = [
     # Call Audio Partials (root)
     path(r"audio-partials/<pk>/", GetCallAudioPartial.as_view(), name="audio-partial"),
     path(r"audio-partials/", GetCallAudioPartials.as_view(), name="audio-partials"),
-    # Call Transctipt Partials (root)
+    # Call Transcript Partials (root)
     path(r"transcript-partials/<pk>/", GetCallTranscriptPartial.as_view(), name="transcript-partial"),
     path(r"transcript-partials/", GetCallTranscriptPartials.as_view(), name="transcript-partials"),
     # Distinct views

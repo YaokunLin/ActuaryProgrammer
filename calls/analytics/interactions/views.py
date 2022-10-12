@@ -1,8 +1,6 @@
 from rest_framework import viewsets
-from calls.analytics.interactions.models import (
-    AgentCallScore,
-    AgentCallScoreMetric,
-)
+
+from calls.analytics.interactions.models import AgentCallScore, AgentCallScoreMetric
 from calls.analytics.interactions.serializers import (
     AgentCallScoreMetricSerializer,
     AgentCallScoreReadSerializer,
@@ -21,7 +19,10 @@ class AgentCallScoreViewset(viewsets.ModelViewSet):
         if self.action in ["create", "update", "partial_update"]:
             return self.serializer_class_write
 
-        return self.serializer_class_read    
+        return self.serializer_class_read
+
+    def get_queryset(self):
+        return super().get_queryset().filter(call=self.kwargs.get("call_pk"))
 
 
 class AgentCallScoreMetricViewset(viewsets.ModelViewSet):
