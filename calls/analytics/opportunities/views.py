@@ -53,10 +53,13 @@ log = logging.getLogger(__name__)
 
 
 class CallCountsView(views.APIView):
-    @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
-    @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
-    @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
+    # @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
+    # @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
+    # @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
+        #
+        # collect parameters
+        #
         dates_info = get_validated_call_dates(query_data=request.query_params)
         dates_errors = dates_info.get("errors")
 
@@ -64,16 +67,27 @@ class CallCountsView(views.APIView):
 
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
 
+        #
+        # validate parameters
+        #
         errors = {}
+        if dates_errors:
+            errors.update(dates_errors)
+
+        if call_direction_errors:
+            errors.update(call_direction_errors)
+
         if practice_errors:
             errors.update(practice_errors)
         if not practice_errors and not valid_practice_id:
             errors.update({"practice__id": "practice__id must be provided"})
-        if dates_errors:
-            errors.update(dates_errors)
+
         if errors:
             return Response(status=status.HTTP_400_BAD_REQUEST, data=errors)
 
+        #
+        # create individual filters from parameters
+        #
         dates = dates_info.get("dates")
         start_date_str = dates[0]
         end_date_str = dates[1]
@@ -86,10 +100,14 @@ class CallCountsView(views.APIView):
         practice = Practice.objects.get(id=valid_practice_id)
         practice_filter = Q(practice__id=valid_practice_id)
 
+        #
+        # filter and compute
+        #
         base_filters = dates_filter & call_direction_filter
         practice_analytics = self.get_call_counts(base_filters & practice_filter, start_date_str, end_date_str)
         results = practice_analytics
 
+        # calculate organization averages
         organization_id = practice.organization_id
         if organization_id:
             num_practices = Practice.objects.filter(organization_id=practice.organization_id).count()
