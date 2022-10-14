@@ -56,7 +56,9 @@ class _TopMentionedViewBase(views.APIView):
 
         valid_call_direction, call_direction_errors = get_validated_call_direction(request=request)
 
-        is_industry_averages_request = get_validated_query_param_bool(request, "industry_average", False)
+        industry_average_parameter_name = "industry_average"
+        is_industry_averages_request = get_validated_query_param_bool(request, industry_average_parameter_name, False)
+        practice_id_parameter_name = "practice__id"
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
 
         size = 10  # TODO: Use app settings for pagination limits and use shared code for getting size here
@@ -76,18 +78,18 @@ class _TopMentionedViewBase(views.APIView):
         # need is_industry_average_request XOR valid practice (valid_practice_id and not practice_errors)
         # can't have both
         if is_industry_averages_request and valid_practice_id:
-            error_message = "practice__id or industry_average must be provided, but not more than one of them."
-            errors.update({"practice__id": error_message, "industry_average": error_message})
+            error_message = f"{practice_id_parameter_name} or {industry_average_parameter_name} must be provided, but not more than one of them."
+            errors.update({practice_id_parameter_name: error_message, industry_average_parameter_name: error_message})
         # have to have at least one
         elif not is_industry_averages_request and not valid_practice_id:
-            error_message = "practice__id or industry_average must be provided, but not more than one of them."
-            errors.update({"practice__id": error_message, "industry_average": error_message})
+            error_message = f"{practice_id_parameter_name} or {industry_average_parameter_name} must be provided, but not more than one of them."
+            errors.update({practice_id_parameter_name: error_message, industry_average_parameter_name: error_message})
         # practice needs to be valid
         elif not is_industry_averages_request and practice_errors:
             errors.update(practice_errors)
         # did they provide a practice at all?
         elif not is_industry_averages_request and not practice_errors and not valid_practice_id:
-            errors.update({"practice__id": "practice__id must be provided"})
+            errors.update({practice_id_parameter_name: "{practice_id_parameter_name} must be provided"})
 
         if errors:
             return Response(status=status.HTTP_400_BAD_REQUEST, data=errors)
