@@ -1,5 +1,7 @@
 import logging
 from contextlib import suppress
+from copy import deepcopy
+from functools import partial
 from typing import Dict, List
 
 from django.db.models import Count, Q
@@ -10,7 +12,11 @@ from rest_framework import status, views
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from calls.analytics.aggregates import safe_divide
+from calls.analytics.aggregates import (
+    divide_safely_if_possible,
+    map_nested_objs,
+    safe_divide,
+)
 from calls.analytics.query_filters import (
     INDUSTRY_AVERAGES_PRACTICE_CALLS_FILTER,
     INDUSTRY_AVERAGES_PRACTICE_FILTER,
@@ -20,7 +26,6 @@ from calls.models import Call
 from calls.validation import (
     get_validated_call_dates,
     get_validated_call_direction,
-    get_validated_organization_id,
     get_validated_practice_id,
     get_validated_query_param_bool,
 )
@@ -39,62 +44,94 @@ class _TopMentionedViewBase(views.APIView):
 
     _RESOURCE_NAME: str = None
 
-    @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
-    @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
-    @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
+    # @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
+    # @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
+    # @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request: Request, format=None) -> Response:
-        # TODO: Use app settings for pagination limits and use shared code for getting size here
-        size = 10
-        with suppress(Exception):
-            size = max(0, min(50, int(request.query_params.get("size", size))))
-
-        is_industry_averages_request = get_validated_query_param_bool(request, "industry_average", False)
-        valid_call_direction, call_direction_errors = get_validated_call_direction(request)
-        valid_practice_id, practice_errors = get_validated_practice_id(request=request)
-        valid_organization_id, organization_errors = get_validated_organization_id(request=request)
+        #
+        # collect parameters
+        #
         dates_info = get_validated_call_dates(query_data=request.query_params)
         dates_errors = dates_info.get("errors")
 
+        valid_call_direction, call_direction_errors = get_validated_call_direction(request=request)
+
+        is_industry_averages_request = get_validated_query_param_bool(request, "industry_average", False)
+        valid_practice_id, practice_errors = get_validated_practice_id(request=request)
+
+        size = 10  # TODO: Use app settings for pagination limits and use shared code for getting size here
+        with suppress(Exception):
+            size = max(0, min(50, int(request.query_params.get("size", size))))
+
+        #
+        # validate parameters
+        #
         errors = {}
-        if practice_errors:
-            errors.update(practice_errors)
-        if organization_errors:
-            errors.update(organization_errors)
-        if call_direction_errors:
-            errors.update(call_direction_errors)
-        if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id) and not is_industry_averages_request:
-            error_message = "practice__id or organization__id or industry_average must be provided, but not more than one of them."
-            errors.update({"practice__id": error_message, "organization__id": error_message, "industry_average": error_message})
-        elif is_industry_averages_request and valid_practice_id or valid_organization_id:
-            error_message = "practice__id or organization__id or industry_average must be provided, but not more than one of them."
-            errors.update({"practice__id": error_message, "organization__id": error_message, "industry_average": error_message})
         if dates_errors:
             errors.update(dates_errors)
+
+        if call_direction_errors:
+            errors.update(call_direction_errors)
+
+        # need is_industry_average_request XOR valid practice (valid_practice_id and not practice_errors)
+        # can't have both
+        if is_industry_averages_request and valid_practice_id:
+            error_message = "practice__id or industry_average must be provided, but not more than one of them."
+            errors.update({"practice__id": error_message, "industry_average": error_message})
+        # have to have at least one
+        elif not is_industry_averages_request and not valid_practice_id:
+            error_message = "practice__id or industry_average must be provided, but not more than one of them."
+            errors.update({"practice__id": error_message, "industry_average": error_message})
+        # practice needs to be valid
+        elif not is_industry_averages_request and practice_errors:
+            errors.update(practice_errors)
+        # did they provide a practice at all?
+        elif not is_industry_averages_request and not practice_errors and not valid_practice_id:
+            errors.update({"practice__id": "practice__id must be provided"})
+
         if errors:
             return Response(status=status.HTTP_400_BAD_REQUEST, data=errors)
 
-        practice_filter = Q()
-        organization_filter = Q()
-        if is_industry_averages_request:
-            practice_filter = INDUSTRY_AVERAGES_PRACTICE_CALLS_FILTER
-        else:
-            if valid_practice_id:
-                practice_filter = Q(practice__id=valid_practice_id)
-            if valid_organization_id:
-                organization_filter = Q(practice__organization_id=valid_organization_id)
-
-        # date filters
+        #
+        # create individual filters from parameters
+        #
         dates = dates_info.get("dates")
-        call_start_time__gte = dates[0]
-        call_start_time__lte = dates[1]
-        dates_filter = Q(call_start_time__gte=call_start_time__gte, call_start_time__lte=call_start_time__lte)
+        start_date_str = dates[0]
+        end_date_str = dates[1]
+        dates_filter = Q(call_start_time__gte=start_date_str, call_start_time__lte=end_date_str)
 
         call_direction_filter = Q()
         if valid_call_direction:
             call_direction_filter = Q(call_direction=valid_call_direction)
 
-        all_filters = NAEPT_PATIENT_FILTER & dates_filter & practice_filter & organization_filter & call_direction_filter
-        return Response(self._get_top_mentions(all_filters, self._RESOURCE_NAME, size, is_industry_averages_request))
+        #
+        # filter and compute
+        #
+
+        # handle industry averages
+        base_filters = NAEPT_PATIENT_FILTER & dates_filter & call_direction_filter
+        if is_industry_averages_request:
+            results = self._get_top_mentions(INDUSTRY_AVERAGES_PRACTICE_CALLS_FILTER & base_filters, self._RESOURCE_NAME, size, is_industry_averages_request)
+            return Response({"results": results})
+
+        # handle practice
+        practice = Practice.objects.get(id=valid_practice_id)
+        practice_filter = Q(practice__id=valid_practice_id)
+        results = self._get_top_mentions(practice_filter & base_filters, self._RESOURCE_NAME, size, is_industry_averages_request)
+
+        # calculate organization averages
+        organization_id = practice.organization_id
+        if organization_id:
+            num_practices = Practice.objects.filter(organization_id=practice.organization_id).count()
+            organization_filter = Q(practice__organization_id=organization_id)
+            results["organization_averages"] = self._get_top_mentions(
+                organization_filter & base_filters, self._RESOURCE_NAME, size, is_industry_averages_request
+            )
+            results["organization_averages"] = map_nested_objs(obj=results["organization_averages"], func=partial(divide_safely_if_possible, num_practices))
+        else:
+            results["organization_averages"] = deepcopy(results)
+
+        return Response({"results": results})
 
     def _get_top_mentions(self, call_filters: Q, resource_name: str, size: int, is_industry_averages_request: bool) -> Dict:
         mentioned_resource_name = f"mentioned_{resource_name}"
