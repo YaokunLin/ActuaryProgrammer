@@ -124,7 +124,7 @@ class _TopMentionedViewBase(views.APIView):
         # calculate organization averages
         organization_id = practice.organization_id
         if organization_id:
-            num_practices = Practice.objects.filter(organization_id=practice.organization_id).count()
+            num_practices = Practice.objects.filter(organization_id=organization_id).count()
             organization_filter = Q(practice__organization_id=organization_id)
             results["organization_averages"] = self._get_top_mentions(
                 organization_filter & base_filters, self._RESOURCE_NAME, size, is_industry_averages_request
