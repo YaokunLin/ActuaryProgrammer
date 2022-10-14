@@ -110,7 +110,7 @@ class CallCountsView(views.APIView):
         # calculate organization averages
         organization_id = practice.organization_id
         if organization_id:
-            num_practices = Practice.objects.filter(organization_id=practice.organization_id).count()
+            num_practices = Practice.objects.filter(organization_id=organization_id).count()
             organization_filter = Q(practice__organization_id=organization_id)
             results["organization_averages"] = self.get_call_counts(base_filters & organization_filter, start_date_str, end_date_str)
             results["organization_averages"] = map_nested_objs(obj=results["organization_averages"], func=partial(divide_safely_if_possible, num_practices))
