@@ -804,9 +804,9 @@ def map_nested_objs(obj, func):
     return func(obj)
 
 
-def divide_safely_if_possible(divisor, dividend):
+def divide_safely_if_possible(divisor: object, dividend: object) -> object:
     """
-    Attempt to divide the object by the divisor. If its possible the division occurs, otherwise return the number.
+    Attempt to divide the object by the divisor. If its possible the division occurs, otherwise return the dividend unaltered.
     This division is safe and avoid division by zero.
     This operates on anything that responds to division and not just integers and floats.
     """
