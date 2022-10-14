@@ -44,9 +44,9 @@ class _TopMentionedViewBase(views.APIView):
 
     _RESOURCE_NAME: str = None
 
-    # @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
-    # @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
-    # @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
+    @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
+    @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
+    @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request: Request, format=None) -> Response:
         #
         # collect parameters
