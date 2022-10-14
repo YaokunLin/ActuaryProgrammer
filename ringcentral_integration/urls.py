@@ -13,7 +13,7 @@ app_name = "ringcentral_integration"
 
 router = routers.DefaultRouter()
 router.register(r"admin/api-credentials", AdminRingCentralAPICredentialsViewset)
-router.register(r"call_legs", RingCentralCallLegViewset, basename="call-legs")
+router.register(r"call-legs", RingCentralCallLegViewset, basename="call-legs")
 
 urlpatterns = [
     path("", include(router.urls)),
