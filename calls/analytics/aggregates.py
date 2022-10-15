@@ -1,7 +1,6 @@
 import collections.abc
 import datetime
 import logging
-import numbers
 from datetime import timedelta
 from typing import Dict, List, Optional, Union
 
@@ -805,13 +804,13 @@ def map_nested_objs(obj, func):
     return func(obj)
 
 
-def divide_safely_if_possible(divisor, obj):
+def divide_safely_if_possible(divisor: object, dividend: object) -> object:
     """
-    Attempt to divide the object by the divisor. If its possible the division occurs, otherwise return the number.
+    Attempt to divide the object by the divisor. If its possible the division occurs, otherwise return the dividend unaltered.
     This division is safe and avoid division by zero.
     This operates on anything that responds to division and not just integers and floats.
     """
     try:
-        return safe_divide(obj, divisor)
+        return safe_divide(dividend, divisor)
     except Exception:
-        return obj
+        return dividend
