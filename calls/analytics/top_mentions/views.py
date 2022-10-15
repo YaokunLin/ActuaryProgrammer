@@ -21,6 +21,7 @@ from calls.analytics.query_filters import (
     INDUSTRY_AVERAGES_PRACTICE_CALLS_FILTER,
     INDUSTRY_AVERAGES_PRACTICE_FILTER,
     NAEPT_PATIENT_FILTER,
+    get_organization_filter_and_practice_count_for_practice,
 )
 from calls.models import Call
 from calls.validation import (
@@ -122,10 +123,8 @@ class _TopMentionedViewBase(views.APIView):
         results = self._get_top_mentions(practice_filter & base_filters, self._RESOURCE_NAME, size, is_industry_averages_request)
 
         # calculate organization averages
-        organization_id = practice.organization_id
-        if organization_id:
-            num_practices = Practice.objects.filter(organization_id=organization_id).count()
-            organization_filter = Q(practice__organization_id=organization_id)
+        organization_filter, num_practices = get_organization_filter_and_practice_count_for_practice(practice=practice)
+        if num_practices:
             results["organization_averages"] = self._get_top_mentions(
                 organization_filter & base_filters, self._RESOURCE_NAME, size, is_industry_averages_request
             )

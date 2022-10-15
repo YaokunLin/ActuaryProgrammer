@@ -33,6 +33,7 @@ from calls.analytics.query_filters import (
     OPPORTUNITIES_FILTER,
     OUTBOUND_FILTER,
     SUCCESS_FILTER,
+    get_organization_filter_and_practice_count_for_practice,
 )
 from calls.models import Call
 from calls.validation import (
@@ -108,10 +109,8 @@ class CallCountsView(views.APIView):
         results = practice_analytics
 
         # calculate organization averages
-        organization_id = practice.organization_id
-        if organization_id:
-            num_practices = Practice.objects.filter(organization_id=organization_id).count()
-            organization_filter = Q(practice__organization_id=organization_id)
+        organization_filter, num_practices = get_organization_filter_and_practice_count_for_practice(practice=practice)
+        if num_practices:
             results["organization_averages"] = self.get_call_counts(base_filters & organization_filter, start_date_str, end_date_str)
             results["organization_averages"] = map_nested_objs(obj=results["organization_averages"], func=partial(divide_safely_if_possible, num_practices))
         else:
@@ -171,8 +170,8 @@ class OpportunitiesView(views.APIView):
         opportunities_qs = Call.objects.filter(practice_filter & dates_filter & INBOUND_FILTER & OPPORTUNITIES_FILTER)
         results = self._calculate_opportunities_analytics(opportunities_qs)
 
-        if practice.organization_id:
-            num_practices = Practice.objects.filter(organization_id=practice.organization_id).count()
+        organization_filter, num_practices = get_organization_filter_and_practice_count_for_practice(practice=practice)
+        if num_practices:
             org_opportunities_qs = Call.objects.filter(
                 Q(practice__organization_id=practice.organization_id) & dates_filter & INBOUND_FILTER & OPPORTUNITIES_FILTER
             )
