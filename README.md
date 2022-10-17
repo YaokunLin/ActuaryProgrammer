@@ -152,7 +152,7 @@ echo "1PASSWORD_SHORTHAND=<youroutputtedtokenhere>" >> ~/.bashrc
 
 Creation of credentials requires us to be local / on the same network as the environment in question since we're using the ORM to update the database itself directly.
 
-1. Download the appropriate credentials file [here](https://start.1password.com/open/i?a=P3RU52IFYBEH3GKEDF2UBYENBQ&v=wlmpasbyyncmhpjji3lfc7ra4a&i=hwym3nsqbjfhrjskkfjmvcnq4a&h=my.1password.com), to access the environment via IAM. place this file into ./credentials peerlogic-api-dev-ed106011ebe5.json
+1. Download the appropriate credentials file [here](https://start.1password.com/open/i?a=P3RU52IFYBEH3GKEDF2UBYENBQ&v=wlmpasbyyncmhpjji3lfc7ra4a&i=hwym3nsqbjfhrjskkfjmvcnq4a&h=my.1password.com), to access the environment via IAM. place this file into the ./credentials directory 
 
 2. Create a google cloud environment. [Gcloud installation](https://cloud.google.com/sdk/docs/install)
 
