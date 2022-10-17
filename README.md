@@ -17,11 +17,11 @@ Create a new file in the root of the peerlogic-api directory called `.env`.
 Paste the contents of this 1Password secret into the `.env` file
 
 See 1Password for a starter
-file: [peerlogic-api LOCAL  starter .env file](https://start.1password.com/open/i?a=P3RU52IFYBEH3GKEDF2UBYENBQ&v=wlmpasbyyncmhpjji3lfc7ra4a&i=sxjcghmtefeqvdystb2l6q7k5y&h=my.1password.com)
+file: [peerlogic-api LOCAL  starter .env file](https://start.1password.com/open/i?a=P3RU52IFYBEH3GKEDF2UBYENBQ&v=wlmpasbyyncmhpjji3lfc7ra4a&i=2swwri27d5bztnkq223yypxdvy&h=my.1password.com)
 
-### Docker commands
+### Docker commands 
 
-Initialize Postgres and create the peerlogic database, without tables:
+Run the following to initialize Postgres and create the peerlogic database, without tables:
 
 ```bash
 docker-compose up -d postgres
@@ -152,11 +152,11 @@ echo "1PASSWORD_SHORTHAND=<youroutputtedtokenhere>" >> ~/.bashrc
 
 Creation of credentials requires us to be local / on the same network as the environment in question since we're using the ORM to update the database itself directly.
 
-1. Download the appropriate credentials file to access the environment via IAM. Place this somewhere that is secure and you won't forget it. You'll need to use this later.
+1. Download the appropriate credentials file [here](https://start.1password.com/open/i?a=P3RU52IFYBEH3GKEDF2UBYENBQ&v=wlmpasbyyncmhpjji3lfc7ra4a&i=hwym3nsqbjfhrjskkfjmvcnq4a&h=my.1password.com), to access the environment via IAM. place this file into ./credentials peerlogic-api-dev-ed106011ebe5.json
 
-2. Create a google cloud environment
+2. Create a google cloud environment. [Gcloud installation](https://cloud.google.com/sdk/docs/install)
 
-    Either this with the appropriate values at the prompts:
+    Enter this with the appropriate values at the prompts:
 
     ```bash
     gcloud init
@@ -166,7 +166,7 @@ Creation of credentials requires us to be local / on the same network as the env
 
     Name it `peerlogic-api-dev`, `peerlogic-api-stage` or `peerlogic-api-prod` depending on which project you choose. Select us-west4a as the Compute Region/Zone.
 
-3. Enter the google cloud environment to access the database with cloud sql proxy
+3. Enter the google cloud environment to access the database with [cloud sql proxy](https://cloud.google.com/sql/docs/mysql/connect-instance-auth-proxy#macos-64-bit)
 
     ```bash
     ./devtools/cloud_sql_proxy.bash
@@ -178,7 +178,7 @@ Google Cloud credentials are necessary to access the database. Your environment 
 
 1. Ensure you have a copy of the appropriate deployment's environment. Use Secret Manager of the appropriate environment to download a copy.
 
-2. Place into the ./environment-connect/ directory the downloaded .env file with its enviromment shorthand as a suffix such as ./environment-connect/.env.dev for example.
+2. In the ./environment-connect/ directory place the downloaded .env file with its environment shorthand as a suffix; such as ./environment-connect/.env.dev for example. 
 
 3. Update the .env file to use the google credentials file.
 

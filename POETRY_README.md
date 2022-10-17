@@ -39,7 +39,7 @@ Poetry
 curl -sSL https://install.python-poetry.org | python3 -
 ```
 
-After that you can run the following command which will create a virtual env via poetry for you.
+Make sure your pyenv is using the appropriate version of python. After that you can run the following command which will create a virtual env via poetry for you.
 ```
 poetry install
 ```
