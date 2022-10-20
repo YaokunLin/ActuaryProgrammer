@@ -1,11 +1,14 @@
+import requests
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import connection, transaction
-
-import requests
 from ringcentral import SDK
+
 from core.models import Practice, PracticeTelecom, VoipProvider
-from ringcentral_integration.models import RingCentralAPICredentials, RingCentralCallSubscription
+from ringcentral_integration.models import (
+    RingCentralAPICredentials,
+    RingCentralCallSubscription,
+)
 
 
 class Command(BaseCommand):
@@ -23,7 +26,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"Got voip provider with pk='{voip_provider.pk}'"))
 
         self.stdout.write(f"Getting ringcentral credentials for voip provider'{options['voip_provider_id']}'")
-        ringcentral_creds = RingCentralAPICredentials.objects.get(voip_provider_id=options['voip_provider_id'])
+        ringcentral_creds = RingCentralAPICredentials.objects.get(voip_provider_id=options["voip_provider_id"])
         self.stdout.write(self.style.SUCCESS(f"Got ringcentral credentials with pk='{ringcentral_creds.pk}'"))
 
         with transaction.atomic():
@@ -41,16 +44,15 @@ class Command(BaseCommand):
 
             ringcentral_sdk = SDK(ringcentral_creds.client_id, ringcentral_creds.client_secret, ringcentral_creds.api_url)
             platform = ringcentral_sdk.platform()
-            platform.login(ringcentral_creds.username, '', ringcentral_creds.password)
+            platform.login(ringcentral_creds.username, "", ringcentral_creds.password)
 
             websocket_url = f"{options['peerlogic_root_api_url']}{ringcentral_call_subscription.call_subscription_uri}"
             event_subscription_payload = {
-                "eventFilters":["/restapi/v1.0/account/~/telephony/sessions"],
-                "deliveryMode":{"address":websocket_url,
-                "transportType":"WebHook"},
-                "expiresIn":315360000 # 10 years
+                "eventFilters": ["/restapi/v1.0/account/~/telephony/sessions"],
+                "deliveryMode": {"address": websocket_url, "transportType": "WebHook"},
+                "expiresIn": 315360000,  # 10 years
             }
-            event_subscription_response = platform.post('/restapi/v1.0/subscription', event_subscription_payload)
+            event_subscription_response = platform.post("/restapi/v1.0/subscription", event_subscription_payload)
 
             # attempt to get response content as json, get the first
             try:

@@ -2,31 +2,31 @@ import logging
 from typing import Dict
 
 from rest_framework import serializers
-from core.serializers import UnixEpochDateField
+
 from calls.models import Call
+from core.serializers import UnixEpochDateField
 
 from .models import (
     RingCentralAPICredentials,
+    RingCentralCallLeg,
     RingCentralSessionEvent,
-    RingCentralCallLeg
 )
-
-from .publishers import (
-    publish_ringcentral_create_call_audio_event
-)
+from .publishers import publish_ringcentral_create_call_audio_event
 
 log = logging.getLogger(__name__)
+
 
 class RingCentralSessionEventSerializer(serializers.ModelSerializer):
     class Meta:
         model = RingCentralSessionEvent
         fields = "__all__"
-    
+
     def create(self, validated_data: Dict):
         instance = super().create(validated_data)
 
         return instance
-    
+
+
 class AdminRingCentralAPICredentialsSerializer(serializers.ModelSerializer):
     class Meta:
         model = RingCentralAPICredentials
@@ -46,6 +46,7 @@ class AdminRingCentralAPICredentialsSerializer(serializers.ModelSerializer):
             "active",
         ]
 
+
 class RingCentralCallLegSerializer(serializers.ModelSerializer):
     publish = serializers.BooleanField(required=False, default=True, allow_null=True)
     time_start = UnixEpochDateField(required=False)
@@ -63,15 +64,15 @@ class RingCentralCallLegSerializer(serializers.ModelSerializer):
         instance = super().create(validated_data=validated_data)
         log.info(validated_data)
 
-        peerlogic_call = Call.objects.get(validated_data['peerlogic_call_id'])
+        peerlogic_call = Call.objects.get(validated_data["peerlogic_call_id"])
         practice_id = peerlogic_call.practice.id
-        if validated_data['recordings']:
+        if validated_data["recordings"]:
             publish_ringcentral_create_call_audio_event(
-                voip_provider = voip_provider,
-                practice_id = practice_id,
-                peerlogic_call_id = validated_data['peerlogic_call_id'],
-                peerlogic_call_partial_id = instance.id,
-                ringcentral_recording_id = validated_data['ringcentral_recording_id'],
+                voip_provider=voip_provider,
+                practice_id=practice_id,
+                peerlogic_call_id=validated_data["peerlogic_call_id"],
+                peerlogic_call_partial_id=instance.id,
+                ringcentral_recording_id=validated_data["ringcentral_recording_id"],
             )
 
         return instance

@@ -1,9 +1,9 @@
 import logging
+
 from django.conf import settings
 from google.cloud import pubsub_v1
 
 from core.pubsub_helpers import publish_event
-
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ def publish_call_create_call_record_event(
     ringcentral_account_id: str,
     topic_path_ringcentral_create_call_record: str = settings.PUBSUB_TOPIC_PATH_RINGCENTRAL_CREATE_CALL_RECORD,
     publisher: pubsub_v1.PublisherClient = settings.PUBLISHER,
-): 
+):
 
     event_attributes = {
         "practice_id": practice_id,
@@ -30,6 +30,7 @@ def publish_call_create_call_record_event(
     }
 
     return publish_event(event_attributes=event_attributes, event=event, topic_path=topic_path_ringcentral_create_call_record, publisher=publisher)
+
 
 def publish_ringcentral_create_call_audio_event(
     voip_provider_id: str,

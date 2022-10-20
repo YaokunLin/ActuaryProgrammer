@@ -1,13 +1,11 @@
 from django.urls import include, path
 from rest_framework import routers
 
-from .views import (
-    ringcentral_call_subscription_event_receiver_view,
-    # LoginView,
+from .views import (  # LoginView,
     AdminRingCentralAPICredentialsViewset,
-    RingCentralCallLegViewset
+    RingCentralCallLegViewset,
+    ringcentral_call_subscription_event_receiver_view,
 )
-
 
 app_name = "ringcentral_integration"
 

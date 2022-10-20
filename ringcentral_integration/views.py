@@ -2,57 +2,57 @@ import json
 import logging
 
 from django.db import transaction
-from django.http import HttpResponse, HttpRequest
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets
-from .models import (
-    RingCentralSessionEvent,
-    RingCentralAPICredentials,
-    RingCentralCallLeg,
-    RingCentralCallSubscription
-)
-from pydantic import BaseModel
-from ringcentral import SDK
-from ringcentral_integration.publishers import publish_call_create_call_record_event
 from django.utils import timezone
-from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from google.api_core.exceptions import PermissionDenied
+from pydantic import BaseModel
+from rest_framework import status, viewsets
+from rest_framework.decorators import (
+    api_view,
+    authentication_classes,
+    permission_classes,
+)
+from rest_framework.exceptions import APIException, ParseError, PermissionDenied
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.exceptions import (
-    APIException,
-    ParseError,
-    PermissionDenied,
-)
+from ringcentral import SDK
+
 from core.models import PracticeTelecom
 from core.setup_user_and_practice import (
     create_agent,
     create_user_telecom,
     save_user_activity_and_token,
     setup_practice,
-    setup_user
+    setup_user,
 )
+from ringcentral_integration.publishers import publish_call_create_call_record_event
 
+from .models import (
+    RingCentralAPICredentials,
+    RingCentralCallLeg,
+    RingCentralCallSubscription,
+    RingCentralSessionEvent,
+)
 from .serializers import (
     AdminRingCentralAPICredentialsSerializer,
-    RingCentralCallLegSerializer
+    RingCentralCallLegSerializer,
 )
-
-from google.api_core.exceptions import PermissionDenied
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
+
 
 class RingCentralAuthToken(BaseModel):
     access_token: str  # alphanumberic
     expires_in: int  # e.g. "3600"
     refresh_token: str  # alphanumberic
-    refresh_token_expires_in: int # "604800"
-    refresh_token_expire_time: int # "1664289200.5082414"
+    refresh_token_expires_in: int  # "604800"
+    refresh_token_expire_time: int  # "1664289200.5082414"
     scope: str  # e.g. "ReadMessages CallControl Faxes..."
     token_type: str  # "Bearer"
-    owner_id: str # alphanumberic
+    owner_id: str  # alphanumberic
 
 
 @api_view(["POST"])
@@ -61,10 +61,10 @@ class RingCentralAuthToken(BaseModel):
 def ringcentral_call_subscription_event_receiver_view(request, practice_telecom_id=None, call_subscription_id=None):
 
     # When creating the webhook, ringcentral expects the validation token it sends to be sent back to verify the endpoint
-    if('Validation-Token' in request.headers):
+    if "Validation-Token" in request.headers:
         response = HttpResponse(status=200)
-        response.headers['Validation-Token'] = request.headers['Validation-Token']
-        response.headers['Content-type'] = 'application/json'
+        response.headers["Validation-Token"] = request.headers["Validation-Token"]
+        response.headers["Content-type"] = "application/json"
         return response
 
     # validate practice telecom exists and is active
@@ -98,46 +98,54 @@ def ringcentral_call_subscription_event_receiver_view(request, practice_telecom_
 
     try:
         req = json.loads(request.body)
-        session = req['body']
-        status_code = session['parties'][0]['status']['code']
+        session = req["body"]
+        status_code = session["parties"][0]["status"]["code"]
     except (json.JSONDecodeError, KeyError):
         return HttpResponse(status=406)
 
     RingCentralSessionEvent.objects.create(
-        full_session_event = session,
-        sequence = session['sequence'],
-        session_id = session['sessionId'],
-        telephony_session_id = session['telephonySessionId'],
-        server_id = session['serverId'],
-        event_time = session['eventTime'],
-        to_name= session['parties'][0]['to'].get('name'),
-        to_extension_id= session['parties'][0]['to'].get('extensionId'),
-        to_phone_number= session['parties'][0]['to'].get('phoneNumber'),
-        from_name= session['parties'][0]['from'].get('name'),
-        from_extension_id= session['parties'][0]['from'].get('extensionId'),
-        from_phone_number= session['parties'][0]['from'].get('phoneNumber'),
-        muted= session['parties'][0]['muted'],
-        status_rcc= session['parties'][0]['status'].get('rcc'),
-        status_code= session['parties'][0]['status'].get('code'),
-        status_reason= session['parties'][0]['status'].get('reason'),
-        account_id= session['parties'][0]['accountId'],
-        direction= session['parties'][0]['direction'],
-        missed_call= session['parties'][0]['missedCall'],
-        stand_alone= session['parties'][0]['standAlone'],
+        full_session_event=session,
+        sequence=session["sequence"],
+        session_id=session["sessionId"],
+        telephony_session_id=session["telephonySessionId"],
+        server_id=session["serverId"],
+        event_time=session["eventTime"],
+        to_name=session["parties"][0]["to"].get("name"),
+        to_extension_id=session["parties"][0]["to"].get("extensionId"),
+        to_phone_number=session["parties"][0]["to"].get("phoneNumber"),
+        from_name=session["parties"][0]["from"].get("name"),
+        from_extension_id=session["parties"][0]["from"].get("extensionId"),
+        from_phone_number=session["parties"][0]["from"].get("phoneNumber"),
+        muted=session["parties"][0]["muted"],
+        status_rcc=session["parties"][0]["status"].get("rcc"),
+        status_code=session["parties"][0]["status"].get("code"),
+        status_reason=session["parties"][0]["status"].get("reason"),
+        account_id=session["parties"][0]["accountId"],
+        direction=session["parties"][0]["direction"],
+        missed_call=session["parties"][0]["missedCall"],
+        stand_alone=session["parties"][0]["standAlone"],
     )
 
     # TODO: still under investigation on if this is the proper disconect event to check
-    if status_code == 'Disconnected':
+    if status_code == "Disconnected":
         #
         # PROCESSING
         #
-        
+
         try:
-            log.info(f"[RingCentral] Publishing call disconnected events for: telephony_session_id: '{session['telephonySessionId']}' and account_id: '{session['parties'][0]['accountId']}'")
-            publish_call_create_call_record_event(
-                ringcentral_telephony_session_id=session['telephonySessionId'], ringcentral_session_id=session['sessionId'], practice_id=practice_id, voip_provider_id=voip_provider_id, ringcentral_account_id=session['parties'][0]['accountId']
+            log.info(
+                f"[RingCentral] Publishing call disconnected events for: telephony_session_id: '{session['telephonySessionId']}' and account_id: '{session['parties'][0]['accountId']}'"
             )
-            log.info(f"Published create call events for: telephony_session_id: '{session['telephonySessionId']}' and account_id: '{session['parties'][0]['accountId']}'")
+            publish_call_create_call_record_event(
+                ringcentral_telephony_session_id=session["telephonySessionId"],
+                ringcentral_session_id=session["sessionId"],
+                practice_id=practice_id,
+                voip_provider_id=voip_provider_id,
+                ringcentral_account_id=session["parties"][0]["accountId"],
+            )
+            log.info(
+                f"Published create call events for: telephony_session_id: '{session['telephonySessionId']}' and account_id: '{session['parties'][0]['accountId']}'"
+            )
         except PermissionDenied:
             message = "Must add role 'roles/pubsub.publisher'. Exiting."
             log.exception(message)
@@ -172,11 +180,7 @@ class LoginView(APIView):
             log.exception(e)
             return Response(status=500, data={"detail": "Server Error"})
 
-
-    def _login_to_ringcentral(
-            self,
-            request: HttpRequest
-        ):
+    def _login_to_ringcentral(self, request: HttpRequest):
 
         username = request.data.get("username")
         password = request.data.get("password")
@@ -188,13 +192,11 @@ class LoginView(APIView):
             log.info(f"Bad Request detected for login. Missing one or more required fields.")
             raise ParseError(f"Bad Request detected for login. Missing one or more required fields.")
 
-        rcsdk = SDK( ringcentral_api_client.client_id,
-             ringcentral_api_client.client_secret,
-             ringcentral_api_client.api_url )
+        rcsdk = SDK(ringcentral_api_client.client_id, ringcentral_api_client.client_secret, ringcentral_api_client.api_url)
         platform = rcsdk.platform()
 
         try:
-            platform.login(username, '', password)
+            platform.login(username, "", password)
         except Exception as e:
             raise PermissionDenied()
 
@@ -207,7 +209,7 @@ class LoginView(APIView):
     def _get_ringcentral_client_secret(self, username, password):
         ringcentral_api_credentials = RingCentralAPICredentials.objects.get(username=username, password=password)
         return ringcentral_api_credentials
-    
+
     def _setup_user_and_save_activity(self, username, ringcentral_auth_token: RingCentralAuthToken) -> None:
         now = timezone.now()
 
@@ -216,7 +218,7 @@ class LoginView(APIView):
                 username=username,
                 name=username,
                 email=username,
-                domain='',
+                domain="",
                 login_time=now,
             )
             save_user_activity_and_token(
@@ -229,7 +231,7 @@ class LoginView(APIView):
 
             if user_created:
                 create_user_telecom(user)
-                practice, _ = setup_practice('')
+                practice, _ = setup_practice("")
                 create_agent(user, practice)
 
 
@@ -238,6 +240,7 @@ class AdminRingCentralAPICredentialsViewset(viewsets.ModelViewSet):
     serializer_class = AdminRingCentralAPICredentialsSerializer
 
     filterset_fields = ["voip_provider", "active"]
+
 
 class RingCentralCallLegViewset(viewsets.ModelViewSet):
     queryset = RingCentralCallLeg.objects.all()
