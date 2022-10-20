@@ -14,7 +14,7 @@ def publish_call_create_call_record_event(
     voip_provider_id: str,
     ringcentral_telephony_session_id: str,
     ringcentral_session_id: str,
-    topic_path_ringcentral_create_call_record: str = settings.PUBSUB_TOPIC_PATH_RINGCENTRAL_CREATE_CALL_RECORD,
+    topic_path_ringcentral_call_disconnected: str = settings.PUBSUB_TOPIC_ID_RINGCENTRAL_CALL_DISCONNECTED,
     publisher: pubsub_v1.PublisherClient = settings.PUBLISHER,
 ):
 
@@ -28,7 +28,7 @@ def publish_call_create_call_record_event(
         "ringcentral_session_id": ringcentral_session_id,
     }
 
-    return publish_event(event_attributes=event_attributes, event=event, topic_path=topic_path_ringcentral_create_call_record, publisher=publisher)
+    return publish_event(event_attributes=event_attributes, event=event, topic_path=topic_path_ringcentral_call_disconnected, publisher=publisher)
 
 
 def publish_ringcentral_create_call_audio_event(
