@@ -68,8 +68,8 @@ class RingCentralCallLegSerializer(serializers.ModelSerializer):
         practice_id = peerlogic_call.practice.id
         if validated_data["recordings"]:
             publish_ringcentral_create_call_audio_event(
-                voip_provider=voip_provider,
                 practice_id=practice_id,
+                voip_provider_id=voip_provider,
                 peerlogic_call_id=validated_data["peerlogic_call_id"],
                 peerlogic_call_partial_id=instance.id,
                 ringcentral_recording_id=validated_data["ringcentral_recording_id"],

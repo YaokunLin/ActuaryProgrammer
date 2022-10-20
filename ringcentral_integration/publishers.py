@@ -32,8 +32,8 @@ def publish_call_create_call_record_event(
 
 
 def publish_ringcentral_create_call_audio_event(
-    voip_provider_id: str,
     practice_id: str,
+    voip_provider_id: str,
     peerlogic_call_id: str,
     peerlogic_call_partial_id: str,
     ringcentral_recording_id: str,
