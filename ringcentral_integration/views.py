@@ -140,10 +140,10 @@ def ringcentral_call_subscription_event_receiver_view(request, practice_telecom_
         try:
             log.info(f"{log_prefix}  Publishing call disconnected events {log_identifiers}")
             publish_call_create_call_record_event(
-                ringcentral_telephony_session_id=ringcentral_telephony_session_id,
-                ringcentral_session_id=ringcentral_session_id,
                 practice_id=practice_id,
                 voip_provider_id=voip_provider_id,
+                ringcentral_telephony_session_id=ringcentral_telephony_session_id,
+                ringcentral_session_id=ringcentral_session_id,
             )
             log.info(f"{log_prefix} Published create call events for {log_identifiers}")
         except PermissionDenied:

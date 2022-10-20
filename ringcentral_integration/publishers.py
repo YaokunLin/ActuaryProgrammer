@@ -10,10 +10,10 @@ log = logging.getLogger(__name__)
 
 
 def publish_call_create_call_record_event(
-    ringcentral_telephony_session_id: str,
-    ringcentral_session_id: str,
     practice_id: str,
     voip_provider_id: str,
+    ringcentral_telephony_session_id: str,
+    ringcentral_session_id: str,
     topic_path_ringcentral_create_call_record: str = settings.PUBSUB_TOPIC_PATH_RINGCENTRAL_CREATE_CALL_RECORD,
     publisher: pubsub_v1.PublisherClient = settings.PUBLISHER,
 ):
