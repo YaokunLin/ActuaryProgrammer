@@ -141,7 +141,6 @@ def ringcentral_call_subscription_event_receiver_view(request, practice_telecom_
                 ringcentral_session_id=session["sessionId"],
                 practice_id=practice_id,
                 voip_provider_id=voip_provider_id,
-                ringcentral_account_id=session["parties"][0]["accountId"],
             )
             log.info(
                 f"Published create call events for: telephony_session_id: '{session['telephonySessionId']}' and account_id: '{session['parties'][0]['accountId']}'"
