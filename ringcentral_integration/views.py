@@ -178,7 +178,6 @@ class LoginView(APIView):
             return Response(status=500, data={"detail": "Server Error"})
 
     def _login_to_ringcentral(self, request: HttpRequest):
-
         username = request.data.get("username")
         password = request.data.get("password")
         ringcentral_api_client = self._get_ringcentral_client_secret(username, password)
