@@ -11,7 +11,7 @@ from .models import (
     RingCentralCallLeg,
     RingCentralSessionEvent,
 )
-from .publishers import publish_ringcentral_create_call_audio_event
+from .publishers import publish_ringcentral_call_leg_saved_event
 
 log = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ class RingCentralCallLegSerializer(serializers.ModelSerializer):
         peerlogic_call = Call.objects.get(validated_data["peerlogic_call_id"])
         practice_id = peerlogic_call.practice.id
         if validated_data["recordings"]:
-            publish_ringcentral_create_call_audio_event(
+            publish_ringcentral_call_leg_saved_event(
                 practice_id=practice_id,
                 voip_provider_id=voip_provider,
                 peerlogic_call_id=validated_data["peerlogic_call_id"],

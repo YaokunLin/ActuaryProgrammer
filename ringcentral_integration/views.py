@@ -33,7 +33,9 @@ from ringcentral_integration.models import (
     RingCentralCallSubscription,
     RingCentralSessionEvent,
 )
-from ringcentral_integration.publishers import publish_call_create_call_record_event
+from ringcentral_integration.publishers import (
+    publish_ringcentral_call_disconnected_event,
+)
 from ringcentral_integration.serializers import (
     AdminRingCentralAPICredentialsSerializer,
     RingCentralCallLegSerializer,
@@ -139,7 +141,7 @@ def ringcentral_call_subscription_event_receiver_view(request, practice_telecom_
 
         try:
             log.info(f"{log_prefix}  Publishing call disconnected events {log_identifiers}")
-            publish_call_create_call_record_event(
+            publish_ringcentral_call_disconnected_event(
                 practice_id=practice_id,
                 voip_provider_id=voip_provider_id,
                 ringcentral_telephony_session_id=ringcentral_telephony_session_id,

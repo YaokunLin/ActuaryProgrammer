@@ -9,12 +9,12 @@ from core.pubsub_helpers import publish_event
 log = logging.getLogger(__name__)
 
 
-def publish_call_create_call_record_event(
+def publish_ringcentral_call_disconnected_event(
     practice_id: str,
     voip_provider_id: str,
     ringcentral_telephony_session_id: str,
     ringcentral_session_id: str,
-    topic_path_ringcentral_call_disconnected: str = settings.PUBSUB_TOPIC_ID_RINGCENTRAL_CALL_DISCONNECTED,
+    topic_path_ringcentral_call_disconnected: str = settings.PUBSUB_TOPIC_PATH_RINGCENTRAL_CALL_DISCONNECTED,
     publisher: pubsub_v1.PublisherClient = settings.PUBLISHER,
 ):
 
@@ -31,13 +31,13 @@ def publish_call_create_call_record_event(
     return publish_event(event_attributes=event_attributes, event=event, topic_path=topic_path_ringcentral_call_disconnected, publisher=publisher)
 
 
-def publish_ringcentral_create_call_audio_event(
+def publish_ringcentral_call_leg_saved_event(
     practice_id: str,
     voip_provider_id: str,
     peerlogic_call_id: str,
     peerlogic_call_partial_id: str,
     ringcentral_recording_id: str,
-    topic_path_ringcentral_get_call_audio: str = settings.PUBSUB_TOPIC_PATH_RINGCENTRAL_GET_CALL_AUDIO,
+    topic_path_ringcentral_call_leg_saved: str = settings.PUBSUB_TOPIC_PATH_RINGCENTRAL_CALL_LEG_SAVED,
     publisher: pubsub_v1.PublisherClient = settings.PUBLISHER,
 ) -> pubsub_v1.publisher.futures.Future:
 
@@ -53,4 +53,4 @@ def publish_ringcentral_create_call_audio_event(
         "ringcentral_recording_id": ringcentral_recording_id,
     }
 
-    return publish_event(event_attributes=event_attributes, event=event, topic_path=topic_path_ringcentral_get_call_audio, publisher=publisher)
+    return publish_event(event_attributes=event_attributes, event=event, topic_path=topic_path_ringcentral_call_leg_saved, publisher=publisher)
