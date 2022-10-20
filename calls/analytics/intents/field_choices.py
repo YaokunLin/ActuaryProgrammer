@@ -27,7 +27,9 @@ class CallOutcomeTypes(models.TextChoices):
 
 class CallOutcomeReasonTypes(models.TextChoices):
     # TODO: Fix incorrect spelling in BQ and ml-stream-pipeline: not_enough_information_possessed_by_patient_or_agent
-    NOT_ENOUGH_INFORMATION_POSSESED_BY_PATIENT_OR_AGENT = "not_enough_information_possesed_by_patient_or_agent", _("Not enough information possessed by patient or agent to resolve")
+    NOT_ENOUGH_INFORMATION_POSSESED_BY_PATIENT_OR_AGENT = "not_enough_information_possesed_by_patient_or_agent", _(
+        "Not enough information possessed by patient or agent to resolve"
+    )
     PROCEDURE_NOT_OFFERED = "procedure_not_offered", _("Procedure not offered")
     CALLER_INDIFFERENCE = "caller_indifference", _("Caller indifference")
     INSURANCE = "insurance", _("Insurance not taken")
@@ -51,7 +53,9 @@ class CallOutcomeReasonTypes(models.TextChoices):
     INSURANCE_INCORRECT_BENEFICIARY_INFORMATION = "insurance_incorrect_beneficiary_information", _("Incorrect beneficiary information")
     INSURANCE_COVERAGE_EXPIRED = "insurance_coverage_expired", _("Insurance coverage expired")
     INSURANCE_COORDINATION_OF_BENEFITS = "insurance_coordination_of_benefits", _("Coordination of benefits")
-    INSURANCE_PREAUTHORIZATION_NOT_OBTAINED = "insurance_preauthorization_not_obtained", _("Pre-authorization / pre-certification not obtained")  # aka pre-certification, prior-authorizations
+    INSURANCE_PREAUTHORIZATION_NOT_OBTAINED = "insurance_preauthorization_not_obtained", _(
+        "Pre-authorization / pre-certification not obtained"
+    )  # aka pre-certification, prior-authorizations
     INSURANCE_PROCEDURE_NOT_COVERED = "insurance_procedure_not_covered", _("Procedure not covered")
 
 

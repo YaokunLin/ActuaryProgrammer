@@ -5,6 +5,7 @@ from .models import (
     AgentCallScoreMetric,
 )
 
+
 class AgentCallScoreAdmin(admin.ModelAdmin):
     list_display = (
         "id",
@@ -13,6 +14,7 @@ class AgentCallScoreAdmin(admin.ModelAdmin):
         "score",
         "raw_model_run_id",
     )
+
 
 admin.site.register(AgentCallScore, AgentCallScoreAdmin)
 admin.site.register(AgentCallScoreMetric)

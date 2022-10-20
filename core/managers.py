@@ -17,7 +17,8 @@ class PracticeManager(models.Manager):
 
 class UserManager(_UserManager):
     """
-    Continues to be necessary for leveraging the Netsapiens credentials for legacy login of cloud functions and our own API. Holy fuck. 2022-08-05    """
+    Continues to be necessary for leveraging the Netsapiens credentials for legacy login of cloud functions and our own API. Holy fuck. 2022-08-05"""
+
     INTROSPECT_TOKEN_PAYLOAD_KEYS = ["token", "client_id", "territory", "domain", "uid", "expires", "scope", "mask_chain"]
 
     def get_and_update_from_introspect_token_payload(self, payload) -> Optional[Any]:

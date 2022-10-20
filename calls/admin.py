@@ -15,6 +15,7 @@ import calls.analytics.interactions.admin  # import admin so it gets registered,
 import calls.analytics.participants.admin  # import admin so it gets registered, DO NOT REMOVE
 import calls.analytics.transcripts.admin  # import admin so it gets registered, DO NOT REMOVE
 
+
 class CallAdmin(admin.ModelAdmin):
     list_display = (
         "id",
@@ -23,6 +24,7 @@ class CallAdmin(admin.ModelAdmin):
         "practice",
         "call_direction",
     )
+
 
 admin.site.register(Call, CallAdmin)
 admin.site.register(CallAudio)

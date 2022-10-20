@@ -17,7 +17,7 @@ class AgentInteractionMetricTypes(models.TextChoices):
     ANNOUNCED_NAME = "announced_name", _("Announced Name")
     OFFERED_ASSISTANCE = "offered_assistance", _("Offered Assistance")
     STATED_BUSINESS_NAME = "stated_business_name", _("Stated Business Name")
-    
+
     # Survey
     ASKED_PATIENT_NAME = "asked_patient_name", _("Asked for the Patient's Name")
     ASKED_PATIENT_CONTACT_INFO = "asked_patient_contact_info", _("Asked for the Patient's Contact Information")
@@ -29,16 +29,18 @@ class AgentInteractionMetricTypes(models.TextChoices):
     MENTIONED_INSURANCE_COVERAGE = "mentioned_insurance_coverage", _("Mentioned Insurance Coverage")
     MENTIONED_FINANCING = "mentioned_financing", _("Mentioned Financing / Discount Club / Payment Plans")
     OFFERED_FREE_CONSULTATION = "offered_free_consultation", _("Offered a Free Consultation")
-    
+
     # Rapport
     AGENT_OVERTALK = "agent_overtalk", _("Listened Enough (Limited Overtalk)")
     HOLD_TIME = "hold_time", _("Acceptable Hold Time Length")
     ASKED_ABOUT_DISCOMFORT = "asked_about_discomfort", _("Asked About Discomfort")
     MENTIONED_PRICING = "mentioned_pricing", _("Mentioned Pricing")
-    
+
     # Convert
     OFFERED_APPOINTMENT_DATE_TIME = "offered_appointment_date_time", _("Offered Appointment Date / Time")
-    BOOKED_APPOINTMENT = "booked_appointment", _("Booked the Appointment")  # TODO evaluate whether to keep this since it's a metric elsewhere / separate from agents specifically
+    BOOKED_APPOINTMENT = "booked_appointment", _(
+        "Booked the Appointment"
+    )  # TODO evaluate whether to keep this since it's a metric elsewhere / separate from agents specifically
 
     # Outbound - Rapport
     ASKED_INSURANCE = "asked_insurance", _("Asked about / verified insurance")
@@ -59,7 +61,6 @@ class AgentInteractionMetricTypes(models.TextChoices):
     ASKED_POLICY_ACTIVE = "asked_policy_active", _("Asked policy active / effective date")
     ASKED_POLICY_EXPIRATION_DATE = "asked_policy_expiration_date", _("Asked policy expiration date")
     ASKED_AUTHORIZATION_REQUIREMENTS = "asked_authorization_requirements", _("Asked authorization requirements")
-
 
 
 class AgentInteractionOvertalkMetricTypes(models.TextChoices):

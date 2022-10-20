@@ -66,7 +66,7 @@ class NetsapiensJSONWebTokenAuthentication(BaseAuthentication):
 
         if not token or len(token) > 64:
             # HEREBEDRAGONS: NETSAPIENS tokens are seemingly all 32-length bearer tokens at present, not long JWTs
-            # core1-phx.peerlogic.com - NsApi.oauth_codes.code (varchar(64)). 
+            # core1-phx.peerlogic.com - NsApi.oauth_codes.code (varchar(64)).
             # count of code lengths on 2022-09-19
             ## select LENGTH(code), count(*) from NsApi.oauth_codes group by LENGTH(code)
             ## length 6 - count 7
