@@ -234,13 +234,13 @@ class LoginView(APIView):
                 create_agent(user, practice)
 
 
-class AdminRingCentralAPICredentialsViewset(viewsets.ModelViewSet):
+class AdminRingCentralAPICredentialsViewSet(viewsets.ModelViewSet):
     queryset = RingCentralAPICredentials.objects.all().order_by("voip_provider", "active", "-created_at")
     serializer_class = AdminRingCentralAPICredentialsSerializer
 
     filterset_fields = ["voip_provider", "active"]
 
 
-class RingCentralCallLegViewset(viewsets.ModelViewSet):
+class RingCentralCallLegViewSet(viewsets.ModelViewSet):
     queryset = RingCentralCallLeg.objects.all()
     serializer_class = RingCentralCallLegSerializer
