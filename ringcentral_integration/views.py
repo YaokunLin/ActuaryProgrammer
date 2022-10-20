@@ -27,15 +27,14 @@ from core.setup_user_and_practice import (
     setup_practice,
     setup_user,
 )
-from ringcentral_integration.publishers import publish_call_create_call_record_event
-
-from .models import (
+from ringcentral_integration.models import (
     RingCentralAPICredentials,
     RingCentralCallLeg,
     RingCentralCallSubscription,
     RingCentralSessionEvent,
 )
-from .serializers import (
+from ringcentral_integration.publishers import publish_call_create_call_record_event
+from ringcentral_integration.serializers import (
     AdminRingCentralAPICredentialsSerializer,
     RingCentralCallLegSerializer,
 )
