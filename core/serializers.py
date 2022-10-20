@@ -54,7 +54,6 @@ class VoipProviderSerializer(serializers.ModelSerializer):
 
 
 class InlineUserSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = User
         fields = ["id", "name"]

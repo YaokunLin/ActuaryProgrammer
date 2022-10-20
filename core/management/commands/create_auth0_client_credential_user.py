@@ -28,7 +28,9 @@ class Command(BaseCommand):
 
         if settings.DB_HOST == "host.docker.internal":
             self.stdout.write(
-                self.style.WARNING(f"Double-check this project ID is correct and then adjust the below link if needed with the proper project for Secret Manager: {settings.PROJECT_ID}")
+                self.style.WARNING(
+                    f"Double-check this project ID is correct and then adjust the below link if needed with the proper project for Secret Manager: {settings.PROJECT_ID}"
+                )
             )
             self.stdout.write(
                 self.style.SUCCESS(

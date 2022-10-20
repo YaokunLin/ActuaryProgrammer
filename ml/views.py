@@ -5,8 +5,8 @@ from ml.field_choices import ClassificationDomain
 from ml.models import MLModel, MLModelResultHistory
 from ml.serializers import MLModelResultHistorySerializer, MLModelSerializer
 
-class MLFieldChoicesView(views.APIView):
 
+class MLFieldChoicesView(views.APIView):
     def get(self, request, format=None):
         result = {}
         result["classification_domain"] = dict((y, x) for x, y in ClassificationDomain.choices)
