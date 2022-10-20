@@ -45,14 +45,14 @@ log = logging.getLogger(__name__)
 
 
 class RingCentralAuthToken(BaseModel):
-    access_token: str  # alphanumberic
+    access_token: str  # alphanumeric
     expires_in: int  # e.g. "3600"
-    refresh_token: str  # alphanumberic
+    refresh_token: str  # alphanumeric
     refresh_token_expires_in: int  # "604800"
     refresh_token_expire_time: int  # "1664289200.5082414"
     scope: str  # e.g. "ReadMessages CallControl Faxes..."
     token_type: str  # "Bearer"
-    owner_id: str  # alphanumberic
+    owner_id: str  # alphanumeric
 
 
 @api_view(["POST"])
@@ -126,7 +126,7 @@ def ringcentral_call_subscription_event_receiver_view(request, practice_telecom_
         stand_alone=session["parties"][0]["standAlone"],
     )
 
-    # TODO: still under investigation on if this is the proper disconect event to check
+    # TODO: still under investigation on if this is the proper disconnect event to check
     if status_code == "Disconnected":
         #
         # PROCESSING
@@ -153,7 +153,7 @@ def ringcentral_call_subscription_event_receiver_view(request, practice_telecom_
     return HttpResponse(status=200)
 
 
-# Note: this is not used but will kept for future reference
+# Note: this is not used but will be kept for future reference
 class LoginView(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]
