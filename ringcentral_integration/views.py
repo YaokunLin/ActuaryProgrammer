@@ -59,6 +59,7 @@ class RingCentralAuthToken(BaseModel):
 @permission_classes([AllowAny])
 def ringcentral_call_subscription_event_receiver_view(request, practice_telecom_id=None, call_subscription_id=None):
 
+    log_identifiers = f" practice_telecom_id='{practice_telecom_id}' call_subscription_id='{call_subscription_id}'"
     # When creating the webhook, ringcentral expects the validation token it sends to be sent back to verify the endpoint
     if "Validation-Token" in request.headers:
         response = HttpResponse(status=200)
@@ -70,30 +71,31 @@ def ringcentral_call_subscription_event_receiver_view(request, practice_telecom_
     practice_telecom: PracticeTelecom = get_object_or_404(
         PracticeTelecom.objects.select_related("practice", "voip_provider"), pk=practice_telecom_id, practice__active=True
     )
-    log.info(f"Validated practice telecom with practice_telecom_id: '{practice_telecom_id}'")
+    log.info(f"Validated practice telecom {log_identifiers}")
 
     # Grab Practice and VOIP Provider for downstream processing
     practice = practice_telecom.practice
     practice_id = practice_telecom.practice.id
 
     if not practice:
-        message = f"No valid practice found for practice_telecom_id = '{practice_telecom_id}'"
+        message = f"No valid practice found for practice_telecom_id {log_identifiers}"
         log.exception(f"{message}. This should not be possible since this is a non-nullable relationship.")
         return Response(status=status.HTTP_404_NOT_FOUND, data={"message": message})
 
+    log_identifiers += " practice_id='{practice_id}'"
     voip_provider = practice_telecom.voip_provider
     if not voip_provider:
         message = (
-            f"No valid voip_provider found for this practice '{practice_id}'. A voip_provider must be set up first in order to receive subscription events."
+            f"No valid voip_provider found for this practice. A voip_provider must be set up first in order to receive subscription events. {log_identifiers}"
         )
         log.exception(f"{message}. Practice is not set up properly and needs a voip_provider. Somehow a subscription was set up and events are being received!")
         return Response(status=status.HTTP_404_NOT_FOUND, data={"message": message})
     voip_provider_id = voip_provider.id
 
-    log.info(f"Validating call_subscription for: call_subscription_id: '{call_subscription_id}'")
+    log.info(f"Validating call_subscription for: call_subscription_id. {log_identifiers}")
     # validate an active subscription exists and is associated with the practice telecom, not referenced later, we just need the check
     get_object_or_404(RingCentralCallSubscription, pk=call_subscription_id, active=True)
-    log.info(f"Validated call_subscription for: call_subscription_id: '{call_subscription_id}'")
+    log.info(f"Validated call_subscription for: call_subscription_id. {log_identifiers}")
 
     try:
         req = json.loads(request.body)
@@ -125,25 +127,26 @@ def ringcentral_call_subscription_event_receiver_view(request, practice_telecom_
         stand_alone=session["parties"][0]["standAlone"],
     )
 
+    #
+    # Check and create disconnect event
+    #
+
     # TODO: still under investigation on if this is the proper disconnect event to check
     if status_code == "Disconnected":
-        #
-        # PROCESSING
-        #
+        ringcentral_telephony_session_id = session["telephonySessionId"]
+        ringcentral_session_id = session["sessionId"]
+        ringcentral_account_id = session["parties"][0]["accountId"]
+        log_identifiers += f" ringcentral_telephony_session_id='{ringcentral_telephony_session_id}' ringcentral_session_id='{ringcentral_session_id}' ringcentral_account_id='{ringcentral_account_id}'"
 
         try:
-            log.info(
-                f"[RingCentral] Publishing call disconnected events for: telephony_session_id: '{session['telephonySessionId']}' and account_id: '{session['parties'][0]['accountId']}'"
-            )
+            log.info(f"[RingCentral] Publishing call disconnected events {log_identifiers}")
             publish_call_create_call_record_event(
-                ringcentral_telephony_session_id=session["telephonySessionId"],
-                ringcentral_session_id=session["sessionId"],
+                ringcentral_telephony_session_id=ringcentral_telephony_session_id,
+                ringcentral_session_id=ringcentral_session_id,
                 practice_id=practice_id,
                 voip_provider_id=voip_provider_id,
             )
-            log.info(
-                f"Published create call events for: telephony_session_id: '{session['telephonySessionId']}' and account_id: '{session['parties'][0]['accountId']}'"
-            )
+            log.info(f"Published create call events for {log_identifiers}")
         except PermissionDenied:
             message = "Must add role 'roles/pubsub.publisher'. Exiting."
             log.exception(message)
