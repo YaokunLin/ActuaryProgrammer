@@ -163,7 +163,6 @@ class LoginView(APIView):
             "password": default_handler,
         }
 
-        ringcentral_access_token_response = None
         try:
             grant_type = request.data.get("grant_type")
             handler = grant_handler_map.get(grant_type, default_handler)
