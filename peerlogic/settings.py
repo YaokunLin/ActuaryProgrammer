@@ -288,22 +288,24 @@ INSTALLED_APPS = [
     # "django_celery_beat",  # TODO: PTECH-1295
     "django_extensions",
     "django_filters",
+    "corsheaders",
+    "fixture_magic",
+    "oauth2_provider",
     "phonenumber_field",
     "rest_framework",
-    "oauth2_provider",
+    # peerlogic-platform
     "peerlogic_admin",
-    "corsheaders",
     "care",
     "core",
     "calls",
     "etl",
     "inbox",
     "ml",
-    "netsapiens_integration",
-    "jive_integration",
-    "ringcentral_integration",
     "reminders",
-    "fixture_magic",
+    # integrations
+    "jive_integration",
+    "netsapiens_integration",
+    "ringcentral_integration",
 ]
 
 MIDDLEWARE = [
