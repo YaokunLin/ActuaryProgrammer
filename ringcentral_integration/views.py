@@ -148,7 +148,7 @@ def ringcentral_call_subscription_event_receiver_view(request, practice_telecom_
             )
             log.info(f"Published create call events for {log_identifiers}")
         except PermissionDenied:
-            message = "Must add role 'roles/pubsub.publisher'. Exiting."
+            message = f"Unable to publish ringcentral disconnected event! Must add role 'roles/pubsub.publisher'. Exiting. {log_identifiers}"
             log.exception(message)
             return Response(status=status.HTTP_403_FORBIDDEN, data={"error": message})
 
