@@ -1,3 +1,13 @@
 from django.contrib import admin
 
-# Register your models here.
+from ringcentral_integration.models import (
+    RingCentralAPICredentials,
+    RingCentralCallLeg,
+    RingCentralCallSubscription,
+    RingCentralSessionEvent,
+)
+
+admin.site.register(RingCentralAPICredentials)
+admin.site.register(RingCentralCallLeg)
+admin.site.register(RingCentralCallSubscription)
+admin.site.register(RingCentralSessionEvent)
