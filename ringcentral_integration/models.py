@@ -24,7 +24,7 @@ class RingCentralAPICredentials(AuditTrailModel):
 class RingCentralCallSubscription(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     source_id = models.CharField(
-        max_length=255, blank=True, default="", help_text=("Subscription ID for RingCentral on the Voip Provider's side. The source of the data / events")
+        max_length=255, blank=True, default="", help_text="Subscription ID for RingCentral on the Voip Provider's side. The source of the data / events"
     )
     practice_telecom = models.ForeignKey("core.PracticeTelecom", null=True, on_delete=models.SET_NULL)  # keep call subscriptions and their ids forever
 
