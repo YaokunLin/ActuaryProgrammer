@@ -120,6 +120,19 @@ class CallViewset(viewsets.ModelViewSet):
         CallSearchFilter,
         OrderingFilter,
     )  # note: these must be kept up to date with settings.py values!
+    ordering_fields = (
+        "id",
+        "call_direction",
+        "call_start_time",
+        "sip_caller_number",
+        "sip_caller_extension",
+        "sip_callee_number",
+        "sip_callee_extension",
+        "engaged_in_calls__non_agent_engagement_persona_type",
+        "call_purposes__call_purpose_type",
+        "call_purposes__outcome_results__call_outcome_type",
+        "call_sentiments__overall_sentiment_score",
+    )
 
     def get_queryset(self):
         calls_qs = Call.objects.none()

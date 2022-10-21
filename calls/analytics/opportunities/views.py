@@ -239,26 +239,25 @@ class OpportunitiesPerUserView(views.APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST, data=errors)
 
         # practice filter
-        practice_filter = {}
+        practice_filter = Q()
         if valid_practice_id:
-            practice_filter = {"practice__id": valid_practice_id}
+            practice_filter = Q(practice_id=valid_practice_id)
 
         # date filters
         dates = dates_info.get("dates")
-        call_start_time__gte = dates[0]
-        call_start_time__lte = dates[1]
-        dates_filter = {"call_start_time__gte": call_start_time__gte, "call_start_time__lte": call_start_time__lte}
+        start_date_str = dates[0]
+        end_date_str = dates[1]
+        dates_filter = Q(call_start_time__gte=start_date_str, call_start_time__lte=end_date_str)
 
-        filters = Q(**dates_filter) & Q(**practice_filter) & INBOUND_FILTER
-        calls_qs = Call.objects.filter(filters)
+        filters = dates_filter & practice_filter & INBOUND_FILTER
 
         aggregates = {
-            "agent": calculate_call_counts_and_opportunities_per_user(calls_qs),  # call counts per caller (agent) phone number
+            "agent": calculate_call_counts_and_opportunities_per_user(filters),  # call counts per caller (agent) phone number
         }
 
         display_filters = {
-            self.QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME["call_start_time__gte"]: call_start_time__gte,
-            self.QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME["call_start_time__lte"]: call_start_time__lte,
+            self.QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME["call_start_time__gte"]: start_date_str,
+            self.QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME["call_start_time__lte"]: end_date_str,
         }
 
         return Response({"filters": display_filters, "results": aggregates})
