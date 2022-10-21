@@ -16,6 +16,14 @@ version = "0.1.43"
 description = "Peerlogic API"
 authors = []
 
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "peerlogic"
+markers = "-k" 
+python_files = ["test*.py", "*_test.py"]
+python_classes = ["Test", "Acceptance"]
+python_functions = ["test"]
+addopts = "-vv -x --lf --cov"
+
 # WARNING - DO NOT MANUNALLY EDIT THIS SECTION
 # Use poetry.add, poetry.remove, etc.
 [tool.poetry.dependencies]
