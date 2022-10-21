@@ -152,9 +152,9 @@ echo "1PASSWORD_SHORTHAND=<youroutputtedtokenhere>" >> ~/.bashrc
 
 Creation of credentials requires us to be local / on the same network as the environment in question since we're using the ORM to update the database itself directly.
 
-1. Download the appropriate credentials file [here](https://start.1password.com/open/i?a=P3RU52IFYBEH3GKEDF2UBYENBQ&v=wlmpasbyyncmhpjji3lfc7ra4a&i=hwym3nsqbjfhrjskkfjmvcnq4a&h=my.1password.com), to access the environment via IAM. place this file into the ./credentials directory
+1. Download the appropriate credentials file to access the environment via IAM. Place this file into the ./credentials directory. For accessing the local dev environment, use the [local credentials](https://start.1password.com/open/i?a=P3RU52IFYBEH3GKEDF2UBYENBQ&v=wlmpasbyyncmhpjji3lfc7ra4a&i=hwym3nsqbjfhrjskkfjmvcnq4a&h=my.1password.com). If there is another environment you are trying to access, you'll need to generate an appropriate credentials file for that environment.
 
-2. Create a google cloud environment. [Gcloud installation](https://cloud.google.com/sdk/docs/install)
+2. [install Gcloud](https://cloud.google.com/sdk/docs/install) then Create a google cloud environment.
 
     Enter this with the appropriate values at the prompts:
 
