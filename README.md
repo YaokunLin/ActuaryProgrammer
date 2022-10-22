@@ -280,10 +280,10 @@ Google Cloud credentials are necessary to access the database. Your environment 
 
 ### Running Test Cases
 
-in the root of your directory run:
+We are using the pytest framework for unit and integration tets. In the root of your directory run:
 
 ```bash
 pytest
 ```
 
-this will run the test cases written in `tests.py`
+This will run the test cases.
