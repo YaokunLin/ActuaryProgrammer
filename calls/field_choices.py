@@ -91,6 +91,8 @@ class TranscriptTypes(models.TextChoices):
     FULL_TEXT = "full_text"
     CHANNEL_1_TEXT = "channel_1_text"
     CHANNEL_2_TEXT = "channel_2_text"
+    SPEAKER_1_TEXT = "speaker_1_text"
+    SPEAKER_2_TEXT = "speaker_2_text"
 
 
 class SpeechToTextModelTypes(models.TextChoices):
