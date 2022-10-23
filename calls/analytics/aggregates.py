@@ -710,9 +710,15 @@ def convert_to_call_counts_only(call_counts_and_durations: Dict) -> Dict:
     return {k: v["call_count"] for k, v in call_counts_and_durations.items()}
 
 
-def calculate_zero_filled_call_counts_by_day(calls_qs: QuerySet, start_date: str, end_date: str, field_to_count: str = "id") -> List[Dict]:
+def calculate_zero_filled_call_counts_by_day(
+    calls_qs: QuerySet, start_date: str, end_date: str, field_to_count: str = "id", distinct: bool = True
+) -> List[Dict]:
     data = list(
-        calls_qs.annotate(date=TruncDate("call_start_time")).values("date").annotate(value=Count(field_to_count)).values("date", "value").order_by("date")
+        calls_qs.annotate(date=TruncDate("call_start_time"))
+        .values("date")
+        .annotate(value=Count(field_to_count, distinct=distinct))
+        .values("date", "value")
+        .order_by("date")
     )
     if not data:
         return []
