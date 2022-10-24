@@ -1,9 +1,6 @@
 from django.contrib import admin
 
-from .models import (
-    AgentCallScore,
-    AgentCallScoreMetric,
-)
+from .models import AgentCallScore, AgentCallScoreMetric
 
 
 class AgentCallScoreAdmin(admin.ModelAdmin):
