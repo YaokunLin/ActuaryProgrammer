@@ -67,7 +67,7 @@ class RingCentralCallLegSerializer(serializers.ModelSerializer):
 
         peerlogic_call = Call.objects.get(pk=validated_data["peerlogic_call_id"])
         practice_id = peerlogic_call.practice.id
-        if 'recording' in validated_data:
+        if "recording" in validated_data:
             publish_ringcentral_call_leg_saved_event(
                 practice_id=practice_id,
                 voip_provider_id=voip_provider_id,
