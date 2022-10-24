@@ -47,6 +47,7 @@ class Command(BaseCommand):
             platform.login(ringcentral_creds.username, "", ringcentral_creds.password)
 
             websocket_url = f"{options['peerlogic_root_api_url']}{ringcentral_call_subscription.call_subscription_uri}"
+            self.stdout.write(f"Websocket URL= '{websocket_url}")
             event_subscription_payload = {
                 "eventFilters": ["/restapi/v1.0/account/~/telephony/sessions"],
                 "deliveryMode": {"address": websocket_url, "transportType": "WebHook"},
