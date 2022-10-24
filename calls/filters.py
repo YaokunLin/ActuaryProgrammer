@@ -1,8 +1,19 @@
+from logging import getLogger
+
+from django.db.models import Q
 from django_filters import rest_framework as filters
 from rest_framework.filters import BaseFilterBackend
 
+from calls.analytics.intents.field_choices import (
+    CallOutcomeReasonTypes,
+    CallOutcomeTypes,
+    CallPurposeTypes,
+)
+from calls.analytics.participants.field_choices import NonAgentEngagementPersonaTypes
 from calls.models import Call, CallTranscript
 from core.models import MarketingCampaignPhoneNumber
+
+log = getLogger(__name__)
 
 
 class CallsFilter(filters.FilterSet):
@@ -10,6 +21,16 @@ class CallsFilter(filters.FilterSet):
     sip_callee_number__startswith = filters.CharFilter(field_name="sip_callee_number", lookup_expr="startswith")
     call_start_time = filters.DateFromToRangeFilter()
     marketing_campaign_name = filters.CharFilter(method="filter_marketing_campaign_name")
+    call_purposes__call_purpose_type = filters.ChoiceFilter(choices=CallPurposeTypes.choices, method="_filter_call_purpose_fields")
+    call_purposes__outcome_results__call_outcome_type = filters.ChoiceFilter(choices=CallOutcomeTypes.choices, method="_filter_call_purpose_fields")
+    call_purposes__outcome_results__outcome_reason_results__call_outcome_reason_type = filters.ChoiceFilter(
+        choices=CallOutcomeReasonTypes.choices, method="_filter_call_purpose_fields"
+    )
+    engaged_in_calls__non_agent_engagement_persona_type = filters.MultipleChoiceFilter(choices=NonAgentEngagementPersonaTypes.choices)
+
+    def __init__(self, *args, **kwargs):
+        self.purpose_filters_applied = False
+        super().__init__(*args, **kwargs)
 
     def filter_marketing_campaign_name(self, queryset, name, value):
         practice_id = self.request.query_params.get("practice__id")
@@ -23,6 +44,21 @@ class CallsFilter(filters.FilterSet):
 
         return queryset.filter(sip_callee_number=campaign_phone_number.phone_number)
 
+    def _filter_call_purpose_fields(self, queryset, name, value):
+        if not self.purpose_filters_applied:
+            call_purpose_key = "call_purposes__call_purpose_type"
+            call_outcome_key = "call_purposes__outcome_results__call_outcome_type"
+            call_outcome_reason_key = "call_purposes__outcome_results__outcome_reason_results__call_outcome_reason_type"
+            filters = Q()
+            for key in {call_purpose_key, call_outcome_key, call_outcome_reason_key}:
+                if key in self.request.query_params:
+                    filters = filters & Q(**{key: self.request.query_params[key]})
+            self.purpose_filters_applied = True
+            log.debug("Filtering call purpose fields for %s: %s", name, filters)
+            return queryset.filter(filters)
+        log.debug("Skipping filtering for %s (call purpose filters already applied)", name)
+        return queryset
+
     class Meta:
         model = Call
         fields = {
@@ -30,11 +66,7 @@ class CallsFilter(filters.FilterSet):
             "call_start_time": ["gte", "exact"],
             "call_end_time": ["lte", "exact"],
             "practice__id": ["exact"],
-            "engaged_in_calls__non_agent_engagement_persona_type": ["exact"],
             "call_direction": ["exact"],
-            "call_purposes__call_purpose_type": ["exact"],
-            "call_purposes__outcome_results__call_outcome_type": ["exact"],
-            "call_purposes__outcome_results__outcome_reason_results__call_outcome_reason_type": ["exact"],
             "call_sentiments__overall_sentiment_score": ["exact"],
             "mentioned_procedures__keyword": ["exact"],
             "sip_caller_extension": ["exact"],
