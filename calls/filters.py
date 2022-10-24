@@ -9,6 +9,7 @@ from calls.analytics.intents.field_choices import (
     CallOutcomeTypes,
     CallPurposeTypes,
 )
+from calls.analytics.participants.field_choices import NonAgentEngagementPersonaTypes
 from calls.models import Call, CallTranscript
 from core.models import MarketingCampaignPhoneNumber
 
@@ -25,6 +26,7 @@ class CallsFilter(filters.FilterSet):
     call_purposes__outcome_results__outcome_reason_results__call_outcome_reason_type = filters.ChoiceFilter(
         choices=CallOutcomeReasonTypes.choices, method="_filter_call_purpose_fields"
     )
+    engaged_in_calls__non_agent_engagement_persona_type = filters.MultipleChoiceFilter(choices=NonAgentEngagementPersonaTypes.choices)
 
     def __init__(self, *args, **kwargs):
         self.purpose_filters_applied = False
@@ -64,7 +66,6 @@ class CallsFilter(filters.FilterSet):
             "call_start_time": ["gte", "exact"],
             "call_end_time": ["lte", "exact"],
             "practice__id": ["exact"],
-            "engaged_in_calls__non_agent_engagement_persona_type": ["exact"],
             "call_direction": ["exact"],
             "call_sentiments__overall_sentiment_score": ["exact"],
             "mentioned_procedures__keyword": ["exact"],
