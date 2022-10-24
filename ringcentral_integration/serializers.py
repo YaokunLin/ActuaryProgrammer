@@ -50,14 +50,16 @@ class AdminRingCentralAPICredentialsSerializer(serializers.ModelSerializer):
 class RingCentralCallLegSerializer(serializers.ModelSerializer):
     time_start = UnixEpochDateField(required=False)
     voip_provider_id = serializers.CharField(required=False)
+    peerlogic_call_partial_id = serializers.CharField(required=False)
     class Meta:
         model = RingCentralCallLeg
         read_only_fields = ["id", "created_at", "modified_at"]
         fields = "__all__"
 
     def create(self, validated_data: Dict):
-        # Grab the Voip provider used in the create call function
+        # Grab the Voip provider and call_partial_id used in the create call function
         voip_provider_id = validated_data.pop("voip_provider_id", None)
+        call_partial_id = validated_data.pop("peerlogic_call_partial_id", None)
 
         # perform the create
         instance = super().create(validated_data=validated_data)
@@ -70,7 +72,7 @@ class RingCentralCallLegSerializer(serializers.ModelSerializer):
                 practice_id=practice_id,
                 voip_provider_id=voip_provider_id,
                 peerlogic_call_id=validated_data["peerlogic_call_id"],
-                peerlogic_call_partial_id=instance.id,
+                peerlogic_call_partial_id=call_partial_id,
                 ringcentral_recording_id=validated_data["recording"],
             )
 
