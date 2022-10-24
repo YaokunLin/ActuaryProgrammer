@@ -62,7 +62,7 @@ class RingCentralAuthToken(BaseModel):
 def ringcentral_call_subscription_event_receiver_view(request, practice_telecom_id=None, call_subscription_id=None):
 
     log_prefix = "[RingCentral]"
-    log_identifiers = f" practice_telecom_id='{practice_telecom_id}' call_subscription_id='{call_subscription_id}'"
+    log_identifiers = f"practice_telecom_id='{practice_telecom_id}' call_subscription_id='{call_subscription_id}'"
     # When creating the webhook, ringcentral expects the validation token it sends to be sent back to verify the endpoint
     if "Validation-Token" in request.headers:
         response = HttpResponse(status=200)
@@ -85,14 +85,14 @@ def ringcentral_call_subscription_event_receiver_view(request, practice_telecom_
         log.exception(f"{message}. This should not be possible since this is a non-nullable relationship.")
         return Response(status=status.HTTP_404_NOT_FOUND, data={"message": message})
 
-    log_identifiers += " practice_id='{practice_id}'"
     voip_provider = practice_telecom.voip_provider
+    log_identifiers += f" practice_id='{practice_id}'"
     if not voip_provider:
         message = f"{log_prefix} No valid voip_provider found for this practice. A voip_provider must be set up first in order to receive subscription events. {log_identifiers}"
         log.exception(f"{message}. Practice is not set up properly and needs a voip_provider. Somehow a subscription was set up and events are being received!")
         return Response(status=status.HTTP_404_NOT_FOUND, data={"message": message})
     voip_provider_id = voip_provider.id
-
+    log_identifiers += f" voip_provider_id='{voip_provider_id}'"
     log.info(f"{log_prefix} Validating call_subscription for: call_subscription_id. {log_identifiers}")
     # validate an active subscription exists and is associated with the practice telecom, not referenced later, we just need the check
     get_object_or_404(RingCentralCallSubscription, pk=call_subscription_id, active=True)
