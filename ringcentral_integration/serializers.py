@@ -48,7 +48,6 @@ class AdminRingCentralAPICredentialsSerializer(serializers.ModelSerializer):
 
 
 class RingCentralCallLegSerializer(serializers.ModelSerializer):
-    publish = serializers.BooleanField(required=False, default=True, allow_null=True)
     time_start = UnixEpochDateField(required=False)
 
     class Meta:
@@ -64,9 +63,9 @@ class RingCentralCallLegSerializer(serializers.ModelSerializer):
         instance = super().create(validated_data=validated_data)
         log.info(validated_data)
 
-        peerlogic_call = Call.objects.get(validated_data["peerlogic_call_id"])
+        peerlogic_call = Call.objects.get(pk=validated_data["peerlogic_call_id"])
         practice_id = peerlogic_call.practice.id
-        if validated_data["recordings"]:
+        if 'recording' in validated_data:
             publish_ringcentral_call_leg_saved_event(
                 practice_id=practice_id,
                 voip_provider_id=voip_provider,
