@@ -10,7 +10,7 @@ from calls.analytics.intents.models import (
     CallMentionedSymptom,
     CallOutcome,
     CallOutcomeReason,
-    CallPurpose
+    CallPurpose,
 )
 from calls.analytics.participants.models import AgentEngagedWith
 from calls.analytics.transcripts.models import CallSentiment
@@ -91,4 +91,3 @@ class InlineCallMentionedSymptomSerializer(serializers.ModelSerializer):
         model = CallMentionedSymptom
         fields = ["id", "keyword"]
         read_only_fields = ["id", "keyword"]
-

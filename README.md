@@ -17,11 +17,11 @@ Create a new file in the root of the peerlogic-api directory called `.env`.
 Paste the contents of this 1Password secret into the `.env` file
 
 See 1Password for a starter
-file: [peerlogic-api LOCAL  starter .env file](https://start.1password.com/open/i?a=P3RU52IFYBEH3GKEDF2UBYENBQ&v=wlmpasbyyncmhpjji3lfc7ra4a&i=sxjcghmtefeqvdystb2l6q7k5y&h=my.1password.com)
+file: [peerlogic-api LOCAL  starter .env file](https://start.1password.com/open/i?a=P3RU52IFYBEH3GKEDF2UBYENBQ&v=wlmpasbyyncmhpjji3lfc7ra4a&i=2swwri27d5bztnkq223yypxdvy&h=my.1password.com)
 
 ### Docker commands
 
-Initialize Postgres and create the peerlogic database, without tables:
+Run the following to initialize Postgres and create the peerlogic database, without tables:
 
 ```bash
 docker-compose up -d postgres
@@ -42,7 +42,7 @@ DJANGO_SUPERUSER_USERNAME=admin
 DJANGO_SUPERUSER_PASSWORD=password
 ```
 
-```
+```bash
 docker-compose run api python3 manage.py createsuperuser --noinput
 ```
 
@@ -59,6 +59,7 @@ Find your user with @peerlogic.com in the Auth0 User [Local or Development envir
 Grab your Auth0 user id (copy the entire thing including the `auth0|` prefix).
 
 Other environments:
+
 * [Stage](https://manage.auth0.com/dashboard/us/stage-peerlogic/users)
 * [Production](https://manage.auth0.com/dashboard/us/peerlogic/users)
 ![alt text](docs/auth_setup_1.png "Find your user in the list")
@@ -128,11 +129,11 @@ See `deployment/app_engine/DEPLOYMENT.md` for deploying to another environment w
 
 ## 1Password sign-in
 
-Set up your CLI tool: https://support.1password.com/command-line-getting-started/
+Set up your CLI tool: [https://support.1password.com/command-line-getting-started/]
 
 Sign in:
 
-https://support.1password.com/command-line/#sign-in-or-out
+[https://support.1password.com/command-line/#sign-in-or-out]
 
 ```bash
 op signin [<sign_in_address>](https://peerlogic.1password.com/signin) <email_address> <secret_key>
@@ -141,7 +142,6 @@ op signin [<sign_in_address>](https://peerlogic.1password.com/signin) <email_add
 eval $(op signin my)
 
 <!-- For MAC:
-
 ```bash
 echo "1PASSWORD_SHORTHAND=<youroutputtedtokenhere>" >> ~/.bashrc
 ``` -->
@@ -152,11 +152,11 @@ echo "1PASSWORD_SHORTHAND=<youroutputtedtokenhere>" >> ~/.bashrc
 
 Creation of credentials requires us to be local / on the same network as the environment in question since we're using the ORM to update the database itself directly.
 
-1. Download the appropriate credentials file to access the environment via IAM. Place this somewhere that is secure and you won't forget it. You'll need to use this later.
+1. Download the appropriate credentials file to access the environment via IAM. Place this file into the ./credentials directory. For accessing the local dev environment, use the [local credentials](https://start.1password.com/open/i?a=P3RU52IFYBEH3GKEDF2UBYENBQ&v=wlmpasbyyncmhpjji3lfc7ra4a&i=hwym3nsqbjfhrjskkfjmvcnq4a&h=my.1password.com). If there is another environment you are trying to access, you'll need to generate an appropriate credentials file for that environment.
 
-2. Create a google cloud environment
+2. [install Gcloud](https://cloud.google.com/sdk/docs/install) then Create a google cloud environment.
 
-    Either this with the appropriate values at the prompts:
+    Enter this with the appropriate values at the prompts:
 
     ```bash
     gcloud init
@@ -166,7 +166,7 @@ Creation of credentials requires us to be local / on the same network as the env
 
     Name it `peerlogic-api-dev`, `peerlogic-api-stage` or `peerlogic-api-prod` depending on which project you choose. Select us-west4a as the Compute Region/Zone.
 
-3. Enter the google cloud environment to access the database with cloud sql proxy
+3. Enter the google cloud environment to access the database with [cloud sql proxy](https://cloud.google.com/sql/docs/mysql/connect-instance-auth-proxy#macos-64-bit)
 
     ```bash
     ./devtools/cloud_sql_proxy.bash
@@ -178,7 +178,7 @@ Google Cloud credentials are necessary to access the database. Your environment 
 
 1. Ensure you have a copy of the appropriate deployment's environment. Use Secret Manager of the appropriate environment to download a copy.
 
-2. Place into the ./environment-connect/ directory the downloaded .env file with its enviromment shorthand as a suffix such as ./environment-connect/.env.dev for example.
+2. In the ./environment-connect/ directory place the downloaded .env file with its environment shorthand as a suffix; such as ./environment-connect/.env.dev for example.
 
 3. Update the .env file to use the google credentials file.
 
@@ -235,11 +235,11 @@ Google Cloud credentials are necessary to access the database. Your environment 
 
 1. Follow above instructions under "Running Management Commands" before continuing.
 
-2. Create a client credential / application at https://peerlogic-api-{rest-of-appspot-baseurl}/oauth/applications/.
+2. Create a client credential / application at [https://peerlogic-api-{rest-of-appspot-baseurl}/oauth/applications/].
 
-2.a. Take note of the client ID and Secret on the form and add it to 1Password before clicking Save.
+    2.a. Take note of the client ID and Secret on the form and add it to 1Password before clicking Save.
 
-2.b. Client type is "Confidential". Authorization grant type is "Client credentials". Algorithm is "No OIDC Support".
+    2.b. Client type is "Confidential". Authorization grant type is "Client credentials". Algorithm is "No OIDC Support".
    *NOTE: The moment you click the Save button you will no longer have access to the client secret.*
    *NOTE: For Client type, select Public. Otherwise you will have a bad time.*
 
@@ -262,7 +262,6 @@ Google Cloud credentials are necessary to access the database. Your environment 
 
 5. [Update the Auth0 Custom Action secrets](https://manage.auth0.com/dashboard/us/dev-ea57un9z/actions/library) for `PEERLOGIC_API_CLIENT_ID` `PEERLOGIC_API_CLIENT_SECRET` for the application.
 
-
 ## Troubleshooting
 
 1. Problems with login / authentication endpoint / connecting to Netsapiens.
@@ -278,3 +277,13 @@ Google Cloud credentials are necessary to access the database. Your environment 
     1. Restart Docker.
     2. Update Docker.
     3. Restart your computer.
+
+### Running Test Cases
+
+We are using the pytest framework for unit and integration tets. In the root of your directory run:
+
+```bash
+pytest
+```
+
+This will run the test cases.

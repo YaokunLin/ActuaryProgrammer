@@ -11,12 +11,14 @@ from .models import (
     CallPurpose,
 )
 
+
 class GenericMentionedAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "call",
         "keyword",
     )
+
 
 class CallOutcomeAdmin(admin.ModelAdmin):
     list_display = (
@@ -26,6 +28,7 @@ class CallOutcomeAdmin(admin.ModelAdmin):
         "call_purpose",
     )
 
+
 class CallPurposeAdmin(admin.ModelAdmin):
     list_display = (
         "id",
@@ -33,6 +36,7 @@ class CallPurposeAdmin(admin.ModelAdmin):
         "call_purpose_type",
         "outcome_results",
     )
+
 
 admin.site.register(CallMentionedCompany, GenericMentionedAdmin)
 admin.site.register(CallMentionedInsurance, GenericMentionedAdmin)

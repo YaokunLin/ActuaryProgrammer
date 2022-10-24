@@ -389,6 +389,7 @@ REST_FRAMEWORK = {
         "rest_framework.filters.OrderingFilter",
     ],  # note: CallViewset and CallTranscriptViewset's filtering should probably be updated when this list is updated
     "PAGE_SIZE": 50,
+    "ORDERING_PARAM": "sort",
 }
 
 # Database

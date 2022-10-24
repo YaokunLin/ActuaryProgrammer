@@ -1,9 +1,11 @@
+from typing import Tuple
+
 from django.db.models import Q
 
 from calls.analytics.intents.field_choices import CallOutcomeTypes, CallPurposeTypes
 from calls.analytics.participants.field_choices import NonAgentEngagementPersonaTypes
 from calls.field_choices import CallConnectionTypes, CallDirectionTypes
-from core.models import InsuranceProviderPhoneNumber
+from core.models import InsuranceProviderPhoneNumber, Practice
 
 # Connections
 CONNECTED_FILTER = Q(call_connection=CallConnectionTypes.CONNECTED)
@@ -47,3 +49,15 @@ def get_insurance_provider_callee_number_filter():
     This filter is created on-demand since creating it involves a DB query
     """
     return Q(sip_callee_number__in=InsuranceProviderPhoneNumber.objects.only("phone_number"))
+
+
+def get_organization_filter_and_practice_count_for_practice(practice: Practice) -> Tuple[Q, int]:
+    organization_filter = Q()
+    num_practices = None
+
+    organization_id = practice.organization_id
+    if organization_id:
+        num_practices = Practice.objects.filter(organization_id=practice.organization_id).count()
+        organization_filter = Q(practice__organization_id=organization_id)
+
+    return organization_filter, num_practices
