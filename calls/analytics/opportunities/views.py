@@ -126,7 +126,7 @@ class CallCountsView(views.APIView):
 
         analytics = {
             "calls_overall": calculate_call_counts(calls_qs, True),  # perform call counts
-            "opportunities": calculate_call_count_opportunities(calls_qs, start_date_str, end_date_str),
+            "opportunities": calculate_call_count_opportunities(filters, start_date_str, end_date_str),
             # TODO: PTECH-1240
             # "calls_per_user": calculate_call_counts_per_user(calls_qs),  # call counts per caller (agent) phone number
             # "calls_per_user_by_date_and_hour": calculate_call_counts_per_user_by_date_and_hour(calls_qs),  # call counts per caller (agent) phone number over time

@@ -89,18 +89,18 @@ def calculate_call_counts(calls_qs: QuerySet, include_by_weekday_breakdown: bool
     return analytics
 
 
-def calculate_call_count_opportunities(calls_qs: QuerySet, start_date_str: str, end_date_str: str) -> Dict:
-    opportunities_total_qs = calls_qs.filter(OPPORTUNITIES_FILTER)
-    opportunities_existing_patient_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & EXISTING_PATIENT_FILTER)
-    opportunities_new_patient_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & NEW_PATIENT_FILTER)
+def calculate_call_count_opportunities(base_filters: Q, start_date_str: str, end_date_str: str) -> Dict:
+    opportunities_total_qs = Call.objects.filter(base_filters & OPPORTUNITIES_FILTER)
+    opportunities_existing_patient_qs = Call.objects.filter(base_filters & NEW_APPOINTMENT_FILTER & EXISTING_PATIENT_FILTER)
+    opportunities_new_patient_qs = Call.objects.filter(base_filters & NEW_APPOINTMENT_FILTER & NEW_PATIENT_FILTER)
 
-    opportunities_won_total_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & SUCCESS_FILTER & (EXISTING_PATIENT_FILTER | NEW_PATIENT_FILTER))
-    opportunities_won_existing_patient_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & SUCCESS_FILTER & EXISTING_PATIENT_FILTER)
-    opportunities_won_new_patient_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & SUCCESS_FILTER & NEW_PATIENT_FILTER)
+    opportunities_won_total_qs = Call.objects.filter(base_filters & NEW_APPOINTMENT_FILTER & SUCCESS_FILTER & (EXISTING_PATIENT_FILTER | NEW_PATIENT_FILTER))
+    opportunities_won_existing_patient_qs = Call.objects.filter(base_filters & NEW_APPOINTMENT_FILTER & SUCCESS_FILTER & EXISTING_PATIENT_FILTER)
+    opportunities_won_new_patient_qs = Call.objects.filter(base_filters & NEW_APPOINTMENT_FILTER & SUCCESS_FILTER & NEW_PATIENT_FILTER)
 
-    opportunities_lost_total_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & FAILURE_FILTER & (EXISTING_PATIENT_FILTER | NEW_PATIENT_FILTER))
-    opportunities_lost_existing_patient_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & FAILURE_FILTER & EXISTING_PATIENT_FILTER)
-    opportunities_lost_new_patient_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & FAILURE_FILTER & NEW_PATIENT_FILTER)
+    opportunities_lost_total_qs = Call.objects.filter(base_filters & NEW_APPOINTMENT_FILTER & FAILURE_FILTER & (EXISTING_PATIENT_FILTER | NEW_PATIENT_FILTER))
+    opportunities_lost_existing_patient_qs = Call.objects.filter(base_filters & NEW_APPOINTMENT_FILTER & FAILURE_FILTER & EXISTING_PATIENT_FILTER)
+    opportunities_lost_new_patient_qs = Call.objects.filter(base_filters & NEW_APPOINTMENT_FILTER & FAILURE_FILTER & NEW_PATIENT_FILTER)
 
     def get_conversion_rates_breakdown(total: List[Dict], won: List[Dict]) -> List[Dict]:
         conversion_rates = []

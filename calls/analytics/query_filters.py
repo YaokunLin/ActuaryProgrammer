@@ -20,12 +20,12 @@ INBOUND_FILTER = Q(call_direction=CallDirectionTypes.INBOUND)
 INTERNAL_FILTER = Q(call_direction=CallDirectionTypes.INTERNAL)
 OUTBOUND_FILTER = Q(call_direction=CallDirectionTypes.OUTBOUND)
 
-# Purpose
-NEW_APPOINTMENT_FILTER = Q(call_purposes__call_purpose_type=CallPurposeTypes.NEW_APPOINTMENT)
-
 # Outcome
 FAILURE_FILTER = Q(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.FAILURE)
 SUCCESS_FILTER = Q(call_purposes__outcome_results__call_outcome_type=CallOutcomeTypes.SUCCESS)
+
+# Purpose
+NEW_APPOINTMENT_FILTER = Q(call_purposes__call_purpose_type=CallPurposeTypes.NEW_APPOINTMENT) & (SUCCESS_FILTER | FAILURE_FILTER)
 
 # Non-agent Engagement Persona Type
 EXISTING_PATIENT_FILTER = Q(engaged_in_calls__non_agent_engagement_persona_type=NonAgentEngagementPersonaTypes.EXISTING_PATIENT)
