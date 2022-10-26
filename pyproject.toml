@@ -16,6 +16,14 @@ version = "0.1.43"
 description = "Peerlogic API"
 authors = []
 
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "peerlogic"
+markers = "-k"
+python_files = ["test*.py", "*_test.py"]
+python_classes = ["Test", "Acceptance"]
+python_functions = ["test"]
+addopts = "-vv -x --lf --cov"
+
 # WARNING - DO NOT MANUNALLY EDIT THIS SECTION
 # Use poetry.add, poetry.remove, etc.
 [tool.poetry.dependencies]
@@ -69,3 +77,5 @@ djangorestframework-stubs = "1.4.0"
 python-dotenv = "0.15.0"
 isort = "^5.10.1"
 pre-commit = "^2.20.0"
+pytest = "^7.2.0"
+pytest-cov = "^4.0.0"
