@@ -1,10 +1,14 @@
+import pytest
 import requests
 from django.test import TestCase
 
 # Create your tests here.
-peerlogr = requests.post('https://peerlogic-api-dev.wn.r.appspot.com')
+peerlogic = requests.post()
 
 def test_api():
-    assert peerlogr.status_code == 200
+    pass
 
-print(peerlogr.status_code)
+@pytest.fixture
+def function_fixture():
+    pass
+# This was from yeasterdays struggle. Will take care of later today.

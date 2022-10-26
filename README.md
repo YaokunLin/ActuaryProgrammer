@@ -280,10 +280,24 @@ Google Cloud credentials are necessary to access the database. Your environment 
 
 ### Running Test Cases
 
-in the root of your directory run:
+In pyproject.toml under `tool.pytest.ini_options` you will find `addopts = "-vv -x --lf --cov"`
+These are pytest commands that we want to execute when running pytest.
+
+1. `-x`: Will stop running tests once one fails
+2. `-vv`: Will display more detail about the failed assertion
+3. `--lf`: Runs from the last failed test when running pytest
+4. `--cov`: outputs a percentage of covered tests.
+
+The command `--cov` is helpful but not necessary and can be removed if necessary.
+
+<!--
+pytest-cov is needed to run `--cov` 
+-->
+
+To run pyest find the root of you directory and run:
 
 ```bash
 pytest
 ```
 
-this will run the test cases written in `tests.py`
+Running `pytest` in the root of your directory will run the test cases written in `Tests/test_api/tests.py`
