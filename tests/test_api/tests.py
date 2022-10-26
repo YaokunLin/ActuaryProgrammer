@@ -18,5 +18,4 @@ def test_api():
 def function_fixture():
     pass
 
-
 # TODO: Implement

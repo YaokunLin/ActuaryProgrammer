@@ -13,6 +13,9 @@ from requests.auth import HTTPBasicAuth, AuthBase
 
 from jive_integration.models import JiveChannel, JiveSession, JiveConnection, JiveLine
 
+# Get an instance of a logger
+log = logging.getLogger(__name__)
+
 
 class Line:
     """
@@ -173,21 +176,25 @@ class JiveClient:
         signature = signature.hexdigest()
 
         channel = JiveChannel.objects.create(connection=connection, signature=signature, expires_at=timezone.now() + timedelta(seconds=lifetime))
+        endpoint = f"https://api.jive.com/notification-channel/v1/channels/{channel.name}"
 
         try:
             resp = self.__request(
                 method="post",
-                path=f"https://api.jive.com/notification-channel/v1/channels/{channel.name}",
+                path=endpoint,
                 json={
                     "channelLifetime": lifetime,
                     "webhookChannelData": {"webhook": {"url": webhook_url}, "channelType": "Webhook", "signature": {"sharedSecret": signature}},
                 },
             )
-            channel.source_jive_id = resp.json()["channelId"]
-            channel.save()
+            response_body = resp.json()
 
             resp.raise_for_status()
+            log.info(f"Jive: POST to endpoint='{endpoint}' gave a response_body='{response_body}'")
+            channel.source_jive_id = response_body.get("channelId")
+            channel.save()
         except Exception as exc:
+            log.warn(f"Could not create channel in Jive, deleting from Peerlogic API.")
             channel.delete()
             raise exc
 
@@ -197,13 +204,16 @@ class JiveClient:
         """
         Extend the channel lifetime by the default value configured by the Jive API
         """
-        resp = self.__request(
-            method="put", url=f"https://api.jive.com/notification-channel/v1/channels/{channel.name}/{channel.source_jive_id}/channel-lifetime"
-        )
+        endpoint = f"https://api.jive.com/notification-channel/v1/channels/{channel.name}/{channel.source_jive_id}/channel-lifetime"
+        resp = self.__request(method="put", url=endpoint)
 
         resp.raise_for_status()
 
-        channel.expires_at = timezone.now() + timedelta(seconds=resp.json()["channelLifetime"])
+        response_body = resp.json()
+
+        log.info(f"Jive: POST to endpoint='{endpoint}' gave a response_body='{response_body}'")
+
+        channel.expires_at = timezone.now() + timedelta(seconds=response_body.get("channelLifetime"))
         channel.save()
 
     def create_session(self, channel: JiveChannel) -> JiveSession:

@@ -773,11 +773,16 @@ def convert_call_counts_to_by_month(data_by_day: List[Dict]) -> List[Dict]:
     return monthly_data
 
 
-def safe_divide(dividend: int, divisor: int, default: int = 0, should_round: bool = True, round_places: Optional[int] = 2) -> Union[int, float]:
+def safe_divide(
+    dividend: Optional[int], divisor: Optional[int], default: int = 0, should_round: bool = True, round_places: Optional[int] = 2
+) -> Union[None, int, float]:
     """
     Divides, falling back to the provided default if the divisor is falsy.
     Also rounds by default to 2 places if the result is a float.
     """
+    if divisor is None or dividend is None:
+        return None
+
     result = divisor and dividend / divisor or default
     if should_round:
         result = round_if_float(result, round_places)
