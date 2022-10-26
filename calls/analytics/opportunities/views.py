@@ -126,7 +126,7 @@ class CallCountsView(views.APIView):
 
         analytics = {
             "calls_overall": calculate_call_counts(calls_qs, True),  # perform call counts
-            "opportunities": calculate_call_count_opportunities(calls_qs, start_date_str, end_date_str),
+            "opportunities": calculate_call_count_opportunities(filters, start_date_str, end_date_str),
             # TODO: PTECH-1240
             # "calls_per_user": calculate_call_counts_per_user(calls_qs),  # call counts per caller (agent) phone number
             # "calls_per_user_by_date_and_hour": calculate_call_counts_per_user_by_date_and_hour(calls_qs),  # call counts per caller (agent) phone number over time
@@ -239,26 +239,25 @@ class OpportunitiesPerUserView(views.APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST, data=errors)
 
         # practice filter
-        practice_filter = {}
+        practice_filter = Q()
         if valid_practice_id:
-            practice_filter = {"practice__id": valid_practice_id}
+            practice_filter = Q(practice_id=valid_practice_id)
 
         # date filters
         dates = dates_info.get("dates")
-        call_start_time__gte = dates[0]
-        call_start_time__lte = dates[1]
-        dates_filter = {"call_start_time__gte": call_start_time__gte, "call_start_time__lte": call_start_time__lte}
+        start_date_str = dates[0]
+        end_date_str = dates[1]
+        dates_filter = Q(call_start_time__gte=start_date_str, call_start_time__lte=end_date_str)
 
-        filters = Q(**dates_filter) & Q(**practice_filter) & INBOUND_FILTER
-        calls_qs = Call.objects.filter(filters)
+        filters = dates_filter & practice_filter & INBOUND_FILTER
 
         aggregates = {
-            "agent": calculate_call_counts_and_opportunities_per_user(calls_qs),  # call counts per caller (agent) phone number
+            "agent": calculate_call_counts_and_opportunities_per_user(filters),  # call counts per caller (agent) phone number
         }
 
         display_filters = {
-            self.QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME["call_start_time__gte"]: call_start_time__gte,
-            self.QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME["call_start_time__lte"]: call_start_time__lte,
+            self.QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME["call_start_time__gte"]: start_date_str,
+            self.QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME["call_start_time__lte"]: end_date_str,
         }
 
         return Response({"filters": display_filters, "results": aggregates})
@@ -272,18 +271,14 @@ class NewPatientOpportunitiesView(views.APIView):
     @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
-        valid_organization_id, organization_errors = get_validated_organization_id(request=request)
         dates_info = get_validated_call_dates(query_data=request.query_params)
         dates_errors = dates_info.get("errors")
 
         errors = {}
         if practice_errors:
             errors.update(practice_errors)
-        if organization_errors:
-            errors.update(organization_errors)
-        if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id):
-            error_message = "practice__id or organization__id must be provided, but not both."
-            errors.update({"practice__id": error_message, "organization__id": error_message})
+        if not practice_errors and not valid_practice_id:
+            errors.update({"practice__id": "practice__id must be provided"})
         if dates_errors:
             errors.update(dates_errors)
         if errors:
@@ -294,44 +289,29 @@ class NewPatientOpportunitiesView(views.APIView):
         if valid_practice_id:
             practice_filter = Q(practice_id=valid_practice_id)
 
-        organization_filter = Q()
-        if valid_organization_id:
-            organization_filter = Q(practice__organization_id=valid_organization_id)
-
         # date filters
         dates = dates_info.get("dates")
         call_start_time__gte = dates[0]
         call_start_time__lte = dates[1]
         dates_filter = Q(call_start_time__gte=call_start_time__gte, call_start_time__lte=call_start_time__lte)
 
-        base_filters = dates_filter & practice_filter & organization_filter & NEW_PATIENT_OPPORTUNITIES_FILTER & INBOUND_FILTER
+        base_filters = dates_filter & practice_filter & NEW_PATIENT_OPPORTUNITIES_FILTER & INBOUND_FILTER
 
         # aggregate analytics
         aggregates = {}
-        new_patient_opportunities_qs = Call.objects.filter(base_filters)
-        aggregates["new_patient_opportunities_total"] = new_patient_opportunities_qs.count()
-        aggregates["new_patient_opportunities_time_series"] = self._calculate_new_patient_opportunities_time_series(
-            new_patient_opportunities_qs, dates[0], dates[1]
-        )
+        new_patient_opportunities_qs = Call.objects.filter(base_filters & (SUCCESS_FILTER | FAILURE_FILTER))
+        aggregates["new_patient_opportunities_total"] = new_patient_opportunities_qs.distinct("id").count()
+        aggregates["new_patient_opportunities_time_series"] = self._calculate_new_patient_opportunities_time_series(base_filters, dates[0], dates[1])
 
         new_patient_opportunities_won_qs = Call.objects.filter(base_filters & SUCCESS_FILTER)
-        aggregates["new_patient_opportunities_won_total"] = new_patient_opportunities_won_qs.count()
+        aggregates["new_patient_opportunities_won_total"] = new_patient_opportunities_won_qs.distinct("id").count()
 
         new_patient_opportunities_lost_qs = Call.objects.filter(base_filters & FAILURE_FILTER)
-        aggregates["new_patient_opportunities_lost_total"] = new_patient_opportunities_lost_qs.count()
+        aggregates["new_patient_opportunities_lost_total"] = new_patient_opportunities_lost_qs.distinct("id").count()
 
         aggregates["new_patient_opportunities_conversion_rate_total"] = safe_divide(
             aggregates["new_patient_opportunities_won_total"], aggregates["new_patient_opportunities_total"]
         )
-
-        if organization_filter:
-            per_practice_averages = {}
-            num_practices = Practice.objects.filter(organization_id=valid_organization_id).count()
-            per_practice_averages["new_patient_opportunities"] = safe_divide(aggregates["new_patient_opportunities_total"], num_practices)
-            per_practice_averages["new_patient_opportunities_won"] = safe_divide(aggregates["new_patient_opportunities_won_total"], num_practices)
-            per_practice_averages["new_patient_opportunities_lost"] = safe_divide(aggregates["new_patient_opportunities_lost_total"], num_practices)
-            aggregates["new_patient_opportunities_conversion_rate"] = safe_divide(aggregates["new_patient_opportunities_conversion_rate_total"], num_practices)
-            aggregates["per_practice_averages"] = per_practice_averages
 
         # display syntactic sugar
         display_filters = {
@@ -342,12 +322,13 @@ class NewPatientOpportunitiesView(views.APIView):
         return Response({"filters": display_filters, "results": aggregates})
 
     @staticmethod
-    def _calculate_new_patient_opportunities_time_series(opportunities_qs: QuerySet, start_date: str, end_date: str) -> Dict:
+    def _calculate_new_patient_opportunities_time_series(base_filters: Q, start_date: str, end_date: str) -> Dict:
         per_day = {}
         per_week = {}
 
-        won_qs = opportunities_qs.filter(SUCCESS_FILTER)
-        lost_qs = opportunities_qs.filter(FAILURE_FILTER)
+        opportunities_qs = Call.objects.filter(base_filters & (SUCCESS_FILTER | FAILURE_FILTER))
+        won_qs = Call.objects.filter(base_filters & SUCCESS_FILTER)
+        lost_qs = Call.objects.filter(base_filters & FAILURE_FILTER)
 
         def get_conversion_rates_breakdown(total: List[Dict], won: List[Dict]) -> List[Dict]:
             conversion_rates = []
@@ -387,18 +368,14 @@ class NewPatientWinbacksView(views.APIView):
     @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
-        valid_organization_id, organization_errors = get_validated_organization_id(request=request)
         dates_info = get_validated_call_dates(query_data=request.query_params)
         dates_errors = dates_info.get("errors")
 
         errors = {}
         if practice_errors:
             errors.update(practice_errors)
-        if organization_errors:
-            errors.update(organization_errors)
-        if not practice_errors and not organization_errors and bool(valid_practice_id) == bool(valid_organization_id):
-            error_message = "practice__id or organization__id must be provided, but not both."
-            errors.update({"practice__id": error_message, "organization__id": error_message})
+        if not practice_errors and not valid_practice_id:
+            errors.update({"practice__id": "practice__id must be provided"})
         if dates_errors:
             errors.update(dates_errors)
         if errors:
@@ -408,14 +385,10 @@ class NewPatientWinbacksView(views.APIView):
         if valid_practice_id:
             practice_filter = Q(practice__id=valid_practice_id)
 
-        organization_filter = Q()
-        if valid_organization_id:
-            organization_filter = Q(practice__organization__id=valid_organization_id)
-
         dates = dates_info.get("dates")
         dates_filter = Q(call_start_time__gte=dates[0], call_start_time__lte=dates[1])
 
-        calls_qs = Call.objects.filter(dates_filter & practice_filter & organization_filter)
+        calls_qs = Call.objects.filter(dates_filter & practice_filter)
 
         winback_patient_phone_numbers = self._get_winback_opportunity_phone_numbers(calls_qs)
         callee_number_filter = Q(sip_callee_number__in=winback_patient_phone_numbers)

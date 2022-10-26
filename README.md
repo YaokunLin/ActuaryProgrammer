@@ -288,7 +288,7 @@ These are pytest commands that we want to execute when running pytest.
 3. `--lf`: Runs from the last failed test when running pytest
 4. `--cov`: outputs a percentage of covered tests.
 
-To run pyest find the root of you directory and run:
+We are using the pytest framework for unit and integration tets. In the root of your directory run:
 
 ```bash
 pytest

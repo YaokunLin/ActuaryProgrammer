@@ -42,6 +42,7 @@ from calls.analytics.query_filters import (
     WENT_TO_VOICEMAIL_FILTER,
 )
 from calls.field_choices import CallDirectionTypes, SentimentTypes
+from calls.models import Call
 from core.models import Practice
 
 # Get an instance of a logger
@@ -88,18 +89,18 @@ def calculate_call_counts(calls_qs: QuerySet, include_by_weekday_breakdown: bool
     return analytics
 
 
-def calculate_call_count_opportunities(calls_qs: QuerySet, start_date_str: str, end_date_str: str) -> Dict:
-    opportunities_total_qs = calls_qs.filter(OPPORTUNITIES_FILTER)
-    opportunities_existing_patient_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & EXISTING_PATIENT_FILTER)
-    opportunities_new_patient_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & NEW_PATIENT_FILTER)
+def calculate_call_count_opportunities(base_filters: Q, start_date_str: str, end_date_str: str) -> Dict:
+    opportunities_total_qs = Call.objects.filter(base_filters & OPPORTUNITIES_FILTER)
+    opportunities_existing_patient_qs = Call.objects.filter(base_filters & NEW_APPOINTMENT_FILTER & EXISTING_PATIENT_FILTER)
+    opportunities_new_patient_qs = Call.objects.filter(base_filters & NEW_APPOINTMENT_FILTER & NEW_PATIENT_FILTER)
 
-    opportunities_won_total_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & SUCCESS_FILTER & (EXISTING_PATIENT_FILTER | NEW_PATIENT_FILTER))
-    opportunities_won_existing_patient_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & SUCCESS_FILTER & EXISTING_PATIENT_FILTER)
-    opportunities_won_new_patient_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & SUCCESS_FILTER & NEW_PATIENT_FILTER)
+    opportunities_won_total_qs = Call.objects.filter(base_filters & NEW_APPOINTMENT_FILTER & SUCCESS_FILTER & (EXISTING_PATIENT_FILTER | NEW_PATIENT_FILTER))
+    opportunities_won_existing_patient_qs = Call.objects.filter(base_filters & NEW_APPOINTMENT_FILTER & SUCCESS_FILTER & EXISTING_PATIENT_FILTER)
+    opportunities_won_new_patient_qs = Call.objects.filter(base_filters & NEW_APPOINTMENT_FILTER & SUCCESS_FILTER & NEW_PATIENT_FILTER)
 
-    opportunities_lost_total_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & FAILURE_FILTER & (EXISTING_PATIENT_FILTER | NEW_PATIENT_FILTER))
-    opportunities_lost_existing_patient_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & FAILURE_FILTER & EXISTING_PATIENT_FILTER)
-    opportunities_lost_new_patient_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & FAILURE_FILTER & NEW_PATIENT_FILTER)
+    opportunities_lost_total_qs = Call.objects.filter(base_filters & NEW_APPOINTMENT_FILTER & FAILURE_FILTER & (EXISTING_PATIENT_FILTER | NEW_PATIENT_FILTER))
+    opportunities_lost_existing_patient_qs = Call.objects.filter(base_filters & NEW_APPOINTMENT_FILTER & FAILURE_FILTER & EXISTING_PATIENT_FILTER)
+    opportunities_lost_new_patient_qs = Call.objects.filter(base_filters & NEW_APPOINTMENT_FILTER & FAILURE_FILTER & NEW_PATIENT_FILTER)
 
     def get_conversion_rates_breakdown(total: List[Dict], won: List[Dict]) -> List[Dict]:
         conversion_rates = []
@@ -239,48 +240,42 @@ def _get_annotation_for_phone_number_with_extension(root_phone_number_field_name
     return annotation
 
 
-def calculate_call_counts_and_opportunities_per_user(calls_qs: QuerySet) -> Dict:
-    # set field_name for all calculations
-    phone_with_extension_field_name = "sip_callee_number_with_extension"
-    field_name = phone_with_extension_field_name
+def calculate_call_counts_and_opportunities_per_user(base_filters: Q) -> Dict:
+    all_calls_qs = Call.objects.filter(base_filters)
+    opportunities_qs = Call.objects.filter(base_filters & OPPORTUNITIES_FILTER)
+    booked_opportunities_qs = Call.objects.filter(base_filters & OPPORTUNITIES_FILTER & SUCCESS_FILTER)
 
-    # root annotated queryset for all subsequent calculations
-    calls_qs = annotate_callee_number_with_extension(calls_qs)
+    field_name = "sip_callee_extension"
 
-    # get distinct sip_caller_number_with_extensions first to form the basis of our return and subsequent joins, includes location / practice
-    user_and_practice_qs = calls_qs.distinct(field_name).values(
-        field_name, "sip_callee_number", "sip_callee_extension", "practice__name", "practice__address_us_state", "practice__created_at"
+    # get distinct sip_callee_extension first to form the basis of our return and subsequent joins, includes location / practice
+    user_and_practice_qs = all_calls_qs.distinct(field_name).values(
+        field_name,
+        "sip_callee_extension",
+        "practice__name",
+        "practice__address_us_state",
     )
 
     # call totals
-    call_total_qs = calls_qs.values(field_name).annotate(call_count=Count("id")).values(field_name, "call_count")
+    call_total_qs = all_calls_qs.values(field_name).annotate(call_count=Count("id")).values(field_name, "call_count")
     call_missed_qs = (
-        calls_qs.filter(call_connection="missed").values(field_name).annotate(call_missed_count=Count("id")).values(field_name, "call_missed_count")
+        all_calls_qs.filter(call_connection="missed").values(field_name).annotate(call_missed_count=Count("id")).values(field_name, "call_missed_count")
     )
 
-    opportunities_total_qs = (
-        calls_qs.filter(NEW_APPOINTMENT_FILTER & (EXISTING_PATIENT_FILTER | NEW_PATIENT_FILTER))
-        .values(field_name)
-        .annotate(opportunities_total_count=Count("id"))
-        .values(field_name, "opportunities_total_count")
-    )
-    opportunities_won_qs = (
-        calls_qs.filter(NEW_APPOINTMENT_FILTER & SUCCESS_FILTER & (EXISTING_PATIENT_FILTER | NEW_PATIENT_FILTER))
-        .values(field_name)
-        .annotate(opportunities_won_count=Count("id"))
-        .values(field_name, "opportunities_won_count")
+    opportunities_qs = opportunities_qs.values(field_name).annotate(opportunities_total_count=Count("id")).values(field_name, "opportunities_total_count")
+    booked_opportunities_qs = (
+        booked_opportunities_qs.values(field_name).annotate(opportunities_won_count=Count("id")).values(field_name, "opportunities_won_count")
     )
 
     # create dataframes for crunching
     user_and_practice_info = read_frame(user_and_practice_qs)
     call_count = read_frame(call_total_qs)
     call_missed_count = read_frame(call_missed_qs)
-    call_opportunities_total_count = read_frame(opportunities_total_qs)
-    call_opportunities_won_count = read_frame(opportunities_won_qs)
+    call_opportunities_total_count = read_frame(opportunities_qs)
+    call_opportunities_booked_count = read_frame(booked_opportunities_qs)
 
     # assemble
     frame_to_return = user_and_practice_info
-    frames_to_join = [call_count, call_missed_count, call_opportunities_total_count, call_opportunities_won_count]
+    frames_to_join = [call_count, call_missed_count, call_opportunities_total_count, call_opportunities_booked_count]
     for frame in frames_to_join:
         frame_to_return = frame_to_return.merge(frame, how="left", on=field_name)  # merges are a sql-like join. retain left-most rows, always
 
@@ -715,9 +710,15 @@ def convert_to_call_counts_only(call_counts_and_durations: Dict) -> Dict:
     return {k: v["call_count"] for k, v in call_counts_and_durations.items()}
 
 
-def calculate_zero_filled_call_counts_by_day(calls_qs: QuerySet, start_date: str, end_date: str, field_to_count: str = "id") -> List[Dict]:
+def calculate_zero_filled_call_counts_by_day(
+    calls_qs: QuerySet, start_date: str, end_date: str, field_to_count: str = "id", distinct: bool = True
+) -> List[Dict]:
     data = list(
-        calls_qs.annotate(date=TruncDate("call_start_time")).values("date").annotate(value=Count(field_to_count)).values("date", "value").order_by("date")
+        calls_qs.annotate(date=TruncDate("call_start_time"))
+        .values("date")
+        .annotate(value=Count(field_to_count, distinct=distinct))
+        .values("date", "value")
+        .order_by("date")
     )
     if not data:
         return []
