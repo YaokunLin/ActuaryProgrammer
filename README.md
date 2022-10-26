@@ -300,4 +300,4 @@ To run pyest find the root of you directory and run:
 pytest
 ```
 
-Running `pytest` in the root of your directory will run the test cases written in `Tests/test_api/tests.py`
+Running `pytest` in the root of your directory will run the test cases written in `Tests/test_api/tests.py` or any other file that starts with "test".
