@@ -292,7 +292,7 @@ def cron(request):
     collected though the records may remain in the database for a period to ensure any latent events sent to the
     webhook receiver will still be routed correctly.
     """
-    logging.info("syncing jive lines and subscriptions")
+    log.info("Jive: syncing jive lines and subscriptions")
 
     # to avoid timeouts we want to complete execution in 30s
     deadline = datetime.now() + timedelta(seconds=60)
@@ -302,17 +302,25 @@ def cron(request):
 
     # for each user connection
     for connection in JiveConnection.objects.filter(active=True).order_by("-last_sync"):
+        log.info(f"Jive: found connection: {connection}")
         jive: JiveClient = JiveClient(client_id=settings.JIVE_CLIENT_ID, client_secret=settings.JIVE_CLIENT_SECRET, refresh_token=connection.refresh_token)
         if deadline < datetime.now():
             return HttpResponse(status=204)
 
         # find any channels about to expire in the next few hours and refresh them
-        for channel in JiveChannel.objects.filter(expires_at__lt=timezone.now() - timedelta(hours=3)):
+
+        # TODO: use JiveChannel.objects.filter(expires_at__lt=timezone.now() - timedelta(hours=3))
+        # Dependencies:
+        # * cron cloud run deployed
+        # FURTHER TODO: make the 3 hours configurable via env var / Secret Manager
+        for channel in JiveChannel.objects.all():
+            log.info(f"Jive: found channel: {channel}")
             # if a channel refresh fails we mark it as inactive
             try:
+                log.info(f"Jive: refreshing channel: {channel}")
                 jive.refresh_channel_lifetime(channel)
             except:
-                logging.info(f"failed to refresh channel {channel.id}, marking as inactive")
+                log.info(f"Jive: failed to refresh channel {channel.id}, marking as inactive")
                 channel.active = False
                 channel.save()
 
@@ -327,7 +335,7 @@ def cron(request):
         add_lines = external_lines - current_lines
         remove_lines = current_lines - external_lines
 
-        logging.info(f"found {len(add_lines)} new lines and {len(remove_lines)} invalid lines for connection {connection.id}")
+        log.info(f"Jive: found {len(add_lines)} new lines and {len(remove_lines)} invalid lines for connection {connection.id}.")
 
         # delete the removed lines
         JiveLine.objects.filter(source_jive_id__in=remove_lines).delete()
@@ -338,6 +346,7 @@ def cron(request):
 
             # if no channels are found create one
             if not channel:
+                log.info(f"Jive: no active webhook channel found for connection='{connection}', creating one.")
                 webhook_url = request.build_absolute_uri(reverse("jive_integration:webhook-receiver"))
 
                 # Jive will only accept a https url so we always replace it, the only case where this would not
@@ -345,18 +354,28 @@ def cron(request):
                 webhook_url = webhook_url.replace("http://", "https://")
 
                 channel = jive.create_webhook_channel(connection=connection, webhook_url=webhook_url)
+                log.info(f"Jive: created channel='{channel}' for connection='{connection}'.")
+                # TODO: better error handling from above client call
 
             # get the latest session for this channel
             session = JiveSession.objects.filter(channel=channel).order_by("-channel__expires_at").first()
 
             # if no session is found create one
             if not session:
+                log.info(f"Jive: no session found for channel='{channel}', creating one.")
                 session = jive.create_session(channel=channel)
+                log.info(f"Jive: created session='{session}' for channel='{channel}'.")
+                # TODO: better error handling from above client call
 
             # subscribe to the new lines
+            log.info(f"Jive: subscribing to {add_lines} with session='{session}'")
             jive.create_session_dialog_subscription(session, *add_lines)
+            log.info(f"Jive: subscribed to {add_lines} with session='{session}'")
+            # TODO: better error handling from above client call
 
         # record sync event to ensure all connections get a chance to be synced
+        # TODO: determine if we should not update this when some channel, session, line or connection has an error
+        # It's led to issues understanding staleness of connections because it's ALWAYS updated.
         connection.last_sync = timezone.now()
         connection.save()
 
