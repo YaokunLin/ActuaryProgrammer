@@ -1,9 +1,15 @@
+import os
 import pytest
 import requests
 
+# Setting environment variables
+os.environ['LOCAL_URL'] = 'http://0.0.0.0:8000/'
+
+# Getting environment variables
+LOCAL = os.getenv('LOCAL_URL')
+
 # Create your tests here.
-local_url = 'http://0.0.0.0:8000/'
-peerlogic = requests.get(local_url)  # TODO: need to add code to configure url
+peerlogic = requests.get(LOCAL)  # TODO: need to add code to configure url
 
 def test_api():
     assert peerlogic.status_code==200
