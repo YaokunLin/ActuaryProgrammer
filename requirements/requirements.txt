@@ -1,4 +1,4 @@
-Django>=3.0
+Django==3.2.16
 argon2-cffi==16.1.0
 # TODO: If still using reqs.txt once we are on Python 3.9+, tzinfo is builtin
 backports.zoneinfo==0.2.1
