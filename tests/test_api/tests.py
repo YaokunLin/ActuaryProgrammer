@@ -1,6 +1,5 @@
 import pytest
 import requests
-from django.test import TestCase
 
 # Create your tests here.
 peerlogic = requests.post()  # TODO: need to add code to configure url
