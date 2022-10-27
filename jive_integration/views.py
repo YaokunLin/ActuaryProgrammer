@@ -105,6 +105,10 @@ def webhook(request):
             "practice": line.session.channel.connection.practice_telecom.practice,
             "call_start_time": start_time,
             "duration_seconds": timedelta(seconds=0),
+            # TODO: connect_duration_seconds logic
+            # TODO: progress_time_seconds logic
+            # TODO: hold_time_seconds logic
+            # TODO: call_connection logic
             "call_direction": direction,
             callee_key: callee_number,  # TODO: get true TN number called from in downstream subscribing cloud functions
             "sip_callee_name": content["data"]["callee"]["name"],
