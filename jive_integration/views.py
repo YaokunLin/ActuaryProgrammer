@@ -110,8 +110,8 @@ def webhook(request):
             "sip_callee_name": content["data"]["callee"]["name"],
             caller_key: caller_number,  # TODO: get true TN number called from in downstream subscribing cloud functions
             "sip_caller_name": content["data"]["caller"]["name"],
-            "checked_voicemail": False,  # TODO: support
-            "went_to_voicemail": False,  # TODO: support
+            "checked_voicemail": False,  # TODO: determine value in downstream subscribing cloud functions
+            "went_to_voicemail": False,  # TODO: determine value in downstream subscribing cloud functions
         }
 
         peerlogic_call = Call.objects.create(**call_fields)
