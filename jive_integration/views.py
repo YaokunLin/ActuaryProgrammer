@@ -375,11 +375,6 @@ def cron(request):
             log.info(f"Jive: subscribed to {add_lines} with session='{session}'")
             # TODO: better error handling from above client call
 
-            # save new lines to the database
-            # TODO: test in development
-            for line in add_lines:
-                JiveLine.objects.update_or_create(session=session, source_jive_id=line.line_id, source_organization_jive_id=line.source_organization_jive_id)
-
         # record sync event to ensure all connections get a chance to be synced
         # TODO: determine if we should not update this when some channel, session, line or connection has an error
         # It's led to issues understanding staleness of connections because it's ALWAYS updated.
