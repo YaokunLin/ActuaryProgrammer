@@ -1,19 +1,10 @@
-import os
-
 import pytest
 import requests
 
 from peerlogic.settings import TEST_API_CLIENT_ROOT_URL
 
 
+@pytest.mark.unit
 def test_api():
     peerlogic = requests.get(TEST_API_CLIENT_ROOT_URL)
     assert peerlogic.status_code == 200
-
-
-@pytest.fixture
-def function_fixture():
-    pass
-
-
-# TODO: Implement
