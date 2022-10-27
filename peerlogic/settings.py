@@ -23,6 +23,9 @@ from dotenv import load_dotenv
 from google.cloud import pubsub_v1, secretmanager, storage
 from requests.auth import HTTPBasicAuth
 
+# URL for local testing
+LOCAL = os.environ["LOCAL_URL"] = "http://0.0.0.0:8000/"
+
 # Get an instance of a logger
 log = logging.getLogger(__name__)
 
