@@ -8,7 +8,7 @@ from peerlogic.settings import TEST_API_CLIENT_ROOT_URL
 
 # Create you tet cases here
 def test_api():
-    peerlogic = requests.get(TEST_API_CLIENT_ROOT_URL)  # TODO: need to add code to configure url
+    peerlogic = requests.get(TEST_API_CLIENT_ROOT_URL)
     assert peerlogic.status_code == 200
 
 
