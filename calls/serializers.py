@@ -208,6 +208,7 @@ class CallTranscriptSerializer(serializers.ModelSerializer):
             "call",
             "publish_event_on_patch",
             "mime_type",
+            "status",
             "transcript_type",
             "transcript_text",
             "speech_to_text_model_type",

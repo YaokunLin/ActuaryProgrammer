@@ -46,15 +46,15 @@ def validate_dates(from_date=None, to_date=None):
         to_date = datetime.strptime(to_date, date_time_format)
         from_date = datetime.strptime(from_date, date_time_format)
 
-    # lets make sure that from_date is less than to_date
+    # let's make sure that from_date is less than or equal to to_date
     if from_date > to_date:
         log.error(f"from_date: '{from_date}' is greater than to_date: '{to_date}'. Swapping dates.")
         temp_to_date = from_date
         from_date = to_date
         to_date = temp_to_date
 
-    # make to_date inclusive, yes this does make the date range default a little wonky
-    to_date = to_date + timedelta(days=1)
+    from_date = from_date.replace(hour=0, minute=0, second=0, microsecond=0)
+    to_date = to_date.replace(hour=23, minute=59, second=59, microsecond=999999)
 
     return from_date.strftime(date_time_format), to_date.strftime(date_time_format)
 

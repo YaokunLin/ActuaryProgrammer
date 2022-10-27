@@ -89,18 +89,18 @@ def calculate_call_counts(calls_qs: QuerySet, include_by_weekday_breakdown: bool
     return analytics
 
 
-def calculate_call_count_opportunities(calls_qs: QuerySet, start_date_str: str, end_date_str: str) -> Dict:
-    opportunities_total_qs = calls_qs.filter(OPPORTUNITIES_FILTER)
-    opportunities_existing_patient_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & EXISTING_PATIENT_FILTER)
-    opportunities_new_patient_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & NEW_PATIENT_FILTER)
+def calculate_call_count_opportunities(base_filters: Q, start_date_str: str, end_date_str: str) -> Dict:
+    opportunities_total_qs = Call.objects.filter(base_filters & OPPORTUNITIES_FILTER)
+    opportunities_existing_patient_qs = Call.objects.filter(base_filters & NEW_APPOINTMENT_FILTER & EXISTING_PATIENT_FILTER)
+    opportunities_new_patient_qs = Call.objects.filter(base_filters & NEW_APPOINTMENT_FILTER & NEW_PATIENT_FILTER)
 
-    opportunities_won_total_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & SUCCESS_FILTER & (EXISTING_PATIENT_FILTER | NEW_PATIENT_FILTER))
-    opportunities_won_existing_patient_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & SUCCESS_FILTER & EXISTING_PATIENT_FILTER)
-    opportunities_won_new_patient_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & SUCCESS_FILTER & NEW_PATIENT_FILTER)
+    opportunities_won_total_qs = Call.objects.filter(base_filters & NEW_APPOINTMENT_FILTER & SUCCESS_FILTER & (EXISTING_PATIENT_FILTER | NEW_PATIENT_FILTER))
+    opportunities_won_existing_patient_qs = Call.objects.filter(base_filters & NEW_APPOINTMENT_FILTER & SUCCESS_FILTER & EXISTING_PATIENT_FILTER)
+    opportunities_won_new_patient_qs = Call.objects.filter(base_filters & NEW_APPOINTMENT_FILTER & SUCCESS_FILTER & NEW_PATIENT_FILTER)
 
-    opportunities_lost_total_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & FAILURE_FILTER & (EXISTING_PATIENT_FILTER | NEW_PATIENT_FILTER))
-    opportunities_lost_existing_patient_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & FAILURE_FILTER & EXISTING_PATIENT_FILTER)
-    opportunities_lost_new_patient_qs = calls_qs.filter(NEW_APPOINTMENT_FILTER & FAILURE_FILTER & NEW_PATIENT_FILTER)
+    opportunities_lost_total_qs = Call.objects.filter(base_filters & NEW_APPOINTMENT_FILTER & FAILURE_FILTER & (EXISTING_PATIENT_FILTER | NEW_PATIENT_FILTER))
+    opportunities_lost_existing_patient_qs = Call.objects.filter(base_filters & NEW_APPOINTMENT_FILTER & FAILURE_FILTER & EXISTING_PATIENT_FILTER)
+    opportunities_lost_new_patient_qs = Call.objects.filter(base_filters & NEW_APPOINTMENT_FILTER & FAILURE_FILTER & NEW_PATIENT_FILTER)
 
     def get_conversion_rates_breakdown(total: List[Dict], won: List[Dict]) -> List[Dict]:
         conversion_rates = []
@@ -710,9 +710,15 @@ def convert_to_call_counts_only(call_counts_and_durations: Dict) -> Dict:
     return {k: v["call_count"] for k, v in call_counts_and_durations.items()}
 
 
-def calculate_zero_filled_call_counts_by_day(calls_qs: QuerySet, start_date: str, end_date: str, field_to_count: str = "id") -> List[Dict]:
+def calculate_zero_filled_call_counts_by_day(
+    calls_qs: QuerySet, start_date: str, end_date: str, field_to_count: str = "id", distinct: bool = True
+) -> List[Dict]:
     data = list(
-        calls_qs.annotate(date=TruncDate("call_start_time")).values("date").annotate(value=Count(field_to_count)).values("date", "value").order_by("date")
+        calls_qs.annotate(date=TruncDate("call_start_time"))
+        .values("date")
+        .annotate(value=Count(field_to_count, distinct=distinct))
+        .values("date", "value")
+        .order_by("date")
     )
     if not data:
         return []
@@ -767,11 +773,16 @@ def convert_call_counts_to_by_month(data_by_day: List[Dict]) -> List[Dict]:
     return monthly_data
 
 
-def safe_divide(dividend: int, divisor: int, default: int = 0, should_round: bool = True, round_places: Optional[int] = 2) -> Union[int, float]:
+def safe_divide(
+    dividend: Optional[int], divisor: Optional[int], default: int = 0, should_round: bool = True, round_places: Optional[int] = 2
+) -> Union[None, int, float]:
     """
     Divides, falling back to the provided default if the divisor is falsy.
     Also rounds by default to 2 places if the result is a float.
     """
+    if divisor is None or dividend is None:
+        return None
+
     result = divisor and dividend / divisor or default
     if should_round:
         result = round_if_float(result, round_places)
