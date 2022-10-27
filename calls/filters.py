@@ -22,7 +22,7 @@ class CallsFilter(filters.FilterSet):
     call_start_time = filters.DateFromToRangeFilter()
     marketing_campaign_name = filters.CharFilter(method="filter_marketing_campaign_name")
     call_purposes__call_purpose_type = filters.ChoiceFilter(choices=CallPurposeTypes.choices, method="_filter_call_purpose_fields")
-    call_purposes__outcome_results__call_outcome_type = filters.ChoiceFilter(choices=CallOutcomeTypes.choices, method="_filter_call_purpose_fields")
+    call_purposes__outcome_results__call_outcome_type = filters.MultipleChoiceFilter(choices=CallOutcomeTypes.choices, method="_filter_call_purpose_fields")
     call_purposes__outcome_results__outcome_reason_results__call_outcome_reason_type = filters.ChoiceFilter(
         choices=CallOutcomeReasonTypes.choices, method="_filter_call_purpose_fields"
     )
@@ -52,7 +52,12 @@ class CallsFilter(filters.FilterSet):
             filters = Q()
             for key in {call_purpose_key, call_outcome_key, call_outcome_reason_key}:
                 if key in self.request.query_params:
-                    filters = filters & Q(**{key: self.request.query_params[key]})
+                    value = self.request.query_params.getlist(key)
+                    if len(value) > 1:
+                        filters = filters & Q(**{f"{key}__in": value})
+                    else:
+                        filters = filters & Q(**{key: value[0]})
+
             self.purpose_filters_applied = True
             log.debug("Filtering call purpose fields for %s: %s", name, filters)
             return queryset.filter(filters)
