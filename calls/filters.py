@@ -21,9 +21,9 @@ class CallsFilter(filters.FilterSet):
     sip_callee_number__startswith = filters.CharFilter(field_name="sip_callee_number", lookup_expr="startswith")
     call_start_time = filters.DateFromToRangeFilter()
     marketing_campaign_name = filters.CharFilter(method="filter_marketing_campaign_name")
-    call_purposes__call_purpose_type = filters.ChoiceFilter(choices=CallPurposeTypes.choices, method="_filter_call_purpose_fields")
+    call_purposes__call_purpose_type = filters.MultipleChoiceFilter(choices=CallPurposeTypes.choices, method="_filter_call_purpose_fields")
     call_purposes__outcome_results__call_outcome_type = filters.MultipleChoiceFilter(choices=CallOutcomeTypes.choices, method="_filter_call_purpose_fields")
-    call_purposes__outcome_results__outcome_reason_results__call_outcome_reason_type = filters.ChoiceFilter(
+    call_purposes__outcome_results__outcome_reason_results__call_outcome_reason_type = filters.MultipleChoiceFilter(
         choices=CallOutcomeReasonTypes.choices, method="_filter_call_purpose_fields"
     )
     engaged_in_calls__non_agent_engagement_persona_type = filters.MultipleChoiceFilter(choices=NonAgentEngagementPersonaTypes.choices)
