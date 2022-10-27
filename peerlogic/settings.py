@@ -23,9 +23,6 @@ from dotenv import load_dotenv
 from google.cloud import pubsub_v1, secretmanager, storage
 from requests.auth import HTTPBasicAuth
 
-# URL for testing.
-TEST_API_LIENT_ROOT_URL = os.environ["LOCAL_URL"] = "http://0.0.0.0:8000/"
-
 # Get an instance of a logger
 log = logging.getLogger(__name__)
 
@@ -68,6 +65,9 @@ else:
     load_dotenv()
 
 GKE_APPLICATION = os.getenv("GKE_APPLICATION", False)
+
+# URL forTesting.
+TEST_API_CLIENT_ROOT_URL = os.getenv("API_CLIENT_ROOT_URL", "http://0.0.0.0:8000/")
 
 DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
 
