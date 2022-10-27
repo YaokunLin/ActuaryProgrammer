@@ -19,7 +19,7 @@ authors = []
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "peerlogic"
 markers = "unit: tests that are isolated from the db, external api calls and other mockable internal code."
-python_files = ["test*.py", "*_test.py"]
+python_files = ["test*.py", "*test.py", "tests.py"]
 python_classes = ["Test", "Acceptance"]
 python_functions = ["test"]
 addopts = "-vv -x --lf --cov"
