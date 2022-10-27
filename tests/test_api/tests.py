@@ -1,12 +1,14 @@
+import os
+
 import pytest
 import requests
 
-# Create your tests here.
-peerlogic = requests.post()  # TODO: need to add code to configure url
+from peerlogic.settings import TEST_API_CLIENT_ROOT_URL
 
 
 def test_api():
-    pass
+    peerlogic = requests.get(TEST_API_CLIENT_ROOT_URL)
+    assert peerlogic.status_code == 200
 
 
 @pytest.fixture

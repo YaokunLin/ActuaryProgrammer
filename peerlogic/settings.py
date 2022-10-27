@@ -512,3 +512,12 @@ JIVE_BUCKET_ACCESS_SECRET = os.getenv("JIVE_BUCKET_ACCESS_SECRET", "")
 
 
 S3_CLIENT = boto3.Session(aws_access_key_id=JIVE_BUCKET_ACCESS_KEY, aws_secret_access_key=JIVE_BUCKET_ACCESS_SECRET).client("s3")
+
+
+#
+# Testing
+#
+
+
+TEST_API_CLIENT_ROOT_URL = os.getenv("TEST_API_CLIENT_ROOT_URL", "http://0.0.0.0:8000/")
+
