@@ -1,9 +1,10 @@
 import factory
 
+
 from core.models import Practice
 
 
-class PracticeModelFactory(factory.DjangoModelFactory):
+class PracticeModelFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Practice
 
