@@ -301,7 +301,7 @@ class NewPatientOpportunitiesView(views.APIView):
         aggregates = {}
         new_patient_opportunities_qs = Call.objects.filter(base_filters & (SUCCESS_FILTER | FAILURE_FILTER))
         aggregates["new_patient_opportunities_total"] = new_patient_opportunities_qs.distinct("id").count()
-        aggregates["new_patient_opportunities_time_series"] = self._calculate_new_patient_opportunities_time_series(base_filters, dates[0], dates[1])
+        aggregates["new_patient_opportunities_time_series"] = self._calculate_new_patient_opportunities_time_series(base_filters, start_date_str, end_date_str)
 
         new_patient_opportunities_won_qs = Call.objects.filter(base_filters & SUCCESS_FILTER)
         aggregates["new_patient_opportunities_won_total"] = new_patient_opportunities_won_qs.distinct("id").count()
@@ -421,7 +421,7 @@ class NewPatientWinbacksView(views.APIView):
         aggregates["winback_opportunities_attempted"] = aggregates.get("winback_opportunities_won", 0) + aggregates.get("winback_opportunities_lost", 0)
         aggregates["winback_opportunities_open"] = aggregates.get("winback_opportunities_total", 0) - aggregates.get("winback_opportunities_attempted", 0)
         aggregates["winback_opportunities_time_series"] = self._calculate_winback_time_series(
-            winback_opportunities_total_qs, winback_opportunities_won_qs, winback_opportunities_lost_qs, dates[0], dates[1]
+            winback_opportunities_total_qs, winback_opportunities_won_qs, winback_opportunities_lost_qs, start_date_str, end_date_str
         )
 
         display_filters = {
