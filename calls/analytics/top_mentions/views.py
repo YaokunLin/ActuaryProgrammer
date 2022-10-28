@@ -52,7 +52,7 @@ class _TopMentionedViewBase(views.APIView):
         #
         # collect parameters
         #
-        dates_info = get_validated_call_dates(query_data=request.query_params)
+        dates_info = get_validated_call_dates(request)
         dates_errors = dates_info.get("errors")
 
         valid_call_direction, call_direction_errors = get_validated_call_direction(request=request)
@@ -99,9 +99,7 @@ class _TopMentionedViewBase(views.APIView):
         # create individual filters from parameters
         #
         dates = dates_info.get("dates")
-        start_date_str = dates[0]
-        end_date_str = dates[1]
-        dates_filter = Q(call_start_time__gte=start_date_str, call_start_time__lte=end_date_str)
+        dates_filter = Q(call_start_time__gte=dates[0], call_start_time__lt=dates[1])
 
         call_direction_filter = Q()
         if valid_call_direction:

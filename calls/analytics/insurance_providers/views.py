@@ -120,7 +120,7 @@ class InsuranceProviderCallMetricsView(views.APIView):
     def get(self, request, format=None):
         insurance_provider = get_validated_insurance_provider(request)
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
-        dates_info = get_validated_call_dates(query_data=request.query_params)
+        dates_info = get_validated_call_dates(request)
         dates_errors = dates_info.get("errors")
 
         errors = {}
@@ -136,7 +136,7 @@ class InsuranceProviderCallMetricsView(views.APIView):
 
         # date filters
         dates = dates_info.get("dates")
-        dates_filter = Q(call_start_time__gte=dates[0], call_start_time__lte=dates[1])
+        dates_filter = Q(call_start_time__gte=dates[0], call_start_time__lt=dates[1])
 
         if insurance_provider:
             insurance_provider_phone_number_filter = Q(sip_callee_number__in=insurance_provider.insuranceproviderphonenumber_set.only("phone_number"))
