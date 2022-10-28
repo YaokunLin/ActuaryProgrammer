@@ -7,7 +7,7 @@ class PracticeModelFactory(factory.DjangoModelFactory):
     class Meta:
         model = Practice
 
-    field1 = factory.faker.Faker("Phone_number")
+    field1 = factory.faker.Faker("name")
 
 
 PracticeModelFactory.build()
