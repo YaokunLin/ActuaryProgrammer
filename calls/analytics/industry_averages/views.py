@@ -98,7 +98,7 @@ def _get_queryset_or_error_response(request: Request, extra_filter: Optional[Q] 
     if extra_filter is None:
         extra_filter = Q()
 
-    dates_info = get_validated_call_dates(query_data=request.query_params)
+    dates_info = get_validated_call_dates(request)
     dates_errors = dates_info.get("errors")
 
     call_direction_filter = Q()
@@ -117,9 +117,7 @@ def _get_queryset_or_error_response(request: Request, extra_filter: Optional[Q] 
 
     # date filters
     dates = dates_info.get("dates")
-    call_start_time__gte = dates[0]
-    call_start_time__lte = dates[1]
-    dates_filter = Q(call_start_time__gte=call_start_time__gte, call_start_time__lte=call_start_time__lte)
+    dates_filter = Q(call_start_time__gte=dates[0], call_start_time__lt=dates[1])
 
     return Call.objects.filter(INDUSTRY_AVERAGES_PRACTICE_CALLS_FILTER & dates_filter & call_direction_filter & extra_filter)
 
