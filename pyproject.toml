@@ -17,7 +17,6 @@ description = "Peerlogic API"
 authors = []
 
 
-
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "peerlogic.settings"
 markers = "unit: tests that are isolated from the db, external api calls and other mockable internal code."
