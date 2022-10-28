@@ -1,7 +1,7 @@
 import requests
 
 
-from django.conf.settings import TEST_API_CLIENT_ROOT_URL
+from peerlogic.settings import TEST_API_CLIENT_ROOT_URL
 
 
 def test_api():
