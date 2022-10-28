@@ -5,7 +5,6 @@ from typing import Dict, List, Union
 from django.conf import settings
 from django.db import DatabaseError, transaction
 from django.http import Http404, HttpResponseBadRequest
-from django.shortcuts import redirect
 from django_filters.rest_framework import (
     DjangoFilterBackend,  # brought in for a backend filter override
 )
@@ -13,7 +12,6 @@ from google.api_core.exceptions import PermissionDenied
 from phonenumber_field.modelfields import to_python as to_phone_number
 from rest_framework import status, views, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import NotFound
 from rest_framework.filters import (
     OrderingFilter,  # brought in for a backend filter override
 )
