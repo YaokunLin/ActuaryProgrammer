@@ -73,7 +73,12 @@ curl -sSL https://install.python-poetry.org | python3 -
 
 if the install above does't work, or if you just want more information about poetry you can visit [https://python-poetry.org/docs/]
 
-### using poetry to set up vuirtual environment
+### using poetry to set up virtual environment
+
+Tell poetry to honor your pyenv version:
+```bash
+poetry config virtualenvs.prefer-active-python true
+```
 
 When using the appropriate version of python you can run the following command which will create a virtual env via poetry for you.
 
@@ -89,6 +94,13 @@ poetry shell
 
 Once your poetry environment is all set up, you can set your IDE's python interpreter to the virtual environment that Poetry created.
 Instructions will vary per IDE.
+
+
+To run postgres and redis, run the following separately:
+
+```bash
+docker-compose -f docker-compose-non-api-services.yml up
+```
 
 ### Updating dependencies
 
