@@ -83,11 +83,12 @@ def webhook(request):
     else:
         direction = CallDirectionTypes.OUTBOUND
 
+
     source_jive_id = content.get("subId")
     source_organization_jive_id = jive_request_data_key_value_pair.get("originatorOrganizationId")
-    log.info(f"Jive: Getting JiveLine with source_jive_id='{source_jive_id}' and originatorOrganizationId='{source_organization_jive_id}'")
-    line: JiveLine = JiveLine.objects.get(source_jive_id=source_jive_id, source_organization_jive_id=source_organization_jive_id)
-    log.info(f"Jive: Got JiveLine with subId='{source_jive_id}' and originatorOrganizationId='{source_organization_jive_id}'")
+    log.info(f"Jive: Checking we have a JiveLine with originatorOrganizationId='{source_organization_jive_id}'")
+    line: JiveLine = JiveLine.objects.get(source_organization_jive_id=source_organization_jive_id).first()
+    log.info(f"Jive: JiveLine found with originatorOrganizationId='{source_organization_jive_id}'")
 
     voip_provider_id = line.session.channel.connection.practice_telecom.voip_provider_id
 
@@ -231,6 +232,7 @@ def authentication_connect(request: Request):
     return HttpResponseRedirect(redirect_to=generate_jive_callback_url(request))
 
 
+# TODO: fix, there is something up with the initial content negotiation here. 500s the first time, redirects properly after that.
 @api_view(["GET"])
 def authentication_connect_url(request: Request):
     """
@@ -321,11 +323,8 @@ def cron(request):
 
         # find any channels about to expire in the next few hours and refresh them
 
-        # TODO: use JiveChannel.objects.filter(expires_at__lt=timezone.now() - timedelta(hours=3))
-        # Dependencies:
-        # * cron cloud run deployed
-        # FURTHER TODO: make the 3 hours configurable via env var / Secret Manager
-        for channel in JiveChannel.objects.all():
+        # TODO: make the 3 hours configurable via env var / Secret Manager
+        for channel in JiveChannel.objects.filter(expires_at__lt=timezone.now() - timedelta(hours=3)):
             log.info(f"Jive: found channel: {channel}")
             # if a channel refresh fails we mark it as inactive
             try:
@@ -341,6 +340,12 @@ def cron(request):
             "source_jive_id", "source_organization_jive_id"
         )
         current_lines = {Line(r[0], r[1]) for r in line_results}
+
+        # TODO: this list_lines jive client call only sees lines assigned to the current user based upon the token - use this REST api call instead to get all users and all their lines
+        # https://developer.goto.com/GoToConnect/#tag/Users/paths/~1users~1v1~1users/get
+        # Needs:
+        # * an account key, whatever that is
+        # * may also need a call to the admin api to get the account key.
         external_lines: Set[Line] = set(jive.list_lines())
 
         # compute new lines
