@@ -3,7 +3,7 @@ from contextlib import suppress
 import json
 import logging
 from datetime import datetime, timedelta
-from typing import Optional, Set
+from typing import Dict, Optional, Set
 
 import dateutil.parser
 from django.conf import settings
@@ -61,12 +61,14 @@ def webhook(request):
 
     try:
         req = json.loads(request.body)
+        timestamp_of_request: datetime = dateutil.parser.isoparser().isoparse(req["timestamp"])
         content = json.loads(req["content"])
     except (json.JSONDecodeError, KeyError):
         return HttpResponse(status=406)
 
-    end_time: datetime = dateutil.parser.isoparser().isoparse(req["timestamp"])
+    end_time = timestamp_of_request
     entity_id = content.get("entityId")
+    jive_request_data_key_value_pair: Dict = content.get("data", {})
     subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=content)
     subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
     subscription_event_data = subscription_event_serializer.validated_data
@@ -76,24 +78,27 @@ def webhook(request):
         return Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": subscription_event_serializer.errors})
 
     direction: CallDirectionTypes
-    if content["data"]["direction"] == "recipient":
+    if jive_request_data_key_value_pair.get("direction") == "recipient":
         direction = CallDirectionTypes.INBOUND
     else:
         direction = CallDirectionTypes.OUTBOUND
 
-    log.info(f"Jive: Getting JiveLine with subId='{content['subId']}' and originatorOrganizationId='{content['data']['originatorOrganizationId']}'")
-    line: JiveLine = JiveLine.objects.get(source_jive_id=content["subId"], source_organization_jive_id=content["data"]["originatorOrganizationId"])
-    log.info(f"Jive: Got JiveLine with subId='{content['subId']}' and originatorOrganizationId='{content['data']['originatorOrganizationId']}'")
+    source_jive_id = content.get("subId")
+    source_organization_jive_id = jive_request_data_key_value_pair.get("originatorOrganizationId")
+    log.info(f"Jive: Getting JiveLine with source_jive_id='{source_jive_id}' and originatorOrganizationId='{source_organization_jive_id}'")
+    line: JiveLine = JiveLine.objects.get(source_jive_id=source_jive_id, source_organization_jive_id=source_organization_jive_id)
+    log.info(f"Jive: Got JiveLine with subId='{source_jive_id}' and originatorOrganizationId='{source_organization_jive_id}'")
 
     voip_provider_id = line.session.channel.connection.practice_telecom.voip_provider_id
 
-    # TODO: content["type"] should be a field choice type - will check these when we have documentation for understanding the options
-    if content["type"] == "announce":
+    # TODO: jive_event_type should be a field choice type - will check these when we have documentation for understanding the options
+    jive_event_type = content.get("type")
+    if jive_event_type == "announce":
         log.info("Jive: Received jive announce event.")
         start_time: datetime = dateutil.parser.isoparser().isoparse(req["timestamp"])
         log.info(f"Jive: Creating Peerlogic Call object with start_time='{start_time}'.")
-        callee_number = content["data"]["callee"]["number"]
-        caller_number = content["data"]["caller"]["number"]
+        callee_number = jive_request_data_key_value_pair.get("callee", {}).get("number")
+        caller_number = jive_request_data_key_value_pair.get("caller", {}).get("number")
         callee_key = "sip_callee_number"
         caller_key = "sip_caller_number"
         if len(callee_number) != US_TELEPHONE_NUMBER_DIGIT_LENGTH:
@@ -111,9 +116,9 @@ def webhook(request):
             # TODO: call_connection logic
             "call_direction": direction,
             callee_key: callee_number,  # TODO: get true TN number called from in downstream subscribing cloud functions
-            "sip_callee_name": content["data"]["callee"]["name"],
+            "sip_callee_name": jive_request_data_key_value_pair.get("callee", {}).get("name"),
             caller_key: caller_number,  # TODO: get true TN number called from in downstream subscribing cloud functions
-            "sip_caller_name": content["data"]["caller"]["name"],
+            "sip_caller_name": jive_request_data_key_value_pair.get("caller", {}).get("name"),
             "checked_voicemail": False,  # TODO: determine value in downstream subscribing cloud functions
             "went_to_voicemail": False,  # TODO: determine value in downstream subscribing cloud functions
         }
@@ -125,23 +130,24 @@ def webhook(request):
         subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
         subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
 
-    elif content["type"] == "replace":
+    elif jive_event_type == "replace":
         log.info("Jive: Received jive replace event.")
-        call_id = get_call_id_from_previous_announce_event(content["oldId"])
+        entity_id = content.get("oldId")
+        call_id = get_call_id_from_previous_announce_event(entity_id)
         subscription_event_data.update({"peerlogic_call_id": call_id})
         subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
         subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
 
-    elif content["type"] == "withdraw":
+    elif jive_event_type == "withdraw":
         log.info("Jive: Received jive withdraw event.")
 
-        call_id = get_call_id_from_previous_announce_event(content["entityId"])
+        call_id = get_call_id_from_previous_announce_event(entity_id)
         log.info(f"Jive: Call ID is {call_id}")
         subscription_event_data.update({"peerlogic_call_id": call_id})
         subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
         subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
 
-        recording_count = len(content["data"]["recordings"])
+        recording_count = len(jive_request_data_key_value_pair.get("recordings", []))
         log.info(f"Jive: Found {recording_count} recordings.")
 
         if recording_count == 0:
@@ -157,7 +163,7 @@ def webhook(request):
             )
 
         recordings = []
-        for recording in content["data"]["recordings"]:
+        for recording in jive_request_data_key_value_pair.get("recordings", []):
             filename_encoded = recording["filename"]
             filename = base64.b64decode(recording["filename"]).decode("utf-8")
             ord = dateutil.parser.isoparser().isoparse(filename.split("~", maxsplit=1)[0].split("/")[-1])
@@ -196,10 +202,10 @@ def webhook(request):
             subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
 
             publish_leg_b_ready_event(
-                jive_call_subscription_id=content["subId"],
+                jive_call_subscription_id=source_jive_id,
                 voip_provider_id=voip_provider_id,
                 event={
-                    "jive_entity_id": content["entityId"],
+                    "jive_entity_id": entity_id,
                     "peerlogic_call_id": peerlogic_call.id,
                     "peerlogic_call_partial_id": cp.id,
                     "filename": filename_encoded,
