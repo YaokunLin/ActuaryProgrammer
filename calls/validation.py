@@ -1,6 +1,7 @@
 import logging
 from typing import Dict, Optional, Tuple
 
+import backports.zoneinfo as zoneinfo
 from rest_framework.request import Request
 
 from calls.field_choices import CallDirectionTypes
@@ -11,8 +12,19 @@ from core.validation import validate_date_format, validate_dates
 log = logging.getLogger(__name__)
 
 
-def get_validated_call_dates(query_data: Dict) -> Dict:
-    """Check if the input dates are of the format YYYY-MM-DD"""
+def get_validated_call_dates(request: Request) -> Dict:
+    """
+    TODO Kyle: Meaningful docstring
+    """
+
+    header_name = "HTTP_TIMEZONE"
+    tzname = request.META.get(header_name)
+    if not tzname or tzname not in zoneinfo.available_timezones():
+        tzname = "UTC"
+
+    tzinfo = zoneinfo.ZoneInfo(tzname)
+
+    query_data = request.query_params
     call_start_time_after = None
     call_start_time_before = None
     errors = {}
@@ -36,7 +48,7 @@ def get_validated_call_dates(query_data: Dict) -> Dict:
         return {"dates": None, "errors": errors}
 
     # Validate the input dates
-    dates = validate_dates(call_start_time_after, call_start_time_before)
+    dates = validate_dates(call_start_time_after, call_start_time_before, tzinfo)
 
     if len(dates) != 2:
         external_msg = f"Server error: Please contact r-and-d@peerlogic.com for assistance."

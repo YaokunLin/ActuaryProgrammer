@@ -61,7 +61,7 @@ class CallCountsView(views.APIView):
         #
         # collect parameters
         #
-        dates_info = get_validated_call_dates(query_data=request.query_params)
+        dates_info = get_validated_call_dates(request)
         dates_errors = dates_info.get("errors")
 
         valid_call_direction, call_direction_errors = get_validated_call_direction(request=request)
@@ -86,13 +86,11 @@ class CallCountsView(views.APIView):
         if errors:
             return Response(status=status.HTTP_400_BAD_REQUEST, data=errors)
 
-        #
-        # create individual filters from parameters
-        #
+        date_time_format = "%Y-%m-%d"
         dates = dates_info.get("dates")
-        start_date_str = dates[0]
-        end_date_str = dates[1]
-        dates_filter = Q(call_start_time__gte=start_date_str, call_start_time__lte=end_date_str)
+        start_date_str = dates[0].strftime(date_time_format)
+        end_date_str = dates[1].strftime(date_time_format)
+        dates_filter = Q(call_start_time__gte=dates[0], call_start_time__lt=dates[1])
 
         call_direction_filter = Q()
         if valid_call_direction:
@@ -146,7 +144,7 @@ class OpportunitiesView(views.APIView):
     @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
     @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
-        dates_info = get_validated_call_dates(query_data=request.query_params)
+        dates_info = get_validated_call_dates(request)
         dates_errors = dates_info.get("errors")
 
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
@@ -165,7 +163,7 @@ class OpportunitiesView(views.APIView):
         practice_filter = Q(practice__id=valid_practice_id)
 
         dates = dates_info.get("dates")
-        dates_filter = Q(call_start_time__gte=dates[0], call_start_time__lte=dates[1])
+        dates_filter = Q(call_start_time__gte=dates[0], call_start_time__lt=dates[1])
 
         opportunities_qs = Call.objects.filter(practice_filter & dates_filter & INBOUND_FILTER & OPPORTUNITIES_FILTER)
         results = self._calculate_opportunities_analytics(opportunities_qs)
@@ -214,7 +212,7 @@ class OpportunitiesView(views.APIView):
 
 
 class OpportunitiesPerUserView(views.APIView):
-    QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME = {"call_start_time__gte": "call_start_time_after", "call_start_time__lte": "call_start_time_before"}
+    QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME = {"call_start_time__gte": "call_start_time_after", "call_start_time__lt": "call_start_time_before"}
 
     @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
     @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
@@ -222,7 +220,7 @@ class OpportunitiesPerUserView(views.APIView):
     def get(self, request, format=None):
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
         valid_organization_id, organization_errors = get_validated_organization_id(request=request)
-        dates_info = get_validated_call_dates(query_data=request.query_params)
+        dates_info = get_validated_call_dates(request)
         dates_errors = dates_info.get("errors")
 
         errors = {}
@@ -244,10 +242,11 @@ class OpportunitiesPerUserView(views.APIView):
             practice_filter = Q(practice_id=valid_practice_id)
 
         # date filters
+        date_time_format = "%Y-%m-%d"
         dates = dates_info.get("dates")
-        start_date_str = dates[0]
-        end_date_str = dates[1]
-        dates_filter = Q(call_start_time__gte=start_date_str, call_start_time__lte=end_date_str)
+        start_date_str = dates[0].strftime(date_time_format)
+        end_date_str = dates[1].strftime(date_time_format)
+        dates_filter = Q(call_start_time__gte=dates[0], call_start_time__lt=dates[1])
 
         filters = dates_filter & practice_filter & INBOUND_FILTER
 
@@ -257,21 +256,21 @@ class OpportunitiesPerUserView(views.APIView):
 
         display_filters = {
             self.QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME["call_start_time__gte"]: start_date_str,
-            self.QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME["call_start_time__lte"]: end_date_str,
+            self.QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME["call_start_time__lt"]: end_date_str,
         }
 
         return Response({"filters": display_filters, "results": aggregates})
 
 
 class NewPatientOpportunitiesView(views.APIView):
-    QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME = {"call_start_time__gte": "call_start_time_after", "call_start_time__lte": "call_start_time_before"}
+    QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME = {"call_start_time__gte": "call_start_time_after", "call_start_time__lt": "call_start_time_before"}
 
     @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
     @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
     @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
-        dates_info = get_validated_call_dates(query_data=request.query_params)
+        dates_info = get_validated_call_dates(request)
         dates_errors = dates_info.get("errors")
 
         errors = {}
@@ -290,10 +289,11 @@ class NewPatientOpportunitiesView(views.APIView):
             practice_filter = Q(practice_id=valid_practice_id)
 
         # date filters
+        date_time_format = "%Y-%m-%d"
         dates = dates_info.get("dates")
-        call_start_time__gte = dates[0]
-        call_start_time__lte = dates[1]
-        dates_filter = Q(call_start_time__gte=call_start_time__gte, call_start_time__lte=call_start_time__lte)
+        start_date_str = dates[0].strftime(date_time_format)
+        end_date_str = dates[1].strftime(date_time_format)
+        dates_filter = Q(call_start_time__gte=dates[0], call_start_time__lt=dates[1])
 
         base_filters = dates_filter & practice_filter & NEW_PATIENT_OPPORTUNITIES_FILTER & INBOUND_FILTER
 
@@ -301,7 +301,7 @@ class NewPatientOpportunitiesView(views.APIView):
         aggregates = {}
         new_patient_opportunities_qs = Call.objects.filter(base_filters & (SUCCESS_FILTER | FAILURE_FILTER))
         aggregates["new_patient_opportunities_total"] = new_patient_opportunities_qs.distinct("id").count()
-        aggregates["new_patient_opportunities_time_series"] = self._calculate_new_patient_opportunities_time_series(base_filters, dates[0], dates[1])
+        aggregates["new_patient_opportunities_time_series"] = self._calculate_new_patient_opportunities_time_series(base_filters, start_date_str, end_date_str)
 
         new_patient_opportunities_won_qs = Call.objects.filter(base_filters & SUCCESS_FILTER)
         aggregates["new_patient_opportunities_won_total"] = new_patient_opportunities_won_qs.distinct("id").count()
@@ -315,8 +315,8 @@ class NewPatientOpportunitiesView(views.APIView):
 
         # display syntactic sugar
         display_filters = {
-            self.QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME["call_start_time__gte"]: call_start_time__gte,
-            self.QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME["call_start_time__lte"]: call_start_time__lte,
+            self.QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME["call_start_time__gte"]: start_date_str,
+            self.QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME["call_start_time__lt"]: end_date_str,
         }
 
         return Response({"filters": display_filters, "results": aggregates})
@@ -361,14 +361,14 @@ class NewPatientOpportunitiesView(views.APIView):
 
 
 class NewPatientWinbacksView(views.APIView):
-    QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME = {"call_start_time__gte": "call_start_time_after", "call_start_time__lte": "call_start_time_before"}
+    QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME = {"call_start_time__gte": "call_start_time_after", "call_start_time__lt": "call_start_time_before"}
 
     @cache_control(max_age=CACHE_TIME_ANALYTICS_CACHE_CONTROL_MAX_AGE_SECONDS)
     @method_decorator(cache_page(CACHE_TIME_ANALYTICS_SECONDS))
     @method_decorator(vary_on_headers(*ANALYTICS_CACHE_VARY_ON_HEADERS))
     def get(self, request, format=None):
         valid_practice_id, practice_errors = get_validated_practice_id(request=request)
-        dates_info = get_validated_call_dates(query_data=request.query_params)
+        dates_info = get_validated_call_dates(request)
         dates_errors = dates_info.get("errors")
 
         errors = {}
@@ -385,8 +385,11 @@ class NewPatientWinbacksView(views.APIView):
         if valid_practice_id:
             practice_filter = Q(practice__id=valid_practice_id)
 
+        date_time_format = "%Y-%m-%d"
         dates = dates_info.get("dates")
-        dates_filter = Q(call_start_time__gte=dates[0], call_start_time__lte=dates[1])
+        start_date_str = dates[0].strftime(date_time_format)
+        end_date_str = dates[1].strftime(date_time_format)
+        dates_filter = Q(call_start_time__gte=dates[0], call_start_time__lt=dates[1])
 
         calls_qs = Call.objects.filter(dates_filter & practice_filter)
 
@@ -418,12 +421,12 @@ class NewPatientWinbacksView(views.APIView):
         aggregates["winback_opportunities_attempted"] = aggregates.get("winback_opportunities_won", 0) + aggregates.get("winback_opportunities_lost", 0)
         aggregates["winback_opportunities_open"] = aggregates.get("winback_opportunities_total", 0) - aggregates.get("winback_opportunities_attempted", 0)
         aggregates["winback_opportunities_time_series"] = self._calculate_winback_time_series(
-            winback_opportunities_total_qs, winback_opportunities_won_qs, winback_opportunities_lost_qs, dates[0], dates[1]
+            winback_opportunities_total_qs, winback_opportunities_won_qs, winback_opportunities_lost_qs, start_date_str, end_date_str
         )
 
         display_filters = {
-            self.QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME["call_start_time__gte"]: dates[0],
-            self.QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME["call_start_time__lte"]: dates[1],
+            self.QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME["call_start_time__gte"]: start_date_str,
+            self.QUERY_FILTER_TO_HUMAN_READABLE_DISPLAY_NAME["call_start_time__lt"]: end_date_str,
         }
 
         return Response({"filters": display_filters, "results": aggregates})

@@ -1,16 +1,13 @@
 import os
 from typing import Optional
+
 from django.conf import settings
 from django.core.management.base import BaseCommand
-
 from google.api_core.exceptions import PermissionDenied
-from oauth2_provider.models import (
-    get_application_model,
-)
-
-from devtools.api_clients.peerlogic_api_client import PeerlogicAPIClient
+from oauth2_provider.models import get_application_model
 
 from calls.models import Call, CallAudioPartial, CallPartial
+from devtools.api_clients.peerlogic_api_client import PeerlogicAPIClient
 
 # TODO: This code doesn't work, figure out why
 # from calls.publishers import publish_call_audio_partial_saved
@@ -51,7 +48,7 @@ class Command(BaseCommand):
 
         # TODO: make practice id truly optional for code that follows
 
-        calls = Call.objects.filter(call_start_time__gte=start_date, call_start_time__lte=end_date, practice__id=practice_id)
+        calls = Call.objects.filter(call_start_time__gte=start_date, call_start_time__lt=end_date, practice__id=practice_id)
         call_partials = CallPartial.objects.filter(call__id__in=calls.values("pk"))
         call_audio_partials = CallAudioPartial.objects.filter(call_partial_id__in=call_partials.values("pk")).select_related("call_partial__call")
         print(f"Call count: {calls.count()}")
