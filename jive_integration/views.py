@@ -92,7 +92,7 @@ def webhook(request):
     source_jive_id = content.get("subId")
     source_organization_jive_id = jive_request_data_key_value_pair.get("originatorOrganizationId")
     log.info(f"Jive: Checking we have a JiveLine with originatorOrganizationId='{source_organization_jive_id}'")
-    line: JiveLine = JiveLine.objects.get(source_organization_jive_id=source_organization_jive_id).first()
+    line: JiveLine = JiveLine.objects.filter(source_organization_jive_id=source_organization_jive_id).first()
     log.info(f"Jive: JiveLine found with originatorOrganizationId='{source_organization_jive_id}'")
 
     voip_provider_id = line.session.channel.connection.practice_telecom.voip_provider_id
