@@ -20,7 +20,7 @@ authors = []
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "peerlogic.settings"
 markers = ["unit", "-k"]
-python_files = ["test*.py", "*test*.py"]
+python_files = ["factories.py", "test*.py", "*test*.py"]
 python_classes = ["Test", "Acceptance"]
 python_functions = ["test"]
 addopts = "-vv -x --lf --cov"

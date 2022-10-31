@@ -1,7 +1,10 @@
 import pytest
 import requests
+from factories import FakerMakerPractices
 
+FakerMakerPractices()
 
 @pytest.mark.unit
-def test_something():  # TODO- make a unit test case
-    pass
+def Test_Practices():  # TODO- make a unit test case
+    assert 
+

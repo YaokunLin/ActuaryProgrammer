@@ -521,3 +521,4 @@ S3_CLIENT = boto3.Session(aws_access_key_id=JIVE_BUCKET_ACCESS_KEY, aws_secret_a
 
 TEST_API_CLIENT_ROOT_URL = os.getenv("TEST_API_CLIENT_ROOT_URL", "http://0.0.0.0:8000/")
 
+DJANGO_SETTINGS_MODULE = os.getenv('DJANGO_SETTINGS_MODULE', 'peerlogic.settings')
