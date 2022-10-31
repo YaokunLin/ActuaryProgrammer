@@ -56,6 +56,7 @@ from calls.views import (
     CallLabelViewset,
     CallNoteViewSet,
     CallPartialViewset,
+    CallsReprocessingView,
     CallTranscriptPartialViewset,
     CallTranscriptViewset,
     CallViewset,
@@ -134,6 +135,7 @@ urlpatterns = [
         InsuranceProviderInteractionsView.as_view(),
         name="outbound-insurance-provider-call-counts-industry-averages",
     ),
+    path(r"calls/reprocessing/", CallsReprocessingView.as_view(), name="reprocess_calls"),
     # Routers
     path(r"", include(calls_app_root_router.urls)),
     path(r"", include(call_router.urls)),
