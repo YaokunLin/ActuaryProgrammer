@@ -13,12 +13,10 @@ LIST_OF_FAKE_PRACTICES = []
 
 def FakerMakerPractices(Class:FakePractice, list,):
     fake_Pract = FakePractice(fake.random_int(1000, 2000), f"{fake.first_name()}'s Dential",
-    industry = "Dential", active = fake.boolean(chance_of_getting_true=50))
+    industry = "Dential", active = fake.boolean(chance_of_getting_true=80))
     list.append(fake_Pract)
 
 while counter < 5:
     FakerMakerPractices(FakePractice, LIST_OF_FAKE_PRACTICES)
     counter += 1
 
-for pract in LIST_OF_FAKE_PRACTICES:
-    print(pract.__dict__)

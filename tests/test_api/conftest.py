@@ -1,8 +1,5 @@
-import factory
 import pytest
 
-# pytest fixtures
-@pytest.fixture
-def Practice():
-    def _practices():
-        pass
+def pytest_collection_modifyitems(items):
+    for item in items:
+        item.add_marker('-k')
