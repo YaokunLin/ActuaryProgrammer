@@ -110,14 +110,20 @@ def webhook(request):
         sip_callee_number = ""
         sip_caller_extension = ""
         sip_caller_number = ""
+        # if callee is an extension:
         if len(jive_callee_number) != US_TELEPHONE_NUMBER_DIGIT_LENGTH:
             sip_callee_extension = jive_callee_number
             sip_callee_number = dialed_number
             sip_caller_number = f"+1{jive_caller_number}"
+        # if caller is an extension:
         if len(jive_caller_number) != US_TELEPHONE_NUMBER_DIGIT_LENGTH:
             sip_caller_extension = jive_caller_number
             sip_caller_number = dialed_number
             sip_callee_number = f"+1{jive_callee_number}"
+        if not sip_callee_number:
+            sip_callee_number = jive_callee_number
+        if not sip_caller_number:
+            sip_caller_number = jive_caller_number
 
         call_fields = {
             "practice_id": practice.pk,
@@ -140,17 +146,21 @@ def webhook(request):
 
         peerlogic_call_serializer = CallSerializer(data=call_fields)
         peerlogic_call_serializer_is_valid = peerlogic_call_serializer.is_valid()
-        if not peerlogic_call_serializer_is_valid:
-            # TODO: natural_key method keeps giving practice field the practice name instead of the pk...
-            # not sure how to remedy
+
+        # TODO: natural_key method keeps giving practice field the practice name instead of the pk...
+        # not sure how to remedy, but it keeps saving the call correctly despite this validation error.
+        peerlogic_call_serializer.errors.pop("practice")
+        if not peerlogic_call_serializer_is_valid and peerlogic_call_serializer.errors:
             log.exception(f"Warning from peerlogic_call_serializer validation: {peerlogic_call_serializer.errors}")
+            response = Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": subscription_event_serializer.errors})
 
         peerlogic_call = Call.objects.create(**call_fields)
         log.info(f"Jive: Created Peerlogic Call object with id='{peerlogic_call.id}'.")
 
-        subscription_event_data.update({"peerlogic_call_id": peerlogic_call.id})
-        subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
-        subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
+        if peerlogic_call:
+            subscription_event_data.update({"peerlogic_call_id": peerlogic_call.id})
+            subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
+            subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
 
     elif jive_event_type == "replace":
         log.info("Jive: Received jive replace event.")
