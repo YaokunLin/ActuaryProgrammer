@@ -87,7 +87,8 @@ def webhook(request):
         call_direction = CallDirectionTypes.OUTBOUND
 
     dialed_number = jive_request_data_key_value_pair.get("ani")
-    dialed_number = dialed_number.split(" <")[0]
+    if dialed_number:
+        dialed_number = dialed_number.split(" <")[0]
 
     source_jive_id = content.get("subId")
     source_organization_jive_id = jive_request_data_key_value_pair.get("originatorOrganizationId")
@@ -122,8 +123,7 @@ def webhook(request):
             sip_callee_number = f"+1{jive_callee_number}"
         if not sip_callee_number:
             sip_callee_number = jive_callee_number
-        if not sip_caller_number:
-            sip_caller_number = jive_caller_number
+        # TODO: Logic for outbound caller number for practice - no ani present
 
         call_fields = {
             "practice_id": practice.pk,
