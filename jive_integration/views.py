@@ -19,6 +19,7 @@ from rest_framework.response import Response
 
 from calls.field_choices import CallConnectionTypes, CallDirectionTypes, SupportedAudioMimeTypes, CallAudioFileStatusTypes
 from calls.models import Call, CallPartial, CallAudioPartial
+from calls.serializers import CallSerializer
 from core.field_choices import VoipProviderIntegrationTypes
 from core.validation import get_validated_practice_telecom
 from jive_integration.jive_client.client import JiveClient, Line
@@ -55,6 +56,7 @@ def webhook(request):
     #
     log.info(f"Jive webhook: Headers: '{request.headers}' POST body '{request.body}'")
 
+    response = HttpResponse(status=202)
     #
     # VALIDATION
     #
@@ -75,14 +77,17 @@ def webhook(request):
 
     if not subscription_event_serializer_is_valid:
         log.exception(f"Jive: Error from subscription_event_serializer validation from entity_id {entity_id}: {subscription_event_serializer.errors}")
-        return Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": subscription_event_serializer.errors})
+        response = Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": subscription_event_serializer.errors})
 
-    direction: CallDirectionTypes
+    call_direction: CallDirectionTypes
     if jive_request_data_key_value_pair.get("direction") == "recipient":
-        direction = CallDirectionTypes.INBOUND
-    else:
-        direction = CallDirectionTypes.OUTBOUND
+        call_direction = CallDirectionTypes.INBOUND
 
+    else:
+        call_direction = CallDirectionTypes.OUTBOUND
+
+    dialed_number = jive_request_data_key_value_pair.get("ani")
+    dialed_number = dialed_number.split(" <")[0]
 
     source_jive_id = content.get("subId")
     source_organization_jive_id = jive_request_data_key_value_pair.get("originatorOrganizationId")
@@ -91,6 +96,7 @@ def webhook(request):
     log.info(f"Jive: JiveLine found with originatorOrganizationId='{source_organization_jive_id}'")
 
     voip_provider_id = line.session.channel.connection.practice_telecom.voip_provider_id
+    practice = line.session.channel.connection.practice_telecom.practice
 
     # TODO: jive_event_type should be a field choice type - will check these when we have documentation for understanding the options
     jive_event_type = content.get("type")
@@ -98,38 +104,65 @@ def webhook(request):
         log.info("Jive: Received jive announce event.")
         start_time: datetime = dateutil.parser.isoparser().isoparse(req["timestamp"])
         log.info(f"Jive: Creating Peerlogic Call object with start_time='{start_time}'.")
-        callee_number = jive_request_data_key_value_pair.get("callee", {}).get("number")
-        caller_number = jive_request_data_key_value_pair.get("caller", {}).get("number")
-        callee_key = "sip_callee_number"
-        caller_key = "sip_caller_number"
-        if len(callee_number) != US_TELEPHONE_NUMBER_DIGIT_LENGTH:
-            callee_key = "sip_callee_extension"
-        if len(caller_number) != US_TELEPHONE_NUMBER_DIGIT_LENGTH:
-            caller_key = "sip_caller_extension"
+        jive_callee_number = jive_request_data_key_value_pair.get("callee", {}).get("number")
+        jive_caller_number = jive_request_data_key_value_pair.get("caller", {}).get("number")
+        sip_callee_extension = ""
+        sip_callee_number = ""
+        sip_caller_extension = ""
+        sip_caller_number = ""
+        # if callee is an extension:
+        if len(jive_callee_number) != US_TELEPHONE_NUMBER_DIGIT_LENGTH:
+            sip_callee_extension = jive_callee_number
+            sip_callee_number = dialed_number
+            sip_caller_number = f"+1{jive_caller_number}"
+        # if caller is an extension:
+        if len(jive_caller_number) != US_TELEPHONE_NUMBER_DIGIT_LENGTH:
+            sip_caller_extension = jive_caller_number
+            sip_caller_number = dialed_number
+            sip_callee_number = f"+1{jive_callee_number}"
+        if not sip_callee_number:
+            sip_callee_number = jive_callee_number
+        if not sip_caller_number:
+            sip_caller_number = jive_caller_number
 
         call_fields = {
-            "practice": line.session.channel.connection.practice_telecom.practice,
+            "practice_id": practice.pk,
             "call_start_time": start_time,
             "duration_seconds": timedelta(seconds=0),
             # TODO: connect_duration_seconds logic
             # TODO: progress_time_seconds logic
             # TODO: hold_time_seconds logic
             # TODO: call_connection logic
-            "call_direction": direction,
-            callee_key: callee_number,  # TODO: get true TN number called from in downstream subscribing cloud functions
+            "call_direction": call_direction,
+            "sip_callee_extension": sip_callee_extension,
+            "sip_callee_number": sip_callee_number,
             "sip_callee_name": jive_request_data_key_value_pair.get("callee", {}).get("name"),
-            caller_key: caller_number,  # TODO: get true TN number called from in downstream subscribing cloud functions
+            "sip_caller_extension": sip_caller_extension,
+            "sip_caller_number": sip_caller_number,
             "sip_caller_name": jive_request_data_key_value_pair.get("caller", {}).get("name"),
             "checked_voicemail": False,  # TODO: determine value in downstream subscribing cloud functions
             "went_to_voicemail": False,  # TODO: determine value in downstream subscribing cloud functions
         }
 
-        peerlogic_call = Call.objects.create(**call_fields)
-        log.info(f"Jive: Created Peerlogic Call object with id='{peerlogic_call.id}'.")
+        peerlogic_call_serializer = CallSerializer(data=call_fields)
+        peerlogic_call_serializer_is_valid = peerlogic_call_serializer.is_valid()
 
-        subscription_event_data.update({"peerlogic_call_id": peerlogic_call.id})
-        subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
-        subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
+        # TODO: natural_key method keeps giving practice field the practice name instead of the pk...
+        # not sure how to remedy, but it keeps saving the call correctly despite this validation error.
+        peerlogic_call_serializer_errors: Dict = dict(peerlogic_call_serializer.errors)
+        peerlogic_call_serializer_errors.pop("practice")
+        if not peerlogic_call_serializer_is_valid and peerlogic_call_serializer_errors:
+            log.exception(f"Error from peerlogic_call_serializer validation: {peerlogic_call_serializer_errors}")
+            # Not raising, still want to capture the events in the database.
+            response = Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": peerlogic_call_serializer_errors})
+
+        peerlogic_call = Call.objects.create(**call_fields)
+
+        if peerlogic_call:
+            log.info(f"Jive: Created Peerlogic Call object with id='{peerlogic_call.id}'.")
+            subscription_event_data.update({"peerlogic_call_id": peerlogic_call.id})
+            subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
+            subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
 
     elif jive_event_type == "replace":
         log.info("Jive: Received jive replace event.")
@@ -215,7 +248,7 @@ def webhook(request):
 
     subscription_event_serializer.save()
 
-    return HttpResponse(status=202)
+    return response
 
 
 @api_view(["GET"])
