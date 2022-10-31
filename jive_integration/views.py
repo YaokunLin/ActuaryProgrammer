@@ -27,7 +27,7 @@ from jive_integration.jive_client.client import JiveClient, Line
 from jive_integration.publishers import publish_leg_b_ready_event
 from jive_integration.serializers import JiveSubscriptionEventExtractSerializer
 from jive_integration.models import JiveConnection, JiveLine, JiveChannel, JiveSession
-from jive_integration.utils import create_peerlogic_call, get_call_id_from_previous_announce_event, get_call_id_from_previous_announce_event_by_originator_id
+from jive_integration.utils import create_peerlogic_call, get_call_id_from_previous_announce_event, get_call_id_from_previous_announce_events_by_originator_id
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -106,7 +106,7 @@ def webhook(request):
         log.info("Jive: Received jive announce event.")
         peerlogic_call = None
 
-        call_id = get_call_id_from_previous_announce_event_by_originator_id(jive_originator_id)
+        call_id = get_call_id_from_previous_announce_events_by_originator_id(jive_originator_id)
         if call_id:
             peerlogic_call = Call.objects.get(pk=call_id)
 
@@ -130,7 +130,7 @@ def webhook(request):
 
     elif jive_event_type == "replace":
         log.info("Jive: Received jive replace event.")
-        call_id = get_call_id_from_previous_announce_event_by_originator_id(jive_originator_id)
+        call_id = get_call_id_from_previous_announce_events_by_originator_id(jive_originator_id)
         subscription_event_data.update({"peerlogic_call_id": call_id})
         subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
         subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
@@ -138,7 +138,7 @@ def webhook(request):
     elif jive_event_type == "withdraw":
         log.info("Jive: Received jive withdraw event.")
 
-        call_id = get_call_id_from_previous_announce_event_by_originator_id(jive_originator_id)
+        call_id = get_call_id_from_previous_announce_events_by_originator_id(jive_originator_id)
         log.info(f"Jive: Call ID is {call_id}")
         subscription_event_data.update({"peerlogic_call_id": call_id})
         subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)

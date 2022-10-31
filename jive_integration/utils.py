@@ -23,6 +23,7 @@ def create_peerlogic_call(jive_request_data_key_value_pair: Dict, call_direction
     sip_callee_number = ""
     sip_caller_extension = ""
     sip_caller_number = ""
+
     # if callee is an extension:
     if len(jive_callee_number) != US_TELEPHONE_NUMBER_DIGIT_LENGTH:
         sip_callee_extension = jive_callee_number
@@ -78,9 +79,11 @@ def get_call_id_from_previous_announce_event(entity_id: str) -> str:
         log.info(f"No JiveSubscriptionEventExtract found with type='announce' and given entity_id='{entity_id}'")
 
 
-def get_call_id_from_previous_announce_event_by_originator_id(originator_id: str) -> str:
+def get_call_id_from_previous_announce_events_by_originator_id(originator_id: str) -> str:
     log.info(f"Jive: Checking if there is a previous subscription event with this originator_id='{originator_id}'.")
     try:
-        return JiveSubscriptionEventExtract.objects.get(jive_type="announce", data_originator_id=originator_id).peerlogic_call_id
+        event = JiveSubscriptionEventExtract.objects.filter(jive_type="announce", data_originator_id=originator_id).first()
+        if event:
+            return event.peerlogic_call_id
     except JiveSubscriptionEventExtract.DoesNotExist:
         log.info(f"No JiveSubscriptionEventExtract found with type='announce' and given originator_id='{originator_id}'")
