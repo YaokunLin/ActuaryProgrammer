@@ -1,11 +1,16 @@
 import factory
+from faker import Faker
 from core.models import Practice
+
+fake = Faker()
+fake = fake.first_name()
+fakepractice = f"{fake}'s Dental"
 
 
 class PracticeModelFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Practice
-    field1 = factory.faker.Faker("name") # TODO: use a valid field
+    practice_name = fakepractice # TODO: use a valid field
 
 
 PracticeModelFactory.build()
