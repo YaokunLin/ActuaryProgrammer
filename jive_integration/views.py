@@ -86,7 +86,7 @@ def webhook(request):
     else:
         call_direction = CallDirectionTypes.OUTBOUND
 
-    dialed_number = jive_request_data_key_value_pair.get("ani")
+    dialed_number = jive_request_data_key_value_pair.get("ani", "")
     if dialed_number:
         dialed_number = dialed_number.split(" <")[0]
 
