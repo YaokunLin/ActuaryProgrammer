@@ -99,7 +99,7 @@ Instructions will vary per IDE.
 To run postgres and redis, run the following separately:
 
 ```bash
-docker-compose -f docker-compose-non-api-services.yml up
+docker-compose up -d redis postgres
 ```
 
 ### Updating dependencies
