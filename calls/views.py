@@ -629,7 +629,7 @@ class CallsReprocessingView(views.APIView):
                 publish_call_transcript_saved(call_id=call_id, call_transcript_id=transcript_id)
                 log.info("Published call transcript ready events for call_id: %s, transcript_id: %s", call_id, transcript_id)
 
-        data = {"calls_to_reprocess": len(transcripts_to_reprocess), "commited": should_commit}
+        data = {"calls_to_reprocess": len(transcripts_to_reprocess), "committed": should_commit}
         return Response(data)
 
 
