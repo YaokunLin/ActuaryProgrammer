@@ -149,15 +149,17 @@ def webhook(request):
 
         # TODO: natural_key method keeps giving practice field the practice name instead of the pk...
         # not sure how to remedy, but it keeps saving the call correctly despite this validation error.
-        peerlogic_call_serializer.errors.pop("practice")
-        if not peerlogic_call_serializer_is_valid and peerlogic_call_serializer.errors:
-            log.exception(f"Warning from peerlogic_call_serializer validation: {peerlogic_call_serializer.errors}")
-            response = Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": subscription_event_serializer.errors})
+        peerlogic_call_serializer_errors: Dict = dict(peerlogic_call_serializer.errors)
+        peerlogic_call_serializer_errors.pop("practice")
+        if not peerlogic_call_serializer_is_valid and peerlogic_call_serializer_errors:
+            log.exception(f"Error from peerlogic_call_serializer validation: {peerlogic_call_serializer_errors}")
+            # Not raising, still want to capture the events in the database.
+            response = Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": peerlogic_call_serializer_errors})
 
         peerlogic_call = Call.objects.create(**call_fields)
-        log.info(f"Jive: Created Peerlogic Call object with id='{peerlogic_call.id}'.")
 
         if peerlogic_call:
+            log.info(f"Jive: Created Peerlogic Call object with id='{peerlogic_call.id}'.")
             subscription_event_data.update({"peerlogic_call_id": peerlogic_call.id})
             subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
             subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
