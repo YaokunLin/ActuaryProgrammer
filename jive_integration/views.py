@@ -14,6 +14,7 @@ from django.utils import timezone
 from rest_framework.decorators import api_view, authentication_classes, permission_classes, renderer_classes
 from rest_framework.permissions import AllowAny
 from rest_framework import status
+from rest_framework.serializers import ValidationError
 from rest_framework.request import Request
 from rest_framework.response import Response
 
@@ -26,12 +27,10 @@ from jive_integration.jive_client.client import JiveClient, Line
 from jive_integration.publishers import publish_leg_b_ready_event
 from jive_integration.serializers import JiveSubscriptionEventExtractSerializer
 from jive_integration.models import JiveConnection, JiveLine, JiveChannel, JiveSession
-from jive_integration.utils import get_call_id_from_previous_announce_event
+from jive_integration.utils import create_peerlogic_call, get_call_id_from_previous_announce_event, get_call_id_from_previous_announce_events_by_originator_id
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
-
-US_TELEPHONE_NUMBER_DIGIT_LENGTH = 10
 
 
 def generate_redirect_uri(request):
@@ -69,14 +68,16 @@ def webhook(request):
         return HttpResponse(status=406)
 
     end_time = timestamp_of_request
-    entity_id = content.get("entityId")
     jive_request_data_key_value_pair: Dict = content.get("data", {})
+    jive_originator_id = jive_request_data_key_value_pair.get("originatorId")
     subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=content)
     subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
     subscription_event_data = subscription_event_serializer.validated_data
 
     if not subscription_event_serializer_is_valid:
-        log.exception(f"Jive: Error from subscription_event_serializer validation from entity_id {entity_id}: {subscription_event_serializer.errors}")
+        log.exception(
+            f"Jive: Error from subscription_event_serializer validation from jive_originator_id {jive_originator_id}: {subscription_event_serializer.errors}"
+        )
         response = Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": subscription_event_serializer.errors})
 
     call_direction: CallDirectionTypes
@@ -103,71 +104,33 @@ def webhook(request):
     jive_event_type = content.get("type")
     if jive_event_type == "announce":
         log.info("Jive: Received jive announce event.")
-        start_time: datetime = dateutil.parser.isoparser().isoparse(req["timestamp"])
-        log.info(f"Jive: Creating Peerlogic Call object with start_time='{start_time}'.")
-        jive_callee_number = jive_request_data_key_value_pair.get("callee", {}).get("number")
-        jive_caller_number = jive_request_data_key_value_pair.get("caller", {}).get("number")
-        sip_callee_extension = ""
-        sip_callee_number = ""
-        sip_caller_extension = ""
-        sip_caller_number = ""
-        # if callee is an extension:
-        if len(jive_callee_number) != US_TELEPHONE_NUMBER_DIGIT_LENGTH:
-            sip_callee_extension = jive_callee_number
-            sip_callee_number = dialed_number
-            sip_caller_number = f"+1{jive_caller_number}"
-        # if caller is an extension:
-        if len(jive_caller_number) != US_TELEPHONE_NUMBER_DIGIT_LENGTH:
-            sip_caller_extension = jive_caller_number
-            sip_caller_number = dialed_number
-            sip_callee_number = f"+1{jive_callee_number}"
-        if not sip_callee_number:
-            sip_callee_number = jive_callee_number
-        # TODO: Logic for outbound caller number for practice - no ani present
+        peerlogic_call = None
 
-        call_fields = {
-            "practice_id": practice.pk,
-            "call_start_time": start_time,
-            "duration_seconds": timedelta(seconds=0),
-            # TODO: connect_duration_seconds logic
-            # TODO: progress_time_seconds logic
-            # TODO: hold_time_seconds logic
-            # TODO: call_connection logic
-            "call_direction": call_direction,
-            "sip_callee_extension": sip_callee_extension,
-            "sip_callee_number": sip_callee_number,
-            "sip_callee_name": jive_request_data_key_value_pair.get("callee", {}).get("name"),
-            "sip_caller_extension": sip_caller_extension,
-            "sip_caller_number": sip_caller_number,
-            "sip_caller_name": jive_request_data_key_value_pair.get("caller", {}).get("name"),
-            "checked_voicemail": False,  # TODO: determine value in downstream subscribing cloud functions
-            "went_to_voicemail": False,  # TODO: determine value in downstream subscribing cloud functions
-        }
+        call_id = get_call_id_from_previous_announce_events_by_originator_id(jive_originator_id)
+        if call_id:
+            peerlogic_call = Call.objects.get(pk=call_id)
 
-        peerlogic_call_serializer = CallSerializer(data=call_fields)
-        peerlogic_call_serializer_is_valid = peerlogic_call_serializer.is_valid()
+        if not peerlogic_call:
+            log.info("Jive: No previous peerlogic call found from previous events in the database - Creating peerlogic call.")
+            try:
+                peerlogic_call = create_peerlogic_call(
+                    jive_request_data_key_value_pair=jive_request_data_key_value_pair,
+                    call_direction=call_direction,
+                    start_time=timestamp_of_request,
+                    dialed_number=dialed_number,
+                    practice=practice,
+                )
+                log.info(f"Jive: Created Peerlogic Call object with id='{peerlogic_call.id}'.")
+            except ValidationError:
+                log.exception("Error creating a new Peerlogic call.")
 
-        # TODO: natural_key method keeps giving practice field the practice name instead of the pk...
-        # not sure how to remedy, but it keeps saving the call correctly despite this validation error.
-        peerlogic_call_serializer_errors: Dict = dict(peerlogic_call_serializer.errors)
-        peerlogic_call_serializer_errors.pop("practice")
-        if not peerlogic_call_serializer_is_valid and peerlogic_call_serializer_errors:
-            log.exception(f"Error from peerlogic_call_serializer validation: {peerlogic_call_serializer_errors}")
-            # Not raising, still want to capture the events in the database.
-            response = Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": peerlogic_call_serializer_errors})
-
-        peerlogic_call = Call.objects.create(**call_fields)
-
-        if peerlogic_call:
-            log.info(f"Jive: Created Peerlogic Call object with id='{peerlogic_call.id}'.")
-            subscription_event_data.update({"peerlogic_call_id": peerlogic_call.id})
-            subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
-            subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
+        subscription_event_data.update({"peerlogic_call_id": peerlogic_call.id})
+        subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
+        subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
 
     elif jive_event_type == "replace":
         log.info("Jive: Received jive replace event.")
-        entity_id = content.get("oldId")
-        call_id = get_call_id_from_previous_announce_event(entity_id)
+        call_id = get_call_id_from_previous_announce_events_by_originator_id(jive_originator_id)
         subscription_event_data.update({"peerlogic_call_id": call_id})
         subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
         subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
@@ -175,7 +138,7 @@ def webhook(request):
     elif jive_event_type == "withdraw":
         log.info("Jive: Received jive withdraw event.")
 
-        call_id = get_call_id_from_previous_announce_event(entity_id)
+        call_id = get_call_id_from_previous_announce_events_by_originator_id(jive_originator_id)
         log.info(f"Jive: Call ID is {call_id}")
         subscription_event_data.update({"peerlogic_call_id": call_id})
         subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
@@ -239,7 +202,7 @@ def webhook(request):
                 jive_call_subscription_id=source_jive_id,
                 voip_provider_id=voip_provider_id,
                 event={
-                    "jive_entity_id": entity_id,
+                    "jive_entity_id": jive_originator_id,  # TODO: dependency to use originator_id in downstream CF
                     "peerlogic_call_id": peerlogic_call.id,
                     "peerlogic_call_partial_id": cp.id,
                     "filename": filename_encoded,
