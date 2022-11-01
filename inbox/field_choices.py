@@ -14,11 +14,7 @@ class BandwidthMessageStatuses(models.TextChoices):
     MESSAGE_SENDING = "message-sending"
 
 
-class PeerlogicMessageStatuses(models.TextChoices):
-    MESSAGE_DELIVERED = "message-delivered"
-    MESSAGE_FAILED = "message-failed"
-    MESSAGE_RECEIVED = "message-received"
-    MESSAGE_SENDING = "message-sending"
+class PeerlogicMessageStatuses(BandwidthMessageStatuses, models.TextChoices):
     BANDWIDTH_MESSAGE_DELIVERED = "bandwidth_message_delivered"
     BANDWIDTH_MESSAGE_FAILED = "bandwidth_message_failed"
     BANDWIDTH_MESSAGE_RECEIVED = "bandwidth_message_received"
