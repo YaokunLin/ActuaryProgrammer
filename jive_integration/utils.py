@@ -18,19 +18,21 @@ log = logging.getLogger(__name__)
 def create_peerlogic_call(jive_request_data_key_value_pair: Dict, call_direction: str, start_time: datetime, dialed_number: str, practice: Practice) -> Call:
     log.info(f"Jive: Creating Peerlogic Call object with start_time='{start_time}'.")
     jive_callee_number = jive_request_data_key_value_pair.get("callee", {}).get("number")
+    jive_callee_number_length = len(jive_callee_number)
     jive_caller_number = jive_request_data_key_value_pair.get("caller", {}).get("number")
+    jive_caller_number_length = len(jive_caller_number)
     sip_callee_extension = ""
     sip_callee_number = ""
     sip_caller_extension = ""
     sip_caller_number = ""
 
-    # if callee is an extension:
-    if len(jive_callee_number) != US_TELEPHONE_NUMBER_DIGIT_LENGTH:
+    # if callee is an extension (UI requires 4 digits, I don't trust it):
+    if jive_callee_number_length != US_TELEPHONE_NUMBER_DIGIT_LENGTH and jive_callee_number_length != 0:
         sip_callee_extension = jive_callee_number
         sip_callee_number = dialed_number
         sip_caller_number = f"+1{jive_caller_number}"
-    # if caller is an extension:
-    if len(jive_caller_number) != US_TELEPHONE_NUMBER_DIGIT_LENGTH:
+    # if caller is an extension (UI requires 4 digits, I don't trust it):
+    if jive_caller_number_length != US_TELEPHONE_NUMBER_DIGIT_LENGTH and jive_caller_number_length != 0:
         sip_caller_extension = jive_caller_number
         sip_caller_number = dialed_number
         sip_callee_number = f"+1{jive_callee_number}"
@@ -65,7 +67,7 @@ def create_peerlogic_call(jive_request_data_key_value_pair: Dict, call_direction
     # popping for now.
     peerlogic_call_serializer_errors.pop("practice")
     if not peerlogic_call_serializer_is_valid and peerlogic_call_serializer_errors:
-        log.exception(f"Error from peerlogic_call_serializer validation: {peerlogic_call_serializer_errors}")
+        log.exception(f"Jive: Error from peerlogic_call_serializer validation: {peerlogic_call_serializer_errors}")
         raise ValidationError(peerlogic_call_serializer_errors)
 
     return Call.objects.create(**call_fields)
@@ -76,7 +78,7 @@ def get_call_id_from_previous_announce_event(entity_id: str) -> str:
     try:
         return JiveSubscriptionEventExtract.objects.get(jive_type="announce", entity_id=entity_id).peerlogic_call_id
     except JiveSubscriptionEventExtract.DoesNotExist:
-        log.info(f"No JiveSubscriptionEventExtract found with type='announce' and given entity_id='{entity_id}'")
+        log.info(f"Jive: No JiveSubscriptionEventExtract found with type='announce' and given entity_id='{entity_id}'")
 
 
 def get_call_id_from_previous_announce_events_by_originator_id(originator_id: str) -> str:
@@ -86,4 +88,4 @@ def get_call_id_from_previous_announce_events_by_originator_id(originator_id: st
         if event:
             return event.peerlogic_call_id
     except JiveSubscriptionEventExtract.DoesNotExist:
-        log.info(f"No JiveSubscriptionEventExtract found with type='announce' and given originator_id='{originator_id}'")
+        log.info(f"Jive: No JiveSubscriptionEventExtract found with type='announce' and given originator_id='{originator_id}'")
