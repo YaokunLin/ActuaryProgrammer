@@ -10,6 +10,8 @@ class PracticeModelFactory(factory.django.DjangoModelFactory):
         model = Practice
         django_get_or_create = fake_Practice # TODO: use a valid field
 
+build = PracticeModelFactory.build_batch()
+
 LIST_OF_FAKE_PRACTICES = []
 
 LIST_OF_FAKE_PRACTICES.append(fake_Practice)
