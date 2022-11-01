@@ -81,6 +81,14 @@ def get_call_id_from_previous_announce_event(entity_id: str) -> str:
         log.info(f"Jive: No JiveSubscriptionEventExtract found with type='announce' and given entity_id='{entity_id}'")
 
 
+def get_subscription_event_from_previous_announce_event(leg_id: str) -> JiveSubscriptionEventExtract:
+    log.info(f"Jive: Checking if there is a previous subscription event with this leg_id='{leg_id}'.")
+    try:
+        return JiveSubscriptionEventExtract.objects.get(jive_type="announce", data_leg_id=leg_id)
+    except JiveSubscriptionEventExtract.DoesNotExist:
+        log.info(f"Jive: No JiveSubscriptionEventExtract found with type='announce' and given leg_id='{leg_id}'")
+
+
 def get_call_id_from_previous_announce_events_by_originator_id(originator_id: str) -> str:
     log.info(f"Jive: Checking if there is a previous subscription event with this originator_id='{originator_id}'.")
     try:
