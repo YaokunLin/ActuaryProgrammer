@@ -1,5 +1,6 @@
 import logging
 import re
+from concurrent import futures
 from typing import Dict, List, Union
 
 from django.conf import settings
@@ -624,10 +625,13 @@ class CallsReprocessingView(views.APIView):
         )
 
         if should_commit:
+            publish_futures = []
             for call_id, transcript_id in transcripts_to_reprocess:
                 log.info("Publishing call transcript ready events for call_id: %s, transcript_id: %s", call_id, transcript_id)
-                publish_call_transcript_saved(call_id=call_id, call_transcript_id=transcript_id)
-                log.info("Published call transcript ready events for call_id: %s, transcript_id: %s", call_id, transcript_id)
+                publish_futures.append(publish_call_transcript_saved(call_id=call_id, call_transcript_id=transcript_id))
+            if publish_futures:
+                futures.wait(publish_futures, return_when=futures.ALL_COMPLETED)
+                log.info("Successfully published all call transcript ready events")
 
         data = {"calls_to_reprocess": len(transcripts_to_reprocess), "committed": should_commit}
         return Response(data)
