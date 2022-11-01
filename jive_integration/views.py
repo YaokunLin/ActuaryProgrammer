@@ -27,7 +27,12 @@ from jive_integration.jive_client.client import JiveClient, Line
 from jive_integration.publishers import publish_leg_b_ready_event
 from jive_integration.serializers import JiveSubscriptionEventExtractSerializer
 from jive_integration.models import JiveConnection, JiveLine, JiveChannel, JiveSession
-from jive_integration.utils import create_peerlogic_call, get_call_id_from_previous_announce_event, get_call_id_from_previous_announce_events_by_originator_id
+from jive_integration.utils import (
+    create_peerlogic_call,
+    get_call_id_from_previous_announce_event,
+    get_call_id_from_previous_announce_events_by_originator_id,
+    get_subscription_event_from_previous_announce_event,
+)
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -69,6 +74,7 @@ def webhook(request):
 
     end_time = timestamp_of_request
     jive_request_data_key_value_pair: Dict = content.get("data", {})
+    jive_leg_id = jive_request_data_key_value_pair.get("legId")
     jive_originator_id = jive_request_data_key_value_pair.get("originatorId")
     subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=content)
     subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
@@ -187,11 +193,13 @@ def webhook(request):
             log.info(
                 f"Jive: Creating Peerlogic CallPartial with peerlogic_call.id='{peerlogic_call.id}',  time_interaction_started='{peerlogic_call.call_start_time}' and time_interaction_ended='{ord}'."
             )
-            # TODO: Get previous call partials for call and see if we need to update the time_interaction started. We only get end times.
-            # Double-check with transfers
-            cp = CallPartial.objects.create(call=peerlogic_call, time_interaction_started=peerlogic_call.call_start_time, time_interaction_ended=end_time)
+
+            # Timestamp already formatted for use in call partial below
+            jive_leg_created_time = subscription_event_data.get("data_created")
+
+            cp = CallPartial.objects.create(call=peerlogic_call, time_interaction_started=jive_leg_created_time, time_interaction_ended=end_time)
             log.info(
-                f"Jive: Created Peerlogic CallPartial with cp.id='{cp.id}', peerlogic_call.id='{peerlogic_call.id}', time_interaction_started='{peerlogic_call.call_start_time}' and entime_interaction_endedd_time='{end_time}'."
+                f"Jive: Created Peerlogic CallPartial with cp.id='{cp.id}', peerlogic_call.id='{peerlogic_call.id}', time_interaction_started='{peerlogic_call.call_start_time}' and time_interaction_ended='{end_time}'."
             )
 
             subscription_event_data.update({"peerlogic_call_partial_id": cp.id})
