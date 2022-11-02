@@ -1,16 +1,20 @@
 import factory
+import shortuuid
 from faker import Faker
+
 from core.models import Practice
 
 fake = Faker()
-fake_Practice = Practice(fake.random_int(1000, 2000), f"{fake.first_name()}'s Dential",
-industry = "Dential", active = fake.boolean(chance_of_getting_true=80))
+fake_Practice = Practice(shortuuid.uuid(), f"{fake.first_name()}'s Dental", industry="Dental", active=fake.boolean(chance_of_getting_true=80))
+
+
 class PracticeModelFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Practice
-        django_get_or_create = fake_Practice # TODO: use a valid field
+        django_get_or_create = fake_Practice
 
-build = PracticeModelFactory.build_batch()
+
+build = PracticeModelFactory.build_batch(3)
 
 LIST_OF_FAKE_PRACTICES = []
 
