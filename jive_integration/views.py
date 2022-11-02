@@ -33,6 +33,7 @@ from jive_integration.utils import (
     get_call_id_from_previous_announce_events_by_originator_id,
     get_subscription_event_from_previous_announce_event,
 )
+from peerlogic.settings import JIVE_CONNECTION_REFRESH_INTERVAL_IN_HOURS
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -326,9 +327,7 @@ def cron(request):
             return HttpResponse(status=204)
 
         # find any channels about to expire in the next few hours and refresh them
-
-        # TODO: make the 3 hours configurable via env var / Secret Manager
-        for channel in JiveChannel.objects.filter(expires_at__lt=timezone.now() - timedelta(hours=3)):
+        for channel in JiveChannel.objects.filter(expires_at__lt=timezone.now() + timedelta(hours=JIVE_CONNECTION_REFRESH_INTERVAL_IN_HOURS)):
             log.info(f"Jive: found channel: {channel}")
             # if a channel refresh fails we mark it as inactive
             try:
