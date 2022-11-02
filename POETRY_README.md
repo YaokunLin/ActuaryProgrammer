@@ -55,7 +55,7 @@ which python
 This will check if you are running pyenv; you should see `/Users/<name>/.pyenv/shims/python`
 
 ```bash
-python --verison
+python --version
 ```
 
 This will check the version of python you are running. You should see python set to 3.7.9 or 3.7.12, respectively; if not, set to one of the two versions. You need to run one of the following commands.
