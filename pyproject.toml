@@ -16,11 +16,10 @@ version = "0.1.43"
 description = "Peerlogic API"
 authors = []
 
-
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "peerlogic.settings"
-markers = ["-k", "unit"]
-python_files = ["test*.py", "*test.py", "*tests.py"]
+markers = "-k"
+python_files = ["test*.py", "*_test.py"]
 python_classes = ["Test", "Acceptance"]
 python_functions = ["test"]
 addopts = "-vv -x --lf --cov"
@@ -74,15 +73,15 @@ ringcentral = "0.7.13"
 jwcrypto = "1.4"
 oauthlib = "3.2.1"
 protobuf = "4.21.6"
+factory-boy = "^3.2.1"
 # Use poetry.add ... --dev, poetry.remove ... --dev, etc.
 
 [tool.poetry.dev-dependencies]
-pytest-django = "^4.5.2"
-pytest = "^7.2.0"
-factory-boy = "^3.2.1"
 black = "22.6.0"
 djangorestframework-stubs = "1.4.0"
 python-dotenv = "0.15.0"
 isort = "^5.10.1"
 pre-commit = "^2.20.0"
+pytest = "^7.2.0"
 pytest-cov = "^4.0.0"
+pytest-django = "^4.5.2"
