@@ -711,8 +711,18 @@ def convert_to_call_counts_only(call_counts_and_durations: Dict) -> Dict:
 
 
 def calculate_zero_filled_call_counts_by_day(
-    calls_qs: QuerySet, start_date: str, end_date: str, field_to_count: str = "id", distinct: bool = True
+    calls_qs: QuerySet,
+    start_date: Union[str, datetime.datetime, datetime.date],
+    end_date: Union[str, datetime.datetime, datetime.date],
+    field_to_count: str = "id",
+    distinct: bool = True,
 ) -> List[Dict]:
+    date_time_format = "%Y-%m-%d"
+    if isinstance(start_date, (datetime.datetime, datetime.date)):
+        start_date = start_date.strftime(date_time_format)
+    if isinstance(end_date, (datetime.datetime, datetime.date)):
+        end_date = end_date.strftime(date_time_format)
+
     data = list(
         calls_qs.annotate(date=TruncDate("call_start_time"))
         .values("date")
@@ -727,7 +737,7 @@ def calculate_zero_filled_call_counts_by_day(
     data = pd.DataFrame(data).set_index("date").reindex(date_range, fill_value=0).reset_index()
     data = data.to_dict("records")
     for i in data:
-        i["date"] = i["date"].strftime("%Y-%m-%d")
+        i["date"] = i["date"].strftime(date_time_format)
     return data
 
 

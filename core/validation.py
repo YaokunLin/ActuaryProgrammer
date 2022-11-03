@@ -4,10 +4,8 @@ from datetime import datetime, timedelta
 from typing import Dict, Optional, Tuple
 
 from django.conf import settings
-from rest_framework.request import Request
 
-from core.field_choices import VoipProviderIntegrationTypes
-from core.models import Agent, Practice, PracticeTelecom
+from core.models import PracticeTelecom
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -22,7 +20,7 @@ def validate_date_format(date=None):
         raise Exception(f"Invalid date format. {e}")
 
 
-def validate_dates(from_date=None, to_date=None):
+def validate_dates(from_date=None, to_date=None, tzinfo=None):
     """Validates the from_date and to_date for the following conditions
 
     1. When only one of the dates are given, the search is limited to the default date range
@@ -53,10 +51,11 @@ def validate_dates(from_date=None, to_date=None):
         from_date = to_date
         to_date = temp_to_date
 
-    from_date = from_date.replace(hour=0, minute=0, second=0, microsecond=0)
-    to_date = to_date.replace(hour=23, minute=59, second=59, microsecond=999999)
+    if tzinfo:
+        from_date = from_date.replace(tzinfo=tzinfo)
+        to_date = to_date.replace(tzinfo=tzinfo)
 
-    return from_date.strftime(date_time_format), to_date.strftime(date_time_format)
+    return from_date, to_date
 
 
 def get_validated_practice_telecom(voip_provider__integration_type: str, email: str) -> Tuple[Optional[str], Optional[Dict[str, str]]]:

@@ -8,7 +8,6 @@ from django.conf import settings
 from django.db import models
 from google.cloud import pubsub_v1
 
-
 # Get an instance of a logger
 log = logging.getLogger(__name__)
 
@@ -52,4 +51,6 @@ def publish_event(
     log.info(f"Published message bytes {event_encoded_data} with error handler to {topic_path}.")
 
     # Non-blocking. Publish failures are handled in the callback function.
-    return publish_future.add_done_callback(get_callback(publish_future, event_encoded_data))
+    publish_future.add_done_callback(get_callback(publish_future, event_encoded_data))
+
+    return publish_future

@@ -1,7 +1,12 @@
+from datetime import datetime, time
 from logging import getLogger
 
+from django import forms
 from django.db.models import Q
 from django_filters import rest_framework as filters
+from django_filters.filters import RangeField
+from django_filters.utils import handle_timezone
+from django_filters.widgets import DateRangeWidget
 from rest_framework.filters import BaseFilterBackend
 
 from calls.analytics.intents.field_choices import (
@@ -16,14 +21,44 @@ from core.models import MarketingCampaignPhoneNumber
 log = getLogger(__name__)
 
 
+class _UnaldultratedDateRangeField(RangeField):
+    """
+    Same as django_filters.fields.DateRangeField except it doesn't set the to_date to use 23:59:59.999999
+    """
+
+    widget = DateRangeWidget
+
+    def __init__(self, *args, **kwargs):
+        fields = (forms.DateField(), forms.DateField())
+        super().__init__(fields, *args, **kwargs)
+
+    def compress(self, data_list):
+        if data_list:
+            start_date, stop_date = data_list
+            if start_date:
+                start_date = handle_timezone(datetime.combine(start_date, time.min), False)
+            if stop_date:
+                stop_date = handle_timezone(datetime.combine(stop_date, time.min), False)
+            return slice(start_date, stop_date)
+        return None
+
+
+class _UnaldultratedDateFromToRangeFilter(filters.RangeFilter):
+    """
+    Same as django_filters.filters.DateFromToRangeFilter except it doesn't set the to_date to use 23:59:59.999999
+    """
+
+    field_class = _UnaldultratedDateRangeField
+
+
 class CallsFilter(filters.FilterSet):
     sip_caller_number__startswith = filters.CharFilter(field_name="sip_caller_number", lookup_expr="startswith")
     sip_callee_number__startswith = filters.CharFilter(field_name="sip_callee_number", lookup_expr="startswith")
-    call_start_time = filters.DateFromToRangeFilter()
+    call_start_time = _UnaldultratedDateFromToRangeFilter()
     marketing_campaign_name = filters.CharFilter(method="filter_marketing_campaign_name")
-    call_purposes__call_purpose_type = filters.ChoiceFilter(choices=CallPurposeTypes.choices, method="_filter_call_purpose_fields")
-    call_purposes__outcome_results__call_outcome_type = filters.ChoiceFilter(choices=CallOutcomeTypes.choices, method="_filter_call_purpose_fields")
-    call_purposes__outcome_results__outcome_reason_results__call_outcome_reason_type = filters.ChoiceFilter(
+    call_purposes__call_purpose_type = filters.MultipleChoiceFilter(choices=CallPurposeTypes.choices, method="_filter_call_purpose_fields")
+    call_purposes__outcome_results__call_outcome_type = filters.MultipleChoiceFilter(choices=CallOutcomeTypes.choices, method="_filter_call_purpose_fields")
+    call_purposes__outcome_results__outcome_reason_results__call_outcome_reason_type = filters.MultipleChoiceFilter(
         choices=CallOutcomeReasonTypes.choices, method="_filter_call_purpose_fields"
     )
     engaged_in_calls__non_agent_engagement_persona_type = filters.MultipleChoiceFilter(choices=NonAgentEngagementPersonaTypes.choices)
@@ -52,7 +87,12 @@ class CallsFilter(filters.FilterSet):
             filters = Q()
             for key in {call_purpose_key, call_outcome_key, call_outcome_reason_key}:
                 if key in self.request.query_params:
-                    filters = filters & Q(**{key: self.request.query_params[key]})
+                    value = self.request.query_params.getlist(key)
+                    if len(value) > 1:
+                        filters = filters & Q(**{f"{key}__in": value})
+                    else:
+                        filters = filters & Q(**{key: value[0]})
+
             self.purpose_filters_applied = True
             log.debug("Filtering call purpose fields for %s: %s", name, filters)
             return queryset.filter(filters)
@@ -62,9 +102,7 @@ class CallsFilter(filters.FilterSet):
     class Meta:
         model = Call
         fields = {
-            "id": ["exact"],  # for demo purposes
-            "call_start_time": ["gte", "exact"],
-            "call_end_time": ["lte", "exact"],
+            "id": ["exact"],
             "practice__id": ["exact"],
             "call_direction": ["exact"],
             "call_sentiments__overall_sentiment_score": ["exact"],

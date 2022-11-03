@@ -55,7 +55,7 @@ which python
 This will check if you are running pyenv; you should see `/Users/<name>/.pyenv/shims/python`
 
 ```bash
-python --verison 
+python --version
 ```
 
 This will check the version of python you are running. You should see python set to 3.7.9 or 3.7.12, respectively; if not, set to one of the two versions. You need to run one of the following commands.
@@ -73,7 +73,12 @@ curl -sSL https://install.python-poetry.org | python3 -
 
 if the install above does't work, or if you just want more information about poetry you can visit [https://python-poetry.org/docs/]
 
-### using poetry to set up vuirtual environment
+### using poetry to set up virtual environment
+
+Tell poetry to honor your pyenv version:
+```bash
+poetry config virtualenvs.prefer-active-python true
+```
 
 When using the appropriate version of python you can run the following command which will create a virtual env via poetry for you.
 
@@ -89,6 +94,13 @@ poetry shell
 
 Once your poetry environment is all set up, you can set your IDE's python interpreter to the virtual environment that Poetry created.
 Instructions will vary per IDE.
+
+
+To run postgres and redis, run the following separately:
+
+```bash
+docker-compose up -d redis postgres
+```
 
 ### Updating dependencies
 
@@ -140,3 +152,31 @@ brew link openssl
 As always, follow any prompts/instructions from the output of those commands above.
 
 Once of all that is done (and your active shell reflects the changes), you should be all ready `poetry install`!
+
+
+## Recreating Poetry Environment
+In case of an emergency and you need to start fresh, follow these steps
+
+# Stop the current virtualenv if active or alternative use `exit` to exit from a Poetry shell session
+
+```bash
+deactivate
+```
+
+# Remove all the files of the current environment of the folder we are in
+
+```bash
+POETRY_LOCATION=`poetry env info -p`
+echo "Poetry is $POETRY_LOCATION"
+rm -rf "$POETRY_LOCATION"
+```
+
+# Reactivate Poetry shell
+```bash
+poetry shell
+```
+
+# Install everything
+```bash
+poetry install
+```
