@@ -24,10 +24,10 @@ markers = [
 python_files = ["test*.py", "*_test.py", "*tests.py"]
 python_classes = ["Test", "Acceptance"]
 python_functions = ["test"]
-addopts = "-vv -x --lf --cov"
+#addopts = "-vv -x --lf --cov"
 
-# WARNING - DO NOT MANUNALLY EDIT THIS SECTION
-# Use poetry.add, poetry.remove, etc.
+# WARNING - DO NOT MANUALLY EDIT THIS SECTION
+# Use poetry.add ... --dev, poetry.remove ... --dev, etc.
 [tool.poetry.dependencies]
 python = "^3.7.9"
 argon2-cffi = "16.1.0"
@@ -62,8 +62,6 @@ psycopg2-binary = "2.8.6"
 google-cloud-secret-manager = "2.8.0"
 google-cloud-pubsub = "2.9.0"
 google-cloud-storage = "2.1.0"
-
-# WARNING - DO NOT MANUNALLY EDIT THIS SECTION
 pandas = "<1.4"
 django-pandas = "^0.6.6"
 numpy = "<1.23"
@@ -75,9 +73,9 @@ ringcentral = "0.7.13"
 jwcrypto = "1.4"
 oauthlib = "3.2.1"
 protobuf = "4.21.6"
-factory-boy = "^3.2.1"
-# Use poetry.add ... --dev, poetry.remove ... --dev, etc.
 
+# WARNING - DO NOT MANUALLY EDIT THIS SECTION
+# Use poetry.add ... --dev, poetry.remove ... --dev, etc.
 [tool.poetry.dev-dependencies]
 black = "22.6.0"
 djangorestframework-stubs = "1.4.0"
@@ -87,3 +85,4 @@ pre-commit = "^2.20.0"
 pytest = "^7.2.0"
 pytest-cov = "^4.0.0"
 pytest-django = "^4.5.2"
+factory-boy = "^3.2.1"

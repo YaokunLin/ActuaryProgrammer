@@ -682,7 +682,7 @@ test = ["pytest (>=6)"]
 name = "factory-boy"
 version = "3.2.1"
 description = "A versatile test fixtures replacement based on thoughtbot's factory_bot for Ruby."
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.6"
 
@@ -697,7 +697,7 @@ doc = ["sphinx", "sphinx-rtd-theme", "sphinxcontrib-spelling"]
 name = "faker"
 version = "15.1.3"
 description = "Faker is a Python package that generates fake data for you."
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.7"
 
@@ -1861,7 +1861,7 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.9"
-content-hash = "f636cda125c0d3af40839d59f82edc1995224366b61e65fc76c30b0a0e8fcb6e"
+content-hash = "6d623285ae8f5ed19dd01d1cb215c9b7fcad8943e4b564ee7eb859854be4c5e5"
 
 [metadata.files]
 amqp = [
