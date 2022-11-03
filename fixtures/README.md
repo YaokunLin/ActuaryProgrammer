@@ -14,9 +14,10 @@ docker-compose run --rm api python3 manage.py load_ml_results_from_bq_json 2022-
 ## Generate more Fixtures when needed
 
 Requirements:
+
 * First, you must be a devops admin to generate these because there is a lot that could go wrong if you are pointed at the wrong environment.
 * Second, see Running Management Commands on the root README.md to connect with the production database.
-* Learn how fixture-magic works if you need to get dependencies: https://github.com/davedash/django-fixture-magic
+* Learn how fixture-magic works if you need to get dependencies: [https://github.com/davedash/django-fixture-magic]
 
 How to generate more fixtures:
 
@@ -43,7 +44,6 @@ docker-compose -f ./devtools/cloudsql-docker-compose.yml run --rm  api python3 m
 ./devtools/cloudsql-docker-compose.yml run --rm  api python3 manage.py dump_object calls.CallTranscript WbtxpYUXqupNfNApktyy2D 9DwQJmcBnGoPRR6rimkdSM MhdCXmPQDu2e7wU7KWHLuW > fixtures/calls_calltranscript.json
 # remove all system warnings before continuing
 ```
-
 
 <!-- TODO: gsutil commands to sync files from production to your own bucket -->
 
