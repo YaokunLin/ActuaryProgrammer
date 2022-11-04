@@ -17,8 +17,8 @@ class JiveConnection(AuditTrailModel):
     refresh_token = models.TextField(blank=True)
     practice_telecom = models.ForeignKey("core.PracticeTelecom", null=True, on_delete=models.SET_NULL)
 
-    last_sync = models.DateTimeField(null=False, blank=False, default=datetime.min.isoformat())
-    active = models.BooleanField(null=True, blank=False, default=True)
+    last_sync = models.DateTimeField(default=datetime.min.isoformat())
+    active = models.BooleanField(default=True)
 
 
 class JiveChannel(models.Model):
@@ -35,9 +35,9 @@ class JiveChannel(models.Model):
 
     name = ShortUUIDField(unique=True)
     source_jive_id = models.CharField(unique=True, max_length=256)
-    signature = models.CharField(max_length=64, unique=True, blank=False, null=False)
-    expires_at = models.DateTimeField(null=False)
-    active = models.BooleanField(default=True, null=False)
+    signature = models.CharField(max_length=64, unique=True)
+    expires_at = models.DateTimeField()
+    active = models.BooleanField(default=True)
 
 
 class JiveSession(models.Model):
@@ -50,7 +50,7 @@ class JiveSession(models.Model):
 
     channel = models.ForeignKey(JiveChannel, on_delete=models.CASCADE)
 
-    url = models.URLField(null=False)
+    url = models.URLField()
 
 
 class JiveLine(models.Model):
@@ -64,8 +64,8 @@ class JiveLine(models.Model):
 
     session = models.ForeignKey(JiveSession, null=True, on_delete=models.CASCADE)
 
-    source_jive_id = models.CharField(max_length=64, blank=False, null=False, unique=True)
-    source_organization_jive_id = models.CharField(max_length=64, blank=False, null=False, unique=True)
+    source_jive_id = models.CharField(max_length=64, unique=True)
+    source_organization_jive_id = models.CharField(max_length=64, unique=True)
 
 
 class JiveCallPartial(models.Model):
@@ -76,7 +76,7 @@ class JiveCallPartial(models.Model):
     id = ShortUUIDField(primary_key=True, editable=False)
 
     start_time = models.DateTimeField()
-    source_jive_id = models.CharField(null=False, blank=False, max_length=255)
+    source_jive_id = models.CharField(max_length=255)
 
 
 class JiveSubscriptionEventExtract(AuditTrailModel):

@@ -41,4 +41,9 @@ class Migration(migrations.Migration):
             name='entity_id',
             field=models.CharField(max_length=128),
         ),
+        migrations.AlterField(
+            model_name='jiveconnection',
+            name='active',
+            field=models.BooleanField(default=True),
+        ),
     ]
