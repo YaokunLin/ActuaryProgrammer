@@ -75,7 +75,6 @@ def webhook(request):
 
     end_time = timestamp_of_request
     jive_request_data_key_value_pair: Dict = content.get("data", {})
-    jive_leg_id = jive_request_data_key_value_pair.get("legId")
     jive_originator_id = jive_request_data_key_value_pair.get("originatorId")
     subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=content)
     subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
@@ -104,8 +103,10 @@ def webhook(request):
     line: JiveLine = JiveLine.objects.filter(source_organization_jive_id=source_organization_jive_id).first()
     log.info(f"Jive: JiveLine found with originatorOrganizationId='{source_organization_jive_id}'")
 
+    channel = line.session.channel
     voip_provider_id = line.session.channel.connection.practice_telecom.voip_provider_id
     practice = line.session.channel.connection.practice_telecom.practice
+    subscription_event_data.update({"jive_channel_id": channel.id})
 
     # TODO: jive_event_type should be a field choice type - will check these when we have documentation for understanding the options
     jive_event_type = content.get("type")
