@@ -31,7 +31,7 @@ class JiveChannel(models.Model):
 
     id = ShortUUIDField(primary_key=True, editable=False)
 
-    connection = models.ForeignKey(JiveConnection, null=False, on_delete=models.CASCADE)
+    connection = models.ForeignKey(JiveConnection, on_delete=models.CASCADE)
 
     name = ShortUUIDField(unique=True)
     source_jive_id = models.CharField(unique=True, max_length=256)
@@ -48,7 +48,7 @@ class JiveSession(models.Model):
 
     id = ShortUUIDField(primary_key=True, editable=False)
 
-    channel = models.ForeignKey(JiveChannel, null=False, on_delete=models.CASCADE)
+    channel = models.ForeignKey(JiveChannel, on_delete=models.CASCADE)
 
     url = models.URLField(null=False)
 
@@ -139,26 +139,26 @@ class JiveSubscriptionEventExtract(AuditTrailModel):
     peerlogic_call_partial_id = models.CharField(
         blank=True, default="", max_length=22, db_index=True
     )  # maps to calls/models.py CallPartial model's id (non-fk to keep these segregated)
+    jive_channel = models.ForeignKey(JiveChannel, null=True, on_delete=models.SET_NULL)
     jive_extract = models.JSONField()
 
     # Lengths except where commented with context are arbitrary due to not knowing the contract
-    jive_type = models.CharField(max_length=128, db_index=True)
+    jive_type = models.CharField(max_length=128, db_index=True) # announce | replace | withdraw
     sub_id = models.CharField(max_length=36, db_index=True)  # uuid stored as a string
-    # TODO: verify these look right
     old_id = models.CharField(max_length=36, db_index=True)  # uuid stored as a string
     new_id = models.CharField(max_length=36, db_index=True)  # uuid stored as a string
-    entity_id = models.CharField(max_length=128, db_index=True)
+    entity_id = models.CharField(max_length=128) # 6 digit number
     data_leg_id = models.CharField(max_length=36, db_index=True)  # uuid stored as a string
-    data_created = models.DateTimeField()
-    data_participant = models.CharField(max_length=128)
-    data_callee_name = models.CharField(max_length=128)
-    data_callee_number = models.CharField(max_length=128)
-    data_caller_name = models.CharField(max_length=128)
-    data_caller_number = models.CharField(max_length=128)
-    data_direction = models.CharField(max_length=128)
-    data_state = models.CharField(max_length=128)
-    data_ani = models.CharField(max_length=128)
-    data_recordings_extract = models.JSONField()  # May not want this since it's found in jive_extract?
-    data_is_click_to_call = models.BooleanField()
-    data_originator_id = models.CharField(max_length=36)
-    data_originator_organization_id = models.CharField(max_length=36)
+    data_created = models.DateTimeField(db_index=True) # seems to be the interaction start time for the individual call leg
+    data_participant = models.CharField(max_length=128) # 30 character unique string
+    data_callee_name = models.CharField(max_length=128) # Caller ID or User's name, depending on call direction
+    data_callee_number = models.CharField(max_length=128) # 4 digit extension or telephone number, depending on call direction
+    data_caller_name = models.CharField(max_length=128) # Caller ID or User's name, depending on call direction
+    data_caller_number = models.CharField(max_length=128) # 4 digit extension or telephone number, depending on call direction
+    data_direction = models.CharField(max_length=128) # initiator or recipient
+    data_state = models.CharField(max_length=128, db_index=True) # CREATED | RINGING | ANSWERED | BRIDGED | UNBRIDGED
+    data_ani = models.CharField(max_length=128) # Number dialed (Automatic Number Identification (ANI) is a telephony service that allows the receiver of a phone call to capture and display the phone number of the phone that originated the call)
+    data_recordings_extract = models.JSONField()  # TODO: May not want this since it's found in jive_extract?
+    data_is_click_to_call = models.BooleanField() # Blank most of the time
+    data_originator_id = models.CharField(max_length=36, db_index=True) # seems to be the cradle to grave call id on trans
+    data_originator_organization_id = models.CharField(max_length=36, db_index=True) # organization id for the Jive account shared by multiple users
