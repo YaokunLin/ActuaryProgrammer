@@ -1,9 +1,10 @@
 import logging
-from core.abstract_models import AuditTrailModel
+
 from django.conf import settings
 from django.db import models
 from django_extensions.db.fields import ShortUUIDField
 
+from core.abstract_models import AuditTrailModel
 from ml.field_choices import ClassificationDomain
 
 # Get an instance of a logger
@@ -26,3 +27,4 @@ class MLModelResultHistory(AuditTrailModel):
     run_id = models.CharField(max_length=22)
     label = models.CharField(max_length=150)
     score = models.FloatField(null=True)
+    threshold = models.FloatField(null=True)
