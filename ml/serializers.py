@@ -1,3 +1,5 @@
+from typing import Dict
+
 from django.utils import timezone
 from rest_framework import serializers
 
@@ -33,7 +35,7 @@ class MLModelResultHistoryCreateSerializer(serializers.Serializer):
     score = serializers.FloatField(required=True, allow_null=True)
     threshold = serializers.FloatField(required=True, allow_null=True)
 
-    def to_internal_value(self, data: dict) -> dict:
+    def to_internal_value(self, data: Dict) -> Dict:
         deserialized = super().to_internal_value(data)
         for field in {"call_id", "model_id"}:
             deserialized[field] = deserialized[field].id
