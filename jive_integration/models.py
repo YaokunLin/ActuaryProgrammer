@@ -17,7 +17,7 @@ class JiveConnection(AuditTrailModel):
     refresh_token = models.TextField(blank=True)
     practice_telecom = models.ForeignKey("core.PracticeTelecom", null=True, on_delete=models.SET_NULL)
 
-    last_sync = models.DateTimeField(default=datetime.min.isoformat())
+    last_sync = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(default=True)
 
 

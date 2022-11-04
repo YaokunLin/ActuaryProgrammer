@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('jive_integration', '0004_relate_jive_channel_to_extracts'),
+        ('jive_integration', '0003_jivesubscriptioneventextract'),
     ]
 
     operations = [
