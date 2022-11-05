@@ -83,25 +83,27 @@ class JiveAWSRecordingBucket(models.Model):
         self.save()
 
     def generate_credentials(self) -> Dict[str, str]:
-        create_user(username=self.aws_short_resource_name)
-        # TODO: save username in DB
+        user = create_user(username=self.aws_short_resource_name)
+        self.username = user.UserName
         policy = create_writeonly_iam_policy_for_bucket(policy_name=self.aws_long_resource_name, bucket_name=self.bucket_name)
-        # TODO: save policy arn in DB - don't expose it in the serializer
-        attach_user_policy(policy_arn=policy.Arn, username=self.aws_short_resource_name)
-        access_key = create_access_key(username=self.aws_short_resource_name)
+        self.policy_arn = policy.Arn
+        attach_user_policy(policy_arn=self.policy_arn, username=self.username)
+        access_key = create_access_key(username=self.username)
         self.access_key_id = access_key.AccessKeyId
-        log.info(
-            f"Saving recording bucket info to the database with self.id='{self.id}', self.access_key_id='{self.access_key_id}', self.bucket_name='{self.bucket_name}'"
-        )
+        log.info(f"Saving recording bucket info to the database with self.__dict__={self.__dict__}")
         self.save()
-        log.info(
-            f"Saved recording bucket info to the database with self.id='{self.id}', self.access_key_id='{self.access_key_id}', self.bucket_name='{self.bucket_name}'"
-        )
+        log.info(f"Saved recording bucket info to the database with self.__dict__={self.__dict__}")
 
         return {"aws_bucket_name": self.bucket_name, "aws_access_key": self.access_key_id, "aws_secret_access_key": access_key.SecretAccessKey}
 
     def delete_credentials(self):
-        """TODO: implement for cleanup"""
+        """TODO: implement for cleanup
+        Detach Policy
+        Delete Policy
+        Delete Access Key
+        Delete User
+        """
+
         pass
 
     def regenerate_credentials(self):
