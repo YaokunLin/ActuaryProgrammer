@@ -263,41 +263,50 @@ def authentication_callback(request: Request):
 
     https://developer.goto.com/guides/Authentication/03_HOW_accessToken/
     """
+    log.info("Jive: Checking for authorization code in query parameters.")
     authorization_code: Optional[str] = request.query_params.get("code")
     if not authorization_code:
-        return Response(status=404, data={"errors": {"code": "Missing from query parameters."}})
+        raise ValidationError({"errors": {"code": "Contact support@peerlogic.com - authorization code is missing from the callback."}})
+    log.info("Jive: Found authorization code.")
 
-    # Exchange the authorization code for an access token
-    log.info("Instantiating JiveClient.")
+    log.info("Jive: Instantiating JiveClient.")
     jive: JiveClient = JiveClient(client_id=settings.JIVE_CLIENT_ID, client_secret=settings.JIVE_CLIENT_SECRET)
-    log.info("Instantiated JiveClient.")
+    log.info("Jive: Instantiated JiveClient.")
 
-    log.info("Exchanging authorization code for an access code.")
+    log.info("Jive: Exchanging authorization code for an access token.")
     jive.exchange_code(authorization_code, generate_redirect_uri(request))
-    log.info("Exchanged authorization code for an access code.")
+    log.info("Jive: Exchanged authorization code for an access token.")
 
+    log.info(f"Jive: Checking for principal (email associated with the user).")
     principal = jive.principal  # this is the email associated with user
-
     if not principal:
-        return Response(status=404, data={"errors": {"principal": "Missing from exchange authorization code for access token response."}})
+        log.exception("Jive: No principal (email associated with the user) found in access token response.")
+        raise ValidationError({"errors": {"principal": "email is missing from your submission - are you logged in?"}})
 
+    log.info(f"Jive: Checking for existing JiveConnection with principal={principal}.")
     connection: JiveConnection = None
-
     with suppress(JiveConnection.DoesNotExist):
         connection = JiveConnection.objects.get(practice_telecom__practice__agent__user__email=principal)
 
     if not connection:
+        log.info(f"Jive: No existing JiveConnection exists with user email principal={principal}.")
+        log.info(f"Jive: Validating a Practice Telecom exists with voip_provider__integration_type of JIVE and principal='{principal}'.")
         # TODO: deal with users with multiple practices (Organizations ACL)
         practice_telecom, errors = get_validated_practice_telecom(voip_provider__integration_type=VoipProviderIntegrationTypes.JIVE, email=principal)
         if not practice_telecom:
-            log.info(f"No practice telecom has set up for this Jive customer with user email or principal='{principal}'")
-            return Response(status=404, data=errors)
+            log.exception(f"No practice telecom has set up for this Jive customer with user email or principal='{principal}', errors='{errors}'")
+            raise ValidationError({"errors": {"code": "Contact support@peerlogic.com - your practice telecom has not been set up with this user yet."}})
+        log.info(f"Jive: Successfully validated a Practice Telecom exists with voip_provider__integration_type of JIVE and principal='{principal}'.")
+
+        log.info(f"Jive: Creating Jive Connection with practice_telecom='{practice_telecom}'.")
         connection = JiveConnection(practice_telecom=practice_telecom)
 
     connection.refresh_token = jive.refresh_token
-
+    log.info(f"Jive: Saving JiveConnection with refresh_token='{jive.refresh_token}.")
     connection.save()
+    log.info(f"Jive: Saved JiveConnection to the database with id='{connection.id}'.")
 
+    # TODO: redirect them back to the application - need to know what route though
     return HttpResponse(status=204)
 
 

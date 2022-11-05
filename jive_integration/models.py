@@ -21,6 +21,39 @@ class JiveConnection(AuditTrailModel):
     active = models.BooleanField(default=True)
 
 
+class JiveAWSRecordingBucket(models.Model):
+    id = ShortUUIDField(primary_key=True, editable=False)
+    connection = models.ForeignKey(JiveConnection, on_delete=models.CASCADE)
+    access_key_id = models.CharField(blank=True, unique=True, max_length=128)  # https://docs.aws.amazon.com/IAM/latest/APIReference/API_AccessKey.html
+    username = models.CharField(blank=True, unique=True, max_length=64)  # https://docs.aws.amazon.com/IAM/latest/APIReference/API_User.html
+    policy_arn = models.CharField(blank=True, unique=True, max_length=2048)  # https://docs.aws.amazon.com/IAM/latest/APIReference/API_Policy.html
+
+    @property
+    def aws_short_resource_name(self) -> str:
+        """
+        Used for nearly everything in aws to refer back to this model in our database
+
+        Use jive, then ID at beginning and then normal domain heirarchy employed
+        by the dependency flow for ease
+        This is for easy searchability within the S3 and IAM consoles
+        """
+
+        # must be 63 characters or less - only have room for 2 ids each 22 characters for a total of 50 chars
+        return f"jive-{self.id}-{self.connection.practice_telecom.practice.id}"
+
+    @property
+    def aws_long_resource_name(self) -> str:
+        """
+        Used for nearly everything in aws to refer back to this model in our database
+
+        Use jive, then ID at beginning and then normal domain heirarchy employed
+        by the dependency flow for ease
+        This is for easy searchability within the S3 and IAM consoles
+        """
+
+        return f"jive-{self.id}-{self.connection.id}-{self.connection.practice_telecom.id}-{self.connection.practice_telecom.practice.id}"
+
+
 class JiveChannel(models.Model):
     """
     Channels represent a destination to deliver events from the Jive API to.  Channels define where events are delivered.
