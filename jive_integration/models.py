@@ -32,8 +32,8 @@ class JiveAWSRecordingBucket(models.Model):
     id = ShortUUIDField(primary_key=True, editable=False)
     connection = models.ForeignKey(JiveConnection, on_delete=models.CASCADE)
     access_key_id = models.CharField(blank=True, unique=True, max_length=128)  # https://docs.aws.amazon.com/IAM/latest/APIReference/API_AccessKey.html
-    secret_access_key = models.CharField(blank=True, unique=True, max_length=256)  # not sure how long, docs don't say
-    bucket_name = models.CharField(blank=True, max_length=63)
+    username = models.CharField(blank=True, unique=True, max_length=64)  # https://docs.aws.amazon.com/IAM/latest/APIReference/API_User.html
+    policy_arn = models.CharField(blank=True, unique=True, max_length=2048)  # https://docs.aws.amazon.com/IAM/latest/APIReference/API_Policy.html
 
     @property
     def aws_short_resource_name(self) -> str:
