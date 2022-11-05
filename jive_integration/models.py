@@ -94,6 +94,7 @@ class JiveAWSRecordingBucket(models.Model):
         self.save()
         log.info(f"Saved recording bucket info to the database with self.__dict__={self.__dict__}")
 
+        # Do not save off the secret key, only return it
         return {"aws_bucket_name": self.bucket_name, "aws_access_key": self.access_key_id, "aws_secret_access_key": access_key.SecretAccessKey}
 
     def delete_credentials(self):
