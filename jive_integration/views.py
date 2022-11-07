@@ -331,19 +331,11 @@ def authentication_callback(request: Request):
     return HttpResponse(status=204)
 
 
-class JiveConnectionViewSet(viewsets.ViewSet):
+class JiveConnectionViewSet(viewsets.ModelViewSet):
+    queryset = JiveConnection.objects.all().order_by("-modified_at")
+    serializer_class = JiveConnectionSerializer
+    filter_fields = ["practice_telecom", "active"]
     permission_classes = [IsAdminUser]
-
-    def list(self, request):
-        queryset = JiveConnection.objects.all()
-        serializer = JiveConnectionSerializer(queryset, many=True)
-        return Response(serializer.data)
-
-    def retrieve(self, request, pk=None):
-        queryset = JiveConnection.objects.all()
-        connection = get_object_or_404(queryset, pk=pk)
-        serializer = JiveConnectionSerializer(connection)
-        return Response(serializer.data)
 
 
 def does_practice_of_user_own_connection(connection_id: str, user: User) -> bool:
