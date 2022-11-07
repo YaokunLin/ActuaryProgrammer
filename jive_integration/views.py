@@ -400,7 +400,7 @@ class JiveAWSRecordingBucketViewSet(viewsets.ViewSet):
         response_data = bucket.generate_credentials()
         log.info(f"Created credentials for JiveAWSRecordingBucket with pk='{pk}'")
 
-        return Response(status=status.HTTP_200_OK, data=response_data)
+        return Response(status=status.HTTP_201_CREATED, data=response_data)
 
 
 @api_view(["GET"])

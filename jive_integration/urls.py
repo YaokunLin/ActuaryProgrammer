@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import include, path
 from rest_framework_nested import routers
 
 from jive_integration.views import (
@@ -14,11 +14,9 @@ from jive_integration.views import (
 app_name = "jive_integration"
 
 jive_integration_root_router = routers.SimpleRouter()
-
-jive_integration_root_router.register(r"connections", JiveConnectionViewSet, base_name="jive-connections")
+jive_integration_root_router.register(r"connections", JiveConnectionViewSet, basename="jive-connections")
 
 connection_router = routers.NestedSimpleRouter(jive_integration_root_router, r"connections", lookup="connection")
-
 connection_router.register(r"recording-buckets", JiveAWSRecordingBucketViewSet, basename="connection-recording-buckets")
 
 urlpatterns = [
@@ -27,4 +25,7 @@ urlpatterns = [
     path("auth/callback", authentication_callback, name="authentication-callback"),
     path("webhook", webhook, name="webhook-receiver"),
     path("cron", cron, name="cron"),
+    # Routers
+    path(r"", include(jive_integration_root_router.urls)),
+    path(r"", include(connection_router.urls)),
 ]
