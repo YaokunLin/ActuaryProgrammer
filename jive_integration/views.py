@@ -33,7 +33,7 @@ from calls.models import Call, CallPartial
 from calls.serializers import CallSerializer
 from core.field_choices import VoipProviderIntegrationTypes
 from core.models import Agent, PracticeTelecom, User
-from core.validation import get_practice_telecom_ids_belonging_to_user, get_validated_practice_telecom
+from core.validation import get_practice_telecoms_belonging_to_user, get_validated_practice_telecom
 from jive_integration.jive_client.client import JiveClient, Line
 from jive_integration.models import (
     JiveAWSRecordingBucket,
@@ -340,7 +340,7 @@ class JiveConnectionViewSet(viewsets.ModelViewSet):
 
 def does_practice_of_user_own_connection(connection_id: str, user: User) -> bool:
     connection = JiveConnection.objects.get(pk=connection_id)
-    return get_practice_telecom_ids_belonging_to_user(user).filter(id=connection.practice_telecom.id).exists()
+    return get_practice_telecoms_belonging_to_user(user).filter(id=connection.practice_telecom.id).exists()
 
 
 class JiveAWSRecordingBucketViewSet(viewsets.ViewSet):
@@ -351,7 +351,7 @@ class JiveAWSRecordingBucketViewSet(viewsets.ViewSet):
             buckets_qs = JiveAWSRecordingBucket.objects.all()
         elif self.request.method in SAFE_METHODS:
             # Can see any practice's buckets if you are an assigned agent to a practice
-            practice_telecom_ids = get_practice_telecom_ids_belonging_to_user(user=self.request.user)
+            practice_telecom_ids = get_practice_telecoms_belonging_to_user(user=self.request.user)
             buckets_qs = JiveAWSRecordingBucket.objects.filter(connection__practice_telecom__id__in=practice_telecom_ids)
         return buckets_qs.filter(connection_id=self.kwargs.get("connection_pk")).order_by("-modified_at")
 

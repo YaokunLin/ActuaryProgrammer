@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 
 from django.conf import settings
+from django.db import models
 
 from core.models import Agent, PracticeTelecom, User
 
@@ -80,6 +81,6 @@ def get_validated_practice_telecom(voip_provider__integration_type: str, email: 
     return practice_telecom, None
 
 
-def get_practice_telecom_ids_belonging_to_user(user: User) -> List[str]:
+def get_practice_telecoms_belonging_to_user(user: User) -> models.QuerySet[PracticeTelecom]:
     practice_ids = Agent.objects.filter(user=user).values_list("practice_id", flat=True)
     return PracticeTelecom.objects.filter(practice__id__in=practice_ids)
