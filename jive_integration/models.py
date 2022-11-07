@@ -48,7 +48,7 @@ class JiveAWSRecordingBucket(models.Model):
         # * buckets must be 63 characters or less
         # * usernames must be 64 characters or less
         # we only have room for 2 ids each 22 characters for a total of 50 chars
-        return f"jive-{self.id}-{self.connection.practice_telecom.practice.id}"
+        return f"jive-{self.connection.practice_telecom.practice.id}-{self.id}"
 
     def generate_aws_bucket_name(self) -> str:
         """
