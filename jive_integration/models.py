@@ -1,9 +1,16 @@
 from datetime import datetime
+import logging
+from typing import Dict
+from django.conf import settings
 
 from django.db import models
 from django_extensions.db.fields import ShortUUIDField
 
 from core.abstract_models import AuditTrailModel
+from core.aws_iam_helpers import attach_user_policy, create_access_key, create_user, create_writeonly_iam_policy_for_bucket
+from core.aws_s3_helpers import create_bucket
+
+log = logging.getLogger(__name__)
 
 
 class JiveConnection(AuditTrailModel):
@@ -31,6 +38,20 @@ class JiveAWSRecordingBucket(models.Model):
     @property
     def aws_short_resource_name(self) -> str:
         """
+        Used for all resources in aws related to this model to refer back to this model
+
+        Use jive, then ID at beginning and then normal domain heirarchy employed
+        by the dependency flow for ease
+        This is for easy searchability within the S3 and IAM consoles
+        """
+
+        # * buckets must be 63 characters or less
+        # * usernames must be 64 characters or less
+        # we only have room for 2 ids each 22 characters for a total of 50 chars
+        return f"jive-{self.connection.practice_telecom.practice.id}-{self.id}"
+
+    def generate_aws_bucket_name(self) -> str:
+        """
         Used for nearly everything in aws to refer back to this model in our database
 
         Use jive, then ID at beginning and then normal domain heirarchy employed
@@ -38,8 +59,9 @@ class JiveAWSRecordingBucket(models.Model):
         This is for easy searchability within the S3 and IAM consoles
         """
 
+        # must be lowercase
         # must be 63 characters or less - only have room for 2 ids each 22 characters for a total of 50 chars
-        return f"jive-{self.id}-{self.connection.practice_telecom.practice.id}"
+        return self.aws_short_resource_name.lower()
 
     @property
     def aws_long_resource_name(self) -> str:
@@ -52,6 +74,42 @@ class JiveAWSRecordingBucket(models.Model):
         """
 
         return f"jive-{self.id}-{self.connection.id}-{self.connection.practice_telecom.id}-{self.connection.practice_telecom.practice.id}"
+
+    def create_bucket(self) -> str:
+        """Burn in the bucket name"""
+        bucket_name = self.generate_aws_bucket_name()
+        create_bucket(bucket_name=bucket_name)
+        self.bucket_name = bucket_name
+        self.save()
+
+    def generate_credentials(self) -> Dict[str, str]:
+        user = create_user(username=self.aws_short_resource_name)
+        self.username = user.UserName
+        policy = create_writeonly_iam_policy_for_bucket(policy_name=self.aws_long_resource_name, bucket_name=self.bucket_name)
+        self.policy_arn = policy.Arn
+        attach_user_policy(policy_arn=self.policy_arn, username=self.username)
+        access_key = create_access_key(username=self.username)
+        self.access_key_id = access_key.AccessKeyId
+        log.info(f"Saving recording bucket info to the database with self.__dict__={self.__dict__}")
+        self.save()
+        log.info(f"Saved recording bucket info to the database with self.__dict__={self.__dict__}")
+
+        # Do not save off the secret key, only return it
+        return {"aws_bucket_name": self.bucket_name, "aws_access_key": self.access_key_id, "aws_secret_access_key": access_key.SecretAccessKey}
+
+    def delete_credentials(self):
+        """TODO: implement for cleanup
+        Detach Policy
+        Delete Policy
+        Delete Access Key
+        Delete User
+        """
+
+        pass
+
+    def regenerate_credentials(self):
+        """TODO: implement for inevitable issues"""
+        pass
 
 
 class JiveChannel(models.Model):
