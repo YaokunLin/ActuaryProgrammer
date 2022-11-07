@@ -384,6 +384,9 @@ class JiveAWSRecordingBucketViewSet(viewsets.ViewSet):
         bucket.create_bucket()
         log.info(f"Jive: Created JiveAWSRecordingBucket with id='{bucket.id}' connection='{connection_pk}")
 
+        serializer = JiveAWSRecordingBucketSerializer(bucket)
+        return Response(status=status.HTTP_201_CREATED, data=serializer.data)
+
     @action(detail=True, methods=["post"])
     def bucket_credentials(self, request, connection_pk=None, pk=None):
         if not does_practice_of_user_own_connection(connection_id=connection_pk, user=request.user):
