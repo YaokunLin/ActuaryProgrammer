@@ -161,6 +161,7 @@ class JiveClient:
         """
         self.__auth.exchange_code(code, request_uri)
 
+    # ToDo: Verify changing lifetime from 518400 to 2147483647 works and properly sets the channelLifetime in GoTo
     def create_webhook_channel(self, connection: JiveConnection, webhook_url: str, lifetime: int = 2147483647) -> JiveChannel:
         """
         Create a record for the intended channel and request the channel from the Jive API.  If the request fails
