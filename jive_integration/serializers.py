@@ -24,8 +24,19 @@ class JiveConnectionSerializer(serializers.ModelSerializer):
 class JiveAWSRecordingBucketSerializer(serializers.ModelSerializer):
     class Meta:
         model = JiveAWSRecordingBucket
-        read_only_fields = ["id", "connection", "access_key_id", "username", "policy_arn"]
-        fields = ["id", "connection", "access_key_id", "username", "policy_arn"]
+        read_only_fields = [
+            "id",
+            "created_by",
+            "created_at",
+            "modified_by",
+            "modified_at",
+            "connection",
+            "access_key_id",
+            "username",
+            "policy_arn",
+            "bucket_name",
+        ]
+        fields = ["id", "connection", "access_key_id", "username", "policy_arn", "bucket_name"]
 
 
 class JiveSubscriptionEventExtractSerializer(serializers.ModelSerializer):

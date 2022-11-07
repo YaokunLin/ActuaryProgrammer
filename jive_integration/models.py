@@ -28,9 +28,10 @@ class JiveConnection(AuditTrailModel):
     active = models.BooleanField(default=True)
 
 
-class JiveAWSRecordingBucket(models.Model):
+class JiveAWSRecordingBucket(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     connection = models.ForeignKey(JiveConnection, on_delete=models.CASCADE)
+    bucket_name = models.CharField(blank=True, unique=True, max_length=63)  # https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html
     access_key_id = models.CharField(blank=True, unique=True, max_length=128)  # https://docs.aws.amazon.com/IAM/latest/APIReference/API_AccessKey.html
     username = models.CharField(blank=True, unique=True, max_length=64)  # https://docs.aws.amazon.com/IAM/latest/APIReference/API_User.html
     policy_arn = models.CharField(blank=True, unique=True, max_length=2048)  # https://docs.aws.amazon.com/IAM/latest/APIReference/API_Policy.html

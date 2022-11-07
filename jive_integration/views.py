@@ -339,9 +339,8 @@ class JiveConnectionViewSet(viewsets.ModelViewSet):
 
 
 def does_practice_of_user_own_connection(connection_id: str, user: User) -> bool:
-    practice_telecom_ids = get_practice_telecom_ids_belonging_to_user(user)
     connection = JiveConnection.objects.get(pk=connection_id)
-    return connection.practice_telecom in practice_telecom_ids
+    return get_practice_telecom_ids_belonging_to_user(user).filter(id=connection.practice_telecom.id).exists()
 
 
 class JiveAWSRecordingBucketViewSet(viewsets.ViewSet):
@@ -356,19 +355,21 @@ class JiveAWSRecordingBucketViewSet(viewsets.ViewSet):
             buckets_qs = JiveAWSRecordingBucket.objects.filter(connection__practice_telecom__id__in=practice_telecom_ids)
         return buckets_qs.filter(connection_id=self.kwargs.get("connection_pk")).order_by("-modified_at")
 
-    def list(self, request):
-        queryset = self.get_queryset()
+    def list(self, request, connection_pk=None):
+        queryset = self.get_queryset().filter(connection_id=connection_pk)
         serializer = JiveAWSRecordingBucketSerializer(queryset, many=True)
         return Response(serializer.data)
 
     def retrieve(self, request, connection_pk=None, pk=None):
-        queryset = self.get_queryset()
+        queryset = self.get_queryset().filter(connection_id=connection_pk)
         connection = get_object_or_404(queryset, pk=pk)
         serializer = JiveAWSRecordingBucketSerializer(connection)
         return Response(serializer.data)
 
     def create(self, request, connection_pk=None):
-        if not does_practice_of_user_own_connection(connection_id=connection_pk, user=request.user):
+        if not (self.request.user.is_staff or self.request.user.is_superuser) and not does_practice_of_user_own_connection(
+            connection_id=connection_pk, user=request.user
+        ):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         log.info(f"Jive: Creating JiveAWSRecordingBucket for connection='{connection_pk}")
@@ -381,7 +382,9 @@ class JiveAWSRecordingBucketViewSet(viewsets.ViewSet):
 
     @action(detail=True, methods=["post"])
     def bucket_credentials(self, request, connection_pk=None, pk=None):
-        if not does_practice_of_user_own_connection(connection_id=connection_pk, user=request.user):
+        if not (self.request.user.is_staff or self.request.user.is_superuser) and not does_practice_of_user_own_connection(
+            connection_id=connection_pk, user=request.user
+        ):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         log.info(f"Getting JiveAWSRecordingBucket from database with pk='{pk}'")

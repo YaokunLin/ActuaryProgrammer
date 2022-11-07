@@ -82,4 +82,4 @@ def get_validated_practice_telecom(voip_provider__integration_type: str, email: 
 
 def get_practice_telecom_ids_belonging_to_user(user: User) -> List[str]:
     practice_ids = Agent.objects.filter(user=user).values_list("practice_id", flat=True)
-    return PracticeTelecom.objects.filter(practice__id__in=practice_ids).values_list("practice_telecom_id", flat=True)
+    return PracticeTelecom.objects.filter(practice__id__in=practice_ids)
