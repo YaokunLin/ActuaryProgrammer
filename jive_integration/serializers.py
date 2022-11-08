@@ -5,9 +5,12 @@ from typing import Dict
 
 from rest_framework import serializers
 
-
 from core.serializers import UnixEpochDateField
-from jive_integration.models import JiveConnection, JiveSubscriptionEventExtract, JiveAWSRecordingBucket
+from jive_integration.models import (
+    JiveAWSRecordingBucket,
+    JiveConnection,
+    JiveSubscriptionEventExtract,
+)
 
 log = logging.getLogger(__name__)
 
