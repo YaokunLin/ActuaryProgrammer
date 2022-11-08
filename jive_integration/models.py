@@ -7,7 +7,7 @@ from django.db import models
 from django_extensions.db.fields import ShortUUIDField
 
 from core.abstract_models import AuditTrailModel
-from core.aws_iam_helpers import attach_user_policy, create_access_key, create_user, create_writeonly_iam_policy_for_bucket
+from core.aws_iam_helpers import attach_user_policy, create_access_key, create_user, create_call_recording_iam_policy_for_bucket
 from core.aws_s3_helpers import create_bucket
 
 log = logging.getLogger(__name__)
@@ -86,7 +86,7 @@ class JiveAWSRecordingBucket(AuditTrailModel):
     def generate_credentials(self) -> Dict[str, str]:
         user = create_user(username=self.aws_short_resource_name)
         self.username = user.UserName
-        policy = create_writeonly_iam_policy_for_bucket(policy_name=self.aws_long_resource_name, bucket_name=self.bucket_name)
+        policy = create_call_recording_iam_policy_for_bucket(policy_name=self.aws_long_resource_name, bucket_name=self.bucket_name)
         self.policy_arn = policy.Arn
         attach_user_policy(policy_arn=self.policy_arn, username=self.username)
         access_key = create_access_key(username=self.username)
