@@ -1,5 +1,6 @@
 import logging
 import re
+from concurrent import futures
 from typing import Dict, List, Union
 
 from django.conf import settings
@@ -8,10 +9,11 @@ from django.http import Http404, HttpResponseBadRequest
 from django_filters.rest_framework import (
     DjangoFilterBackend,  # brought in for a backend filter override
 )
-from google.api_core.exceptions import PermissionDenied
+from google.api_core.exceptions import PermissionDenied as GooglePermissionDenied
 from phonenumber_field.modelfields import to_python as to_phone_number
 from rest_framework import status, views, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import (
     OrderingFilter,  # brought in for a backend filter override
 )
@@ -38,6 +40,7 @@ from calls.twilio_etl import (
     get_caller_name_info_from_twilio,
     update_telecom_caller_name_info_with_twilio_data_for_valid_sections,
 )
+from calls.validation import get_validated_query_param_bool
 from core.file_upload import FileToUpload
 from core.models import Agent
 
@@ -198,7 +201,7 @@ class CallAudioViewset(viewsets.ModelViewSet):
         # TODO: figure out how to detect errors from error handler and respond with 403
         # ideally without slow-downs
         # most common error is the following when first getting started
-        # PermissionDenied - Must add role 'roles/pubsub.publisher'
+        # GooglePermissionDenied - Must add role 'roles/pubsub.publisher'
         return Response(status=status.HTTP_200_OK, data={"status": "published"})
 
     def data_is_valid(self, files: List) -> Union[FileToUpload, Dict]:
@@ -266,7 +269,7 @@ class CallAudioViewset(viewsets.ModelViewSet):
             log.info(f"Publishing call audio saved events for: call_audio_id: '{call_audio.pk}'")
             publish_call_audio_saved(call_id=call_pk, call_audio_id=call_audio.pk)
             log.info(f"Published call audio saved events for: call_audio_id: '{call_audio.pk}'")
-        except PermissionDenied:
+        except GooglePermissionDenied:
             message = "Must add role 'roles/pubsub.publisher'. Exiting."
             log.exception(message)
             return Response(status=status.HTTP_403_FORBIDDEN, data={"error": message})
@@ -383,7 +386,7 @@ class CallTranscriptViewset(viewsets.ModelViewSet):
             log.info(f"Publishing call transcript ready events for: call_transcript_id: '{call_transcript.pk}'")
             publish_call_transcript_saved(call_id=call_pk, call_transcript_id=call_transcript.pk)
             log.info(f"Published call transcript ready events for: call_transcript_id: '{call_transcript.pk}'")
-        except PermissionDenied:
+        except GooglePermissionDenied:
             message = "Must add role 'roles/pubsub.publisher'. Exiting."
             log.exception(message)
             return Response(status=status.HTTP_403_FORBIDDEN, data={"error": message})
@@ -484,7 +487,7 @@ class CallAudioPartialViewset(viewsets.ModelViewSet):
             publish_call_audio_partial_saved(call_id=call_pk, partial_id=call_partial_pk, audio_partial_id=pk)
             log.info(f"Republished call audio partial ready events for: call_audio_partial_id: '{pk}'")
             return Response(status=status.HTTP_200_OK, data={"status": "published"})
-        except PermissionDenied:
+        except GooglePermissionDenied:
             message = "Must add role 'roles/pubsub.publisher'. Exiting."
             log.exception(message)
             return Response(status=status.HTTP_403_FORBIDDEN, data={"error": message})
@@ -557,7 +560,7 @@ class CallAudioPartialViewset(viewsets.ModelViewSet):
             log.info(f"Publishing call audio partial ready events for: call_audio_partial_id: '{call_audio_partial.id}'")
             publish_call_audio_partial_saved(call_id=call_pk, partial_id=call_partial_pk, audio_partial_id=call_audio_partial.id)
             log.info(f"Published call audio partial ready events for: call_audio_partial_id: '{call_audio_partial.id}'")
-        except PermissionDenied:
+        except GooglePermissionDenied:
             message = "Must add role 'roles/pubsub.publisher'. Exiting."
             log.exception(message)
             return Response(status=status.HTTP_403_FORBIDDEN, data={"error": message})
@@ -594,6 +597,44 @@ class CallNoteViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return super().get_queryset().filter(call=self.kwargs.get("call_pk"))
+
+
+class CallsReprocessingView(views.APIView):
+    def post(self, request: Request) -> Response:
+        if not self.request.user.is_staff and not self.request.user.is_superuser:
+            raise PermissionDenied()
+
+        calls_qs = CallSerializer.apply_queryset_prefetches(Call.objects.all())
+
+        should_commit = get_validated_query_param_bool(request, "commit", False)
+
+        filter = CallsFilter(request=request, data=request.query_params)
+        is_valid = filter.is_valid()
+        if not is_valid:
+            return Response(data={"errors": filter.errors}, status=400)
+
+        calls_qs = filter.filter_queryset(queryset=calls_qs)
+        transcripts_to_reprocess = (
+            CallTranscript.objects.filter(
+                call_id__in=calls_qs.values_list("id", flat=True).distinct(),
+                transcript_type=TranscriptTypes.FULL_TEXT,
+            )
+            .order_by("call_id", "-created_at")
+            .distinct("call_id")
+            .values_list("call_id", "id")
+        )
+
+        if should_commit:
+            publish_futures = []
+            for call_id, transcript_id in transcripts_to_reprocess:
+                log.info("Publishing call transcript ready events for call_id: %s, transcript_id: %s", call_id, transcript_id)
+                publish_futures.append(publish_call_transcript_saved(call_id=call_id, call_transcript_id=transcript_id))
+            if publish_futures:
+                futures.wait(publish_futures, return_when=futures.ALL_COMPLETED)
+                log.info("Successfully published all call transcript ready events")
+
+        data = {"calls_to_reprocess": len(transcripts_to_reprocess), "committed": should_commit}
+        return Response(data)
 
 
 class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):

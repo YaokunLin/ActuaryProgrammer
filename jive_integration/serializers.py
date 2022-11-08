@@ -5,13 +5,41 @@ from typing import Dict
 
 from rest_framework import serializers
 
-
 from core.serializers import UnixEpochDateField
-from jive_integration.models import JiveSubscriptionEventExtract
+from jive_integration.models import (
+    JiveAWSRecordingBucket,
+    JiveConnection,
+    JiveSubscriptionEventExtract,
+)
 
 log = logging.getLogger(__name__)
 
 CAMELCASE_REGEX_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
+
+
+class JiveConnectionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = JiveConnection
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "last_sync"]
+        fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "practice_telecom", "last_sync", "active"]
+
+
+class JiveAWSRecordingBucketSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = JiveAWSRecordingBucket
+        read_only_fields = [
+            "id",
+            "created_by",
+            "created_at",
+            "modified_by",
+            "modified_at",
+            "connection",
+            "access_key_id",
+            "username",
+            "policy_arn",
+            "bucket_name",
+        ]
+        fields = ["id", "connection", "access_key_id", "username", "policy_arn", "bucket_name"]
 
 
 class JiveSubscriptionEventExtractSerializer(serializers.ModelSerializer):
