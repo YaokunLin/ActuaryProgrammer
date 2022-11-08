@@ -4,11 +4,11 @@ from rest_framework_nested import routers
 from jive_integration.views import (
     JiveAWSRecordingBucketViewSet,
     JiveConnectionViewSet,
-    webhook,
-    cron,
     authentication_callback,
-    authentication_connect_url,
     authentication_connect,
+    authentication_connect_url,
+    cron,
+    webhook,
 )
 
 app_name = "jive_integration"
