@@ -1,11 +1,12 @@
 import logging
 import time
 from datetime import datetime, timedelta
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from django.conf import settings
+from django.db import models
 
-from core.models import PracticeTelecom
+from core.models import Agent, PracticeTelecom, User
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -78,3 +79,8 @@ def get_validated_practice_telecom(voip_provider__integration_type: str, email: 
         return None, invalid_error
 
     return practice_telecom, None
+
+
+def get_practice_telecoms_belonging_to_user(user: User) -> models.QuerySet[PracticeTelecom]:
+    practice_ids = Agent.objects.filter(user=user).values_list("practice_id", flat=True)
+    return PracticeTelecom.objects.filter(practice__id__in=practice_ids)

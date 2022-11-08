@@ -1,37 +1,56 @@
 import base64
-from contextlib import suppress
 import json
 import logging
+from contextlib import suppress
 from datetime import datetime, timedelta
-from typing import Dict, Optional, Set
+from typing import Dict, List, Optional, Set
+from urllib.parse import urlencode, urlparse
 
 import dateutil.parser
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseRedirect
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
-
-from rest_framework.decorators import api_view, authentication_classes, permission_classes, renderer_classes
-from rest_framework.permissions import AllowAny
-from rest_framework import status
-from rest_framework.serializers import ValidationError
+from rest_framework import status, viewsets
+from rest_framework.decorators import (
+    action,
+    api_view,
+    authentication_classes,
+    permission_classes,
+    renderer_classes,
+)
+from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAdminUser
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.serializers import ValidationError
 
-from calls.field_choices import CallConnectionTypes, CallDirectionTypes, SupportedAudioMimeTypes, CallAudioFileStatusTypes
-from calls.models import Call, CallPartial, CallAudioPartial
+from calls.field_choices import (
+    CallConnectionTypes,
+    CallDirectionTypes,
+)
+from calls.models import Call, CallPartial
 from calls.serializers import CallSerializer
 from core.field_choices import VoipProviderIntegrationTypes
-from core.validation import get_validated_practice_telecom
+from core.models import Agent, PracticeTelecom, User
+from core.validation import get_practice_telecoms_belonging_to_user, get_validated_practice_telecom
 from jive_integration.jive_client.client import JiveClient, Line
+from jive_integration.models import (
+    JiveAWSRecordingBucket,
+    JiveChannel,
+    JiveConnection,
+    JiveLine,
+    JiveSession,
+)
 from jive_integration.publishers import publish_leg_b_ready_event
-from jive_integration.serializers import JiveSubscriptionEventExtractSerializer
-from jive_integration.models import JiveConnection, JiveLine, JiveChannel, JiveSession
+from jive_integration.serializers import (
+    JiveAWSRecordingBucketSerializer,
+    JiveConnectionSerializer,
+    JiveSubscriptionEventExtractSerializer,
+)
 from jive_integration.utils import (
     create_peerlogic_call,
-    get_call_id_from_previous_announce_event,
     get_call_id_from_previous_announce_events_by_originator_id,
-    get_subscription_event_from_previous_announce_event,
 )
 from peerlogic.settings import JIVE_CONNECTION_REFRESH_INTERVAL_IN_HOURS
 
@@ -306,8 +325,77 @@ def authentication_callback(request: Request):
     connection.save()
     log.info(f"Jive: Saved JiveConnection to the database with id='{connection.id}'.")
 
+    query_string_to_append_to_redirect_url = {"connection_id": connection.id}
     # TODO: redirect them back to the application - need to know what route though
+    # return redirect(urlencode(query_string_to_append_to_redirect_url))
     return HttpResponse(status=204)
+
+
+class JiveConnectionViewSet(viewsets.ModelViewSet):
+    queryset = JiveConnection.objects.all().order_by("-modified_at")
+    serializer_class = JiveConnectionSerializer
+    filter_fields = ["practice_telecom", "active"]
+    permission_classes = [IsAdminUser]
+
+
+def does_practice_of_user_own_connection(connection_id: str, user: User) -> bool:
+    connection = JiveConnection.objects.get(pk=connection_id)
+    return get_practice_telecoms_belonging_to_user(user).filter(id=connection.practice_telecom.id).exists()
+
+
+class JiveAWSRecordingBucketViewSet(viewsets.ViewSet):
+    def get_queryset(self):
+        buckets_qs = JiveAWSRecordingBucket.objects.none()
+
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            buckets_qs = JiveAWSRecordingBucket.objects.all()
+        elif self.request.method in SAFE_METHODS:
+            # Can see any practice's buckets if you are an assigned agent to a practice
+            practice_telecom_ids = get_practice_telecoms_belonging_to_user(user=self.request.user)
+            buckets_qs = JiveAWSRecordingBucket.objects.filter(connection__practice_telecom__id__in=practice_telecom_ids)
+        return buckets_qs.filter(connection_id=self.kwargs.get("connection_pk")).order_by("-modified_at")
+
+    def list(self, request, connection_pk=None):
+        queryset = self.get_queryset().filter(connection_id=connection_pk)
+        serializer = JiveAWSRecordingBucketSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def retrieve(self, request, connection_pk=None, pk=None):
+        queryset = self.get_queryset().filter(connection_id=connection_pk)
+        connection = get_object_or_404(queryset, pk=pk)
+        serializer = JiveAWSRecordingBucketSerializer(connection)
+        return Response(serializer.data)
+
+    def create(self, request, connection_pk=None):
+        if not (self.request.user.is_staff or self.request.user.is_superuser) and not does_practice_of_user_own_connection(
+            connection_id=connection_pk, user=request.user
+        ):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        log.info(f"Jive: Creating JiveAWSRecordingBucket for connection='{connection_pk}")
+        bucket = JiveAWSRecordingBucket.objects.create(connection_id=connection_pk)
+        bucket.create_bucket()
+        log.info(f"Jive: Created JiveAWSRecordingBucket with id='{bucket.id}' connection='{connection_pk}")
+
+        serializer = JiveAWSRecordingBucketSerializer(bucket)
+        return Response(status=status.HTTP_201_CREATED, data=serializer.data)
+
+    @action(detail=True, methods=["post"])
+    def bucket_credentials(self, request, connection_pk=None, pk=None):
+        if not (self.request.user.is_staff or self.request.user.is_superuser) and not does_practice_of_user_own_connection(
+            connection_id=connection_pk, user=request.user
+        ):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        log.info(f"Getting JiveAWSRecordingBucket from database with pk='{pk}'")
+        bucket = JiveAWSRecordingBucket.objects.get(pk=pk)
+        log.info(f"Got JiveAWSRecordingBucket from database with pk='{pk}'")
+
+        log.info(f"Creating credentials for JiveAWSRecordingBucket with pk='{pk}'")
+        response_data = bucket.generate_credentials()
+        log.info(f"Created credentials for JiveAWSRecordingBucket with pk='{pk}'")
+
+        return Response(status=status.HTTP_201_CREATED, data=response_data)
 
 
 @api_view(["GET"])
