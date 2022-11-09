@@ -20,8 +20,16 @@ class JiveConnection(AuditTrailModel):
     """
 
     id = ShortUUIDField(primary_key=True, editable=False)
-
+    # token_type = "Bearer"
     refresh_token = models.TextField(blank=True)
+    scope = models.TextField(blank=True)
+    # firstName
+    # lastName
+    account_key = models.CharField(max_length=20, blank=True)
+    organizer_key = models.CharField(max_length=20, blank=True)
+    # version
+    # account_type
+    email = models.TextField(blank=True) # is the user principal (email) with super admin priviledges
     practice_telecom = models.ForeignKey("core.PracticeTelecom", null=True, on_delete=models.SET_NULL)
 
     last_sync = models.DateTimeField(auto_now_add=True)
@@ -30,7 +38,7 @@ class JiveConnection(AuditTrailModel):
 
 class JiveAWSRecordingBucket(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
-    connection = models.ForeignKey(JiveConnection, on_delete=models.CASCADE)
+    connection = models.OneToOneField(JiveConnection, on_delete=models.CASCADE)
     bucket_name = models.CharField(blank=True, unique=True, max_length=63)  # https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html
     access_key_id = models.CharField(blank=True, unique=True, max_length=128)  # https://docs.aws.amazon.com/IAM/latest/APIReference/API_AccessKey.html
     username = models.CharField(blank=True, unique=True, max_length=64)  # https://docs.aws.amazon.com/IAM/latest/APIReference/API_User.html
