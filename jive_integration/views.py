@@ -231,10 +231,11 @@ def webhook(request):
                 jive_call_subscription_id=source_jive_id,
                 voip_provider_id=voip_provider_id,
                 event={
-                    "jive_entity_id": jive_originator_id,  # TODO: dependency to use originator_id in downstream CF
+                    "jive_originator_id": jive_originator_id,
                     "peerlogic_call_id": peerlogic_call.id,
                     "peerlogic_call_partial_id": cp.id,
                     "filename": filename_encoded,
+                    "bucket_name": filename_encoded,
                 },
             )
 
