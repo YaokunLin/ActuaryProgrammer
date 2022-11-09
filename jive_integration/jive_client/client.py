@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 
 import requests
-from django.conf import settings
 from django.utils import timezone
 from requests.auth import AuthBase, HTTPBasicAuth
 
@@ -120,6 +119,9 @@ class _Authentication(AuthBase):
 
         try:
             self._access_token: str = body["access_token"]
+            self._account_key: str = body.get("account_key")
+            self._organizer_key: str = body.get("organizer_key")
+            self._scope: str = body.get("scope")
             self._principal: Optional[str] = body.get("principal")  # email address associated to the account
             self._refresh_token: str = body["refresh_token"]
             self.__token_expires_at: float = (datetime.utcnow() + timedelta(seconds=body["expires_in"])).timestamp()
