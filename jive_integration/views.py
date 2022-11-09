@@ -23,6 +23,7 @@ from calls.models import Call, CallPartial, CallAudioPartial
 from calls.serializers import CallSerializer
 from core.field_choices import VoipProviderIntegrationTypes
 from core.validation import get_validated_practice_telecom
+from jive_integration.field_choices import JiveEventTypes
 from jive_integration.jive_client.client import JiveClient, Line
 from jive_integration.publishers import publish_leg_b_ready_event
 from jive_integration.serializers import JiveSubscriptionEventExtractSerializer
@@ -32,6 +33,8 @@ from jive_integration.utils import (
     get_call_id_from_previous_announce_event,
     get_call_id_from_previous_announce_events_by_originator_id,
     get_subscription_event_from_previous_announce_event,
+    calculate_connect_duration,
+    calculate_progress_time,
 )
 from peerlogic.settings import JIVE_CONNECTION_REFRESH_INTERVAL_IN_HOURS
 
@@ -101,6 +104,7 @@ def webhook(request):
     source_jive_id = content.get("subId")
     source_organization_jive_id = jive_request_data_key_value_pair.get("originatorOrganizationId")
     log.info(f"Jive: Checking we have a JiveLine with originatorOrganizationId='{source_organization_jive_id}'")
+    # TODO: Validate the webhook is active. Put this in a try/catch as well to handle exception
     line: JiveLine = JiveLine.objects.filter(source_organization_jive_id=source_organization_jive_id).first()
     log.info(f"Jive: JiveLine found with originatorOrganizationId='{source_organization_jive_id}'")
 
@@ -109,7 +113,7 @@ def webhook(request):
 
     # TODO: jive_event_type should be a field choice type - will check these when we have documentation for understanding the options
     jive_event_type = content.get("type")
-    if jive_event_type == "announce":
+    if jive_event_type == JiveEventTypes.ANNOUNCE:
         log.info("Jive: Received jive announce event.")
         peerlogic_call = None
 
@@ -135,14 +139,14 @@ def webhook(request):
         subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
         subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
 
-    elif jive_event_type == "replace":
+    elif jive_event_type == JiveEventTypes.REPLACE:
         log.info("Jive: Received jive replace event.")
         call_id = get_call_id_from_previous_announce_events_by_originator_id(jive_originator_id)
         subscription_event_data.update({"peerlogic_call_id": call_id})
         subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
         subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
 
-    elif jive_event_type == "withdraw":
+    elif jive_event_type == JiveEventTypes.WITHDRAW:
         log.info("Jive: Received jive withdraw event.")
 
         call_id = get_call_id_from_previous_announce_events_by_originator_id(jive_originator_id)
@@ -154,17 +158,23 @@ def webhook(request):
         recording_count = len(jive_request_data_key_value_pair.get("recordings", []))
         log.info(f"Jive: Found {recording_count} recordings.")
 
+        log.info("Jive: Updating Peerlogic call end time and duration.")
+        peerlogic_call = Call.objects.get(pk=call_id)
+        peerlogic_call.call_end_time = end_time
+        peerlogic_call.duration_seconds = peerlogic_call.call_end_time - peerlogic_call.call_start_time
+        peerlogic_call.connect_duration_seconds = calculate_connect_duration(jive_originator_id)
+        peerlogic_call.progress_time_seconds = calculate_progress_time(jive_originator_id)
+
         if recording_count == 0:
             # TODO: call Jive API to see if there is a corresponding Voicemail
-            log.info("Jive: Updating Peerlogic call end time and duration.")
-            peerlogic_call = Call.objects.get(pk=call_id)
-            peerlogic_call.call_end_time = end_time
-            peerlogic_call.duration_seconds = peerlogic_call.call_end_time - peerlogic_call.call_start_time
             peerlogic_call.call_connection = CallConnectionTypes.MISSED
-            peerlogic_call.save()
-            log.info(
-                f"Jive: Updated Peerlogic call with the following fields: peerlogic_call.call_connection='{peerlogic_call.call_connection}', peerlogic_call.call_end_time='{peerlogic_call.call_end_time}', peerlogic_call.duration_seconds='{peerlogic_call.duration_seconds}'"
-            )
+        else:
+            peerlogic_call.call_connection = CallConnectionTypes.CONNECTED
+        
+        peerlogic_call.save()
+        log.info(
+            f"Jive: Updated Peerlogic call with the following fields: peerlogic_call.call_connection='{peerlogic_call.call_connection}', peerlogic_call.call_end_time='{peerlogic_call.call_end_time}', peerlogic_call.duration_seconds='{peerlogic_call.duration_seconds}'"
+        )
 
         recordings = []
         for recording in jive_request_data_key_value_pair.get("recordings", []):
@@ -180,16 +190,6 @@ def webhook(request):
             ord = recording[0]
             filename = recording[1]
             filename_encoded = recording[2]
-
-            log.info("Jive: Updating Peerlogic call end time and duration.")
-            peerlogic_call = Call.objects.get(pk=call_id)
-            peerlogic_call.call_end_time = end_time
-            peerlogic_call.duration_seconds = peerlogic_call.call_end_time - peerlogic_call.call_start_time
-            peerlogic_call.call_connection = CallConnectionTypes.CONNECTED
-            peerlogic_call.save()
-            log.info(
-                f"Jive: Updated Peerlogic call with the following fields: peerlogic_call.call_connection='{peerlogic_call.call_connection}', peerlogic_call.call_end_time='{peerlogic_call.call_end_time}', peerlogic_call.duration_seconds='{peerlogic_call.duration_seconds}'"
-            )
 
             log.info(
                 f"Jive: Creating Peerlogic CallPartial with peerlogic_call.id='{peerlogic_call.id}',  time_interaction_started='{peerlogic_call.call_start_time}' and time_interaction_ended='{ord}'."
