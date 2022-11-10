@@ -8,7 +8,7 @@ from rest_framework.serializers import ValidationError
 from calls.models import Call
 from calls.serializers import CallSerializer
 from core.models import Practice
-from jive_integration.field_choices import JiveEventTypes, JiveEventState
+from jive_integration.field_choices import JiveEventTypeChoices, JiveLegStateChoices
 from jive_integration.models import JiveConnection, JiveSubscriptionEventExtract
 
 US_TELEPHONE_NUMBER_DIGIT_LENGTH = 10
@@ -77,7 +77,7 @@ def create_peerlogic_call(jive_request_data_key_value_pair: Dict, call_direction
 def get_call_id_from_previous_announce_event(entity_id: str) -> str:
     log.info(f"Jive: Checking if there is a previous subscription event with this entity_id='{entity_id}'.")
     try:
-        return JiveSubscriptionEventExtract.objects.get(jive_type=JiveEventTypes.ANNOUNCE, entity_id=entity_id).peerlogic_call_id
+        return JiveSubscriptionEventExtract.objects.get(jive_type=JiveEventTypeChoices.ANNOUNCE, entity_id=entity_id).peerlogic_call_id
     except JiveSubscriptionEventExtract.DoesNotExist:
         log.info(f"Jive: No JiveSubscriptionEventExtract found with type='announce' and given entity_id='{entity_id}'")
 
@@ -85,7 +85,7 @@ def get_call_id_from_previous_announce_event(entity_id: str) -> str:
 def get_subscription_event_from_previous_announce_event(leg_id: str) -> JiveSubscriptionEventExtract:
     log.info(f"Jive: Checking if there is a previous subscription event with this leg_id='{leg_id}'.")
     try:
-        return JiveSubscriptionEventExtract.objects.get(jive_type=JiveEventTypes.ANNOUNCE, data_leg_id=leg_id)
+        return JiveSubscriptionEventExtract.objects.get(jive_type=JiveEventTypeChoices.ANNOUNCE, data_leg_id=leg_id)
     except JiveSubscriptionEventExtract.DoesNotExist:
         log.info(f"Jive: No JiveSubscriptionEventExtract found with type='announce' and given leg_id='{leg_id}'")
 
@@ -93,7 +93,7 @@ def get_subscription_event_from_previous_announce_event(leg_id: str) -> JiveSubs
 def get_call_id_from_previous_announce_events_by_originator_id(originator_id: str) -> str:
     log.info(f"Jive: Checking if there is a previous subscription event with this originator_id='{originator_id}'.")
     try:
-        event = JiveSubscriptionEventExtract.objects.filter(jive_type=JiveEventTypes.ANNOUNCE, data_originator_id=originator_id).first()
+        event = JiveSubscriptionEventExtract.objects.filter(jive_type=JiveEventTypeChoices.ANNOUNCE, data_originator_id=originator_id).first()
         if event:
             return event.peerlogic_call_id
     except JiveSubscriptionEventExtract.DoesNotExist:
@@ -102,9 +102,9 @@ def get_call_id_from_previous_announce_events_by_originator_id(originator_id: st
 
 def calculate_connect_duration(originator_id: str) -> int:
     # Grab first jive ringing state for the call id
-    ringing_event = JiveSubscriptionEventExtract.objects.filter(data_state=JiveEventState.RINGING, data_originator_id=originator_id).first()
+    ringing_event = JiveSubscriptionEventExtract.objects.filter(data_state=JiveLegStateChoices.RINGING, data_originator_id=originator_id).first()
     # Grab first jive answer state for the call id
-    answered_event = JiveSubscriptionEventExtract.objects.filter(data_state=JiveEventState.ANSWERED, data_originator_id=originator_id).first()
+    answered_event = JiveSubscriptionEventExtract.objects.filter(data_state=JiveLegStateChoices.ANSWERED, data_originator_id=originator_id).first()
     # Subtract the time
     if ringing_event and answered_event:
         return answered_event.data_created - ringing_event.data_created
@@ -113,9 +113,11 @@ def calculate_connect_duration(originator_id: str) -> int:
 
 def calculate_progress_time(originator_id: str) -> int:
     # Grab first jive answer state for the call id
-    answered_event = JiveSubscriptionEventExtract.objects.filter(data_state=JiveEventState.ANSWERED, data_originator_id=originator_id).first()
+    answered_event = JiveSubscriptionEventExtract.objects.filter(data_state=JiveLegStateChoices.ANSWERED, data_originator_id=originator_id).first()
     # Grab last jive hungup state for the call id
-    hungup_event = JiveSubscriptionEventExtract.objects.filter(data_state=JiveEventState.HUNGUP, data_originator_id=originator_id).order_by("-data_created").first()
+    hungup_event = (
+        JiveSubscriptionEventExtract.objects.filter(data_state=JiveLegStateChoices.HUNGUP, data_originator_id=originator_id).order_by("-data_created").first()
+    )
     # Subtract the time
     if hungup_event and answered_event:
         return hungup_event.data_created - answered_event.data_created
