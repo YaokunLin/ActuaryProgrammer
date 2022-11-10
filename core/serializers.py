@@ -1,7 +1,10 @@
 from datetime import datetime
+from django.db.models import Prefetch, QuerySet
 from rest_framework import serializers
 
-from .models import Agent, Client, Patient, Practice, PracticeTelecom, User, VoipProvider
+from core.inline_serializers import InlinePracticeTelecomSerializer, InlineUserSerializer
+
+from core.models import Agent, Client, Patient, Practice, PracticeTelecom, User, VoipProvider
 
 
 class UnixEpochDateField(serializers.DateTimeField):
@@ -33,6 +36,8 @@ class PatientSerializer(serializers.ModelSerializer):
 
 
 class PracticeSerializer(serializers.ModelSerializer):
+    practice_telecom = InlinePracticeTelecomSerializer(read_only=True)
+
     class Meta:
         model = Practice
         fields = "__all__"
@@ -43,6 +48,13 @@ class PracticeTelecomSerializer(serializers.ModelSerializer):
     class Meta:
         model = PracticeTelecom
         fields = "__all__"
+        read_only_fields = ["id", "created_at", "modified_by", "modified_at", "voip_provider", "practice", "domain", "phone_sms", "phone_callback"]
+
+
+class AdminPracticeTelecomSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PracticeTelecom
+        fields = "__all__"
         read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
 
 
@@ -50,14 +62,14 @@ class VoipProviderSerializer(serializers.ModelSerializer):
     class Meta:
         model = VoipProvider
         fields = "__all__"
-        read_only_fields = ["id", "created_at", "modified_by", "modified_at", "active"]
+        read_only_fields = "__all__"
 
 
-class InlineUserSerializer(serializers.ModelSerializer):
+class AdminVoipProviderSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = ["id", "name"]
-        read_only_fields = ["id", "auth0_id", "objects"]
+        model = VoipProvider
+        fields = "__all__"
+        read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
 
 
 class AgentSerializer(serializers.ModelSerializer):

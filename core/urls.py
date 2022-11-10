@@ -11,7 +11,7 @@ from .views import (
     PracticeTelecomViewSet,
     PracticeViewSet,
     UserViewset,
-    VoipProviderViewset,
+    AdminVoipProviderViewset,
 )
 
 router = routers.DefaultRouter()
@@ -22,7 +22,7 @@ router.register(r"patients", PatientViewset)
 router.register(r"practices", PracticeViewSet, basename="practices")
 router.register(r"practice-telecoms", PracticeTelecomViewSet)
 router.register(r"users", AdminUserViewset)
-router.register(r"voip-providers", VoipProviderViewset, basename="voip-providers")
+router.register(r"voip-providers", AdminVoipProviderViewset, basename="voip-providers")
 
 urlpatterns = [
     path("login", LoginView.as_view()),
