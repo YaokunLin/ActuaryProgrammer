@@ -1,17 +1,15 @@
 import hashlib
 import logging
+import urllib.parse
 import uuid
 from datetime import datetime, timedelta
 from typing import List, Optional
 
 import requests
-import urllib.parse
-
-from django.conf import settings
 from django.utils import timezone
-from requests.auth import HTTPBasicAuth, AuthBase
+from requests.auth import AuthBase, HTTPBasicAuth
 
-from jive_integration.models import JiveChannel, JiveSession, JiveConnection, JiveLine
+from jive_integration.models import JiveChannel, JiveConnection, JiveLine, JiveSession
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -121,6 +119,9 @@ class _Authentication(AuthBase):
 
         try:
             self._access_token: str = body["access_token"]
+            self._account_key: Optional[str] = body.get("account_key")
+            self._organizer_key: Optional[str] = body.get("organizer_key")
+            self._scope: Optional[str] = body.get("scope")
             self._principal: Optional[str] = body.get("principal")  # email address associated to the account
             self._refresh_token: str = body["refresh_token"]
             self.__token_expires_at: float = (datetime.utcnow() + timedelta(seconds=body["expires_in"])).timestamp()
@@ -162,10 +163,12 @@ class JiveClient:
         """
         self.__auth.exchange_code(code, request_uri)
 
-    def create_webhook_channel(self, connection: JiveConnection, webhook_url: str, lifetime: int = 518400) -> JiveChannel:
+    def create_webhook_channel(self, connection: JiveConnection, webhook_url: str, lifetime: int = 2147483647) -> JiveChannel:
         """
         Create a record for the intended channel and request the channel from the Jive API.  If the request fails
         the record will be deleted.
+
+        Note: lifetime set to 2147483647 (68 years) is the maximum amount of time allowed by GoTo.
 
         https://developer.goto.com/GoToConnect#tag/Channels
 

@@ -9,7 +9,7 @@ from calls.models import Call
 from calls.serializers import CallSerializer
 from core.models import Practice
 from jive_integration.field_choices import JiveEventTypes, JiveEventState
-from jive_integration.models import JiveSubscriptionEventExtract
+from jive_integration.models import JiveConnection, JiveSubscriptionEventExtract
 
 US_TELEPHONE_NUMBER_DIGIT_LENGTH = 10
 # Get an instance of a logger

@@ -504,15 +504,18 @@ X_FRAME_OPTIONS = "SAMEORIGIN"
 
 # Jive
 JIVE_AUTHORIZATION_URL = os.getenv("JIVE_AUTHORIZATION_URL", "https://authentication.logmeininc.com/oauth/authorize")
-JIVE_BUCKET_ACCESS_KEY = os.getenv("JIVE_BUCKET_ACCESS_KEY", "")  # in AWS
-JIVE_BUCKET_ACCESS_SECRET = os.getenv("JIVE_BUCKET_ACCESS_SECRET", "")  # in AWS
-JIVE_BUCKET_NAME = os.getenv("JIVE_BUCKET_NAME", "")  # in AWS
 JIVE_CLIENT_ID = os.getenv("JIVE_CLIENT_ID", "")
 JIVE_CLIENT_SECRET = os.getenv("JIVE_CLIENT_SECRET", "")
 JIVE_CONNECTION_REFRESH_INTERVAL_IN_HOURS = int(os.getenv("JIVE_CRON_REFRESH_CADENCE_IN_HOURS", 3))
 
 
-S3_CLIENT = boto3.Session(aws_access_key_id=JIVE_BUCKET_ACCESS_KEY, aws_secret_access_key=JIVE_BUCKET_ACCESS_SECRET).client("s3")
+# AWS
+AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY", "")
+AWS_SECRET_KEY = os.getenv("AWS_SECRET_KEY", "")
+BOTO_SESSION = boto3.Session(aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY)
+AWS_DEFAULT_REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-2")
+S3_CLIENT = BOTO_SESSION.client("s3", region_name=AWS_DEFAULT_REGION)
+IAM_CLIENT = BOTO_SESSION.client("iam")
 
 
 #
