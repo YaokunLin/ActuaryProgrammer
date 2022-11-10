@@ -34,6 +34,7 @@ from calls.serializers import CallSerializer
 from core.field_choices import VoipProviderIntegrationTypes
 from core.models import Agent, PracticeTelecom, User
 from core.validation import get_practice_telecoms_belonging_to_user, get_validated_practice_telecom
+from jive_integration.field_choices import JiveEventTypeChoices
 from jive_integration.jive_client.client import JiveClient, Line
 from jive_integration.models import (
     JiveAWSRecordingBucket,
@@ -123,13 +124,18 @@ def webhook(request):
     log.info(f"Jive: JiveLine found with originatorOrganizationId='{source_organization_jive_id}'")
 
     channel = line.session.channel
-    voip_provider_id = line.session.channel.connection.practice_telecom.voip_provider_id
-    practice = line.session.channel.connection.practice_telecom.practice
     subscription_event_data.update({"jive_channel_id": channel.id})
 
-    # TODO: jive_event_type should be a field choice type - will check these when we have documentation for understanding the options
+    voip_provider_id = line.session.channel.connection.practice_telecom.voip_provider_id
+    practice = line.session.channel.connection.practice_telecom.practice
+
+    # Bucket can be overridden for our testing jive account
+    bucket_name = line.session.channel.connection.bucket.bucket_name
+    if settings.TEST_JIVE_PRACTICE_ID == practice.id:
+        bucket_name = settings.JIVE_BUCKET_NAME
+
     jive_event_type = content.get("type")
-    if jive_event_type == "announce":
+    if jive_event_type == JiveEventTypeChoices.ANNOUNCE:
         log.info("Jive: Received jive announce event.")
         peerlogic_call = None
 
@@ -155,14 +161,14 @@ def webhook(request):
         subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
         subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
 
-    elif jive_event_type == "replace":
+    elif jive_event_type == JiveEventTypeChoices.REPLACE:
         log.info("Jive: Received jive replace event.")
         call_id = get_call_id_from_previous_announce_events_by_originator_id(jive_originator_id)
         subscription_event_data.update({"peerlogic_call_id": call_id})
         subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
         subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
 
-    elif jive_event_type == "withdraw":
+    elif jive_event_type == JiveEventTypeChoices.WITHDRAW:
         log.info("Jive: Received jive withdraw event.")
 
         call_id = get_call_id_from_previous_announce_events_by_originator_id(jive_originator_id)
@@ -235,7 +241,7 @@ def webhook(request):
                     "peerlogic_call_id": peerlogic_call.id,
                     "peerlogic_call_partial_id": cp.id,
                     "filename": filename_encoded,
-                    "bucket_name": filename_encoded,
+                    "bucket_name": bucket_name,
                 },
             )
 
@@ -347,6 +353,7 @@ def does_practice_of_user_own_connection(connection_id: str, user: User) -> bool
 class JiveAWSRecordingBucketViewSet(viewsets.ViewSet):
     queryset = JiveConnection.objects.all().order_by("-modified_at")
     serializer_class = JiveConnectionSerializer
+
     def get_queryset(self):
         buckets_qs = JiveAWSRecordingBucket.objects.none()
 
