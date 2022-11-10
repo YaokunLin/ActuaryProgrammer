@@ -514,7 +514,6 @@ AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY", "")
 AWS_SECRET_KEY = os.getenv("AWS_SECRET_KEY", "")
 BOTO_SESSION = boto3.Session(aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access_key=AWS_SECRET_KEY)
 AWS_DEFAULT_REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-2")
-AWS_READ_ALL_CLIENT_BUCKETS_POLICY_ARN = os.getenv("AWS_READ_ALL_CLIENT_BUCKETS_POLICY_ARN", "")
 S3_CLIENT = BOTO_SESSION.client("s3", region_name=AWS_DEFAULT_REGION)
 IAM_CLIENT = BOTO_SESSION.client("iam")
 

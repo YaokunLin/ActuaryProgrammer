@@ -345,6 +345,8 @@ def does_practice_of_user_own_connection(connection_id: str, user: User) -> bool
 
 
 class JiveAWSRecordingBucketViewSet(viewsets.ViewSet):
+    queryset = JiveConnection.objects.all().order_by("-modified_at")
+    serializer_class = JiveConnectionSerializer
     def get_queryset(self):
         buckets_qs = JiveAWSRecordingBucket.objects.none()
 
