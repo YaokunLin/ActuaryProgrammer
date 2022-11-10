@@ -15,7 +15,7 @@ from rest_framework.exceptions import (
     ParseError,
     PermissionDenied,
 )
-from rest_framework.permissions import SAFE_METHODS, AllowAny
+from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -35,8 +35,9 @@ from core.serializers import (
     ClientSerializer,
     PatientSerializer,
     PracticeSerializer,
+    AdminPracticeTelecomSerializer,
+    AdminVoipProviderSerializer,
     PracticeTelecomSerializer,
-    VoipProviderSerializer,
 )
 from core.setup_user_and_practice import (
     create_agent,
@@ -272,6 +273,19 @@ class PatientViewset(viewsets.ModelViewSet):
     filterset_fields = ["phone_mobile", "phone_home", "phone_work", "phone_fax"]
     search_fields = ["name_first", "name_last", "phone_mobile", "phone_home", "phone_work"]
 
+    def get_queryset(self):
+        patient_qs = Patient.objects.none()
+
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            patient_qs = Patient.objects.all()
+        elif self.request.method in SAFE_METHODS:
+            # TODO: organizations ACL
+            # Can see any patients if you are an assigned agent to a practice
+            practice_ids = Agent.objects.filter(user=self.request.user).values_list("practice_id", flat=True)
+            patient_qs = Patient.objects.filter(practice__id__in=practice_ids)
+
+        return patient_qs.order_by("-modified_at")
+
 
 class PracticeViewSet(viewsets.ModelViewSet):
     serializer_class = PracticeSerializer
@@ -285,24 +299,80 @@ class PracticeViewSet(viewsets.ModelViewSet):
         if self.request.user.is_staff or self.request.user.is_superuser:
             query_set = Practice.objects.all()
         elif self.request.method in SAFE_METHODS:
+            # TODO: organizations ACL
             # Can see any practice if you are an assigned agent to a practice
             practice_ids = Agent.objects.filter(user=self.request.user).values_list("practice_id", flat=True)
             query_set = Practice.objects.filter(pk__in=practice_ids)
 
         return query_set.order_by("name")
 
+    def create(self, request):
+        if not (self.request.user.is_staff or self.request.user.is_superuser):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        super().create(request=request)
+
+    def update(self, request):
+        if not (self.request.user.is_staff or self.request.user.is_superuser):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        super().update(request=request)
+
+    def partial_update(self, request):
+        if not (self.request.user.is_staff or self.request.user.is_superuser):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        super().partial_update(request=request)
+
 
 class PracticeTelecomViewSet(viewsets.ModelViewSet):
     queryset = PracticeTelecom.objects.all().order_by("-modified_at")
-    serializer_class = PracticeTelecomSerializer
-    # TODO: provide filtering of queryset to logged in voip providers' practices
-
     filterset_fields = ["domain", "phone_sms", "phone_callback", "voip_provider"]
+    serializer_class_write = AdminPracticeTelecomSerializer
+    serializer_class_read = PracticeTelecomSerializer
+
+    def get_serializer_class(self):
+        if self.action in ["create", "update", "partial_update"]:
+            return self.serializer_class_write
+
+        return self.serializer_class_read
+
+    def get_queryset(self):
+        practice_telecoms_qs = PracticeTelecom.objects.none()
+
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            practice_telecoms_qs = PracticeTelecom.objects.all()
+        elif self.request.method in SAFE_METHODS:
+            # TODO: organizations ACL
+            # Can see any practice telecoms if you are an assigned agent to a practice
+            practice_ids = Agent.objects.filter(user=self.request.user).values_list("practice_id", flat=True)
+            practice_telecoms_qs = PracticeTelecom.objects.filter(practice__id__in=practice_ids)
+
+        return practice_telecoms_qs.order_by("-modified_at")
+
+    def create(self, request):
+        if not (self.request.user.is_staff or self.request.user.is_superuser):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        super().create(request=request)
+
+    def update(self, request):
+        if not (self.request.user.is_staff or self.request.user.is_superuser):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        super().update(request=request)
+
+    def partial_update(self, request):
+        if not (self.request.user.is_staff or self.request.user.is_superuser):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        super().partial_update(request=request)
 
 
-class VoipProviderViewset(viewsets.ModelViewSet):
+class AdminVoipProviderViewset(viewsets.ModelViewSet):
+    permission_classes = [IsAdminUser]
     queryset = VoipProvider.objects.all().order_by("-modified_at")
-    serializer_class = VoipProviderSerializer
+    serializer_class = AdminVoipProviderSerializer
 
     filterset_fields = ["company_name"]
 
@@ -310,8 +380,20 @@ class VoipProviderViewset(viewsets.ModelViewSet):
 class AgentViewset(viewsets.ModelViewSet):
     queryset = Agent.objects.all().order_by("-practice").select_related("user")
     serializer_class = AgentSerializer
-
     filterset_fields = ["practice"]
+
+    def get_queryset(self):
+        agents_qs = Agent.objects.none()
+
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            agents_qs = Agent.objects.all()
+        elif self.request.method in SAFE_METHODS:
+            # TODO: organizations ACL
+            # Can see any agents if you are an assigned agent to a practice
+            practice_ids = Agent.objects.filter(user=self.request.user).values_list("practice_id", flat=True)
+            agents_qs = Agent.objects.filter(practice__id__in=practice_ids)
+
+        return agents_qs.order_by("-modified_at")
 
 
 class UserViewset(viewsets.ModelViewSet):
