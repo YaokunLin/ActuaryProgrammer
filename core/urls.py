@@ -7,10 +7,10 @@ from .views import (
     AgentViewset,
     ClientViewset,
     LoginView,
+    MyProfileView,
     PatientViewset,
     PracticeTelecomViewSet,
     PracticeViewSet,
-    UserViewset,
     AdminVoipProviderViewset,
 )
 
@@ -26,6 +26,7 @@ router.register(r"voip-providers", AdminVoipProviderViewset, basename="voip-prov
 
 urlpatterns = [
     path("login", LoginView.as_view()),
+    path("my-profile", MyProfileView.as_view()),
 ]
 
 
