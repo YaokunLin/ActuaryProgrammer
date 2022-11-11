@@ -61,8 +61,8 @@ class AdminPracticeTelecomSerializer(serializers.ModelSerializer):
 class VoipProviderSerializer(serializers.ModelSerializer):
     class Meta:
         model = VoipProvider
-        fields = "__all__"
-        read_only_fields = "__all__"
+        fields = ["id", "created_at", "modified_by", "modified_at", "company_name"]
+        read_only_fields = ["id", "created_at", "modified_by", "modified_at", "company_name"]
 
 
 class AdminVoipProviderSerializer(serializers.ModelSerializer):
