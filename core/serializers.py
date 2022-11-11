@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 from core.inline_serializers import InlinePracticeTelecomSerializer, InlineUserSerializer
 
-from core.models import Agent, Client, Patient, Practice, PracticeTelecom, User, VoipProvider
+from core.models import Agent, Client, Organization, Patient, Practice, PracticeTelecom, User, VoipProvider
 
 
 class UnixEpochDateField(serializers.DateTimeField):
@@ -33,6 +33,13 @@ class PatientSerializer(serializers.ModelSerializer):
         model = Patient
         read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
         fields = "__all__"
+
+
+class OrganizationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Organization
+        fields = "__all__"
+        read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
 
 
 class PracticeSerializer(serializers.ModelSerializer):

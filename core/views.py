@@ -3,6 +3,7 @@ import logging
 import requests
 from django.conf import settings
 from django.db import transaction
+from django.db.models import Q
 from django.http import HttpRequest
 from django.utils import timezone
 from django.utils.translation import ugettext as _
@@ -23,6 +24,7 @@ from core.exceptions import InternalServerError, ServiceUnavailableError
 from core.models import (
     Agent,
     Client,
+    Organization,
     Patient,
     Practice,
     PracticeTelecom,
@@ -33,6 +35,7 @@ from core.serializers import (
     AdminUserSerializer,
     AgentSerializer,
     ClientSerializer,
+    OrganizationSerializer,
     PatientSerializer,
     PracticeSerializer,
     AdminPracticeTelecomSerializer,
@@ -47,6 +50,7 @@ from core.setup_user_and_practice import (
     setup_user,
     update_user_on_refresh,
 )
+from core.view_mixins import MadeByMeViewSetMixin
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -365,6 +369,47 @@ class PracticeTelecomViewSet(viewsets.ModelViewSet):
     def partial_update(self, request):
         if not (self.request.user.is_staff or self.request.user.is_superuser):
             return Response(status=status.HTTP_404_NOT_FOUND)
+
+        super().partial_update(request=request)
+
+
+class OrganizationViewSet(MadeByMeViewSetMixin, viewsets.ModelViewSet):
+    queryset = Organization.objects.all().order_by("-modified_at")
+    filterset_fields = ["name"]
+    serializer_class = OrganizationSerializer
+
+    def get_queryset(self):
+        organizations_qs = Organization.objects.none()
+
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            organizations_qs = PracticeTelecom.objects.all()
+        elif self.request.method in SAFE_METHODS:
+            # Can see your own organizations associated to your assigned agent practices
+            practice_ids = Agent.objects.filter(user=self.request.user).values_list("practice_id", flat=True)
+
+            organizations_related_to_me_filter = Q(practice__id__in=practice_ids)
+            filters = self.resource_made_by_me_filter | organizations_related_to_me_filter
+            organizations_qs = Organization.objects.filter(filters)
+
+        return organizations_qs.order_by("-modified_at")
+
+    def create(self, request):
+        if not (self.request.user.is_staff or self.request.user.is_superuser) and Organization.objects.filter(self.resource_made_by_me_filter).exists():
+            return Response(status=status.HTTP_403_FORBIDDEN, data={"errors": "You are only allowed to make 1 organization."})
+
+        super().create(request=request)
+
+    def update(self, request):
+        if not (self.request.user.is_staff or self.request.user.is_superuser):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        # TODO: organization admin access
+
+        super().update(request=request)
+
+    def partial_update(self, request):
+        if not (self.request.user.is_staff or self.request.user.is_superuser):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        # TODO: organization admin access
 
         super().partial_update(request=request)
 
