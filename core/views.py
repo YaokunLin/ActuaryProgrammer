@@ -9,7 +9,8 @@ from django.utils import timezone
 from django.utils.translation import ugettext as _
 from oauth2_provider.contrib.rest_framework import TokenHasReadWriteScope, TokenHasScope
 from pydantic import BaseModel
-from rest_framework import status, viewsets
+
+from rest_framework import status, views, viewsets
 from rest_framework.exceptions import (
     APIException,
     AuthenticationFailed,
@@ -21,6 +22,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from core.exceptions import InternalServerError, ServiceUnavailableError
+from core.field_choices import IndustryTypes, VoipProviderIntegrationTypes
 from core.models import (
     Agent,
     Client,
@@ -41,6 +43,7 @@ from core.serializers import (
     AdminPracticeTelecomSerializer,
     AdminVoipProviderSerializer,
     PracticeTelecomSerializer,
+    VoipProviderSerializer,
 )
 from core.setup_user_and_practice import (
     create_agent,
@@ -60,6 +63,14 @@ class ServiceUnavailableError(APIException):
     status_code = status.HTTP_503_SERVICE_UNAVAILABLE
     default_detail = _("Service unavailable. Try again later.")
     default_code = "service_unavailable_error"
+
+
+class CoreFieldChoicesView(views.APIView):
+    def get(self, request, format=None):
+        result = {}
+        result["industry_types"] = dict((y, x) for x, y in IndustryTypes.choices)
+        # excluding VoipProviderIntegrationTypes.choices - our integration types are secret. (Use /voip-providers/)
+        return Response(result)
 
 
 class LoginView(APIView):
@@ -372,7 +383,6 @@ class PracticeTelecomViewSet(viewsets.ModelViewSet):
 
         super().partial_update(request=request)
 
-
 class OrganizationViewSet(MadeByMeViewSetMixin, viewsets.ModelViewSet):
     queryset = Organization.objects.all().order_by("-modified_at")
     filterset_fields = ["name"]
@@ -414,12 +424,39 @@ class OrganizationViewSet(MadeByMeViewSetMixin, viewsets.ModelViewSet):
         super().partial_update(request=request)
 
 
-class AdminVoipProviderViewset(viewsets.ModelViewSet):
-    permission_classes = [IsAdminUser]
+
+class VoipProviderViewset(viewsets.ModelViewSet):
+    """VOIP Providers are unique - we want users to be able to select them as an integration partner with us"""
+
     queryset = VoipProvider.objects.all().order_by("-modified_at")
-    serializer_class = AdminVoipProviderSerializer
 
     filterset_fields = ["company_name"]
+    serializer_class_write = AdminVoipProviderSerializer
+    serializer_class_read = VoipProviderSerializer
+
+    def get_serializer_class(self):
+        if self.action in ["create", "update", "partial_update"]:
+            return self.serializer_class_write
+
+        return self.serializer_class_read
+
+    def create(self, request):
+        if not (self.request.user.is_staff or self.request.user.is_superuser):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        super().create(request=request)
+
+    def update(self, request):
+        if not (self.request.user.is_staff or self.request.user.is_superuser):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        super().update(request=request)
+
+    def partial_update(self, request):
+        if not (self.request.user.is_staff or self.request.user.is_superuser):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        super().partial_update(request=request)
 
 
 class AgentViewset(viewsets.ModelViewSet):
