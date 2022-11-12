@@ -34,15 +34,15 @@ from core.models import (
     VoipProvider,
 )
 from core.serializers import (
+    AdminOrganizationSerializer,
+    AdminPracticeTelecomSerializer,
     AdminUserSerializer,
+    AdminVoipProviderSerializer,
     AgentSerializer,
     ClientSerializer,
-    AdminOrganizationSerializer,
     OrganizationSerializer,
     PatientSerializer,
     PracticeSerializer,
-    AdminPracticeTelecomSerializer,
-    AdminVoipProviderSerializer,
     PracticeTelecomSerializer,
     VoipProviderSerializer,
 )
