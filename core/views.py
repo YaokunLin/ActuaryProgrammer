@@ -383,10 +383,7 @@ class PracticeTelecomViewSet(viewsets.ModelViewSet):
 
         super().partial_update(request=request)
 
-<<<<<<< HEAD
 
-=======
->>>>>>> c626baa554dd761cb08cdb81705b4ff377d1a92b
 class OrganizationViewSet(MadeByMeViewSetMixin, viewsets.ModelViewSet):
     queryset = Organization.objects.all().order_by("-modified_at")
     filterset_fields = ["name"]
@@ -428,16 +425,9 @@ class OrganizationViewSet(MadeByMeViewSetMixin, viewsets.ModelViewSet):
         return super().partial_update(request=request)
 
 
-
-<<<<<<< HEAD
-class VoipProviderViewset(viewsets.ModelViewSet):
-    """VOIP Providers are unique - we want users to be able to select them as an integration partner with us"""
-=======
-
 class VoipProviderViewset(viewsets.ModelViewSet):
     """VOIP Providers are unique - we want users to be able to select them as an integration partner with us"""
 
->>>>>>> c626baa554dd761cb08cdb81705b4ff377d1a92b
     queryset = VoipProvider.objects.all().order_by("-modified_at")
 
     filterset_fields = ["company_name"]
