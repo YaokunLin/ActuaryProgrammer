@@ -1,5 +1,5 @@
-
 from django.db.models import Q
+
 
 class MadeByMeViewSetMixin:
     @property
