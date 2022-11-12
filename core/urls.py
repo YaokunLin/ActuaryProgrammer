@@ -6,12 +6,13 @@ from .views import (
     AdminUserViewset,
     AgentViewset,
     ClientViewset,
+    CoreFieldChoicesView,
     LoginView,
     OrganizationViewSet,
     PatientViewset,
     PracticeTelecomViewSet,
     PracticeViewSet,
-    AdminVoipProviderViewset,
+    VoipProviderViewset,
 )
 
 router = routers.DefaultRouter()
@@ -23,9 +24,10 @@ router.register(r"organizations", OrganizationViewSet)
 router.register(r"practices", PracticeViewSet, basename="practices")
 router.register(r"practice-telecoms", PracticeTelecomViewSet)
 router.register(r"users", AdminUserViewset)
-router.register(r"voip-providers", AdminVoipProviderViewset, basename="voip-providers")
+router.register(r"voip-providers", VoipProviderViewset, basename="voip-providers")
 
 urlpatterns = [
+    path(r"core-field-choices", CoreFieldChoicesView.as_view(), name="core-field-choices"),
     path("login", LoginView.as_view()),
 ]
 
