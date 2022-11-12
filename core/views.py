@@ -37,6 +37,7 @@ from core.serializers import (
     AdminUserSerializer,
     AgentSerializer,
     ClientSerializer,
+    AdminOrganizationSerializer,
     OrganizationSerializer,
     PatientSerializer,
     PracticeSerializer,
@@ -387,7 +388,12 @@ class PracticeTelecomViewSet(viewsets.ModelViewSet):
 class OrganizationViewSet(MadeByMeViewSetMixin, viewsets.ModelViewSet):
     queryset = Organization.objects.all().order_by("-modified_at")
     filterset_fields = ["name"]
-    serializer_class = OrganizationSerializer
+
+    def get_serializer_class(self):
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            return AdminOrganizationSerializer
+        else:
+            return OrganizationSerializer
 
     def get_queryset(self):
         organizations_qs = Organization.objects.none()

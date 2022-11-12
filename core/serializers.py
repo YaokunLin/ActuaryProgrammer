@@ -1,6 +1,6 @@
 from datetime import datetime
-from django.db.models import Prefetch, QuerySet
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from core.inline_serializers import InlinePracticeTelecomSerializer, InlineUserSerializer
 
@@ -35,9 +35,11 @@ class PatientSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class OrganizationSerializer(serializers.ModelSerializer):
+class AdminPracticeSerializer(serializers.ModelSerializer):
+    practice_telecom = InlinePracticeTelecomSerializer(read_only=True)
+
     class Meta:
-        model = Organization
+        model = Practice
         fields = "__all__"
         read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
 
@@ -47,6 +49,31 @@ class PracticeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Practice
+        fields = "__all__"
+        read_only_fields = ["id", "created_at", "modified_by", "modified_at", "active"]
+
+
+class OrganizationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Organization
+        fields = "__all__"
+        read_only_fields = ["id", "created_at", "modified_by", "modified_at", "active"]
+
+    def create(self, validated_data):
+        request = self.context.get("request")
+        name = validated_data.get("name")
+
+        # TODO: do we want active: False this model for Peerlogic Validation?
+        organization = Organization.objects.create(**validated_data)
+        practice = Practice.objects.create(organization=organization, name=name, active=False)
+        Agent.objects.create(practice=practice, user=request.user)
+
+        return organization
+
+
+class AdminOrganizationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Organization
         fields = "__all__"
         read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
 

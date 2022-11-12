@@ -115,7 +115,7 @@ class UserTelecom(AuditTrailModel):
 class Practice(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     name = models.CharField(_("name"), max_length=150, unique=True)
-    industry = models.CharField(choices=IndustryTypes.choices, default=IndustryTypes.DENTISTRY_GENERAL, max_length=250)
+    industry = models.CharField(choices=IndustryTypes.choices, blank=True, max_length=250)
     active = models.BooleanField(
         null=True, blank=False, default=False
     )  # practices are active or inactive based upon whether we've approved their submission and whether they're paid up
