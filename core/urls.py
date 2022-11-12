@@ -12,7 +12,6 @@ from .views import (
     PatientViewset,
     PracticeTelecomViewSet,
     PracticeViewSet,
-    UserViewset,
     VoipProviderViewset,
 )
 
