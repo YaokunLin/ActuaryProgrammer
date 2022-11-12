@@ -39,16 +39,15 @@ from core.models import (
 )
 from core.serializers import (
     AdminOrganizationSerializer,
+    AdminPracticeTelecomSerializer,
     AdminUserSerializer,
+    AdminVoipProviderSerializer,
     AgentSerializer,
     ClientSerializer,
-    AdminOrganizationSerializer,
     OrganizationSerializer,
     MyProfileUserSerializer,
     PatientSerializer,
     PracticeSerializer,
-    AdminPracticeTelecomSerializer,
-    AdminVoipProviderSerializer,
     PracticeTelecomSerializer,
     VoipProviderSerializer,
 )
