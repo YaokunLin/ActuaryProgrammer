@@ -9,6 +9,7 @@ from .views import (
     CoreFieldChoicesView,
     LoginView,
     OrganizationViewSet,
+    MyProfileView,
     PatientViewset,
     PracticeTelecomViewSet,
     PracticeViewSet,
@@ -29,6 +30,7 @@ router.register(r"voip-providers", VoipProviderViewset, basename="voip-providers
 urlpatterns = [
     path(r"core-field-choices", CoreFieldChoicesView.as_view(), name="core-field-choices"),
     path("login", LoginView.as_view()),
+    path("my-profile", MyProfileView.as_view()),
 ]
 
 

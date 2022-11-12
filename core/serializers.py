@@ -115,6 +115,39 @@ class AgentSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "practice", "user"]
 
 
+class MyProfileUserSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(write_only=True, required=True)
+    last_name = serializers.CharField(write_only=True, required=True)
+
+    class Meta:
+        model = User
+        fields = ["id", "name", "first_name", "last_name", "date_joined", "email", "username"]
+        # TODO: change email (auth0 driven)
+        read_only_fields = ["id", "name", "date_joined", "email", "username"]
+
+    def update(self, instance, validated_data):
+        # Always capitalize
+        first_name = validated_data.get("first_name", instance.first_name).capitalize()
+        validated_data["first_name"] = first_name
+        last_name = validated_data.get("last_name", instance.last_name).capitalize()
+        validated_data["last_name"] = last_name
+        # For display
+        validated_data["name"] = f"{first_name} {last_name}"
+
+        super().update(instance, validated_data)
+
+        return instance
+
+
+class MyProfileAgentSerializer(serializers.ModelSerializer):
+    user = MyProfileUserSerializer(required=False)
+
+    class Meta:
+        model = Agent
+        fields = ["id", "practice", "user"]
+        read_only_fields = ["id", "practice"]
+
+
 class AdminUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
