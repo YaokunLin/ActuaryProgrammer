@@ -6,7 +6,7 @@ from django.db import transaction
 from django.http import HttpRequest
 from django.utils import timezone
 from django.utils.translation import ugettext as _
-from oauth2_provider.contrib.rest_framework import TokenHasReadWriteScope, TokenHasScope
+from oauth2_provider.contrib.rest_framework import TokenHasReadWriteScope
 from pydantic import BaseModel
 
 from rest_framework import status, views, viewsets
@@ -16,9 +16,13 @@ from rest_framework.exceptions import (
     ParseError,
     PermissionDenied,
 )
+from rest_framework.generics import RetrieveUpdateAPIView
+from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
 from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAdminUser
 from rest_framework.response import Response
+from rest_framework.serializers import ValidationError
 from rest_framework.views import APIView
+
 
 from core.exceptions import InternalServerError, ServiceUnavailableError
 from core.field_choices import IndustryTypes, VoipProviderIntegrationTypes
@@ -34,7 +38,9 @@ from core.models import (
 from core.serializers import (
     AdminUserSerializer,
     AgentSerializer,
+    MyProfileAgentSerializer,
     ClientSerializer,
+    MyProfileUserSerializer,
     PatientSerializer,
     PracticeSerializer,
     AdminPracticeTelecomSerializer,
@@ -367,17 +373,17 @@ class PracticeTelecomViewSet(viewsets.ModelViewSet):
 
         super().create(request=request)
 
-    def update(self, request):
+    def update(self, request, pk=None):
         if not (self.request.user.is_staff or self.request.user.is_superuser):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        super().update(request=request)
+        super().update(request=request, pk=pk)
 
-    def partial_update(self, request):
+    def partial_update(self, request, pk=None):
         if not (self.request.user.is_staff or self.request.user.is_superuser):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        super().partial_update(request=request)
+        super().partial_update(request=request, pk=pk)
 
 
 class VoipProviderViewset(viewsets.ModelViewSet):
@@ -433,9 +439,19 @@ class AgentViewset(viewsets.ModelViewSet):
         return agents_qs.order_by("-modified_at")
 
 
-class UserViewset(viewsets.ModelViewSet):
-    queryset = Agent.objects.all().order_by("-practice")
-    serializer_class = AgentSerializer
+class MyProfileView(RetrieveUpdateAPIView):
+    def get(self, request, format=None):
+        user = User.objects.get(pk=self.request.user.id)
+        serializer = MyProfileUserSerializer(user)
+        return Response(data=serializer.data)
+
+    def patch(self, request, format=None):
+        user = User.objects.get(pk=self.request.user.id)
+        serializer = MyProfileUserSerializer(user, data=request.data)
+        if not serializer.is_valid():
+            raise ValidationError(serializer.errors)
+        serializer.save()
+        return Response(data=serializer.data)
 
 
 class AdminUserViewset(viewsets.ModelViewSet):
