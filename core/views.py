@@ -353,10 +353,10 @@ class PracticeTelecomViewSet(viewsets.ModelViewSet):
     serializer_class_read = PracticeTelecomSerializer
 
     def get_serializer_class(self):
-        if self.action in ["create", "update", "partial_update"]:
-            return self.serializer_class_write
-
-        return self.serializer_class_read
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            return AdminPracticeTelecomSerializer
+        else:
+            return PracticeTelecomSerializer
 
     def get_queryset(self):
         practice_telecoms_qs = PracticeTelecom.objects.none()
@@ -371,23 +371,27 @@ class PracticeTelecomViewSet(viewsets.ModelViewSet):
 
         return practice_telecoms_qs.order_by("-modified_at")
 
-    def create(self, request):
-        if not (self.request.user.is_staff or self.request.user.is_superuser):
-            return Response(status=status.HTTP_404_NOT_FOUND)
+    # TODO: Organizations ACL with DRF object permissions
+    def permissions_check(self, request):
+        practice_id = request.data.get("practice")
+        practice_ids = Agent.objects.filter(user=self.request.user).values_list("practice_id", flat=True)
+        if practice_id not in practice_ids:
+            return Response(status=status.HTTP_403_FORBIDDEN, data={"errors": {"practice": "Not a member of this practice"}})
 
-        super().create(request=request)
+    def create(self, request):
+        self.permissions_check(request)
+
+        return super().create(request=request)
 
     def update(self, request, pk=None):
-        if not (self.request.user.is_staff or self.request.user.is_superuser):
-            return Response(status=status.HTTP_404_NOT_FOUND)
+        self.permissions_check(request)
 
-        super().update(request=request, pk=pk)
+        return super().update(request=request, pk=pk)
 
     def partial_update(self, request, pk=None):
-        if not (self.request.user.is_staff or self.request.user.is_superuser):
-            return Response(status=status.HTTP_404_NOT_FOUND)
+        self.permissions_check(request)
 
-        super().partial_update(request=request, pk=pk)
+        return super().partial_update(request=request, pk=pk)
 
 
 class OrganizationViewSet(MadeByMeViewSetMixin, viewsets.ModelViewSet):
