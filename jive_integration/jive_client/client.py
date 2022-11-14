@@ -197,7 +197,10 @@ class JiveClient:
             channel.source_jive_id = response_body.get("channelId")
             channel.save()
         except Exception as exc:
-            log.warn(f"Could not create channel in Jive, deleting from Peerlogic API.")
+            log.warn(f"Jive: Could not create channel in Jive, deleting from Peerlogic API.")
+            if resp is not None and resp.text:
+                log.warn(f"Jive: Response text: '{resp.text}'")
+
             channel.delete()
             raise exc
 
@@ -227,16 +230,22 @@ class JiveClient:
 
         dependency: channelID not channel Id
         """
-        resp = self.__request(method="post", url="https://realtime.jive.com/v2/session", json={"channelId": channel.source_jive_id})
-
-        resp.raise_for_status()
-
-        body = resp.json()
-
         try:
-            return JiveSession.objects.create(channel=channel, url=body["self"])
+            resp = self.__request(method="post", url="https://realtime.jive.com/v2/session", json={"channelId": channel.source_jive_id})
+
+            resp.raise_for_status()
+
+            body = resp.json()
+            
         except KeyError as exc:
             raise APIResponseException("failed to parse session response") from exc
+        except Exception as e:
+            msg = "Jive: Exception Raised in create_session"
+            if resp is not None and resp.text:
+                msg = f"{msg}. Response text: '{resp.text}'"
+            raise Exception(msg)
+
+        return JiveSession.objects.create(channel=channel, url=body["self"])
 
     def create_session_dialog_subscription(self, session: JiveSession, *lines: Line):
         """

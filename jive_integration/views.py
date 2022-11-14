@@ -192,7 +192,7 @@ def webhook(request):
 
         peerlogic_call.save()
         log.info(
-            f"Jive: Updated Peerlogic call with the following fields: peerlogic_call.call_connection='{peerlogic_call.call_connection}', peerlogic_call.call_end_time='{peerlogic_call.call_end_time}', peerlogic_call.duration_seconds='{peerlogic_call.duration_seconds}'"
+            f"Jive: Updated Peerlogic call with the following fields: peerlogic_call.call_connection='{peerlogic_call.call_connection}', peerlogic_call.call_end_time='{peerlogic_call.call_end_time}', peerlogic_call.duration_seconds='{peerlogic_call.duration_seconds}', connect_duration_seconds='{peerlogic_call.connect_duration_seconds}', progress_time_seconds='{peerlogic_call.progress_time_seconds}'"
         )
 
         recordings = []
@@ -319,6 +319,7 @@ def authentication_callback(request: Request):
 
         log.info(f"Jive: Creating Jive Connection with practice_telecom='{practice_telecom}'.")
         connection = JiveConnection(practice_telecom=practice_telecom)
+        # TODO: Add bucket creation here
 
     connection.refresh_token = jive.refresh_token
     log.info(f"Jive: Saving JiveConnection with refresh_token='{jive.refresh_token}.")
@@ -469,11 +470,10 @@ def cron(request):
             if not channel:
                 log.info(f"Jive: no active webhook channel found for connection='{connection}', creating one.")
                 webhook_url = request.build_absolute_uri(reverse("jive_integration:webhook-receiver"))
-
                 # Jive will only accept a https url so we always replace it, the only case where this would not
                 # be an https url is a development environment.
                 webhook_url = webhook_url.replace("http://", "https://")
-
+                log.info(f"Jive: attempting to webhook_url='{webhook_url}' for connection='{connection}'.")
                 channel = jive.create_webhook_channel(connection=connection, webhook_url=webhook_url)
                 log.info(f"Jive: created channel='{channel}' for connection='{connection}'.")
                 # TODO: better error handling from above client call
