@@ -181,6 +181,8 @@ def webhook(request):
         peerlogic_call = Call.objects.get(pk=call_id)
         peerlogic_call.call_end_time = end_time
         peerlogic_call.duration_seconds = peerlogic_call.call_end_time - peerlogic_call.call_start_time
+        #TODO: Handle transfers correctly. Connect duration should include time between transfers
+        # Currently it only calculates time between connected and first answered
         peerlogic_call.connect_duration_seconds = calculate_connect_duration(jive_originator_id)
         peerlogic_call.progress_time_seconds = calculate_progress_time(jive_originator_id, end_time)
 
