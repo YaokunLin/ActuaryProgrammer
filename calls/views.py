@@ -600,6 +600,8 @@ class CallNoteViewSet(viewsets.ModelViewSet):
 
 
 class CallsReprocessingView(views.APIView):
+    MAX_CALLS_PER_REQUEST = 500
+
     def post(self, request: Request) -> Response:
         if not self.request.user.is_staff and not self.request.user.is_superuser:
             raise PermissionDenied()
@@ -623,8 +625,13 @@ class CallsReprocessingView(views.APIView):
             .distinct("call_id")
             .values_list("call_id", "id")
         )
+        num_calls_to_reprocess = len(transcripts_to_reprocess)
 
         if should_commit:
+            if num_calls_to_reprocess > self.MAX_CALLS_PER_REQUEST:
+                raise ValidationError(
+                    {"errors": [{"commit": f"This would reprocess {num_calls_to_reprocess} at once. The maximum allowed is {self.MAX_CALLS_PER_REQUEST}"}]}
+                )
             publish_futures = []
             for call_id, transcript_id in transcripts_to_reprocess:
                 log.info("Publishing call transcript ready events for call_id: %s, transcript_id: %s", call_id, transcript_id)
@@ -633,7 +640,7 @@ class CallsReprocessingView(views.APIView):
                 futures.wait(publish_futures, return_when=futures.ALL_COMPLETED)
                 log.info("Successfully published all call transcript ready events")
 
-        data = {"calls_to_reprocess": len(transcripts_to_reprocess), "committed": should_commit}
+        data = {"calls_to_reprocess": num_calls_to_reprocess, "committed": should_commit}
         return Response(data)
 
 
