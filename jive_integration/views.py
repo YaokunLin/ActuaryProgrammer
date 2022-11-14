@@ -182,7 +182,7 @@ def webhook(request):
         peerlogic_call.call_end_time = end_time
         peerlogic_call.duration_seconds = peerlogic_call.call_end_time - peerlogic_call.call_start_time
         peerlogic_call.connect_duration_seconds = calculate_connect_duration(jive_originator_id)
-        peerlogic_call.progress_time_seconds = calculate_progress_time(jive_originator_id)
+        peerlogic_call.progress_time_seconds = calculate_progress_time(jive_originator_id, end_time)
 
         if recording_count == 0:
             # TODO: call Jive API to see if there is a corresponding Voicemail
@@ -217,7 +217,12 @@ def webhook(request):
             # Timestamp already formatted for use in call partial below
             jive_leg_created_time = subscription_event_data.get("data_created")
 
-            cp = CallPartial.objects.create(call=peerlogic_call, time_interaction_started=jive_leg_created_time, time_interaction_ended=end_time)
+            # Check if call partial exists with same call id, start and end time. If not then create one
+            try:
+                cp = CallPartial.objects.get(call=peerlogic_call, time_interaction_started=jive_leg_created_time, time_interaction_ended=end_time)
+            except CallPartial.DoesNotExist:
+                cp = CallPartial.objects.create(call=peerlogic_call, time_interaction_started=jive_leg_created_time, time_interaction_ended=end_time)
+
             log.info(
                 f"Jive: Created Peerlogic CallPartial with cp.id='{cp.id}', peerlogic_call.id='{peerlogic_call.id}', time_interaction_started='{peerlogic_call.call_start_time}' and time_interaction_ended='{end_time}'."
             )

@@ -111,14 +111,11 @@ def calculate_connect_duration(originator_id: str) -> int:
     return None
 
 
-def calculate_progress_time(originator_id: str) -> int:
+def calculate_progress_time(originator_id: str, end_time: datetime) -> int:
     # Grab first jive answer state for the call id
     answered_event = JiveSubscriptionEventExtract.objects.filter(data_state=JiveLegStateChoices.ANSWERED, data_originator_id=originator_id).first()
-    # Grab last jive hungup state for the call id
-    hungup_event = (
-        JiveSubscriptionEventExtract.objects.filter(data_state=JiveLegStateChoices.HUNGUP, data_originator_id=originator_id).order_by("-data_created").first()
-    )
+
     # Subtract the time
-    if hungup_event and answered_event:
-        return hungup_event.data_created - answered_event.data_created
+    if end_time and answered_event:
+        return end_time - answered_event.data_created
     return None
