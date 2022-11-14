@@ -321,10 +321,9 @@ class JiveClient:
         body = resp.json()
 
         try:
-            
             for item in body.get("items", []):
-                lines = item.get("lines", [])
-                for item_line in lines:
+                item_lines = item.get("lines", [])
+                for item_line in item_lines:
                     lines.append(Line(line_id=item_line["id"], source_organization_jive_id=item_line["organization"]["id"]))
         except KeyError as exc:
             raise APIResponseException("Failed to parse list_lines_all_users response") from exc
