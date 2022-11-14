@@ -19,6 +19,7 @@ from rest_framework.exceptions import (
 from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
 from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAdminUser
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from rest_framework.views import APIView
@@ -46,6 +47,7 @@ from core.serializers import (
     OrganizationSerializer,
     PatientSerializer,
     PracticeSerializer,
+    PracticeTelecomCreateSerializer,
     PracticeTelecomSerializer,
     VoipProviderSerializer,
 )
@@ -312,7 +314,6 @@ class PracticeViewSet(viewsets.ModelViewSet):
     search_fields = ["name"]
 
     def get_queryset(self):
-
         query_set = Practice.objects.none()
 
         if self.request.user.is_staff or self.request.user.is_superuser:
@@ -325,19 +326,19 @@ class PracticeViewSet(viewsets.ModelViewSet):
 
         return query_set.order_by("name")
 
-    def create(self, request):
+    def create(self, request: Request, *args, **kwargs) -> Response:
         if not (self.request.user.is_staff or self.request.user.is_superuser):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         super().create(request=request)
 
-    def update(self, request):
+    def update(self, request: Request, *args, **kwargs) -> Response:
         if not (self.request.user.is_staff or self.request.user.is_superuser):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         super().update(request=request)
 
-    def partial_update(self, request):
+    def partial_update(self, request: Request, *args, **kwargs) -> Response:
         if not (self.request.user.is_staff or self.request.user.is_superuser):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -347,8 +348,6 @@ class PracticeViewSet(viewsets.ModelViewSet):
 class PracticeTelecomViewSet(viewsets.ModelViewSet):
     queryset = PracticeTelecom.objects.all().order_by("-modified_at")
     filterset_fields = ["domain", "phone_sms", "phone_callback", "voip_provider"]
-    serializer_class_write = AdminPracticeTelecomSerializer
-    serializer_class_read = PracticeTelecomSerializer
 
     def get_serializer_class(self):
         if self.request.user.is_staff or self.request.user.is_superuser:
@@ -358,7 +357,6 @@ class PracticeTelecomViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         practice_telecoms_qs = PracticeTelecom.objects.none()
-
         if self.request.user.is_staff or self.request.user.is_superuser:
             practice_telecoms_qs = PracticeTelecom.objects.all()
         elif self.request.method in SAFE_METHODS:
@@ -376,19 +374,19 @@ class PracticeTelecomViewSet(viewsets.ModelViewSet):
         if practice_id not in practice_ids:
             return Response(status=status.HTTP_403_FORBIDDEN, data={"errors": {"practice": "Not a member of this practice"}})
 
-    def create(self, request):
+    def create(self, request: Request, *args, **kwargs) -> Response:
         self.permissions_check(request)
+        serializer = PracticeTelecomCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=self.get_success_headers(serializer.data))
 
-        return super().create(request=request)
-
-    def update(self, request, pk=None):
+    def update(self, request: Request, pk=None, *args, **kwargs) -> Response:
         self.permissions_check(request)
-
         return super().update(request=request, pk=pk)
 
-    def partial_update(self, request, pk=None):
+    def partial_update(self, request: Request, pk=None, *args, **kwargs) -> Response:
         self.permissions_check(request)
-
         return super().partial_update(request=request, pk=pk)
 
 
@@ -416,20 +414,29 @@ class OrganizationViewSet(MadeByMeViewSetMixin, viewsets.ModelViewSet):
 
         return organizations_qs.order_by("-modified_at")
 
-    def create(self, request):
+    def create(self, request: Request, *args, **kwargs) -> Response:
         if not (self.request.user.is_staff or self.request.user.is_superuser) and Organization.objects.filter(self.resource_made_by_me_filter).exists():
             return Response(status=status.HTTP_403_FORBIDDEN, data={"errors": "You are only allowed to make 1 organization."})
 
-        return super().create(request=request)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        organization = serializer.instance
+        name = serializer.validated_data["name"]
+        practice = Practice.objects.create(organization=organization, name=name, active=False)
+        Agent.objects.create(practice=practice, user=request.user)
 
-    def update(self, request):
+        output_serializer = OrganizationSerializer(organization)
+        return Response(output_serializer.data, status=status.HTTP_201_CREATED, headers=self.get_success_headers(output_serializer.data))
+
+    def update(self, request: Request, *args, **kwargs) -> Response:
         if not (self.request.user.is_staff or self.request.user.is_superuser):
             return Response(status=status.HTTP_404_NOT_FOUND)
         # TODO: organization admin access
 
         return super().update(request=request)
 
-    def partial_update(self, request):
+    def partial_update(self, request: Request, *args, **kwargs) -> Response:
         if not (self.request.user.is_staff or self.request.user.is_superuser):
             return Response(status=status.HTTP_404_NOT_FOUND)
         # TODO: organization admin access
@@ -438,7 +445,9 @@ class OrganizationViewSet(MadeByMeViewSetMixin, viewsets.ModelViewSet):
 
 
 class VoipProviderViewset(viewsets.ModelViewSet):
-    """VOIP Providers are unique - we want users to be able to select them as an integration partner with us"""
+    """
+    VOIP Providers are unique - we want users to be able to select them as an integration partner with us
+    """
 
     queryset = VoipProvider.objects.all().order_by("-modified_at")
 
@@ -452,19 +461,19 @@ class VoipProviderViewset(viewsets.ModelViewSet):
 
         return self.serializer_class_read
 
-    def create(self, request):
+    def create(self, request: Request, *args, **kwargs) -> Response:
         if not (self.request.user.is_staff or self.request.user.is_superuser):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         super().create(request=request)
 
-    def update(self, request):
+    def update(self, request: Request, *args, **kwargs) -> Response:
         if not (self.request.user.is_staff or self.request.user.is_superuser):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         super().update(request=request)
 
-    def partial_update(self, request):
+    def partial_update(self, request: Request, *args, **kwargs) -> Response:
         if not (self.request.user.is_staff or self.request.user.is_superuser):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -491,12 +500,12 @@ class AgentViewset(viewsets.ModelViewSet):
 
 
 class MyProfileView(RetrieveUpdateAPIView):
-    def get(self, request, format=None):
+    def get(self, request: Request, *args, **kwargs) -> Response:
         user = User.objects.get(pk=self.request.user.id)
         serializer = MyProfileUserSerializer(user)
         return Response(data=serializer.data)
 
-    def patch(self, request, format=None):
+    def patch(self, request: Request, *args, **kwargs) -> Response:
         user = User.objects.get(pk=self.request.user.id)
         serializer = MyProfileUserSerializer(user, data=request.data)
         if not serializer.is_valid():

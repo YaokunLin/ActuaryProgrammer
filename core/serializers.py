@@ -1,10 +1,22 @@
 from datetime import datetime
+
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from core.inline_serializers import InlinePracticeTelecomSerializer, InlineUserSerializer
-
-from core.models import Agent, Client, Organization, Patient, Practice, PracticeTelecom, User, VoipProvider
+from core.inline_serializers import (
+    InlinePracticeTelecomSerializer,
+    InlineUserSerializer,
+)
+from core.models import (
+    Agent,
+    Client,
+    Organization,
+    Patient,
+    Practice,
+    PracticeTelecom,
+    User,
+    VoipProvider,
+)
 
 
 class UnixEpochDateField(serializers.DateTimeField):
@@ -53,25 +65,26 @@ class PracticeSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_at", "modified_by", "modified_at", "active"]
 
 
+class InlinePracticeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Practice
+        fields = ["id", "name", "created_at", "modified_at", "active"]
+        read_only_fields = ["id", "name", "created_at", "modified_at", "active"]
+
+
 class OrganizationSerializer(serializers.ModelSerializer):
+
+    practices = InlinePracticeSerializer(many=True, read_only=True)
+
     class Meta:
         model = Organization
         fields = "__all__"
-        read_only_fields = ["id", "created_at", "modified_by", "modified_at", "active"]
-
-    def create(self, validated_data):
-        request = self.context.get("request")
-        name = validated_data.get("name")
-
-        # TODO: do we want active: False this model for Peerlogic Validation?
-        organization = Organization.objects.create(**validated_data)
-        practice = Practice.objects.create(organization=organization, name=name, active=False)
-        Agent.objects.create(practice=practice, user=request.user)
-
-        return organization
+        read_only_fields = ["id", "created_at", "modified_by", "modified_at", "active", "practices"]
 
 
 class AdminOrganizationSerializer(serializers.ModelSerializer):
+    practices = InlinePracticeSerializer(many=True, read_only=True)
+
     class Meta:
         model = Organization
         fields = "__all__"
@@ -82,21 +95,39 @@ class PracticeTelecomSerializer(serializers.ModelSerializer):
     class Meta:
         model = PracticeTelecom
         fields = "__all__"
-        read_only_fields = ["id", "created_at", "modified_by", "modified_at", "voip_provider", "practice", "domain", "phone_sms", "phone_callback"]
+        read_only_fields = [
+            "id",
+            "created_at",
+            "created_by",
+            "modified_by",
+            "modified_at",
+            "voip_provider",
+            "practice",
+            "domain",
+            "phone_sms",
+            "phone_callback",
+        ]
+
+
+class PracticeTelecomCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PracticeTelecom
+        fields = ["id", "practice", "voip_provider", "created_at", "modified_at"]
+        read_only_fields = ["id", "created_at", "modified_at"]
 
 
 class AdminPracticeTelecomSerializer(serializers.ModelSerializer):
     class Meta:
         model = PracticeTelecom
         fields = "__all__"
-        read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
+        read_only_fields = ["id", "created_at", "created_by", "modified_by", "modified_at"]
 
 
 class VoipProviderSerializer(serializers.ModelSerializer):
     class Meta:
         model = VoipProvider
-        fields = ["id", "created_at", "modified_by", "modified_at", "company_name"]
-        read_only_fields = ["id", "created_at", "modified_by", "modified_at", "company_name"]
+        fields = ["id", "created_at", "modified_at", "company_name"]
+        read_only_fields = ["id", "created_at", "modified_at", "company_name"]
 
 
 class AdminVoipProviderSerializer(serializers.ModelSerializer):

@@ -125,7 +125,7 @@ class Practice(AuditTrailModel):
 
     address_us_state = USStateField(blank=True, default="AZ")  # yes, it's a char field behind the scenes
 
-    organization = models.ForeignKey("core.Organization", null=True, blank=True, on_delete=models.SET_NULL)
+    organization = models.ForeignKey("core.Organization", null=True, blank=True, on_delete=models.SET_NULL, related_name="practices")
 
     objects = PracticeManager()
 
@@ -177,7 +177,7 @@ class VoipProvider(AuditTrailModel):
 
 class PracticeTelecom(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
-    voip_provider = models.ForeignKey(VoipProvider, on_delete=models.SET_NULL, null=True)
+    voip_provider = models.ForeignKey(VoipProvider, on_delete=models.CASCADE, related_name="practice_telecoms")
     practice = models.OneToOneField(Practice, on_delete=models.CASCADE, related_name="practice_telecom")
     domain = models.CharField(max_length=80, db_index=True, blank=True)  # TODO: move to Netsapiens App specific datamodel
     phone_sms = PhoneNumberField(blank=True)
