@@ -3,6 +3,7 @@ from datetime import datetime
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from core.field_choices import IndustryTypes
 from core.inline_serializers import (
     InlinePracticeTelecomSerializer,
     InlineUserSerializer,
@@ -68,8 +69,27 @@ class PracticeSerializer(serializers.ModelSerializer):
 class InlinePracticeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Practice
-        fields = ["id", "name", "created_at", "modified_at", "active"]
-        read_only_fields = ["id", "name", "created_at", "modified_at", "active"]
+        fields = ["id", "name", "created_at", "modified_at", "active", "industry"]
+        read_only_fields = ["id", "name", "created_at", "modified_at", "active", "industry"]
+
+
+class OrganizationCreateSerializer(serializers.ModelSerializer):
+    """
+    Allows for propagation of industry to the auto-generated practice
+    """
+
+    industry = serializers.ChoiceField(choices=IndustryTypes.choices, allow_null=False, allow_blank=True, required=False, default="")
+
+    class Meta:
+        model = Organization
+        fields = "__all__"
+        read_only_fields = ["id", "created_at", "created_by", "modified_by", "modified_at", "active", "practices"]
+
+    def create(self, validated_data):
+        """
+        Remove industry from fields passed to model create
+        """
+        return super().create({k: v for k, v in validated_data.items() if k != "industry"})
 
 
 class OrganizationSerializer(serializers.ModelSerializer):

@@ -4,6 +4,7 @@ import requests
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Q
+from django.db.transaction import atomic
 from django.http import HttpRequest
 from django.utils import timezone
 from django.utils.translation import ugettext as _
@@ -17,15 +18,14 @@ from rest_framework.exceptions import (
     PermissionDenied,
 )
 from rest_framework.generics import RetrieveUpdateAPIView
-from rest_framework.mixins import ListModelMixin, RetrieveModelMixin
-from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAdminUser
+from rest_framework.permissions import SAFE_METHODS, AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from rest_framework.views import APIView
 
 from core.exceptions import InternalServerError, ServiceUnavailableError
-from core.field_choices import IndustryTypes, VoipProviderIntegrationTypes
+from core.field_choices import IndustryTypes
 from core.models import (
     Agent,
     Client,
@@ -44,6 +44,7 @@ from core.serializers import (
     AgentSerializer,
     ClientSerializer,
     MyProfileUserSerializer,
+    OrganizationCreateSerializer,
     OrganizationSerializer,
     PatientSerializer,
     PracticeSerializer,
@@ -418,13 +419,15 @@ class OrganizationViewSet(MadeByMeViewSetMixin, viewsets.ModelViewSet):
         if not (self.request.user.is_staff or self.request.user.is_superuser) and Organization.objects.filter(self.resource_made_by_me_filter).exists():
             return Response(status=status.HTTP_403_FORBIDDEN, data={"errors": "You are only allowed to make 1 organization."})
 
-        serializer = self.get_serializer(data=request.data)
+        serializer = OrganizationCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        organization = serializer.instance
-        name = serializer.validated_data["name"]
-        practice = Practice.objects.create(organization=organization, name=name, active=False)
-        Agent.objects.create(practice=practice, user=request.user)
+        with atomic():
+            self.perform_create(serializer)
+            organization = serializer.instance
+            name = serializer.validated_data["name"]
+            industry = serializer.validated_data.get("industry", "")
+            practice = Practice.objects.create(organization=organization, name=name, active=False, industry=industry)
+            Agent.objects.create(practice=practice, user=request.user)
 
         output_serializer = OrganizationSerializer(organization)
         return Response(output_serializer.data, status=status.HTTP_201_CREATED, headers=self.get_success_headers(output_serializer.data))
