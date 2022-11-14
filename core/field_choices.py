@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
 
 class FileStatusTypes(object):
@@ -25,4 +26,4 @@ class IndustryTypes(models.TextChoices):
 
 class VoipProviderIntegrationTypes(models.TextChoices):
     NETSAPIENS = "netsapiens"
-    JIVE = "jive"
+    JIVE = "jive", _("GoTo / Jive")
