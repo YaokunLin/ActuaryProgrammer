@@ -47,6 +47,7 @@ class _Authentication(AuthBase):
         self._client_id = client_id
         self._client_secret = client_secret
         self._access_token = None
+        self._account_key = None
         self._refresh_token = refresh_token
 
     def __call__(self, r: requests.Request):
@@ -118,7 +119,7 @@ class _Authentication(AuthBase):
         body = resp.json()
 
         try:
-            self._access_token: str = body["access_token"]
+            self._access_token: str = body.get("access_token")
             self._account_key: Optional[str] = body.get("account_key")
             self._organizer_key: Optional[str] = body.get("organizer_key")
             self._scope: Optional[str] = body.get("scope")
@@ -156,6 +157,10 @@ class JiveClient:
     @property
     def principal(self):
         return self.__auth._principal
+
+    @property
+    def account_key(self):
+        return self.__auth._account_key
 
     def exchange_code(self, code: str, request_uri: str):
         """
@@ -260,7 +265,7 @@ class JiveClient:
 
     def list_lines(self) -> List[Line]:
         """
-        List all lines avaialable to the user's account and pair them with their given organization id.
+        List all lines available to the user's account and pair them with their given organization id.
 
         https://developer.goto.com/GoToConnect#tag/Lines/paths/~1users~1v1~1lines/get
         """
@@ -275,6 +280,30 @@ class JiveClient:
         try:
             for item in body["items"]:
                 lines.append(Line(line_id=item["id"], source_organization_jive_id=item["organization"]["id"]))
+        except KeyError as exc:
+            raise APIResponseException("failed to parse list lines response") from exc
+
+        return lines
+
+    def list_lines_all_users(self, account_key:str) -> List[Line]:
+        """
+        List all lines available to all the user's account and pair them with their given organization id.
+
+        https://developer.goto.com/GoToConnect#tag/Lines/paths/~1users~1v1~1lines/get
+        """
+
+        lines: List[Line] = []
+
+        resp = self.__request(method="get", path=f"/users/v1/users?accountKey={account_key}")
+
+        resp.raise_for_status()
+
+        body = resp.json()
+
+        try:
+            for item in body["items"]:
+                for item_line in item['lines']:
+                    lines.append(Line(line_id=item_line["id"], source_organization_jive_id=item_line["organization"]["id"]))
         except KeyError as exc:
             raise APIResponseException("failed to parse list lines response") from exc
 
