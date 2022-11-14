@@ -9,7 +9,6 @@ from django.utils import timezone
 from django.utils.translation import ugettext as _
 from oauth2_provider.contrib.rest_framework import TokenHasReadWriteScope
 from pydantic import BaseModel
-
 from rest_framework import status, views, viewsets
 from rest_framework.exceptions import (
     APIException,
@@ -23,7 +22,6 @@ from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from rest_framework.views import APIView
-
 
 from core.exceptions import InternalServerError, ServiceUnavailableError
 from core.field_choices import IndustryTypes, VoipProviderIntegrationTypes
@@ -44,8 +42,8 @@ from core.serializers import (
     AdminVoipProviderSerializer,
     AgentSerializer,
     ClientSerializer,
-    OrganizationSerializer,
     MyProfileUserSerializer,
+    OrganizationSerializer,
     PatientSerializer,
     PracticeSerializer,
     PracticeTelecomSerializer,
@@ -396,7 +394,7 @@ class PracticeTelecomViewSet(viewsets.ModelViewSet):
 
 class OrganizationViewSet(MadeByMeViewSetMixin, viewsets.ModelViewSet):
     queryset = Organization.objects.all().order_by("-modified_at")
-    filterset_fields = ["name"]
+    filterset_fields = ("name",)  # TODO: This should probably be case insensitive
 
     def get_serializer_class(self):
         if self.request.user.is_staff or self.request.user.is_superuser:
@@ -408,11 +406,10 @@ class OrganizationViewSet(MadeByMeViewSetMixin, viewsets.ModelViewSet):
         organizations_qs = Organization.objects.none()
 
         if self.request.user.is_staff or self.request.user.is_superuser:
-            organizations_qs = PracticeTelecom.objects.all()
+            organizations_qs = Organization.objects.all()
         elif self.request.method in SAFE_METHODS:
             # Can see your own organizations associated to your assigned agent practices
             practice_ids = Agent.objects.filter(user=self.request.user).values_list("practice_id", flat=True)
-
             organizations_related_to_me_filter = Q(practice__id__in=practice_ids)
             filters = self.resource_made_by_me_filter | organizations_related_to_me_filter
             organizations_qs = Organization.objects.filter(filters)
