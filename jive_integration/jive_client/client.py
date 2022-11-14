@@ -159,8 +159,19 @@ class JiveClient:
         return self.__auth._principal
 
     @property
+    def organizer_key(self):
+        return self.__auth._organizer_key
+
+    @property
+    def scope(self):
+        return self.__auth._scope
+
+    @property
     def account_key(self):
         return self.__auth._account_key
+
+    def get_token(self):
+        self.__auth._get_token()
 
     def exchange_code(self, code: str, request_uri: str):
         """
