@@ -170,7 +170,7 @@ class JiveLine(models.Model):
     session = models.ForeignKey(JiveSession, null=True, on_delete=models.CASCADE)
 
     source_jive_id = models.CharField(max_length=64, unique=True)
-    source_organization_jive_id = models.CharField(max_length=64, unique=True)
+    source_organization_jive_id = models.CharField(max_length=64)
 
 
 class JiveSubscriptionEventExtract(AuditTrailModel):

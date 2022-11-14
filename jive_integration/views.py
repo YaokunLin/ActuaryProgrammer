@@ -305,9 +305,14 @@ def authentication_callback(request: Request):
 
     log.info(f"Jive: Checking for principal (email associated with the user).")
     principal = jive.principal  # this is the email associated with user
+    scope = jive.scope # this is the scope of the authenticated user
     if not principal:
         log.exception("Jive: No principal (email associated with the user) found in access token response.")
         raise ValidationError({"errors": {"principal": "email is missing from your submission - are you logged in?"}})
+
+    log.info("Jive: Refresh token to get account key and organization key.")
+    jive.refresh_token()
+    log.info("Jive: Done refreshing token")
 
     log.info(f"Jive: Checking for existing JiveConnection with principal={principal}.")
     connection: JiveConnection = None
@@ -324,8 +329,14 @@ def authentication_callback(request: Request):
             raise ValidationError({"errors": {"code": "Contact support@peerlogic.com - your practice telecom has not been set up with this user yet."}})
         log.info(f"Jive: Successfully validated a Practice Telecom exists with voip_provider__integration_type of JIVE and principal='{principal}'.")
 
-        log.info(f"Jive: Creating Jive Connection with practice_telecom='{practice_telecom}'.")
-        connection = JiveConnection(practice_telecom=practice_telecom)
+        log.info(f"Jive: Creating Jive Connection with practice_telecom='{practice_telecom}', account_key='{jive.account_key}', email='{principal}', organizer_key='{jive.organizer_key}' and scope='{scope}'.")
+        connection = JiveConnection(
+            practice_telecom=practice_telecom,
+            email=principal,
+            account_key=jive.account_key,
+            organizer_key=jive.organizer_key,
+            scope=scope
+        )
 
     connection.refresh_token = jive.refresh_token
     log.info(f"Jive: Saving JiveConnection with refresh_token='{jive.refresh_token}.")
@@ -457,7 +468,7 @@ def cron(request):
         # Needs:
         # * an account key, whatever that is
         # * may also need a call to the admin api to get the account key.
-        external_lines: Set[Line] = set(jive.list_lines())
+        external_lines: Set[Line] = set(jive.list_lines_all_users(connection.account_key))
 
         # compute new lines
         add_lines = external_lines - current_lines
