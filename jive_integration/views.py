@@ -305,7 +305,8 @@ def authentication_callback(request: Request):
 
     log.info(f"Jive: Checking for principal (email associated with the user).")
     principal = jive.principal  # this is the email associated with user
-    scope = jive.scope # this is the scope assoicated with user
+    scope = jive.scope # this is the scope of the authenticated user
+    if not principal:
         log.exception("Jive: No principal (email associated with the user) found in access token response.")
         raise ValidationError({"errors": {"principal": "email is missing from your submission - are you logged in?"}})
 
