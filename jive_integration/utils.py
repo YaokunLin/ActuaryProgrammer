@@ -102,9 +102,9 @@ def get_call_id_from_previous_announce_events_by_originator_id(originator_id: st
 
 def calculate_connect_duration(originator_id: str) -> int:
     # Grab first jive ringing state for the call id
-    ringing_event = JiveSubscriptionEventExtract.objects.filter(data_state=JiveLegStateChoices.CREATED, data_originator_id=originator_id).first()
+    ringing_event = JiveSubscriptionEventExtract.objects.filter(data_state=JiveLegStateChoices.CREATED, data_originator_id=originator_id).order_by("-data_created").first()
     # Grab first jive answer state for the call id
-    answered_event = JiveSubscriptionEventExtract.objects.filter(data_state=JiveLegStateChoices.ANSWERED, data_originator_id=originator_id).first()
+    answered_event = JiveSubscriptionEventExtract.objects.filter(data_state=JiveLegStateChoices. ANSWERED, data_originator_id=originator_id).order_by("-data_created").first()
     # Subtract the time
     if ringing_event and answered_event:
         return answered_event.created_at - ringing_event.created_at
@@ -113,7 +113,7 @@ def calculate_connect_duration(originator_id: str) -> int:
 
 def calculate_progress_time(originator_id: str, end_time: datetime) -> int:
     # Grab first jive answer state for the call id
-    answered_event = JiveSubscriptionEventExtract.objects.filter(data_state=JiveLegStateChoices.ANSWERED, data_originator_id=originator_id).first()
+    answered_event = JiveSubscriptionEventExtract.objects.filter(data_state=JiveLegStateChoices.ANSWERED, data_originator_id=originator_id).order_by("-data_created").first()
 
     # Subtract the time
     if end_time and answered_event:
