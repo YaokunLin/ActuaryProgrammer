@@ -311,13 +311,14 @@ def authentication_callback(request: Request):
         raise ValidationError({"errors": {"principal": "email is missing from your submission - are you logged in?"}})
 
     log.info("Jive: Refresh token to get account key and organization key.")
-    jive.refresh_token()
+    jive.get_token()
     log.info("Jive: Done refreshing token")
 
     log.info(f"Jive: Checking for existing JiveConnection with principal={principal}.")
     connection: JiveConnection = None
     with suppress(JiveConnection.DoesNotExist):
         connection = JiveConnection.objects.get(practice_telecom__practice__agent__user__email=principal)
+        if connection: log.info(f"Jive: Found existing JiveConnection with principal={principal}.")
 
     if not connection:
         log.info(f"Jive: No existing JiveConnection exists with user email principal={principal}.")
@@ -332,13 +333,14 @@ def authentication_callback(request: Request):
         log.info(f"Jive: Creating Jive Connection with practice_telecom='{practice_telecom}', account_key='{jive.account_key}', email='{principal}', organizer_key='{jive.organizer_key}' and scope='{scope}'.")
         connection = JiveConnection(
             practice_telecom=practice_telecom,
-            email=principal,
-            account_key=jive.account_key,
-            organizer_key=jive.organizer_key,
-            scope=scope
+            email=principal
         )
 
     connection.refresh_token = jive.refresh_token
+    connection.account_key = jive.account_key
+    connection.organizer_key = jive.organizer_key
+    connection.email = principal
+    connection.scope = scope
     log.info(f"Jive: Saving JiveConnection with refresh_token='{jive.refresh_token}.")
     connection.save()
     log.info(f"Jive: Saved JiveConnection to the database with id='{connection.id}'.")
