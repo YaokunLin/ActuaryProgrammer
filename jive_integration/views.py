@@ -2,8 +2,8 @@ import base64
 import json
 import logging
 from contextlib import suppress
-from datetime import datetime, timedelta
-from typing import Dict, Optional, Set
+from datetime import datetime
+from typing import Dict, Optional
 from urllib.parse import urlencode, urlparse
 
 import dateutil.parser
@@ -96,7 +96,6 @@ def webhook(request):
 
     end_time = timestamp_of_request
     jive_request_data_key_value_pair: Dict = content.get("data", {})
-    jive_leg_id = jive_request_data_key_value_pair.get("legId")
     jive_originator_id = jive_request_data_key_value_pair.get("originatorId")
     subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=content)
     subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
@@ -122,7 +121,6 @@ def webhook(request):
     source_jive_id = content.get("subId")
     source_organization_jive_id = jive_request_data_key_value_pair.get("originatorOrganizationId")
     log.info(f"Jive: Checking we have a JiveLine with originatorOrganizationId='{source_organization_jive_id}'")
-    # TODO: Validate the webhook is active. Put this in a try/catch as well to handle exception
     line: JiveLine = JiveLine.objects.filter(source_organization_jive_id=source_organization_jive_id).first()
     log.info(f"Jive: JiveLine found with originatorOrganizationId='{source_organization_jive_id}'")
 
