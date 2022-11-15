@@ -52,6 +52,8 @@ from jive_integration.utils import (
     get_call_id_from_previous_announce_events_by_originator_id,
     handle_withdraw_event,
     refresh_connection,
+    parse_webhook_from_header,
+    get_channel_from_source_jive_id,
 )
 
 # Get an instance of a logger
@@ -84,13 +86,18 @@ def webhook(request):
     #
     # VALIDATION
     #
+    webhook = parse_webhook_from_header(request.headers.get('signature-input'))
+    jive_channel = get_channel_from_source_jive_id(webhook)
+    if not jive_channel:
+        log.error(f"Jive: JiveChannel record does not exist for webhook='{webhook}'")
+        return HttpResponse(status=status.HTTP_404_NOT_FOUND, data={"signature": "invalid"})
 
     try:
         req = json.loads(request.body)
         timestamp_of_request: datetime = dateutil.parser.isoparser().isoparse(req["timestamp"])
         content = json.loads(req["content"])
     except (json.JSONDecodeError, KeyError):
-        return HttpResponse(status=406)
+        return HttpResponse(status=status.HTTP_406_NOT_ACCEPTABLE)
 
     end_time = timestamp_of_request
     jive_request_data_key_value_pair: Dict = content.get("data", {})
