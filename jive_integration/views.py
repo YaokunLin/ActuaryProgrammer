@@ -90,14 +90,14 @@ def webhook(request):
     jive_channel = get_channel_from_source_jive_id(webhook)
     if not jive_channel:
         log.error(f"Jive: JiveChannel record does not exist for webhook='{webhook}'")
-        return HttpResponse(status=406)
+        return HttpResponse(status=status.HTTP_404_NOT_FOUND, data={"signature": "invalid"})
 
     try:
         req = json.loads(request.body)
         timestamp_of_request: datetime = dateutil.parser.isoparser().isoparse(req["timestamp"])
         content = json.loads(req["content"])
     except (json.JSONDecodeError, KeyError):
-        return HttpResponse(status=406)
+        return HttpResponse(status=status.HTTP_406_NOT_ACCEPTABLE)
 
     end_time = timestamp_of_request
     jive_request_data_key_value_pair: Dict = content.get("data", {})
