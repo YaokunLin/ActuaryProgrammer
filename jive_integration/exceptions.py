@@ -1,0 +1,4 @@
+
+
+class TooLateToRefreshTokenException(Exception):
+  pass

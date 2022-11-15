@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 from typing import List, Optional
 
 import requests
-from django.conf import settings
 from django.utils import timezone
 from requests.auth import AuthBase, HTTPBasicAuth
 
@@ -48,6 +47,7 @@ class _Authentication(AuthBase):
         self._client_id = client_id
         self._client_secret = client_secret
         self._access_token = None
+        self._account_key = None
         self._refresh_token = refresh_token
 
     def __call__(self, r: requests.Request):
@@ -119,7 +119,10 @@ class _Authentication(AuthBase):
         body = resp.json()
 
         try:
-            self._access_token: str = body["access_token"]
+            self._access_token: str = body.get("access_token")
+            self._account_key: Optional[str] = body.get("account_key")
+            self._organizer_key: Optional[str] = body.get("organizer_key")
+            self._scope: Optional[str] = body.get("scope")
             self._principal: Optional[str] = body.get("principal")  # email address associated to the account
             self._refresh_token: str = body["refresh_token"]
             self.__token_expires_at: float = (datetime.utcnow() + timedelta(seconds=body["expires_in"])).timestamp()
@@ -154,6 +157,21 @@ class JiveClient:
     @property
     def principal(self):
         return self.__auth._principal
+
+    @property
+    def organizer_key(self):
+        return self.__auth._organizer_key
+
+    @property
+    def scope(self):
+        return self.__auth._scope
+
+    @property
+    def account_key(self):
+        return self.__auth._account_key
+
+    def get_token(self):
+        return self.__auth._get_token()
 
     def exchange_code(self, code: str, request_uri: str):
         """
@@ -258,7 +276,7 @@ class JiveClient:
 
     def list_lines(self) -> List[Line]:
         """
-        List all lines avaialable to the user's account and pair them with their given organization id.
+        List all lines available to the user's account and pair them with their given organization id.
 
         https://developer.goto.com/GoToConnect#tag/Lines/paths/~1users~1v1~1lines/get
         """
@@ -275,6 +293,31 @@ class JiveClient:
                 lines.append(Line(line_id=item["id"], source_organization_jive_id=item["organization"]["id"]))
         except KeyError as exc:
             raise APIResponseException("failed to parse list lines response") from exc
+
+        return lines
+
+    def list_lines_all_users(self, account_key:str) -> List[Line]:
+        """
+        List all lines available to all the user's account and pair them with their given organization id.
+
+        https://developer.goto.com/GoToConnect#tag/Lines/paths/~1users~1v1~1lines/get
+        """
+
+        lines: List[Line] = []
+
+        resp = self.__request(method="get", path=f"/users/v1/users?accountKey={account_key}")
+
+        resp.raise_for_status()
+
+        body = resp.json()
+
+        try:
+            for item in body.get("items", []):
+                item_lines = item.get("lines", [])
+                for item_line in item_lines:
+                    lines.append(Line(line_id=item_line["id"], source_organization_jive_id=item_line["organization"]["id"]))
+        except KeyError as exc:
+            raise APIResponseException("Failed to parse list_lines_all_users response") from exc
 
         return lines
 

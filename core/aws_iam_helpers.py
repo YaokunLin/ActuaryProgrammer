@@ -18,20 +18,33 @@ def create_user(username: str) -> User:
     return User(**response.get("User"))
 
 
-def create_writeonly_iam_policy_for_bucket(policy_name: str, bucket_name: str) -> IAMPolicy:
+def create_call_recording_iam_policy_for_bucket(policy_name: str, bucket_name: str) -> IAMPolicy:
     """https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/iam.html#IAM.Client.create_policy"""
     s3_managed_policy = {
         "Version": "2012-10-17",
         "Statement": [
             {
+                "Sid": "ListObjectsInBucket",
                 "Effect": "Allow",
                 "Action": [
+                    "s3:ListBucket",
+                ],
+                "Resource": f"arn:aws:s3:::{bucket_name}",
+                "Condition": {"StringNotEquals": {"s3:x-amz-acl": ["public-read"]}},
+            },
+            {
+                "Sid": "CallRecordingObjectActions",
+                "Effect": "Allow",
+                "Action": [
+                    "s3:AbortMultipartUpload",
                     "s3:PutObject",
                     "s3:PutObjectAcl",
+                    "s3:GetObject",
+                    "s3:GetObjectAcl",
                 ],
                 "Resource": f"arn:aws:s3:::{bucket_name}/*",
                 "Condition": {"StringNotEquals": {"s3:x-amz-acl": ["public-read"]}},
-            }
+            },
         ],
     }
 
@@ -61,6 +74,6 @@ def create_access_key(username: str) -> AccessKey:
 if __name__ == "__main__":
     """Only run when from command line / scripted."""
     create_user("test-s3-user")
-    create_writeonly_iam_policy_for_bucket("test-s3-user", "plapi-test-bucket-foo")
+    create_call_recording_iam_policy_for_bucket("test-s3-user", "plapi-test-bucket-foo")
     attach_user_policy(policy_arn="arn:aws:iam::020628457151:policy/test-s3-user", username="test-s3-user")
     create_access_key("test-s3-user")

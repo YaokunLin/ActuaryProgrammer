@@ -3,26 +3,33 @@ import logging
 import requests
 from django.conf import settings
 from django.db import transaction
+from django.db.models import Q
+from django.db.transaction import atomic
 from django.http import HttpRequest
 from django.utils import timezone
 from django.utils.translation import ugettext as _
-from oauth2_provider.contrib.rest_framework import TokenHasReadWriteScope, TokenHasScope
+from oauth2_provider.contrib.rest_framework import TokenHasReadWriteScope
 from pydantic import BaseModel
-from rest_framework import status, viewsets
+from rest_framework import status, views, viewsets
 from rest_framework.exceptions import (
     APIException,
     AuthenticationFailed,
     ParseError,
     PermissionDenied,
 )
+from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.permissions import SAFE_METHODS, AllowAny
+from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.serializers import ValidationError
 from rest_framework.views import APIView
 
 from core.exceptions import InternalServerError, ServiceUnavailableError
+from core.field_choices import IndustryTypes
 from core.models import (
     Agent,
     Client,
+    Organization,
     Patient,
     Practice,
     PracticeTelecom,
@@ -30,11 +37,18 @@ from core.models import (
     VoipProvider,
 )
 from core.serializers import (
+    AdminOrganizationSerializer,
+    AdminPracticeTelecomSerializer,
     AdminUserSerializer,
+    AdminVoipProviderSerializer,
     AgentSerializer,
     ClientSerializer,
+    MyProfileUserSerializer,
+    OrganizationCreateSerializer,
+    OrganizationSerializer,
     PatientSerializer,
     PracticeSerializer,
+    PracticeTelecomCreateSerializer,
     PracticeTelecomSerializer,
     VoipProviderSerializer,
 )
@@ -46,6 +60,7 @@ from core.setup_user_and_practice import (
     setup_user,
     update_user_on_refresh,
 )
+from core.view_mixins import MadeByMeViewSetMixin
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -55,6 +70,14 @@ class ServiceUnavailableError(APIException):
     status_code = status.HTTP_503_SERVICE_UNAVAILABLE
     default_detail = _("Service unavailable. Try again later.")
     default_code = "service_unavailable_error"
+
+
+class CoreFieldChoicesView(views.APIView):
+    def get(self, request, format=None):
+        result = {}
+        result["industry_types"] = dict((y, x) for x, y in IndustryTypes.choices)
+        # excluding VoipProviderIntegrationTypes.choices - our integration types are secret. (Use /voip-providers/)
+        return Response(result)
 
 
 class LoginView(APIView):
@@ -272,6 +295,19 @@ class PatientViewset(viewsets.ModelViewSet):
     filterset_fields = ["phone_mobile", "phone_home", "phone_work", "phone_fax"]
     search_fields = ["name_first", "name_last", "phone_mobile", "phone_home", "phone_work"]
 
+    def get_queryset(self):
+        patient_qs = Patient.objects.none()
+
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            patient_qs = Patient.objects.all()
+        elif self.request.method in SAFE_METHODS:
+            # TODO: organizations ACL
+            # Can see any patients if you are an assigned agent to a practice
+            practice_ids = Agent.objects.filter(user=self.request.user).values_list("practice_id", flat=True)
+            patient_qs = Patient.objects.filter(practice__id__in=practice_ids)
+
+        return patient_qs.order_by("-modified_at")
+
 
 class PracticeViewSet(viewsets.ModelViewSet):
     serializer_class = PracticeSerializer
@@ -279,44 +315,206 @@ class PracticeViewSet(viewsets.ModelViewSet):
     search_fields = ["name"]
 
     def get_queryset(self):
-
         query_set = Practice.objects.none()
 
         if self.request.user.is_staff or self.request.user.is_superuser:
             query_set = Practice.objects.all()
         elif self.request.method in SAFE_METHODS:
+            # TODO: organizations ACL
             # Can see any practice if you are an assigned agent to a practice
             practice_ids = Agent.objects.filter(user=self.request.user).values_list("practice_id", flat=True)
             query_set = Practice.objects.filter(pk__in=practice_ids)
 
         return query_set.order_by("name")
 
+    def create(self, request: Request, *args, **kwargs) -> Response:
+        if not (self.request.user.is_staff or self.request.user.is_superuser):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        super().create(request=request)
+
+    def update(self, request: Request, *args, **kwargs) -> Response:
+        if not (self.request.user.is_staff or self.request.user.is_superuser):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        super().update(request=request)
+
+    def partial_update(self, request: Request, *args, **kwargs) -> Response:
+        if not (self.request.user.is_staff or self.request.user.is_superuser):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        super().partial_update(request=request)
+
 
 class PracticeTelecomViewSet(viewsets.ModelViewSet):
     queryset = PracticeTelecom.objects.all().order_by("-modified_at")
-    serializer_class = PracticeTelecomSerializer
-    # TODO: provide filtering of queryset to logged in voip providers' practices
-
     filterset_fields = ["domain", "phone_sms", "phone_callback", "voip_provider"]
+
+    def get_serializer_class(self):
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            return AdminPracticeTelecomSerializer
+        else:
+            return PracticeTelecomSerializer
+
+    def get_queryset(self):
+        practice_telecoms_qs = PracticeTelecom.objects.none()
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            practice_telecoms_qs = PracticeTelecom.objects.all()
+        elif self.request.method in SAFE_METHODS:
+            # TODO: organizations ACL
+            # Can see any practice telecoms if you are an assigned agent to a practice
+            practice_ids = Agent.objects.filter(user=self.request.user).values_list("practice_id", flat=True)
+            practice_telecoms_qs = PracticeTelecom.objects.filter(practice__id__in=practice_ids)
+
+        return practice_telecoms_qs.order_by("-modified_at")
+
+    # TODO: Organizations ACL with DRF object permissions
+    def permissions_check(self, request):
+        practice_id = request.data.get("practice")
+        practice_ids = Agent.objects.filter(user=self.request.user).values_list("practice_id", flat=True)
+        if practice_id not in practice_ids:
+            return Response(status=status.HTTP_403_FORBIDDEN, data={"errors": {"practice": "Not a member of this practice"}})
+
+    def create(self, request: Request, *args, **kwargs) -> Response:
+        self.permissions_check(request)
+        serializer = PracticeTelecomCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=self.get_success_headers(serializer.data))
+
+    def update(self, request: Request, pk=None, *args, **kwargs) -> Response:
+        self.permissions_check(request)
+        return super().update(request=request, pk=pk)
+
+    def partial_update(self, request: Request, pk=None, *args, **kwargs) -> Response:
+        self.permissions_check(request)
+        return super().partial_update(request=request, pk=pk)
+
+
+class OrganizationViewSet(MadeByMeViewSetMixin, viewsets.ModelViewSet):
+    queryset = Organization.objects.all().order_by("-modified_at")
+    filterset_fields = ("name",)  # TODO: This should probably be case insensitive
+
+    def get_serializer_class(self):
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            return AdminOrganizationSerializer
+        else:
+            return OrganizationSerializer
+
+    def get_queryset(self):
+        organizations_qs = Organization.objects.none()
+
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            organizations_qs = Organization.objects.all()
+        elif self.request.method in SAFE_METHODS:
+            # Can see your own organizations associated to your assigned agent practices
+            practice_ids = Agent.objects.filter(user=self.request.user).values_list("practice_id", flat=True)
+            organizations_related_to_me_filter = Q(practice__id__in=practice_ids)
+            filters = self.resource_made_by_me_filter | organizations_related_to_me_filter
+            organizations_qs = Organization.objects.filter(filters)
+
+        return organizations_qs.order_by("-modified_at")
+
+    def create(self, request: Request, *args, **kwargs) -> Response:
+        if not (self.request.user.is_staff or self.request.user.is_superuser) and Organization.objects.filter(self.resource_made_by_me_filter).exists():
+            return Response(status=status.HTTP_403_FORBIDDEN, data={"errors": "You are only allowed to make 1 organization."})
+
+        serializer = OrganizationCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        with atomic():
+            self.perform_create(serializer)
+            organization = serializer.instance
+            name = serializer.validated_data["name"]
+            industry = serializer.validated_data.get("industry", "")
+            practice = Practice.objects.create(organization=organization, name=name, active=False, industry=industry)
+            Agent.objects.create(practice=practice, user=request.user)
+
+        output_serializer = OrganizationSerializer(organization)
+        return Response(output_serializer.data, status=status.HTTP_201_CREATED, headers=self.get_success_headers(output_serializer.data))
+
+    def update(self, request: Request, *args, **kwargs) -> Response:
+        if not (self.request.user.is_staff or self.request.user.is_superuser):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        # TODO: organization admin access
+
+        return super().update(request=request)
+
+    def partial_update(self, request: Request, *args, **kwargs) -> Response:
+        if not (self.request.user.is_staff or self.request.user.is_superuser):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        # TODO: organization admin access
+
+        return super().partial_update(request=request)
 
 
 class VoipProviderViewset(viewsets.ModelViewSet):
+    """
+    VOIP Providers are unique - we want users to be able to select them as an integration partner with us
+    """
+
     queryset = VoipProvider.objects.all().order_by("-modified_at")
-    serializer_class = VoipProviderSerializer
 
     filterset_fields = ["company_name"]
+    serializer_class_write = AdminVoipProviderSerializer
+    serializer_class_read = VoipProviderSerializer
+
+    def get_serializer_class(self):
+        if self.action in ["create", "update", "partial_update"]:
+            return self.serializer_class_write
+
+        return self.serializer_class_read
+
+    def create(self, request: Request, *args, **kwargs) -> Response:
+        if not (self.request.user.is_staff or self.request.user.is_superuser):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        super().create(request=request)
+
+    def update(self, request: Request, *args, **kwargs) -> Response:
+        if not (self.request.user.is_staff or self.request.user.is_superuser):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        super().update(request=request)
+
+    def partial_update(self, request: Request, *args, **kwargs) -> Response:
+        if not (self.request.user.is_staff or self.request.user.is_superuser):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        super().partial_update(request=request)
 
 
 class AgentViewset(viewsets.ModelViewSet):
     queryset = Agent.objects.all().order_by("-practice").select_related("user")
     serializer_class = AgentSerializer
-
     filterset_fields = ["practice"]
 
+    def get_queryset(self):
+        agents_qs = Agent.objects.none()
 
-class UserViewset(viewsets.ModelViewSet):
-    queryset = Agent.objects.all().order_by("-practice")
-    serializer_class = AgentSerializer
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            agents_qs = Agent.objects.all()
+        elif self.request.method in SAFE_METHODS:
+            # TODO: organizations ACL
+            # Can see any agents if you are an assigned agent to a practice
+            practice_ids = Agent.objects.filter(user=self.request.user).values_list("practice_id", flat=True)
+            agents_qs = Agent.objects.filter(practice__id__in=practice_ids)
+
+        return agents_qs.order_by("-modified_at")
+
+
+class MyProfileView(RetrieveUpdateAPIView):
+    def get(self, request: Request, *args, **kwargs) -> Response:
+        user = User.objects.get(pk=self.request.user.id)
+        serializer = MyProfileUserSerializer(user)
+        return Response(data=serializer.data)
+
+    def patch(self, request: Request, *args, **kwargs) -> Response:
+        user = User.objects.get(pk=self.request.user.id)
+        serializer = MyProfileUserSerializer(user, data=request.data)
+        if not serializer.is_valid():
+            raise ValidationError(serializer.errors)
+        serializer.save()
+        return Response(data=serializer.data)
 
 
 class AdminUserViewset(viewsets.ModelViewSet):
