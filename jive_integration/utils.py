@@ -165,7 +165,7 @@ def handle_withdraw_event(
             originator_id=jive_originator_id, data_recordings_extract=jive_request_recordings
         )
         if initial_withdraw_id:
-            log.info(f"Jive: Recording found and call partial already created from a separate line earler: '{initial_withdraw_id}' - skipping publishing.")
+            log.info(f"Jive: Recording found and call partial already created from a separate line earlier: '{initial_withdraw_id}' - skipping publishing.")
             return subscription_event_serializer
 
     recordings = []
