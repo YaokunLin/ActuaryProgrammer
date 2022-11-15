@@ -88,7 +88,8 @@ def webhook(request):
     #
     webhook = parse_webhook_from_header(request.headers.get('signature-input'))
     jive_channel = get_channel_from_source_jive_id(webhook)
-    if not jive_channel:
+    #TODO: test this to ensure we are not accepting jive_channels were active = false
+    if not jive_channel or not jive_channel.active:
         log.error(f"Jive: JiveChannel record does not exist for webhook='{webhook}'")
         return HttpResponse(status=status.HTTP_404_NOT_FOUND, data={"signature": "invalid"})
 
