@@ -34,7 +34,7 @@ from core.validation import (
     get_validated_practice_telecom,
 )
 from jive_integration.field_choices import JiveEventTypeChoices
-from jive_integration.jive_client.client import JiveClient, Line
+from jive_integration.jive_client.client import JiveClient
 from jive_integration.models import (
     JiveAWSRecordingBucket,
     JiveChannel,
