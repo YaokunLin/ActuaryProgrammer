@@ -285,7 +285,7 @@ class JiveClient:
 
     def list_lines(self) -> List[Line]:
         """
-        List all lines available to the user's account and pair them with their given organization id.
+        List only lines available to the user only; not their organization's lines.
 
         https://developer.goto.com/GoToConnect#tag/Lines/paths/~1users~1v1~1lines/get
         """
@@ -305,7 +305,7 @@ class JiveClient:
 
         return lines
 
-    def list_lines_all_users(self, account_key:str) -> List[Line]:
+    def list_lines_all_users(self, account_key: str) -> List[Line]:
         """
         List all lines available to all the user's account and pair them with their given organization id.
 
