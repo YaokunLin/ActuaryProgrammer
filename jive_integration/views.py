@@ -2,8 +2,8 @@ import base64
 import json
 import logging
 from contextlib import suppress
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Set
+from datetime import datetime
+from typing import Dict, Optional
 from urllib.parse import urlencode, urlparse
 
 import dateutil.parser
@@ -25,17 +25,16 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 
-from calls.field_choices import (
-    CallConnectionTypes,
-    CallDirectionTypes,
-)
+from calls.field_choices import CallConnectionTypes, CallDirectionTypes
 from calls.models import Call, CallPartial
-from calls.serializers import CallSerializer
 from core.field_choices import VoipProviderIntegrationTypes
-from core.models import Agent, PracticeTelecom, User
-from core.validation import get_practice_telecoms_belonging_to_user, get_validated_practice_telecom
+from core.models import User
+from core.validation import (
+    get_practice_telecoms_belonging_to_user,
+    get_validated_practice_telecom,
+)
 from jive_integration.field_choices import JiveEventTypeChoices
-from jive_integration.jive_client.client import JiveClient, Line
+from jive_integration.jive_client.client import JiveClient
 from jive_integration.models import (
     JiveAWSRecordingBucket,
     JiveChannel,
@@ -52,8 +51,8 @@ from jive_integration.serializers import (
 from jive_integration.utils import (
     create_peerlogic_call,
     get_call_id_from_previous_announce_events_by_originator_id,
+    refresh_connection,
 )
-from peerlogic.settings import JIVE_CONNECTION_REFRESH_INTERVAL_IN_HOURS
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -305,7 +304,7 @@ def authentication_callback(request: Request):
 
     log.info(f"Jive: Checking for principal (email associated with the user).")
     principal = jive.principal  # this is the email associated with user
-    scope = jive.scope # this is the scope of the authenticated user
+    scope = jive.scope  # this is the scope of the authenticated user
     if not principal:
         log.exception("Jive: No principal (email associated with the user) found in access token response.")
         raise ValidationError({"errors": {"principal": "email is missing from your submission - are you logged in?"}})
@@ -331,11 +330,10 @@ def authentication_callback(request: Request):
             raise ValidationError({"errors": {"code": "Contact support@peerlogic.com - your practice telecom has not been set up with this user yet."}})
         log.info(f"Jive: Successfully validated a Practice Telecom exists with voip_provider__integration_type of JIVE and principal='{principal}'.")
 
-        log.info(f"Jive: Creating Jive Connection with practice_telecom='{practice_telecom}', account_key='{jive.account_key}', email='{principal}', organizer_key='{jive.organizer_key}' and scope='{scope}'.")
-        connection = JiveConnection(
-            practice_telecom=practice_telecom,
-            email=principal
+        log.info(
+            f"Jive: Creating Jive Connection with practice_telecom='{practice_telecom}', account_key='{jive.account_key}', email='{principal}', organizer_key='{jive.organizer_key}' and scope='{scope}'."
         )
+        connection = JiveConnection(practice_telecom=practice_telecom, email=principal)
 
     connection.refresh_token = jive.refresh_token
     connection.account_key = jive.account_key
@@ -357,6 +355,21 @@ class JiveConnectionViewSet(viewsets.ModelViewSet):
     serializer_class = JiveConnectionSerializer
     filter_fields = ["practice_telecom", "active"]
     permission_classes = [IsAdminUser]
+
+    @action(detail=True, methods=["patch"])
+    def refresh(self, request, pk=None):
+        if not (self.request.user.is_staff or self.request.user.is_superuser) and not does_practice_of_user_own_connection(connection_id=pk, user=request.user):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        log.info(f"Getting JiveConnection from database with pk='{pk}'")
+        connection = JiveConnection.objects.get(pk=pk)
+        log.info(f"Got JiveConnection from database with pk='{pk}'")
+
+        log.info(f"Refreshing connection for JiveConnection with pk='{pk}'")
+        response_data = refresh_connection(connection=connection, request=request)
+        log.info(f"Refreshed connection for JiveConnection with pk='{pk}'")
+
+        return Response(status=status.HTTP_200_OK, data=response_data)
 
 
 def does_practice_of_user_own_connection(connection_id: str, user: User) -> bool:
@@ -435,90 +448,12 @@ def cron(request):
     """
     log.info("Jive: syncing jive lines and subscriptions")
 
-    # to avoid timeouts we want to complete execution in 30s
-    deadline = datetime.now() + timedelta(seconds=60)
-
     # cleanup any expired channels, this will cascade to sessions and lines
     JiveChannel.objects.filter(expires_at__lt=timezone.now()).delete()
 
     # for each user connection
     for connection in JiveConnection.objects.filter(active=True).order_by("-last_sync"):
         log.info(f"Jive: found connection: {connection}")
-        jive: JiveClient = JiveClient(client_id=settings.JIVE_CLIENT_ID, client_secret=settings.JIVE_CLIENT_SECRET, refresh_token=connection.refresh_token)
-        if deadline < datetime.now():
-            return HttpResponse(status=204)
-
-        # find any channels about to expire in the next few hours and refresh them
-        for channel in JiveChannel.objects.filter(expires_at__lt=timezone.now() + timedelta(hours=JIVE_CONNECTION_REFRESH_INTERVAL_IN_HOURS)):
-            log.info(f"Jive: found channel: {channel}")
-            # if a channel refresh fails we mark it as inactive
-            try:
-                log.info(f"Jive: refreshing channel: {channel}")
-                jive.refresh_channel_lifetime(channel)
-            except:
-                log.info(f"Jive: failed to refresh channel {channel.id}, marking as inactive")
-                channel.active = False
-                channel.save()
-
-        # get the current lines with an active channel for this connection
-        line_results = JiveLine.objects.filter(session__channel__connection=connection, session__channel__active=True).values_list(
-            "source_jive_id", "source_organization_jive_id"
-        )
-        current_lines = {Line(r[0], r[1]) for r in line_results}
-
-        # TODO: this list_lines jive client call only sees lines assigned to the current user based upon the token - use this REST api call instead to get all users and all their lines
-        # https://developer.goto.com/GoToConnect/#tag/Users/paths/~1users~1v1~1users/get
-        # Needs:
-        # * an account key, whatever that is
-        # * may also need a call to the admin api to get the account key.
-        external_lines: Set[Line] = set(jive.list_lines_all_users(connection.account_key))
-
-        # compute new lines
-        add_lines = external_lines - current_lines
-        remove_lines = current_lines - external_lines
-
-        log.info(f"Jive: found {len(add_lines)} new lines and {len(remove_lines)} invalid lines for connection {connection.id}.")
-
-        # delete the removed lines
-        JiveLine.objects.filter(source_jive_id__in=remove_lines).delete()
-
-        if add_lines:
-            # get the latest active channel for this connection
-            channel = JiveChannel.objects.filter(connection=connection, active=True, expires_at__gt=timezone.now()).order_by("-expires_at").first()
-
-            # if no channels are found create one
-            if not channel:
-                log.info(f"Jive: no active webhook channel found for connection='{connection}', creating one.")
-                webhook_url = request.build_absolute_uri(reverse("jive_integration:webhook-receiver"))
-
-                # Jive will only accept a https url so we always replace it, the only case where this would not
-                # be an https url is a development environment.
-                webhook_url = webhook_url.replace("http://", "https://")
-
-                channel = jive.create_webhook_channel(connection=connection, webhook_url=webhook_url)
-                log.info(f"Jive: created channel='{channel}' for connection='{connection}'.")
-                # TODO: better error handling from above client call
-
-            # get the latest session for this channel
-            session = JiveSession.objects.filter(channel=channel).order_by("-channel__expires_at").first()
-
-            # if no session is found create one
-            if not session:
-                log.info(f"Jive: no session found for channel='{channel}', creating one.")
-                session = jive.create_session(channel=channel)
-                log.info(f"Jive: created session='{session}' for channel='{channel}'.")
-                # TODO: better error handling from above client call
-
-            # subscribe to the new lines
-            log.info(f"Jive: subscribing to {add_lines} with session='{session}'")
-            jive.create_session_dialog_subscription(session, *add_lines)
-            log.info(f"Jive: subscribed to {add_lines} with session='{session}'")
-            # TODO: better error handling from above client call
-
-        # record sync event to ensure all connections get a chance to be synced
-        # TODO: determine if we should not update this when some channel, session, line or connection has an error
-        # It's led to issues understanding staleness of connections because it's ALWAYS updated.
-        connection.last_sync = timezone.now()
-        connection.save()
+        refresh_connection(connection=connection, request=request)
 
     return HttpResponse(status=202)
