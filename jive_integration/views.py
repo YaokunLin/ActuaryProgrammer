@@ -25,8 +25,8 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 
-from calls.field_choices import CallConnectionTypes, CallDirectionTypes
-from calls.models import Call, CallPartial
+from calls.field_choices import CallDirectionTypes
+from calls.models import Call
 from core.field_choices import VoipProviderIntegrationTypes
 from core.models import User
 from core.validation import (
@@ -42,7 +42,6 @@ from jive_integration.models import (
     JiveLine,
     JiveSession,
 )
-from jive_integration.publishers import publish_leg_b_ready_event
 from jive_integration.serializers import (
     JiveAWSRecordingBucketSerializer,
     JiveConnectionSerializer,
@@ -51,6 +50,7 @@ from jive_integration.serializers import (
 from jive_integration.utils import (
     create_peerlogic_call,
     get_call_id_from_previous_announce_events_by_originator_id,
+    handle_withdraw_event,
     refresh_connection,
     parse_webhook_from_header,
     get_channel_from_source_jive_id,
@@ -176,80 +176,18 @@ def webhook(request):
 
     elif jive_event_type == JiveEventTypeChoices.WITHDRAW:
         log.info("Jive: Received jive withdraw event.")
-
-        call_id = get_call_id_from_previous_announce_events_by_originator_id(jive_originator_id)
-        log.info(f"Jive: Call ID is {call_id}")
-        subscription_event_data.update({"peerlogic_call_id": call_id})
-        subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
-        subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
-
-        recording_count = len(jive_request_data_key_value_pair.get("recordings", []))
-        log.info(f"Jive: Found {recording_count} recordings.")
-
-        if recording_count == 0:
-            # TODO: call Jive API to see if there is a corresponding Voicemail
-            log.info("Jive: Updating Peerlogic call end time and duration.")
-            peerlogic_call = Call.objects.get(pk=call_id)
-            peerlogic_call.call_end_time = end_time
-            peerlogic_call.duration_seconds = peerlogic_call.call_end_time - peerlogic_call.call_start_time
-            peerlogic_call.call_connection = CallConnectionTypes.MISSED
-            peerlogic_call.save()
-            log.info(
-                f"Jive: Updated Peerlogic call with the following fields: peerlogic_call.call_connection='{peerlogic_call.call_connection}', peerlogic_call.call_end_time='{peerlogic_call.call_end_time}', peerlogic_call.duration_seconds='{peerlogic_call.duration_seconds}'"
-            )
-
-        recordings = []
-        for recording in jive_request_data_key_value_pair.get("recordings", []):
-            filename_encoded = recording["filename"]
-            filename = base64.b64decode(recording["filename"]).decode("utf-8")
-            ord = dateutil.parser.isoparser().isoparse(filename.split("~", maxsplit=1)[0].split("/")[-1])
-
-            recordings.append([ord, filename, filename_encoded])
-
-        recordings = sorted(recordings, key=lambda r: r[0])
-
-        for recording in recordings:
-            ord = recording[0]
-            filename = recording[1]
-            filename_encoded = recording[2]
-
-            log.info("Jive: Updating Peerlogic call end time and duration.")
-            peerlogic_call = Call.objects.get(pk=call_id)
-            peerlogic_call.call_end_time = end_time
-            peerlogic_call.duration_seconds = peerlogic_call.call_end_time - peerlogic_call.call_start_time
-            peerlogic_call.call_connection = CallConnectionTypes.CONNECTED
-            peerlogic_call.save()
-            log.info(
-                f"Jive: Updated Peerlogic call with the following fields: peerlogic_call.call_connection='{peerlogic_call.call_connection}', peerlogic_call.call_end_time='{peerlogic_call.call_end_time}', peerlogic_call.duration_seconds='{peerlogic_call.duration_seconds}'"
-            )
-
-            log.info(
-                f"Jive: Creating Peerlogic CallPartial with peerlogic_call.id='{peerlogic_call.id}',  time_interaction_started='{peerlogic_call.call_start_time}' and time_interaction_ended='{ord}'."
-            )
-
-            # Timestamp already formatted for use in call partial below
-            jive_leg_created_time = subscription_event_data.get("data_created")
-
-            cp = CallPartial.objects.create(call=peerlogic_call, time_interaction_started=jive_leg_created_time, time_interaction_ended=end_time)
-            log.info(
-                f"Jive: Created Peerlogic CallPartial with cp.id='{cp.id}', peerlogic_call.id='{peerlogic_call.id}', time_interaction_started='{peerlogic_call.call_start_time}' and time_interaction_ended='{end_time}'."
-            )
-
-            subscription_event_data.update({"peerlogic_call_partial_id": cp.id})
-            subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
-            subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
-
-            publish_leg_b_ready_event(
-                jive_call_subscription_id=source_jive_id,
+        try:
+            subscription_event_serializer = handle_withdraw_event(
+                jive_originator_id=jive_originator_id,
+                source_jive_id=source_jive_id,
                 voip_provider_id=voip_provider_id,
-                event={
-                    "jive_originator_id": jive_originator_id,
-                    "peerlogic_call_id": peerlogic_call.id,
-                    "peerlogic_call_partial_id": cp.id,
-                    "filename": filename_encoded,
-                    "bucket_name": bucket_name,
-                },
+                end_time=timestamp_of_request,
+                subscription_event_data=subscription_event_data,
+                jive_request_data_key_value_pair=jive_request_data_key_value_pair,
+                bucket_name=bucket_name,
             )
+        except Exception:
+            log.exception("Jive: Exception during withdraw event.")
 
     subscription_event_serializer.save()
 
