@@ -1,10 +1,23 @@
 from datetime import datetime
-from django.db.models import Prefetch, QuerySet
+
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
-from core.inline_serializers import InlinePracticeTelecomSerializer, InlineUserSerializer
-
-from core.models import Agent, Client, Patient, Practice, PracticeTelecom, User, VoipProvider
+from core.field_choices import IndustryTypes
+from core.inline_serializers import (
+    InlinePracticeTelecomSerializer,
+    InlineUserSerializer,
+)
+from core.models import (
+    Agent,
+    Client,
+    Organization,
+    Patient,
+    Practice,
+    PracticeTelecom,
+    User,
+    VoipProvider,
+)
 
 
 class UnixEpochDateField(serializers.DateTimeField):
@@ -35,7 +48,7 @@ class PatientSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class PracticeSerializer(serializers.ModelSerializer):
+class AdminPracticeSerializer(serializers.ModelSerializer):
     practice_telecom = InlinePracticeTelecomSerializer(read_only=True)
 
     class Meta:
@@ -44,25 +57,97 @@ class PracticeSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
 
 
+class PracticeSerializer(serializers.ModelSerializer):
+    practice_telecom = InlinePracticeTelecomSerializer(read_only=True)
+
+    class Meta:
+        model = Practice
+        fields = "__all__"
+        read_only_fields = ["id", "created_at", "modified_by", "modified_at", "active"]
+
+
+class InlinePracticeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Practice
+        fields = ["id", "name", "created_at", "modified_at", "active", "industry"]
+        read_only_fields = ["id", "name", "created_at", "modified_at", "active", "industry"]
+
+
+class OrganizationCreateSerializer(serializers.ModelSerializer):
+    """
+    Allows for propagation of industry to the auto-generated practice
+    """
+
+    industry = serializers.ChoiceField(choices=IndustryTypes.choices, allow_null=False, allow_blank=True, required=False, default="")
+
+    class Meta:
+        model = Organization
+        fields = "__all__"
+        read_only_fields = ["id", "created_at", "created_by", "modified_by", "modified_at", "active", "practices"]
+
+    def create(self, validated_data):
+        """
+        Remove industry from fields passed to model create
+        """
+        return super().create({k: v for k, v in validated_data.items() if k != "industry"})
+
+
+class OrganizationSerializer(serializers.ModelSerializer):
+
+    practices = InlinePracticeSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Organization
+        fields = "__all__"
+        read_only_fields = ["id", "created_at", "modified_by", "modified_at", "active", "practices"]
+
+
+class AdminOrganizationSerializer(serializers.ModelSerializer):
+    practices = InlinePracticeSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Organization
+        fields = "__all__"
+        read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
+
+
 class PracticeTelecomSerializer(serializers.ModelSerializer):
     class Meta:
         model = PracticeTelecom
         fields = "__all__"
-        read_only_fields = ["id", "created_at", "modified_by", "modified_at", "voip_provider", "practice", "domain", "phone_sms", "phone_callback"]
+        read_only_fields = [
+            "id",
+            "created_at",
+            "created_by",
+            "modified_by",
+            "modified_at",
+            "voip_provider",
+            "practice",
+            "domain",
+            "phone_sms",
+            "phone_callback",
+        ]
+
+
+class PracticeTelecomCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PracticeTelecom
+        fields = ["id", "practice", "voip_provider", "created_at", "modified_at"]
+        read_only_fields = ["id", "created_at", "modified_at"]
 
 
 class AdminPracticeTelecomSerializer(serializers.ModelSerializer):
     class Meta:
         model = PracticeTelecom
         fields = "__all__"
-        read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
+        read_only_fields = ["id", "created_at", "created_by", "modified_by", "modified_at"]
 
 
 class VoipProviderSerializer(serializers.ModelSerializer):
     class Meta:
         model = VoipProvider
-        fields = ["id", "created_at", "modified_by", "modified_at", "company_name"]
-        read_only_fields = ["id", "created_at", "modified_by", "modified_at", "company_name"]
+        fields = ["id", "created_at", "modified_at", "company_name"]
+        read_only_fields = ["id", "created_at", "modified_at", "company_name"]
 
 
 class AdminVoipProviderSerializer(serializers.ModelSerializer):

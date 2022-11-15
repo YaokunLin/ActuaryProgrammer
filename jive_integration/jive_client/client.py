@@ -171,7 +171,7 @@ class JiveClient:
         return self.__auth._account_key
 
     def get_token(self):
-        self.__auth._get_token()
+        return self.__auth._get_token()
 
     def exchange_code(self, code: str, request_uri: str):
         """

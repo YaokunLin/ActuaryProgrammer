@@ -59,7 +59,7 @@ class AgentAdmin(admin.ModelAdmin):
 
 
 class PracticeAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "active", "industry")
+    list_display = ("id", "name", "active", "industry", "organization")
     form = PracticeAdminForm
 
 
