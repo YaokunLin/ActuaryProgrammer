@@ -1,2 +1,2 @@
-class TooLateToRefreshTokenException(Exception):
+class RefreshTokenNoLongerRefreshableException(Exception):
     pass
