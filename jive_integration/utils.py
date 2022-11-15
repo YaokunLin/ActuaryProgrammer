@@ -14,7 +14,7 @@ from calls.field_choices import CallConnectionTypes
 from calls.models import Call, CallPartial
 from calls.serializers import CallSerializer
 from core.models import Practice
-from jive_integration.exceptions import TooLateToRefreshTokenException
+from jive_integration.exceptions import RefreshTokenNoLongerRefreshableException
 from jive_integration.jive_client.client import JiveClient, Line
 from jive_integration.models import (
     JiveChannel,
@@ -229,7 +229,7 @@ def refresh_connection(connection: JiveConnection, request: Request):
     deadline = datetime.now() + timedelta(seconds=60)
     jive: JiveClient = JiveClient(client_id=settings.JIVE_CLIENT_ID, client_secret=settings.JIVE_CLIENT_SECRET, refresh_token=connection.refresh_token)
     if deadline < datetime.now():
-        raise TooLateToRefreshTokenException()
+        raise RefreshTokenNoLongerRefreshableException()
 
     for channel in JiveChannel.objects.filter(connection=connection):
         log.info(f"Jive: found channel: {channel}")
