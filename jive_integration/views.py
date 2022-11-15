@@ -52,6 +52,8 @@ from jive_integration.utils import (
     create_peerlogic_call,
     get_call_id_from_previous_announce_events_by_originator_id,
     refresh_connection,
+    parse_webhook_from_header,
+    get_channel_from_source_jive_id,
 )
 
 # Get an instance of a logger
@@ -84,6 +86,11 @@ def webhook(request):
     #
     # VALIDATION
     #
+    webhook = parse_webhook_from_header(request.headers.get('signature-input'))
+    jive_channel = get_channel_from_source_jive_id(webhook)
+    if not jive_channel:
+        log.error(f"Jive: JiveChannel record does not exist for webhook='{webhook}'")
+        return HttpResponse(status=406)
 
     try:
         req = json.loads(request.body)

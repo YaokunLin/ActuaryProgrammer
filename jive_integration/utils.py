@@ -109,6 +109,12 @@ def get_call_id_from_previous_announce_events_by_originator_id(originator_id: st
     except JiveSubscriptionEventExtract.DoesNotExist:
         log.info(f"Jive: No JiveSubscriptionEventExtract found with type='announce' and given originator_id='{originator_id}'")
 
+def get_channel_from_source_jive_id(webhook: str) -> JiveChannel:
+    log.info(f"Jive: Finding channel record with matching source_jive_id: '{webhook}'")
+    try:
+        return JiveChannel.objects.get(source_jive_id=webhook)
+    except JiveChannel.DoesNotExist:
+        log.info(f"Jive: No JiveChannel found with source_jive_id: '{webhook}'")
 
 def refresh_connection(connection: JiveConnection, request: Request):
     # to avoid timeouts we want to complete execution in 30s
@@ -182,3 +188,9 @@ def refresh_connection(connection: JiveConnection, request: Request):
     # It's led to issues understanding staleness of connections because it's ALWAYS updated.
     connection.last_sync = timezone.now()
     connection.save()
+
+def parse_webhook_from_header(header:str) -> str:
+    # Example format: 
+    # 'sig1=("@request-target" "date" "digest");keyid="Webhook.2427ad08-0624-454b-99ce-d05d23f08d0e";alg="hmac-sha256";created=1668543156;expires=1668543456;nonce="/Hny/Qbs+5o="'
+    # We need to grab the keyid value
+    return header.split('keyid="')[1].split('";alg=')[0]
