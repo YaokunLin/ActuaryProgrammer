@@ -344,6 +344,8 @@ def authentication_callback(request: Request):
     connection.save()
     log.info(f"Jive: Saved JiveConnection to the database with id='{connection.id}'.")
 
+    refresh_connection(connection=connection, request=request)
+
     query_string_to_append_to_redirect_url = {"connection_id": connection.id}
     # TODO: redirect them back to the application - need to know what route though
     # return redirect(urlencode(query_string_to_append_to_redirect_url))
