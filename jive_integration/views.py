@@ -318,7 +318,8 @@ def authentication_callback(request: Request):
     connection: JiveConnection = None
     with suppress(JiveConnection.DoesNotExist):
         connection = JiveConnection.objects.get(practice_telecom__practice__agent__user__email=principal)
-        if connection: log.info(f"Jive: Found existing JiveConnection with principal={principal}.")
+        if connection:
+            log.info(f"Jive: Found existing JiveConnection with principal={principal}.")
 
     if not connection:
         log.info(f"Jive: No existing JiveConnection exists with user email principal={principal}.")
