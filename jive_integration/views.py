@@ -78,8 +78,6 @@ def generate_jive_callback_url(
 def webhook(request):
     # https://api.jive.com/call-reports/v1/recordings/4428338e-826b-40af-b4a0-d01a2010f525?organizationId=af93983c-ec29-4aca-8516-b8ab36b587d1
 
-    # TODO: validate using print(line.session.channel.signature)
-    #
     log.info(f"Jive webhook: Headers: '{request.headers}' POST body '{request.body}'")
 
     response = HttpResponse(status=202)
@@ -90,8 +88,8 @@ def webhook(request):
     jive_channel = get_channel_from_source_jive_id(webhook)
     #TODO: test this to ensure we are not accepting jive_channels were active = false
     if not jive_channel or not jive_channel.active:
-        log.error(f"Jive: JiveChannel record does not exist for webhook='{webhook}'")
-        return HttpResponse(status=status.HTTP_404_NOT_FOUND, data={"signature": "invalid"})
+        log.error(f"Jive: Active JiveChannel record does not exist for webhook='{webhook}'")
+        return Response(status=status.HTTP_404_NOT_FOUND, data={"signature": "invalid"})
 
     try:
         req = json.loads(request.body)
