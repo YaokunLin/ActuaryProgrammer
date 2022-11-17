@@ -89,7 +89,9 @@ def webhook(request):
     if not jive_channel or not jive_channel.active:
         # TODO: 404 was immediately expiring the webhook. this is actually not recoverable right now if we have no other
         # channel activated - we'll shoot ourselves in the foot until we understand this
-        log.error(f"Jive: Active JiveChannel record does not exist for webhook='{webhook}' - Doing nothing.")
+        log.error(
+            f"Jive: Active JiveChannel record does not exist for webhook='{webhook}' - Doing nothing. See https://peerlogictech.atlassian.net/wiki/spaces/PL/pages/471891982/Misconfiguration+Troubleshooting+-+Manual+Backend+Steps#Delete%2FExpire-a-Webhook for more info on how to make sure this expired properly."
+        )
         return Response(status=status.HTTP_200_OK, data={"signature": "invalid"})
 
     try:
