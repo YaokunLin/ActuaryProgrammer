@@ -114,12 +114,14 @@ def get_call_id_from_previous_announce_events_by_originator_id(originator_id: st
     except JiveSubscriptionEventExtract.DoesNotExist:
         log.info(f"Jive: No JiveSubscriptionEventExtract found with type='announce' and given originator_id='{originator_id}'")
 
+
 def get_channel_from_source_jive_id(webhook: str) -> JiveChannel:
     log.info(f"Jive: Finding channel record with matching source_jive_id: '{webhook}'")
     try:
         return JiveChannel.objects.get(source_jive_id=webhook)
     except JiveChannel.DoesNotExist:
         log.info(f"Jive: No JiveChannel found with source_jive_id: '{webhook}'")
+
 
 def get_call_partial_id_from_previous_withdraw_event_by_originator_id(originator_id: str, data_recordings_extract: List[Dict[str, str]]) -> Optional[str]:
     log.info(f"Jive: Checking if there is a previous withdraw subscription event with this originator_id='{originator_id} and recording list.")
@@ -303,8 +305,9 @@ def refresh_connection(connection: JiveConnection, request: Request):
     connection.last_sync = timezone.now()
     connection.save()
 
-def parse_webhook_from_header(header:str) -> str:
-    # Example format: 
+
+def parse_webhook_from_header(header: str) -> str:
+    # Example format:
     # 'sig1=("@request-target" "date" "digest");keyid="Webhook.2427ad08-0624-454b-99ce-d05d23f08d0e";alg="hmac-sha256";created=1668543156;expires=1668543456;nonce="/Hny/Qbs+5o="'
     # We need to grab the keyid value
     return header.split('keyid="')[1].split('";alg=')[0]

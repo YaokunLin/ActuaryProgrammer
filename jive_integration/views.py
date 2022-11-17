@@ -84,12 +84,13 @@ def webhook(request):
     #
     # VALIDATION
     #
-    webhook = parse_webhook_from_header(request.headers.get('signature-input'))
+    webhook = parse_webhook_from_header(request.headers.get("signature-input"))
     jive_channel = get_channel_from_source_jive_id(webhook)
-    #TODO: test this to ensure we are not accepting jive_channels were active = false
     if not jive_channel or not jive_channel.active:
-        log.error(f"Jive: Active JiveChannel record does not exist for webhook='{webhook}'")
-        return Response(status=status.HTTP_404_NOT_FOUND, data={"signature": "invalid"})
+        # TODO: 404 was immediately expiring the webhook. this is actually not recoverable right now if we have no other
+        # channel activated - we'll shoot ourselves in the foot until we understand this
+        log.error(f"Jive: Active JiveChannel record does not exist for webhook='{webhook}' - Doing nothing.")
+        return Response(status=status.HTTP_200_OK, data={"signature": "invalid"})
 
     try:
         req = json.loads(request.body)
@@ -120,7 +121,11 @@ def webhook(request):
 
     dialed_number = jive_request_data_key_value_pair.get("ani", "")
     if dialed_number:
-        dialed_number = dialed_number.split(" <")[0]
+        # Example ani's:
+        # "ani":"Main Line <+14403883505>"
+        # "ani":"+14403883505 <+14403883505>"
+        dialed_number = dialed_number.split(" <")[1]
+        dialed_number = dialed_number.split(">")[0]
 
     source_jive_id = content.get("subId")
     source_organization_jive_id = jive_request_data_key_value_pair.get("originatorOrganizationId")
