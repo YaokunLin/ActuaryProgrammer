@@ -19,8 +19,6 @@
 runtime: python37
 service: default
 instance_class: F4_1G
-automatic_scaling:
-  min_instances: 2
 
 handlers:
 # This configures Google App Engine to serve the files in the app's static
