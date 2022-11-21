@@ -179,12 +179,12 @@ class JiveClient:
         """
         self.__auth.exchange_code(code, request_uri)
 
-    def create_webhook_channel(self, connection: JiveConnection, webhook_url: str, lifetime: int = 2147483647) -> JiveChannel:
+    def create_webhook_channel(self, connection: JiveConnection, webhook_url: str, lifetime: int = 2592000) -> JiveChannel:
         """
         Create a record for the intended channel and request the channel from the Jive API.  If the request fails
         the record will be deleted.
 
-        Note: lifetime set to 2147483647 (68 years) is the maximum amount of time allowed by GoTo.
+        Note: lifetime set to 2592000 (30 days) is the maximum amount of time allowed by the GoTo server we are interfacing with.
 
         https://developer.goto.com/GoToConnect#tag/Channels
 
@@ -278,7 +278,7 @@ class JiveClient:
         """
         List only lines available to the user only; not their organization's lines.
 
-        https://developer.goto.com/GoToConnect#tag/Lines/paths/~1users~1v1~1lines/get
+        https://developer.goto.com/GoToConnect/#tag/Lines/paths/~1users~1v1~1lines/get
         """
         lines: List[Line] = []
 
@@ -300,7 +300,7 @@ class JiveClient:
         """
         List all lines available to all the user's account and pair them with their given organization id.
 
-        https://developer.goto.com/GoToConnect#tag/Lines/paths/~1users~1v1~1lines/get
+        https://developer.goto.com/GoToConnect/#tag/Users/paths/~1users~1v1~1users/get
         """
 
         lines: List[Line] = []
