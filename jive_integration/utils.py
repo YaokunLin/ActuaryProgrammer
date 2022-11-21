@@ -78,10 +78,6 @@ def create_peerlogic_call(jive_request_data_key_value_pair: Dict, call_direction
     peerlogic_call_serializer_is_valid = peerlogic_call_serializer.is_valid()
     peerlogic_call_serializer_errors: Dict = dict(peerlogic_call_serializer.errors)
 
-    # TODO: natural_key method keeps giving practice field the practice name instead of the pk...
-    # not sure how to remedy, but it keeps saving the call correctly despite this validation error.
-    # popping for now.
-    peerlogic_call_serializer_errors.pop("practice")
     if not peerlogic_call_serializer_is_valid and peerlogic_call_serializer_errors:
         log.exception(f"Jive: Error from peerlogic_call_serializer validation: {peerlogic_call_serializer_errors}")
         raise ValidationError(peerlogic_call_serializer_errors)
@@ -113,6 +109,7 @@ def get_call_id_from_previous_announce_events_by_originator_id(originator_id: st
             return event.peerlogic_call_id
     except JiveSubscriptionEventExtract.DoesNotExist:
         log.info(f"Jive: No JiveSubscriptionEventExtract found with type='announce' and given originator_id='{originator_id}'")
+        return ""  # Blankable call id
 
 
 def get_channel_from_source_jive_id(webhook: str) -> JiveChannel:
@@ -135,7 +132,7 @@ def get_call_partial_id_from_previous_withdraw_event_by_originator_id(originator
             return event.peerlogic_call_partial_id
     except JiveSubscriptionEventExtract.DoesNotExist:
         log.info(f"Jive: No JiveSubscriptionEventExtract found with type='withdrawal' and given originator_id='{originator_id}' with the same recording list.")
-        return None
+        return ""
 
 
 def handle_withdraw_event(
@@ -152,6 +149,7 @@ def handle_withdraw_event(
     subscription_event_data.update({"peerlogic_call_id": call_id})
     subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
     subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
+    subscription_event_serializer.save()
 
     jive_request_recordings = jive_request_data_key_value_pair.get("recordings", [])
     recording_count = len(jive_request_recordings)
@@ -215,7 +213,8 @@ def handle_withdraw_event(
 
         subscription_event_data.update({"peerlogic_call_partial_id": cp.id})
         subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
-        subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
+        subscription_event_serializer.is_valid()
+        subscription_event_serializer.save()
 
         publish_leg_b_ready_event(
             jive_call_subscription_id=source_jive_id,
@@ -229,7 +228,7 @@ def handle_withdraw_event(
             },
         )
 
-    return subscription_event_serializer
+    return (subscription_event_serializer, call_id)
 
 
 def refresh_connection(connection: JiveConnection, request: Request):

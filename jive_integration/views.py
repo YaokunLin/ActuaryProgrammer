@@ -114,6 +114,8 @@ def webhook(request):
         )
         response = Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": subscription_event_serializer.errors})
 
+    event = subscription_event_serializer.save()
+
     call_direction: CallDirectionTypes
     if jive_request_data_key_value_pair.get("direction") == "recipient":
         call_direction = CallDirectionTypes.INBOUND
@@ -148,15 +150,16 @@ def webhook(request):
 
     jive_event_type = content.get("type")
     if jive_event_type == JiveEventTypeChoices.ANNOUNCE:
-        log.info("Jive: Received jive announce event.")
+        log.info(f"Jive: Received jive announce event: event.id='{event.id}'")
         peerlogic_call = None
 
+        call_id = ""
         call_id = get_call_id_from_previous_announce_events_by_originator_id(jive_originator_id)
         if call_id:
             peerlogic_call = Call.objects.get(pk=call_id)
 
         if not peerlogic_call:
-            log.info("Jive: No previous peerlogic call found from previous events in the database - Creating peerlogic call.")
+            log.info(f"Jive: No previous peerlogic call found from previous events in the database - Creating peerlogic call from event.id='{event.id}'")
             try:
                 peerlogic_call = create_peerlogic_call(
                     jive_request_data_key_value_pair=jive_request_data_key_value_pair,
@@ -165,25 +168,19 @@ def webhook(request):
                     dialed_number=dialed_number,
                     practice=practice,
                 )
-                log.info(f"Jive: Created Peerlogic Call object with id='{peerlogic_call.id}'.")
+                call_id = peerlogic_call.id
+                log.info(f"Jive: Created Peerlogic Call object with id='{peerlogic_call.id}' from event.id='{event.id}'")
             except ValidationError:
-                log.exception("Error creating a new Peerlogic call.")
-
-        subscription_event_data.update({"peerlogic_call_id": peerlogic_call.id})
-        subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
-        subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
+                log.exception(f"Error creating a new Peerlogic call from event.id='{event.id}'")
 
     elif jive_event_type == JiveEventTypeChoices.REPLACE:
-        log.info("Jive: Received jive replace event.")
+        log.info(f"Jive: Received jive replace event: event.id='{event.id}'")
         call_id = get_call_id_from_previous_announce_events_by_originator_id(jive_originator_id)
-        subscription_event_data.update({"peerlogic_call_id": call_id})
-        subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
-        subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
 
     elif jive_event_type == JiveEventTypeChoices.WITHDRAW:
-        log.info("Jive: Received jive withdraw event.")
+        log.info(f"Jive: Received jive withdraw event: event.id='{event.id}'")
         try:
-            subscription_event_serializer = handle_withdraw_event(
+            subscription_event_serializer, call_id = handle_withdraw_event(
                 jive_originator_id=jive_originator_id,
                 source_jive_id=source_jive_id,
                 voip_provider_id=voip_provider_id,
@@ -193,8 +190,11 @@ def webhook(request):
                 bucket_name=bucket_name,
             )
         except Exception:
-            log.exception("Jive: Exception during withdraw event.")
+            log.exception(f"Jive: Exception during withdraw event: event.id='{event.id}'")
 
+    subscription_event_data.update({"peerlogic_call_id": call_id})
+    subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
+    subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
     subscription_event_serializer.save()
 
     return response
