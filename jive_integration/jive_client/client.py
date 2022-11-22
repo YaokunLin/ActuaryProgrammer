@@ -250,7 +250,10 @@ class JiveClient:
         body = resp.json()
 
         try:
-            return JiveSession.objects.create(channel=channel, url=body["self"])
+            log.info(f"Jive Session Created - response body='{body}'")
+            log.info(f"Saving Jive Session to the database: channel='{channel}', url={body['self']}")
+            session = JiveSession.objects.create(channel=channel, url=body["self"])
+            log.info(f"Saved session.id='{session.id}' to the database")
         except KeyError as exc:
             raise APIResponseException("failed to parse session response") from exc
 
