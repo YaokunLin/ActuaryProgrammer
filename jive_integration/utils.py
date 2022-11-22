@@ -1,10 +1,13 @@
 import base64
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Set
+from time import sleep
+from typing import Dict, List, Optional, Set, Tuple
 import dateutil
+import shortuuid
 
 from django.conf import settings
+from django.core.cache import cache
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework.request import Request
@@ -32,7 +35,7 @@ US_TELEPHONE_NUMBER_DIGIT_LENGTH = 10
 log = logging.getLogger(__name__)
 
 
-def create_peerlogic_call(jive_request_data_key_value_pair: Dict, start_time: datetime, dialed_number: str, practice: Practice) -> Call:
+def create_peerlogic_call(call_id: str, jive_request_data_key_value_pair: Dict, start_time: datetime, dialed_number: str, practice: Practice) -> Call:
     log.info(f"Jive: Creating Peerlogic Call object with start_time='{start_time}'.")
 
     call_direction: CallDirectionTypes
@@ -73,6 +76,7 @@ def create_peerlogic_call(jive_request_data_key_value_pair: Dict, start_time: da
         # TODO: Logic for outbound caller number for practice - no ani present
 
     call_fields = {
+        "id": call_id,
         "practice": practice,
         "call_start_time": start_time,
         "duration_seconds": timedelta(seconds=0),
@@ -107,8 +111,29 @@ def create_peerlogic_call(jive_request_data_key_value_pair: Dict, start_time: da
     return Call.objects.create(**call_fields)
 
 
+def get_or_create_call_id(originator_id: str) -> Tuple[bool, str]:
+    call_id = get_call_id_from_previous_announce_events_by_originator_id(originator_id)
+    if call_id:
+        return True, call_id
+
+    # Proceed to check the cache
+    CACHE_TIMEOUT = 600  # 10 minutes
+    cache_key = f"jive.originator_id.{originator_id}"
+    call_id = shortuuid.uuid()
+    log.info(f"Getting call_id for cache_key='{cache_key}'")
+    cache_miss = cache.set(cache_key, call_id, nx=True, timeout=CACHE_TIMEOUT)
+    if not cache_miss:
+        call_id = cache.get(cache_key)
+        # check events for announce
+        log.info(f"Returning existing call_id='{call_id}' for cache_key='{cache_key}'")
+        return True, call_id
+
+    log.info(f"Returning new call_id='{call_id}' for cache_key='{cache_key}'")
+    return False, call_id
+
+
 def get_call_id_from_previous_announce_event(entity_id: str) -> str:
-    log.info(f"Jive: Checking if there is a previous announce subscription event with this entity_id='{entity_id}'.")
+    log.info(f"Jive: Checking if there is a prdsevious announce subscription event with this entity_id='{entity_id}'.")
     try:
         return JiveSubscriptionEventExtract.objects.get(jive_type="announce", entity_id=entity_id).peerlogic_call_id
     except JiveSubscriptionEventExtract.DoesNotExist:
@@ -155,6 +180,21 @@ def get_call_partial_id_from_previous_withdraw_event_by_originator_id(originator
     except JiveSubscriptionEventExtract.DoesNotExist:
         log.info(f"Jive: No JiveSubscriptionEventExtract found with type='withdrawal' and given originator_id='{originator_id}' with the same recording list.")
         return ""
+
+
+def wait_for_peerlogic_call(call_id: str, current_attempt: int = 1) -> str:
+    MAX_ATTEMPTS = 3
+
+    try:
+        log.info(f"Trying to get a call from call_id='{call_id}'")
+        call = Call.objects.get(pk=call_id)
+        log.info(f"Successfully got a call from call_id='{call_id}'")
+        return call
+    except Call.DoesNotExist:
+        if current_attempt >= MAX_ATTEMPTS:
+            raise
+        sleep(1)
+        return wait_for_peerlogic_call(call_id=call_id, current_attempt=current_attempt + 1)
 
 
 def handle_withdraw_event(

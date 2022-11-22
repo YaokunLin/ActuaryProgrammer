@@ -3,6 +3,7 @@ import json
 import logging
 from contextlib import suppress
 from datetime import datetime
+from time import sleep
 from typing import Dict, Optional
 from urllib.parse import urlencode, urlparse
 
@@ -35,13 +36,7 @@ from core.validation import (
 )
 from jive_integration.field_choices import JiveEventTypeChoices
 from jive_integration.jive_client.client import JiveClient
-from jive_integration.models import (
-    JiveAWSRecordingBucket,
-    JiveChannel,
-    JiveConnection,
-    JiveLine,
-    JiveSession,
-)
+from jive_integration.models import JiveAWSRecordingBucket, JiveChannel, JiveConnection, JiveLine
 from jive_integration.serializers import (
     JiveAWSRecordingBucketSerializer,
     JiveConnectionSerializer,
@@ -50,10 +45,12 @@ from jive_integration.serializers import (
 from jive_integration.utils import (
     create_peerlogic_call,
     get_call_id_from_previous_announce_events_by_originator_id,
+    get_or_create_call_id,
     handle_withdraw_event,
     refresh_connection,
     parse_webhook_from_header,
     get_channel_from_source_jive_id,
+    wait_for_peerlogic_call,
 )
 
 # Get an instance of a logger
@@ -147,14 +144,15 @@ def webhook(request):
         log.info(f"Jive: Received jive announce event: event.id='{event.id}'")
         peerlogic_call = None
 
-        call_id = get_call_id_from_previous_announce_events_by_originator_id(jive_originator_id)
-        if call_id:
-            peerlogic_call = Call.objects.get(pk=call_id)
+        call_exists, call_id = get_or_create_call_id(jive_originator_id)
+        if call_exists:
+            wait_for_peerlogic_call(call_id=call_id)
 
-        if not peerlogic_call:
+        if not call_exists:
             log.info(f"Jive: No previous peerlogic call found from previous events in the database - Creating peerlogic call from event.id='{event.id}'")
             try:
                 peerlogic_call = create_peerlogic_call(
+                    call_id=call_id,
                     jive_request_data_key_value_pair=jive_request_data_key_value_pair,
                     start_time=timestamp_of_request,
                     dialed_number=dialed_number,
