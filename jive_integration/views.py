@@ -1,16 +1,13 @@
-import base64
 import json
 import logging
 from contextlib import suppress
 from datetime import datetime
-from time import sleep
 from typing import Dict, Optional
-from urllib.parse import urlencode, urlparse
 
 import dateutil.parser
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status, viewsets
@@ -26,8 +23,6 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 
-from calls.field_choices import CallDirectionTypes
-from calls.models import Call
 from core.field_choices import VoipProviderIntegrationTypes
 from core.models import User
 from core.validation import (
@@ -36,7 +31,12 @@ from core.validation import (
 )
 from jive_integration.field_choices import JiveEventTypeChoices
 from jive_integration.jive_client.client import JiveClient
-from jive_integration.models import JiveAWSRecordingBucket, JiveChannel, JiveConnection, JiveLine
+from jive_integration.models import (
+    JiveAWSRecordingBucket,
+    JiveChannel,
+    JiveConnection,
+    JiveLine,
+)
 from jive_integration.serializers import (
     JiveAWSRecordingBucketSerializer,
     JiveConnectionSerializer,
@@ -45,11 +45,11 @@ from jive_integration.serializers import (
 from jive_integration.utils import (
     create_peerlogic_call,
     get_call_id_from_previous_announce_events_by_originator_id,
+    get_channel_from_source_jive_id,
     get_or_create_call_id,
     handle_withdraw_event,
-    refresh_connection,
     parse_webhook_from_header,
-    get_channel_from_source_jive_id,
+    refresh_connection,
     wait_for_peerlogic_call,
 )
 
