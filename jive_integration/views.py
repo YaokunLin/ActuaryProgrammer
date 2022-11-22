@@ -138,7 +138,6 @@ def webhook(request):
 
     # Bucket can be overridden for our testing jive account
     bucket_name = line.session.channel.connection.bucket.bucket_name
-    log.info(f"BUCKET NAME: {bucket_name}")
     if settings.TEST_JIVE_PRACTICE_ID == practice.id:
         bucket_name = settings.JIVE_BUCKET_NAME
 
