@@ -178,8 +178,8 @@ def webhook(request):
                 jive_request_data_key_value_pair=jive_request_data_key_value_pair,
                 bucket_name=bucket_name,
             )
-        except Exception:
-            log.exception(f"Jive: Exception during withdraw event: event.id='{event.id}'")
+        except Exception as e:
+            log.exception(f"Jive: Exception='{e}' occurred during withdraw event: event.id='{event.id}'")
 
     # always get the call_id onto the event
     event.peerlogic_call_id = call_id
