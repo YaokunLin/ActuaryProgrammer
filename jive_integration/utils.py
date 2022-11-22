@@ -115,8 +115,8 @@ def get_or_create_call_id(originator_id: str) -> Tuple[bool, str]:
     call_id = get_call_id_from_previous_announce_events_by_originator_id(originator_id)
     if call_id:
         log.info(f"Jive: Returning call_id from an existing announce event extract only - call_id='{call_id}'")
-        created = True
-        return created, call_id
+        exists_in_db = True
+        return exists_in_db, call_id
 
     # Proceed to check the cache
     CACHE_TIMEOUT = 600  # 10 minutes
@@ -128,12 +128,12 @@ def get_or_create_call_id(originator_id: str) -> Tuple[bool, str]:
         call_id = cache.get(cache_key)
         # check events for announce
         log.info(f"Jive: Returning existing call_id='{call_id}' for cache_key='{cache_key}'")
-        created = True
-        return created, call_id
+        exists_in_db = True
+        return exists_in_db, call_id
 
     log.info(f"Jive: Returning new call_id='{call_id}' for cache_key='{cache_key}'")
-    created = False
-    return created, call_id
+    exists_in_db = False
+    return exists_in_db, call_id
 
 
 def get_call_id_from_previous_announce_event(entity_id: str) -> str:
