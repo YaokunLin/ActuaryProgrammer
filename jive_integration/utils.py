@@ -3,17 +3,17 @@ import logging
 from datetime import datetime, timedelta
 from time import sleep
 from typing import Dict, List, Optional, Set, Tuple
+
 import dateutil
 import shortuuid
-
 from django.conf import settings
 from django.core.cache import cache
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework.request import Request
 from rest_framework.serializers import ValidationError
-from calls.field_choices import CallConnectionTypes, CallDirectionTypes
 
+from calls.field_choices import CallConnectionTypes, CallDirectionTypes
 from calls.models import Call, CallPartial
 from calls.serializers import CallSerializer, CallWriteSerializer
 from core.models import Practice
@@ -114,23 +114,26 @@ def create_peerlogic_call(call_id: str, jive_request_data_key_value_pair: Dict, 
 def get_or_create_call_id(originator_id: str) -> Tuple[bool, str]:
     call_id = get_call_id_from_previous_announce_events_by_originator_id(originator_id)
     if call_id:
-        log.info("Jive: Returning call_id from an existing announce event extract only - call_id='{call_id}'")
-        return True, call_id
+        log.info(f"Jive: Returning call_id from an existing announce event extract only - call_id='{call_id}'")
+        exists_in_db = True
+        return exists_in_db, call_id
 
     # Proceed to check the cache
     CACHE_TIMEOUT = 600  # 10 minutes
     cache_key = f"jive.originator_id.{originator_id}"
     call_id = shortuuid.uuid()
     log.info(f"Jive: Getting call_id for cache_key='{cache_key}'")
-    cache_miss = cache.set(cache_key, call_id, nx=True, timeout=CACHE_TIMEOUT)
-    if not cache_miss:
+    was_created = cache.set(cache_key, call_id, nx=True, timeout=CACHE_TIMEOUT)
+    if not was_created:
         call_id = cache.get(cache_key)
         # check events for announce
         log.info(f"Jive: Returning existing call_id='{call_id}' for cache_key='{cache_key}'")
-        return True, call_id
+        exists_in_db = True
+        return exists_in_db, call_id
 
     log.info(f"Jive: Returning new call_id='{call_id}' for cache_key='{cache_key}'")
-    return False, call_id
+    exists_in_db = False
+    return exists_in_db, call_id
 
 
 def get_call_id_from_previous_announce_event(entity_id: str) -> str:
