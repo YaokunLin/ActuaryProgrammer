@@ -142,7 +142,6 @@ def webhook(request):
     jive_event_type = content.get("type")
     if jive_event_type == JiveEventTypeChoices.ANNOUNCE:
         log.info(f"Jive: Received jive announce event: event.id='{event.id}'")
-        peerlogic_call = None
 
         call_exists, call_id = get_or_create_call_id(jive_originator_id)
         if call_exists:
