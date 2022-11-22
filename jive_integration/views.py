@@ -75,7 +75,7 @@ def generate_jive_callback_url(
 def webhook(request):
     # https://api.jive.com/call-reports/v1/recordings/4428338e-826b-40af-b4a0-d01a2010f525?organizationId=af93983c-ec29-4aca-8516-b8ab36b587d1
 
-    log.info(f"Jive webhook: Headers: '{request.headers}' POST body '{request.body}'")
+    log.info(f"Jive: Webhook received event. headers='{request.headers}' body='{request.body}'")
 
     response = HttpResponse(status=202)
     #
