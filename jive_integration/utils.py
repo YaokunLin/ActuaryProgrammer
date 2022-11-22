@@ -123,8 +123,8 @@ def get_or_create_call_id(originator_id: str) -> Tuple[bool, str]:
     cache_key = f"jive.originator_id.{originator_id}"
     call_id = shortuuid.uuid()
     log.info(f"Jive: Getting call_id for cache_key='{cache_key}'")
-    cache_miss = cache.set(cache_key, call_id, nx=True, timeout=CACHE_TIMEOUT)
-    if not cache_miss:
+    was_created = cache.set(cache_key, call_id, nx=True, timeout=CACHE_TIMEOUT)
+    if not was_created:
         call_id = cache.get(cache_key)
         # check events for announce
         log.info(f"Jive: Returning existing call_id='{call_id}' for cache_key='{cache_key}'")
