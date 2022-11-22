@@ -173,7 +173,7 @@ def webhook(request):
                 jive_originator_id=jive_originator_id,
                 source_jive_id=source_jive_id,
                 voip_provider_id=voip_provider_id,
-                end_time=timestamp_of_request,
+                end_time=end_time,
                 event=event,
                 jive_request_data_key_value_pair=jive_request_data_key_value_pair,
                 bucket_name=bucket_name,
