@@ -84,3 +84,11 @@ def get_validated_practice_telecom(voip_provider__integration_type: str, email: 
 def get_practice_telecoms_belonging_to_user(user: User) -> models.QuerySet[PracticeTelecom]:
     practice_ids = Agent.objects.filter(user=user).values_list("practice_id", flat=True)
     return PracticeTelecom.objects.filter(practice__id__in=practice_ids)
+
+
+def is_extension(phone_number: str) -> bool:
+    if not phone_number.isdigit():
+        return False
+    if 3 <= len(phone_number) <= 6:
+        return True
+    return False
