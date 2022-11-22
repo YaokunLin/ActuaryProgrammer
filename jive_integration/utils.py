@@ -114,21 +114,22 @@ def create_peerlogic_call(call_id: str, jive_request_data_key_value_pair: Dict, 
 def get_or_create_call_id(originator_id: str) -> Tuple[bool, str]:
     call_id = get_call_id_from_previous_announce_events_by_originator_id(originator_id)
     if call_id:
+        log.info("Jive: Returning call_id from an existing announce event extract only - call_id='{call_id}'")
         return True, call_id
 
     # Proceed to check the cache
     CACHE_TIMEOUT = 600  # 10 minutes
     cache_key = f"jive.originator_id.{originator_id}"
     call_id = shortuuid.uuid()
-    log.info(f"Getting call_id for cache_key='{cache_key}'")
+    log.info(f"Jive: Getting call_id for cache_key='{cache_key}'")
     cache_miss = cache.set(cache_key, call_id, nx=True, timeout=CACHE_TIMEOUT)
     if not cache_miss:
         call_id = cache.get(cache_key)
         # check events for announce
-        log.info(f"Returning existing call_id='{call_id}' for cache_key='{cache_key}'")
+        log.info(f"Jive: Returning existing call_id='{call_id}' for cache_key='{cache_key}'")
         return True, call_id
 
-    log.info(f"Returning new call_id='{call_id}' for cache_key='{cache_key}'")
+    log.info(f"Jive: Returning new call_id='{call_id}' for cache_key='{cache_key}'")
     return False, call_id
 
 
@@ -183,6 +184,7 @@ def get_call_partial_id_from_previous_withdraw_event_by_originator_id(originator
 
 
 def wait_for_peerlogic_call(call_id: str, current_attempt: int = 1) -> str:
+    """Will sleep for 1 second for each attempt"""
     MAX_ATTEMPTS = 3
 
     try:

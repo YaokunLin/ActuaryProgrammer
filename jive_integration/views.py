@@ -146,7 +146,7 @@ def webhook(request):
 
         call_exists, call_id = get_or_create_call_id(jive_originator_id)
         if call_exists:
-            wait_for_peerlogic_call(call_id=call_id)
+            peerlogic_call = wait_for_peerlogic_call(call_id=call_id)
 
         if not call_exists:
             log.info(f"Jive: No previous peerlogic call found from previous events in the database - Creating peerlogic call from event.id='{event.id}'")
