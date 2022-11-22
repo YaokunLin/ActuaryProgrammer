@@ -9,11 +9,12 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework.request import Request
 from rest_framework.serializers import ValidationError
-from calls.field_choices import CallConnectionTypes
+from calls.field_choices import CallConnectionTypes, CallDirectionTypes
 
 from calls.models import Call, CallPartial
-from calls.serializers import CallSerializer
+from calls.serializers import CallSerializer, CallWriteSerializer
 from core.models import Practice
+from core.validation import is_extension
 from jive_integration.exceptions import RefreshTokenNoLongerRefreshableException
 from jive_integration.jive_client.client import JiveClient, Line
 from jive_integration.models import (
@@ -31,33 +32,48 @@ US_TELEPHONE_NUMBER_DIGIT_LENGTH = 10
 log = logging.getLogger(__name__)
 
 
-def create_peerlogic_call(jive_request_data_key_value_pair: Dict, call_direction: str, start_time: datetime, dialed_number: str, practice: Practice) -> Call:
+def create_peerlogic_call(jive_request_data_key_value_pair: Dict, start_time: datetime, dialed_number: str, practice: Practice) -> Call:
     log.info(f"Jive: Creating Peerlogic Call object with start_time='{start_time}'.")
+
+    call_direction: CallDirectionTypes
+    if jive_request_data_key_value_pair.get("direction") == "recipient":
+        call_direction = CallDirectionTypes.INBOUND
+        # inbound for now - will check if both callee and caller are extensions instead of Telephone Numbers
+        # to detect internal
+    else:
+        call_direction = CallDirectionTypes.OUTBOUND
+
     jive_callee_number = jive_request_data_key_value_pair.get("callee", {}).get("number")
-    jive_callee_number_length = len(jive_callee_number)
+    jive_callee_number_is_extension = is_extension(jive_callee_number)
     jive_caller_number = jive_request_data_key_value_pair.get("caller", {}).get("number")
-    jive_caller_number_length = len(jive_caller_number)
+    jive_caller_number_is_extension = is_extension(jive_caller_number)
     sip_callee_extension = ""
     sip_callee_number = ""
     sip_caller_extension = ""
     sip_caller_number = ""
 
-    # if callee is an extension (UI requires 4 digits, I don't trust it):
-    if jive_callee_number_length != US_TELEPHONE_NUMBER_DIGIT_LENGTH and jive_callee_number_length != 0:
+    # both extensions?
+    if jive_callee_number_is_extension and jive_caller_number_is_extension:
         sip_callee_extension = jive_callee_number
-        sip_callee_number = dialed_number
-        sip_caller_number = f"+1{jive_caller_number}"
-    # if caller is an extension (UI requires 4 digits, I don't trust it):
-    if jive_caller_number_length != US_TELEPHONE_NUMBER_DIGIT_LENGTH and jive_caller_number_length != 0:
         sip_caller_extension = jive_caller_number
-        sip_caller_number = dialed_number
-        sip_callee_number = f"+1{jive_callee_number}"
-    if not sip_callee_number:
-        sip_callee_number = jive_callee_number
-    # TODO: Logic for outbound caller number for practice - no ani present
+        call_direction = CallDirectionTypes.INTERNAL
+    else:
+        # if just callee is an extension (between 3-6 digits):
+        if jive_callee_number_is_extension:
+            sip_callee_extension = jive_callee_number
+            sip_callee_number = dialed_number
+            sip_caller_number = f"+1{jive_caller_number}"
+        # if caller is an extension (between 3-6 digits):
+        if jive_caller_number_is_extension:
+            sip_caller_extension = jive_caller_number
+            sip_caller_number = dialed_number
+            sip_callee_number = f"+1{jive_callee_number}"
+        if not sip_callee_number:
+            sip_callee_number = jive_callee_number
+        # TODO: Logic for outbound caller number for practice - no ani present
 
     call_fields = {
-        "practice_id": practice.pk,
+        "practice": practice,
         "call_start_time": start_time,
         "duration_seconds": timedelta(seconds=0),
         # TODO: connect_duration_seconds logic
@@ -74,10 +90,16 @@ def create_peerlogic_call(jive_request_data_key_value_pair: Dict, call_direction
         "went_to_voicemail": False,  # TODO: determine value in downstream subscribing cloud functions
     }
 
-    peerlogic_call_serializer = CallSerializer(data=call_fields)
+    log.info(f"Jive: Call fields determined: call_fields='{call_fields}'")
+
+    peerlogic_call_serializer = CallWriteSerializer(data=call_fields)
     peerlogic_call_serializer_is_valid = peerlogic_call_serializer.is_valid()
     peerlogic_call_serializer_errors: Dict = dict(peerlogic_call_serializer.errors)
 
+    # TODO: practice field keeps giving the practice name instead of the pk...
+    # not sure how to remedy, but it keeps saving the call correctly despite this validation error.
+    # popping for now.
+    peerlogic_call_serializer_errors.pop("practice")
     if not peerlogic_call_serializer_is_valid and peerlogic_call_serializer_errors:
         log.exception(f"Jive: Error from peerlogic_call_serializer validation: {peerlogic_call_serializer_errors}")
         raise ValidationError(peerlogic_call_serializer_errors)
@@ -140,16 +162,14 @@ def handle_withdraw_event(
     source_jive_id: str,
     voip_provider_id: str,
     end_time: datetime,
-    subscription_event_data: Dict,
+    event: JiveSubscriptionEventExtract,
     jive_request_data_key_value_pair: Dict,
     bucket_name: str,
-) -> JiveSubscriptionEventExtractSerializer:
+) -> JiveSubscriptionEventExtract:
     call_id = get_call_id_from_previous_announce_events_by_originator_id(jive_originator_id)
     log.info(f"Jive: Call ID is {call_id}")
-    subscription_event_data.update({"peerlogic_call_id": call_id})
-    subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
-    subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
-    subscription_event_serializer.save()
+    event.peerlogic_call_id = call_id
+    event.save()
 
     jive_request_recordings = jive_request_data_key_value_pair.get("recordings", [])
     recording_count = len(jive_request_recordings)
@@ -172,7 +192,7 @@ def handle_withdraw_event(
         )
         if initial_withdraw_id:
             log.info(f"Jive: Recording found and call partial already created from a separate line earlier: '{initial_withdraw_id}' - skipping publishing.")
-            return subscription_event_serializer
+            return event, call_id
 
     recordings = []
     for recording in jive_request_recordings:
@@ -203,18 +223,15 @@ def handle_withdraw_event(
             f"Jive: Creating Peerlogic CallPartial with peerlogic_call.id='{peerlogic_call.id}',  time_interaction_started='{peerlogic_call.call_start_time}' and time_interaction_ended='{ord}'."
         )
 
-        # Timestamp already formatted for use in call partial below
-        jive_leg_created_time = subscription_event_data.get("data_created")
+        jive_leg_created_time = event.data_created
 
         cp = CallPartial.objects.create(call=peerlogic_call, time_interaction_started=jive_leg_created_time, time_interaction_ended=end_time)
         log.info(
             f"Jive: Created Peerlogic CallPartial with cp.id='{cp.id}', peerlogic_call.id='{peerlogic_call.id}', time_interaction_started='{peerlogic_call.call_start_time}' and time_interaction_ended='{end_time}'."
         )
 
-        subscription_event_data.update({"peerlogic_call_partial_id": cp.id})
-        subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
-        subscription_event_serializer.is_valid()
-        subscription_event_serializer.save()
+        event.peerlogic_call_partial_id = cp.id
+        event.save()
 
         publish_leg_b_ready_event(
             jive_call_subscription_id=source_jive_id,
@@ -228,7 +245,7 @@ def handle_withdraw_event(
             },
         )
 
-    return (subscription_event_serializer, call_id)
+    return (event, call_id)
 
 
 def refresh_connection(connection: JiveConnection, request: Request):

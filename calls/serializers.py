@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Dict, Optional
 
 from django.db.models import Prefetch, QuerySet
 from django_countries.serializers import CountryFieldMixin
@@ -37,9 +37,19 @@ from calls.models import (
     CallTranscriptPartial,
     TelecomCallerNameInfo,
 )
+from core.models import Practice
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
+
+
+class CallWriteSerializer(serializers.ModelSerializer):
+    practice = serializers.PrimaryKeyRelatedField(queryset=Practice.objects.all(), pk_field=serializers.CharField())
+
+    class Meta:
+        model = Call
+        fields = "__all__"
+        read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "domain", "latest_audio_signed_url", "latest_transcript_signed_url"]
 
 
 class CallSerializer(serializers.ModelSerializer):

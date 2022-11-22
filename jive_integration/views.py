@@ -116,13 +116,6 @@ def webhook(request):
 
     event = subscription_event_serializer.save()
 
-    call_direction: CallDirectionTypes
-    if jive_request_data_key_value_pair.get("direction") == "recipient":
-        call_direction = CallDirectionTypes.INBOUND
-
-    else:
-        call_direction = CallDirectionTypes.OUTBOUND
-
     dialed_number = jive_request_data_key_value_pair.get("ani", "")
     if dialed_number:
         # Example ani's:
@@ -145,15 +138,16 @@ def webhook(request):
 
     # Bucket can be overridden for our testing jive account
     bucket_name = line.session.channel.connection.bucket.bucket_name
+    log.info(f"BUCKET NAME: {bucket_name}")
     if settings.TEST_JIVE_PRACTICE_ID == practice.id:
         bucket_name = settings.JIVE_BUCKET_NAME
 
+    call_id = ""
     jive_event_type = content.get("type")
     if jive_event_type == JiveEventTypeChoices.ANNOUNCE:
         log.info(f"Jive: Received jive announce event: event.id='{event.id}'")
         peerlogic_call = None
 
-        call_id = ""
         call_id = get_call_id_from_previous_announce_events_by_originator_id(jive_originator_id)
         if call_id:
             peerlogic_call = Call.objects.get(pk=call_id)
@@ -163,7 +157,6 @@ def webhook(request):
             try:
                 peerlogic_call = create_peerlogic_call(
                     jive_request_data_key_value_pair=jive_request_data_key_value_pair,
-                    call_direction=call_direction,
                     start_time=timestamp_of_request,
                     dialed_number=dialed_number,
                     practice=practice,
@@ -180,22 +173,21 @@ def webhook(request):
     elif jive_event_type == JiveEventTypeChoices.WITHDRAW:
         log.info(f"Jive: Received jive withdraw event: event.id='{event.id}'")
         try:
-            subscription_event_serializer, call_id = handle_withdraw_event(
+            event, call_id = handle_withdraw_event(
                 jive_originator_id=jive_originator_id,
                 source_jive_id=source_jive_id,
                 voip_provider_id=voip_provider_id,
                 end_time=timestamp_of_request,
-                subscription_event_data=subscription_event_data,
+                event=event,
                 jive_request_data_key_value_pair=jive_request_data_key_value_pair,
                 bucket_name=bucket_name,
             )
         except Exception:
             log.exception(f"Jive: Exception during withdraw event: event.id='{event.id}'")
 
-    subscription_event_data.update({"peerlogic_call_id": call_id})
-    subscription_event_serializer = JiveSubscriptionEventExtractSerializer(data=subscription_event_data)
-    subscription_event_serializer_is_valid = subscription_event_serializer.is_valid()
-    subscription_event_serializer.save()
+    # always get the call_id onto the event
+    event.peerlogic_call_id = call_id
+    event.save()
 
     return response
 
@@ -310,7 +302,7 @@ class JiveConnectionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminUser]
 
     @action(detail=True, methods=["patch"])
-    def refresh(self, request, pk=None):
+    def sync(self, request, pk=None):
         if not (self.request.user.is_staff or self.request.user.is_superuser) and not does_practice_of_user_own_connection(connection_id=pk, user=request.user):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
