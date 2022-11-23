@@ -108,8 +108,8 @@ def webhook(request):
     subscription_event_data = subscription_event_serializer.validated_data
 
     if not subscription_event_serializer_is_valid:
-        log.exception(
-            f"Jive: Error from subscription_event_serializer validation from jive_originator_id {jive_originator_id}: {subscription_event_serializer.errors}"
+        log.error(
+            f"{log_prefix} Error from subscription_event_serializer validation from jive_originator_id='{jive_originator_id}': errors='{subscription_event_serializer.errors}'. Setting response to invalid."
         )
         response = Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": subscription_event_serializer.errors})
 
