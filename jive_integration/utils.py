@@ -137,14 +137,6 @@ def get_or_create_call_id(originator_id: str) -> Tuple[bool, str]:
     return exists_in_db, call_id
 
 
-def get_call_id_from_previous_announce_event(entity_id: str) -> str:
-    log.info(f"Jive: Checking if there is a previous announce subscription event with this entity_id='{entity_id}'.")
-    try:
-        return JiveSubscriptionEventExtract.objects.get(jive_type="announce", entity_id=entity_id).peerlogic_call_id
-    except JiveSubscriptionEventExtract.DoesNotExist:
-        log.info(f"Jive: No JiveSubscriptionEventExtract found with type='announce' and given entity_id='{entity_id}'")
-
-
 def get_call_id_from_previous_announce_events_by_originator_id(originator_id: str) -> str:
     log.info(f"Jive: Checking if there is a previous announce subscription event with this originator_id='{originator_id}' in the RDBMS.")
     try:
