@@ -15,7 +15,7 @@ from rest_framework.serializers import ValidationError
 
 from calls.field_choices import CallConnectionTypes, CallDirectionTypes
 from calls.models import Call, CallPartial
-from calls.serializers import CallSerializer, CallWriteSerializer
+from calls.serializers import CallWriteSerializer
 from core.models import Practice
 from core.validation import is_extension
 from jive_integration.exceptions import RefreshTokenNoLongerRefreshableException
@@ -28,7 +28,6 @@ from jive_integration.models import (
     JiveSubscriptionEventExtract,
 )
 from jive_integration.publishers import publish_leg_b_ready_event
-from jive_integration.serializers import JiveSubscriptionEventExtractSerializer
 
 US_TELEPHONE_NUMBER_DIGIT_LENGTH = 10
 # Get an instance of a logger
