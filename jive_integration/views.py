@@ -315,7 +315,11 @@ class JiveChannelViewSet(viewsets.ModelViewSet):
         log.info("Jive: Instantiated JiveClient with connection.id='{connection.id}'")
 
         log.info(f"Jive: Deleting webhook channel jive-side and deactivating peerlogic-side for JiveChannel with pk='{pk}'")
-        channel = jive.delete_webhook_channel(channel=channel)
+        try:
+            channel = jive.delete_webhook_channel(channel=channel)
+        except Exception:
+            log.exception("Jive: Could not delete webhook channel!")
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         log.info(f"Jive: Successfully deleted webhook channel jive-side and deactivated peerlogic-side for JiveChannel with pk='{channel.pk}', active='{channel.active}'")
 
         JiveChannelSerializer(channel)
