@@ -8,6 +8,7 @@ from rest_framework import serializers
 from core.serializers import UnixEpochDateField
 from jive_integration.models import (
     JiveAWSRecordingBucket,
+    JiveChannel,
     JiveConnection,
     JiveSubscriptionEventExtract,
 )
@@ -40,6 +41,29 @@ class JiveAWSRecordingBucketSerializer(serializers.ModelSerializer):
             "bucket_name",
         ]
         fields = ["id", "connection", "access_key_id", "username", "policy_arn", "bucket_name"]
+
+
+class JiveChannelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = JiveChannel
+        read_only_fields = [
+            "id",
+            "connection",
+            "name",
+            "source_jive_id",
+            "signature",
+            "expires_at",
+            "active",
+        ]
+        fields = [
+            "id",
+            "connection",
+            "name",
+            "source_jive_id",
+            "signature",
+            "expires_at",
+            "active",
+        ]
 
 
 class JiveSubscriptionEventExtractSerializer(serializers.ModelSerializer):

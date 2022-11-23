@@ -3,6 +3,7 @@ from rest_framework_nested import routers
 
 from jive_integration.views import (
     JiveAWSRecordingBucketViewSet,
+    JiveChannelViewSet,
     JiveConnectionViewSet,
     authentication_callback,
     authentication_connect,
@@ -17,6 +18,7 @@ jive_integration_root_router = routers.SimpleRouter()
 jive_integration_root_router.register(r"connections", JiveConnectionViewSet, basename="jive-connections")
 
 connection_router = routers.NestedSimpleRouter(jive_integration_root_router, r"connections", lookup="connection")
+connection_router.register(r"channels", JiveChannelViewSet, basename="connection-channels")
 connection_router.register(r"recording-buckets", JiveAWSRecordingBucketViewSet, basename="connection-recording-buckets")
 
 urlpatterns = [

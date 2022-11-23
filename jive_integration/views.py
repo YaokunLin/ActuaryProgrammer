@@ -13,7 +13,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils import timezone
-from rest_framework import status, viewsets
+from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import (
     action,
     api_view,
@@ -39,6 +39,7 @@ from jive_integration.jive_client.client import JiveClient
 from jive_integration.models import JiveAWSRecordingBucket, JiveChannel, JiveConnection, JiveLine
 from jive_integration.serializers import (
     JiveAWSRecordingBucketSerializer,
+    JiveChannelSerializer,
     JiveConnectionSerializer,
     JiveSubscriptionEventExtractSerializer,
 )
@@ -47,7 +48,7 @@ from jive_integration.utils import (
     get_call_id_from_previous_announce_events_by_originator_id,
     get_or_create_call_id,
     handle_withdraw_event,
-    refresh_connection,
+    resync_connection,
     parse_webhook_from_header,
     get_channel_from_source_jive_id,
     wait_for_peerlogic_call,
@@ -284,12 +285,45 @@ def authentication_callback(request: Request):
     connection.save()
     log.info(f"Jive: Saved JiveConnection to the database with id='{connection.id}'.")
 
-    refresh_connection(connection=connection, request=request)
+    resync_connection(connection=connection, request=request)
 
     query_string_to_append_to_redirect_url = {"connection_id": connection.id}
     # TODO: redirect them back to the application - need to know what route though
     # return redirect(urlencode(query_string_to_append_to_redirect_url))
     return HttpResponse(status=204)
+
+
+class JiveChannelViewSet(viewsets.ModelViewSet):
+    queryset = JiveChannel.objects.all()
+    serializer_class = JiveChannelSerializer
+    permission_classes = [IsAdminUser]
+
+    def destroy(self, request, pk=None, connection_pk=None):
+        if not (self.request.user.is_staff or self.request.user.is_superuser) and not does_practice_of_user_own_connection(connection_id=pk, user=request.user):
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        log.info(f"Getting JiveConnection from database with pk='{pk}'")
+        connection = JiveConnection.objects.get(pk=connection_pk)
+        log.info(f"Got JiveConnection from database with pk='{pk}'")
+
+        log.info(f"Jive: Getting JiveChannel from database with pk='{pk}'")
+        channel = JiveChannel.objects.get(pk=pk)
+        log.info(f"Jive: Got JiveChannel from database with pk='{pk}'")
+
+        log.info(f"Jive: Instantiating JiveClient with connection.id='{connection.id}'")
+        jive: JiveClient = JiveClient(client_id=settings.JIVE_CLIENT_ID, client_secret=settings.JIVE_CLIENT_SECRET, refresh_token=connection.refresh_token)
+        log.info("Jive: Instantiated JiveClient with connection.id='{connection.id}'")
+
+        log.info(f"Jive: Deleting webhook channel jive-side and deactivating peerlogic-side for JiveChannel with pk='{pk}'")
+        try:
+            channel = jive.delete_webhook_channel(channel=channel)
+        except Exception:
+            log.exception("Jive: Could not delete webhook channel!")
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+        log.info(f"Jive: Successfully deleted webhook channel jive-side and deactivated peerlogic-side for JiveChannel with pk='{channel.pk}', active='{channel.active}'")
+
+        JiveChannelSerializer(channel)
+        return Response(status=status.HTTP_200_OK, data=JiveChannelSerializer(channel).data)
 
 
 class JiveConnectionViewSet(viewsets.ModelViewSet):
@@ -299,7 +333,11 @@ class JiveConnectionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminUser]
 
     @action(detail=True, methods=["patch"])
-    def sync(self, request, pk=None):
+    def resync(
+        self,
+        request,
+        pk=None,
+    ):
         if not (self.request.user.is_staff or self.request.user.is_superuser) and not does_practice_of_user_own_connection(connection_id=pk, user=request.user):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -308,7 +346,7 @@ class JiveConnectionViewSet(viewsets.ModelViewSet):
         log.info(f"Got JiveConnection from database with pk='{pk}'")
 
         log.info(f"Refreshing connection for JiveConnection with pk='{pk}'")
-        response_data = refresh_connection(connection=connection, request=request)
+        response_data = resync_connection(connection=connection, request=request)
         log.info(f"Refreshed connection for JiveConnection with pk='{pk}'")
 
         return Response(status=status.HTTP_200_OK, data=response_data)
@@ -396,6 +434,6 @@ def cron(request):
     # for each user connection
     for connection in JiveConnection.objects.filter(active=True).order_by("-last_sync"):
         log.info(f"Jive: found connection: {connection}")
-        refresh_connection(connection=connection, request=request)
+        resync_connection(connection=connection, request=request)
 
     return HttpResponse(status=202)
