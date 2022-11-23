@@ -85,9 +85,7 @@ def webhook(request):
     webhook = parse_webhook_from_header(request.headers.get("signature-input"))
     jive_channel = get_channel_from_source_jive_id(webhook)
     if not jive_channel or not jive_channel.active:
-        log.error(
-            f"Jive: Active JiveChannel record does not exist for webhook='{webhook}' - Doing nothing. See https://peerlogictech.atlassian.net/wiki/spaces/PL/pages/471891982/Misconfiguration+Troubleshooting+-+Manual+Backend+Steps#Delete%2FExpire-a-Webhook for more info on how to make sure this expired properly."
-        )
+        log.error(f"Jive: Active JiveChannel record does not exist for webhook='{webhook}'! - Sending response to invalidate the webhook.")
         return Response(status=status.HTTP_404_NOT_FOUND, data={"signature": "invalid"})
 
     try:
