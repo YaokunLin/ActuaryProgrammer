@@ -294,36 +294,49 @@ def authentication_callback(request: Request):
 
 
 class JiveChannelViewSet(viewsets.ModelViewSet):
-    queryset = JiveChannel.objects.all()
+    queryset = JiveChannel.objects.all().order_by("-modified_at")
+    filter_fields = ["active", "source_jive_id"]
     serializer_class = JiveChannelSerializer
     permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        return super().get_queryset().filter(connection=self.kwargs.get("connection_pk"))
 
     def destroy(self, request, pk=None, connection_pk=None):
         if not (self.request.user.is_staff or self.request.user.is_superuser) and not does_practice_of_user_own_connection(connection_id=pk, user=request.user):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        log.info(f"Getting JiveConnection from database with pk='{pk}'")
-        connection = JiveConnection.objects.get(pk=connection_pk)
-        log.info(f"Got JiveConnection from database with pk='{pk}'")
-
         log.info(f"Jive: Getting JiveChannel from database with pk='{pk}'")
-        channel = JiveChannel.objects.get(pk=pk)
+        channel = get_object_or_404(self.get_queryset(), pk=pk)
         log.info(f"Jive: Got JiveChannel from database with pk='{pk}'")
+
+        connection = channel.connection
 
         log.info(f"Jive: Instantiating JiveClient with connection.id='{connection.id}'")
         jive: JiveClient = JiveClient(client_id=settings.JIVE_CLIENT_ID, client_secret=settings.JIVE_CLIENT_SECRET, refresh_token=connection.refresh_token)
         log.info("Jive: Instantiated JiveClient with connection.id='{connection.id}'")
 
+        successfully_deleted_jive_side = False
+
         log.info(f"Jive: Deleting webhook channel jive-side and deactivating peerlogic-side for JiveChannel with pk='{pk}'")
         try:
             channel = jive.delete_webhook_channel(channel=channel)
-        except Exception:
-            log.exception("Jive: Could not delete webhook channel!")
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        log.info(f"Jive: Successfully deleted webhook channel jive-side and deactivated peerlogic-side for JiveChannel with pk='{channel.pk}', active='{channel.active}'")
+            successfully_deleted_jive_side = True
+            log.info(
+                f"Jive: Successfully deleted webhook channel jive-side and deactivated peerlogic-side for JiveChannel with pk='{channel.pk}', active='{channel.active}'"
+            )
 
-        JiveChannelSerializer(channel)
-        return Response(status=status.HTTP_200_OK, data=JiveChannelSerializer(channel).data)
+        except Exception:
+            log.exception(f"Jive: Could not delete webhook channel channel={channel}. Setting to inactive in the RDBMS.")
+            successfully_deleted_jive_side = False  # we know it's set above, explicitly setting it here.
+            channel.active = False
+            channel.save()
+            log.info(f"Jive: Set JiveChannel to inactive with pk='{channel.pk}', active='{channel.active}'")
+
+        jive_channel_serializer = JiveChannelSerializer(channel)
+        return Response(
+            status=status.HTTP_200_OK, data={"channel": jive_channel_serializer.data, "successfully_deleted_jive_side": successfully_deleted_jive_side}
+        )
 
 
 class JiveConnectionViewSet(viewsets.ModelViewSet):
@@ -345,9 +358,9 @@ class JiveConnectionViewSet(viewsets.ModelViewSet):
         connection = JiveConnection.objects.get(pk=pk)
         log.info(f"Got JiveConnection from database with pk='{pk}'")
 
-        log.info(f"Refreshing connection for JiveConnection with pk='{pk}'")
+        log.info(f"Resynced connection for JiveConnection with pk='{pk}'")
         response_data = resync_connection(connection=connection, request=request)
-        log.info(f"Refreshed connection for JiveConnection with pk='{pk}'")
+        log.info(f"Resynced connection for JiveConnection with pk='{pk}'")
 
         return Response(status=status.HTTP_200_OK, data=response_data)
 
@@ -420,7 +433,7 @@ class JiveAWSRecordingBucketViewSet(viewsets.ViewSet):
 @permission_classes([])
 def cron(request):
     """
-    Jive event subscriptions must be refreshed every week. Additionally, there is no push event when a line is added
+    Jive event subscriptions must be resynced every week. Additionally, there is no push event when a line is added
     or removed from an account.   This endpoint will sync the lines from jive for each active connection.  Connections
     are prioritized by the longest interval since the last sync.  Any stale or invalid channels will be garbage
     collected though the records may remain in the database for a period to ensure any latent events sent to the
