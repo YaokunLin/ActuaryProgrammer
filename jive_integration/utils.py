@@ -308,7 +308,7 @@ def resync_connection(connection: JiveConnection, request: Request):
     if deadline < datetime.now():
         raise RefreshTokenNoLongerRefreshableException()
 
-    for channel in JiveChannel.objects.filter(connection=connection):
+    for channel in JiveChannel.objects.filter(connection=connection, active=True):
         log.info(f"Jive: found channel: {channel}")
         # if a channel refresh fails we mark it as inactive
         try:
