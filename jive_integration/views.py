@@ -76,16 +76,20 @@ def generate_jive_callback_url(
 def webhook(request):
     # https://api.jive.com/call-reports/v1/recordings/4428338e-826b-40af-b4a0-d01a2010f525?organizationId=af93983c-ec29-4aca-8516-b8ab36b587d1
 
-    log.info(f"Jive: Webhook received event. headers='{request.headers}' body='{request.body}'")
+    log_prefix = "Jive: Webhook received event."
+    log.info(f"{log_prefix} headers='{request.headers}' body='{request.body}'")
 
     response = HttpResponse(status=202)
     #
     # VALIDATION
     #
     webhook = parse_webhook_from_header(request.headers.get("signature-input"))
+    log_prefix = f"{log_prefix}. webhook='{webhook}'"
     jive_channel = get_channel_from_source_jive_id(webhook)
     if not jive_channel or not jive_channel.active:
-        log.error(f"Jive: Active JiveChannel record does not exist for webhook='{webhook}'! - Sending response to invalidate the webhook.")
+        log.error(
+            f"{log_prefix} Active JiveChannel record does not exist for webhook! - Sending response to invalidate the webhook. jive_channel='{jive_channel}'"
+        )
         return Response(status=status.HTTP_404_NOT_FOUND, data={"signature": "invalid"})
 
     try:
@@ -93,6 +97,7 @@ def webhook(request):
         timestamp_of_request: datetime = dateutil.parser.isoparser().isoparse(req["timestamp"])
         content = json.loads(req["content"])
     except (json.JSONDecodeError, KeyError):
+        log.error(f"{log_prefix} Could not determine timestemp of request. Invalid response sent to webhook. Invalidating webhook.")
         return HttpResponse(status=status.HTTP_406_NOT_ACCEPTABLE)
 
     end_time = timestamp_of_request
