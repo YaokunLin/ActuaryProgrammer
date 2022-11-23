@@ -210,7 +210,7 @@ def handle_withdraw_event(
     event: JiveSubscriptionEventExtract,
     jive_request_data_key_value_pair: Dict,
     bucket_name: str,
-) -> JiveSubscriptionEventExtract:
+) -> Tuple[JiveSubscriptionEventExtract, str]:
     call_id = get_call_id_from_previous_announce_events_by_originator_id(jive_originator_id)
     log.info(f"Jive: Call ID is {call_id}")
     event.peerlogic_call_id = call_id
@@ -290,7 +290,7 @@ def handle_withdraw_event(
             },
         )
 
-    return (event, call_id)
+    return event, call_id
 
 
 def resync_connection(connection: JiveConnection, request: Request):
@@ -300,7 +300,7 @@ def resync_connection(connection: JiveConnection, request: Request):
     if deadline < datetime.now():
         raise RefreshTokenNoLongerRefreshableException()
 
-    for channel in JiveChannel.objects.filter(connection=connection):
+    for channel in JiveChannel.objects.filter(connection=connection, active=True):
         log.info(f"Jive: found channel: {channel}")
         # if a channel refresh fails we mark it as inactive
         try:
