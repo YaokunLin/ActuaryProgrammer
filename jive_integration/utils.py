@@ -149,11 +149,11 @@ def get_call_id_from_previous_announce_events_by_originator_id(originator_id: st
 
 
 def get_channel_from_source_jive_id(webhook: str) -> JiveChannel:
-    log.info(f"Jive: Finding channel record with matching source_jive_id: '{webhook}'")
+    log.info(f"Jive: Finding channel record with matching source_jive_id='{webhook}'")
     try:
         return JiveChannel.objects.get(source_jive_id=webhook)
     except JiveChannel.DoesNotExist:
-        log.info(f"Jive: No JiveChannel found with source_jive_id: '{webhook}'")
+        log.info(f"Jive: No JiveChannel found with source_jive_id='{webhook}'")
 
 
 def get_call_partial_id_from_previous_withdraw_event_by_originator_id(originator_id: str, data_recordings_extract: List[Dict[str, str]]) -> Optional[str]:
@@ -207,7 +207,7 @@ def handle_withdraw_event(
 
     if recording_count == 0:
         # TODO: call Jive API to see if there is a corresponding Voicemail
-        log.info("Jive: Updating Peerlogic call end time and duration.")
+        log.info(f"Jive: Updating Peerlogic call end time and duration. call_id='{call_id}'")
         peerlogic_call = Call.objects.get(pk=call_id)
         peerlogic_call.call_end_time = end_time
         peerlogic_call.duration_seconds = peerlogic_call.call_end_time - peerlogic_call.call_start_time
@@ -275,7 +275,7 @@ def handle_withdraw_event(
             },
         )
 
-    return (event, call_id)
+    return (event, call_id)  # TODO this violates the types in the function contract
 
 
 def refresh_connection(connection: JiveConnection, request: Request):
