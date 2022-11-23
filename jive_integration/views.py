@@ -163,11 +163,11 @@ def webhook(request):
                 log.exception(f"Error creating a new Peerlogic call from event.id='{event.id}'")
 
     elif jive_event_type == JiveEventTypeChoices.REPLACE:
-        log.info(f"Jive: Received jive replace event: event.id='{event.id}'")
+        log.info(f"Jive: Received jive replace event, event.id='{event.id}'")
         call_id = get_call_id_from_previous_announce_events_by_originator_id(jive_originator_id)
 
     elif jive_event_type == JiveEventTypeChoices.WITHDRAW:
-        log.info(f"Jive: Received jive withdraw event: event.id='{event.id}'")
+        log.info(f"Jive: Received jive withdraw event, event.id='{event.id}'")
         try:
             event, call_id = handle_withdraw_event(
                 jive_originator_id=jive_originator_id,
@@ -178,6 +178,7 @@ def webhook(request):
                 jive_request_data_key_value_pair=jive_request_data_key_value_pair,
                 bucket_name=bucket_name,
             )
+            log.info(f"Jive: Handled jive withdraw event, event.id='{event.id}'")
         except Exception as e:
             log.exception(f"Jive: Exception='{e}' occurred during withdraw event: event.id='{event.id}'")
 
