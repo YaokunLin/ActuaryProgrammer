@@ -304,9 +304,9 @@ class JiveChannelViewSet(viewsets.ModelViewSet):
         if not (self.request.user.is_staff or self.request.user.is_superuser) and not does_practice_of_user_own_connection(connection_id=pk, user=request.user):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        log.info(f"Getting JiveConnection from database with pk='{pk}'")
+        log.info(f"Jive: Getting JiveConnection from database with pk='{pk}'")
         connection = JiveConnection.objects.get(pk=connection_pk)
-        log.info(f"Got JiveConnection from database with pk='{pk}'")
+        log.info(f"Jive: Got JiveConnection from database with pk='{pk}'")
 
         log.info(f"Jive: Getting JiveChannel from database with pk='{pk}'")
         channel = JiveChannel.objects.get(pk=pk)
