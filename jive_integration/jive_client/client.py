@@ -207,11 +207,14 @@ class JiveClient:
                 },
             )
             response_body = resp.json()
-
             resp.raise_for_status()
+
             log.info(f"Jive: POST to endpoint='{endpoint}' gave a response_body='{response_body}'")
-            channel.source_jive_id = response_body.get("channelId")
+            channel_id = response_body.get("channelId")
+            channel.source_jive_id = channel_id
             channel.save()
+            log.info(f"Jive: Updated channel='{channel}' channelId='{channel_id}'")
+
         except Exception as exc:
             message = f"Could not create channel in Jive, deleting from Peerlogic API."
             log.warning(message)
