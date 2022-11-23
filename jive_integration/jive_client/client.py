@@ -229,7 +229,6 @@ class JiveClient:
         resp = self.__request(method="put", url=endpoint)
 
         resp.raise_for_status()
-
         response_body = resp.json()
 
         log.info(f"Jive: POST to endpoint='{endpoint}' gave a response_body='{response_body}'")
@@ -262,9 +261,7 @@ class JiveClient:
         dependency: channelID not channel Id
         """
         resp = self.__request(method="post", url="https://realtime.jive.com/v2/session", json={"channelId": channel.source_jive_id})
-
         resp.raise_for_status()
-
         body = resp.json()
 
         try:
