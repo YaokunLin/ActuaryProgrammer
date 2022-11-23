@@ -115,6 +115,7 @@ def webhook(request):
 
     event = subscription_event_serializer.save()
 
+    log.prefix = f"{log_prefix} event='{event.id}'"
     dialed_number = jive_request_data_key_value_pair.get("ani", "")
     if dialed_number:
         # Example ani's:
@@ -143,13 +144,13 @@ def webhook(request):
     call_id = ""
     jive_event_type = content.get("type")
     if jive_event_type == JiveEventTypeChoices.ANNOUNCE:
-        log.info(f"{log_prefix} Received jive announce event: event.id='{event.id}'")
+        log.info(f"{log_prefix} Received jive announce event")
 
         call_exists, call_id = get_or_create_call_id(jive_originator_id)
         if call_exists:
             peerlogic_call = wait_for_peerlogic_call(call_id=call_id)
         else:
-            log.info(f"{log_prefix} No previous peerlogic call found from previous events in the database - Creating peerlogic call from event.id='{event.id}'")
+            log.info(f"{log_prefix} No previous peerlogic call found from previous events in the database - Creating peerlogic call.")
             try:
                 peerlogic_call = create_peerlogic_call(
                     call_id=call_id,
@@ -159,16 +160,16 @@ def webhook(request):
                     practice=practice,
                 )
                 call_id = peerlogic_call.id
-                log.info(f"Jive: Created Peerlogic Call object with id='{peerlogic_call.id}' from event.id='{event.id}'")
+                log.info(f"Jive: Created Peerlogic Call object with id='{peerlogic_call.id}'.")
             except ValidationError:
-                log.exception(f"Error creating a new Peerlogic call from event.id='{event.id}'")
+                log.exception(f"Error creating a new Peerlogic call.")
 
     elif jive_event_type == JiveEventTypeChoices.REPLACE:
-        log.info(f"{log_prefix} Received jive replace event, event.id='{event.id}'")
+        log.info(f"{log_prefix} Received jive replace event.")
         call_id = get_call_id_from_previous_announce_events_by_originator_id(jive_originator_id)
 
     elif jive_event_type == JiveEventTypeChoices.WITHDRAW:
-        log.info(f"{log_prefix} Received jive withdraw event, event.id='{event.id}'")
+        log.info(f"{log_prefix} Received jive withdraw event.")
         try:
             event, call_id = handle_withdraw_event(
                 jive_originator_id=jive_originator_id,
@@ -179,9 +180,9 @@ def webhook(request):
                 jive_request_data_key_value_pair=jive_request_data_key_value_pair,
                 bucket_name=bucket_name,
             )
-            log.info(f"{log_prefix} Handled jive withdraw event, event.id='{event.id}'")
+            log.info(f"{log_prefix} Handled jive withdraw event.")
         except Exception as e:
-            log.exception(f"{log_prefix} Exception='{e}' occurred during withdraw event: event.id='{event.id}'")
+            log.exception(f"{log_prefix} Exception='{e}' occurred during withdraw event.")
             return response  # still return a success otherwise we may kill the source channel from sending future events - needs verification 2022-11-23
 
     # always get the call_id onto the event
