@@ -200,40 +200,46 @@ def handle_withdraw_event(
 ) -> Tuple[JiveSubscriptionEventExtract, str]:
 
     event_id = event.id
-    log.info(f"Jive: Handling withdraw event {event_id} - Finding associated call_id")
+    log_prefix = f"Jive: Handling withdraw event {event_id} -"
+    log.info(f"{log_prefix} Finding associated call_id")
     call_id = get_call_id_from_previous_announce_events_by_originator_id(jive_originator_id)
-    log.info(f"Jive: Handling withdraw event {event_id} - Found associated call_id='{call_id}'")
+    log.info(f"{log_prefix} Found associated call_id='{call_id}'")
 
     # handle case where we do not have any preceding events (somehow)
     if not call_id:
         raise Exception(
-            f"Jive: Handling withdraw event {event_id} - Unable to find call_id='{call_id}'! There should already be an associated call_id for an earlier announce event but none was found!"
+            f"{log_prefix} Unable to find call_id='{call_id}'! There should already be an associated call_id for an earlier announce event but none was found!"
         )
 
+    log.info(f"{log_prefix} Associating call_id='{call_id}' and saving.")
     event.peerlogic_call_id = call_id
     event.save()
+    log.info(f"{log_prefix} Associated call_id='{call_id}'.")
 
+    log.info(f"{log_prefix} Extracting recording count from {event_id}")
     jive_request_recordings = jive_request_data_key_value_pair.get("recordings", [])
     recording_count = len(jive_request_recordings)
-    log.info(f"Jive: Found {recording_count} recordings.")
+    log.info(f"{log_prefix} Found {recording_count} recordings.")
 
     if recording_count == 0:
         # TODO: call Jive API to see if there is a corresponding Voicemail
-        log.info(f"Jive: Updating Peerlogic call end time and duration. call_id='{call_id}'")
+        log.info(f"{log_prefix} Updating Peerlogic call end time and duration. call_id='{call_id}'")
         peerlogic_call = Call.objects.get(pk=call_id)
         peerlogic_call.call_end_time = end_time
         peerlogic_call.duration_seconds = peerlogic_call.call_end_time - peerlogic_call.call_start_time
         peerlogic_call.call_connection = CallConnectionTypes.MISSED
         peerlogic_call.save()
         log.info(
-            f"Jive: Updated Peerlogic call with the following fields: peerlogic_call.call_connection='{peerlogic_call.call_connection}', peerlogic_call.call_end_time='{peerlogic_call.call_end_time}', peerlogic_call.duration_seconds='{peerlogic_call.duration_seconds}'"
+            f"{log_prefix} Updated Peerlogic call with the following fields: peerlogic_call.call_connection='{peerlogic_call.call_connection}', peerlogic_call.call_end_time='{peerlogic_call.call_end_time}', peerlogic_call.duration_seconds='{peerlogic_call.duration_seconds}'"
         )
     else:  # recording_count > 0:
         initial_withdraw_id = get_call_partial_id_from_previous_withdraw_event_by_originator_id(
             originator_id=jive_originator_id, data_recordings_extract=jive_request_recordings
         )
         if initial_withdraw_id:
-            log.info(f"Jive: Recording found and call partial already created from a separate line earlier: '{initial_withdraw_id}' - skipping publishing.")
+            log.info(
+                f"{log_prefix} Recording found and call partial already created from a separate line earlier: '{initial_withdraw_id}' - skipping publishing."
+            )
             return event, call_id
 
     recordings = []
@@ -251,25 +257,25 @@ def handle_withdraw_event(
         filename = recording[1]
         filename_encoded = recording[2]
 
-        log.info("Jive: Updating Peerlogic call end time and duration.")
+        log.info(f"{log_prefix} Updating Peerlogic call end time and duration.")
         peerlogic_call = Call.objects.get(pk=call_id)
         peerlogic_call.call_end_time = end_time
         peerlogic_call.duration_seconds = peerlogic_call.call_end_time - peerlogic_call.call_start_time
         peerlogic_call.call_connection = CallConnectionTypes.CONNECTED
         peerlogic_call.save()
         log.info(
-            f"Jive: Updated Peerlogic call with the following fields: peerlogic_call.call_connection='{peerlogic_call.call_connection}', peerlogic_call.call_end_time='{peerlogic_call.call_end_time}', peerlogic_call.duration_seconds='{peerlogic_call.duration_seconds}'"
+            f"{log_prefix} Updated Peerlogic call with the following fields: peerlogic_call.call_connection='{peerlogic_call.call_connection}', peerlogic_call.call_end_time='{peerlogic_call.call_end_time}', peerlogic_call.duration_seconds='{peerlogic_call.duration_seconds}'"
         )
 
         log.info(
-            f"Jive: Creating Peerlogic CallPartial with peerlogic_call.id='{peerlogic_call.id}',  time_interaction_started='{peerlogic_call.call_start_time}' and time_interaction_ended='{ord}'."
+            f"{log_prefix} Creating Peerlogic CallPartial with peerlogic_call.id='{peerlogic_call.id}',  time_interaction_started='{peerlogic_call.call_start_time}' and time_interaction_ended='{ord}'."
         )
 
         jive_leg_created_time = event.data_created
 
         cp = CallPartial.objects.create(call=peerlogic_call, time_interaction_started=jive_leg_created_time, time_interaction_ended=end_time)
         log.info(
-            f"Jive: Created Peerlogic CallPartial with cp.id='{cp.id}', peerlogic_call.id='{peerlogic_call.id}', time_interaction_started='{peerlogic_call.call_start_time}' and time_interaction_ended='{end_time}'."
+            f"{log_prefix} Created Peerlogic CallPartial with cp.id='{cp.id}', peerlogic_call.id='{peerlogic_call.id}', time_interaction_started='{peerlogic_call.call_start_time}' and time_interaction_ended='{end_time}'."
         )
 
         event.peerlogic_call_partial_id = cp.id
