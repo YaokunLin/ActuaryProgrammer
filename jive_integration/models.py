@@ -39,7 +39,7 @@ class JiveConnection(AuditTrailModel):
 
 class JiveAWSRecordingBucket(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
-    connection = models.OneToOneField(JiveConnection, on_delete=models.CASCADE, related_name="bucket")
+    connection = models.OneToOneField(JiveConnection, on_delete=models.SET_NULL, null=True, related_name="bucket")
     bucket_name = models.CharField(blank=True, max_length=63)  # https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html
     access_key_id = models.CharField(blank=True, max_length=128)  # https://docs.aws.amazon.com/IAM/latest/APIReference/API_AccessKey.html
     username = models.CharField(blank=True, max_length=64)  # https://docs.aws.amazon.com/IAM/latest/APIReference/API_User.html
@@ -122,7 +122,7 @@ class JiveAWSRecordingBucket(AuditTrailModel):
         pass
 
 
-class JiveChannel(models.Model):
+class JiveChannel(AuditTrailModel):
     """
     Channels represent a destination to deliver events from the Jive API to.  Channels define where events are delivered.
     Channels have a limited lifespan but can be refreshed to extend it.  When a channel is created a user defined
@@ -143,7 +143,7 @@ class JiveChannel(models.Model):
     active = models.BooleanField(default=True)
 
 
-class JiveSession(models.Model):
+class JiveSession(AuditTrailModel):
     """
     Session represent a series of objects that we would like to be notified of events for.  Sessions are linked to
     channels in the Jive API as a vector for events.
@@ -157,7 +157,7 @@ class JiveSession(models.Model):
     url = models.URLField()
 
 
-class JiveLine(models.Model):
+class JiveLine(AuditTrailModel):
     """
     Represents a phone number associated with the user's Jive account.  Most Jive API endpoints require
     a reference to the associated organization id to reference a line. Lines are linked to a user's account

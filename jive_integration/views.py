@@ -294,9 +294,13 @@ def authentication_callback(request: Request):
 
 
 class JiveChannelViewSet(viewsets.ModelViewSet):
-    queryset = JiveChannel.objects.all()
+    queryset = JiveChannel.objects.all().order_by("-modified_at")
+    filter_fields = ["active", "source_jive_id"]
     serializer_class = JiveChannelSerializer
     permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        return super().get_queryset().filter(connection=self.kwargs.get("connection_pk"))
 
     def destroy(self, request, pk=None, connection_pk=None):
         if not (self.request.user.is_staff or self.request.user.is_superuser) and not does_practice_of_user_own_connection(connection_id=pk, user=request.user):
@@ -314,16 +318,27 @@ class JiveChannelViewSet(viewsets.ModelViewSet):
         jive: JiveClient = JiveClient(client_id=settings.JIVE_CLIENT_ID, client_secret=settings.JIVE_CLIENT_SECRET, refresh_token=connection.refresh_token)
         log.info("Jive: Instantiated JiveClient with connection.id='{connection.id}'")
 
+        successfully_deleted_jive_side = False
+
         log.info(f"Jive: Deleting webhook channel jive-side and deactivating peerlogic-side for JiveChannel with pk='{pk}'")
         try:
             channel = jive.delete_webhook_channel(channel=channel)
+            successfully_deleted_jive_side = True
+            log.info(
+                f"Jive: Successfully deleted webhook channel jive-side and deactivated peerlogic-side for JiveChannel with pk='{channel.pk}', active='{channel.active}'"
+            )
+
         except Exception:
-            log.exception("Jive: Could not delete webhook channel!")
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        log.info(f"Jive: Successfully deleted webhook channel jive-side and deactivated peerlogic-side for JiveChannel with pk='{channel.pk}', active='{channel.active}'")
+            log.exception(f"Jive: Could not delete webhook channel channel={channel}. Setting to inactive in the RDBMS.")
+            successfully_deleted_jive_side = False  # we know it's set above, explicitly setting it here.
+            channel.active = False
+            channel.save()
+            log.info(f"Jive: Set JiveChannel to inactive with pk='{channel.pk}', active='{channel.active}'")
 
         JiveChannelSerializer(channel)
-        return Response(status=status.HTTP_200_OK, data=JiveChannelSerializer(channel).data)
+        return Response(
+            status=status.HTTP_200_OK, data={"channel": JiveChannelSerializer(channel).data, "successfully_deleted_jive_side": successfully_deleted_jive_side}
+        )
 
 
 class JiveConnectionViewSet(viewsets.ModelViewSet):
