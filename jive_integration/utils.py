@@ -148,12 +148,13 @@ def get_call_id_from_previous_announce_events_by_originator_id(originator_id: st
         return ""  # Blankable call id
 
 
-def get_channel_from_source_jive_id(webhook: str) -> JiveChannel:
+def get_channel_from_source_jive_id(webhook: str) -> Optional[JiveChannel]:
     log.info(f"Jive: Finding channel record with matching source_jive_id='{webhook}'")
     try:
         return JiveChannel.objects.get(source_jive_id=webhook)
     except JiveChannel.DoesNotExist:
         log.info(f"Jive: No JiveChannel found with source_jive_id='{webhook}'")
+        return None
 
 
 def get_call_partial_id_from_previous_withdraw_event_by_originator_id(originator_id: str, data_recordings_extract: List[Dict[str, str]]) -> Optional[str]:
