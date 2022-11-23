@@ -175,6 +175,7 @@ def get_call_partial_id_from_previous_withdraw_event_by_originator_id(originator
 def wait_for_peerlogic_call(call_id: str, current_attempt: int = 1) -> str:
     """Will sleep for 1 second for each attempt"""
     MAX_ATTEMPTS = 3
+    SLEEP_TIME_SECONDS = 1
 
     try:
         log.info(f"Trying to get a call from call_id='{call_id}'")
@@ -184,7 +185,7 @@ def wait_for_peerlogic_call(call_id: str, current_attempt: int = 1) -> str:
     except Call.DoesNotExist:
         if current_attempt >= MAX_ATTEMPTS:
             raise
-        sleep(1)
+        sleep(SLEEP_TIME_SECONDS)
         return wait_for_peerlogic_call(call_id=call_id, current_attempt=current_attempt + 1)
 
 
