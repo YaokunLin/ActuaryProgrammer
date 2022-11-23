@@ -114,19 +114,21 @@ def create_peerlogic_call(call_id: str, jive_request_data_key_value_pair: Dict, 
 def get_or_create_call_id(originator_id: str) -> Tuple[bool, str]:
     call_id = get_call_id_from_previous_announce_events_by_originator_id(originator_id)
     if call_id:
-        log.info(f"Jive: Returning call_id from an existing announce event extract only - call_id='{call_id}'")
+        log.info(f"Jive: Returning call_id from an existing announce event extract call_id='{call_id}', originator_id='{originator_id}'")
         exists_in_db = True
         return exists_in_db, call_id
 
     # Proceed to check the cache
+    log.info(f"Jive: call_id not found in the RDBMS. Checking cache.")
     CACHE_TIMEOUT = 600  # 10 minutes
     cache_key = f"jive.originator_id.{originator_id}"
+
     call_id = shortuuid.uuid()
     log.info(f"Jive: Getting call_id for cache_key='{cache_key}'")
     was_created = cache.set(cache_key, call_id, nx=True, timeout=CACHE_TIMEOUT)
     if not was_created:
+        # the cache_key and a previously existing call_id were stored, get the stored call_id
         call_id = cache.get(cache_key)
-        # check events for announce
         log.info(f"Jive: Returning existing call_id='{call_id}' for cache_key='{cache_key}'")
         exists_in_db = True
         return exists_in_db, call_id
@@ -137,7 +139,7 @@ def get_or_create_call_id(originator_id: str) -> Tuple[bool, str]:
 
 
 def get_call_id_from_previous_announce_event(entity_id: str) -> str:
-    log.info(f"Jive: Checking if there is a prdsevious announce subscription event with this entity_id='{entity_id}'.")
+    log.info(f"Jive: Checking if there is a previous announce subscription event with this entity_id='{entity_id}'.")
     try:
         return JiveSubscriptionEventExtract.objects.get(jive_type="announce", entity_id=entity_id).peerlogic_call_id
     except JiveSubscriptionEventExtract.DoesNotExist:
@@ -153,13 +155,13 @@ def get_subscription_event_from_previous_announce_event(leg_id: str) -> JiveSubs
 
 
 def get_call_id_from_previous_announce_events_by_originator_id(originator_id: str) -> str:
-    log.info(f"Jive: Checking if there is a previous announce subscription event with this originator_id='{originator_id}'.")
+    log.info(f"Jive: Checking if there is a previous announce subscription event with this originator_id='{originator_id}' in the RDBMS.")
     try:
         event = JiveSubscriptionEventExtract.objects.filter(jive_type="announce", data_originator_id=originator_id).first()
         if event:
             return event.peerlogic_call_id
     except JiveSubscriptionEventExtract.DoesNotExist:
-        log.info(f"Jive: No JiveSubscriptionEventExtract found with type='announce' and given originator_id='{originator_id}'")
+        log.info(f"Jive: No JiveSubscriptionEventExtract found with type='announce' and given originator_id='{originator_id}' in the RDBMS.")
         return ""  # Blankable call id
 
 
