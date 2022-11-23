@@ -198,8 +198,18 @@ def handle_withdraw_event(
     jive_request_data_key_value_pair: Dict,
     bucket_name: str,
 ) -> Tuple[JiveSubscriptionEventExtract, str]:
-    call_id = get_call_id_from_previous_announce_events_by_originator_id(jive_originator_id)  # TODO, can this handle a None?
-    log.info(f"Jive: Call ID is {call_id}")
+
+    event_id = event.id
+    log.info(f"Jive: Handling withdraw event {event_id} - Finding associated call_id")
+    call_id = get_call_id_from_previous_announce_events_by_originator_id(jive_originator_id)
+    log.info(f"Jive: Handling withdraw event {event_id} - Found associated call_id='{call_id}'")
+
+    # handle case where we do not have any preceding events (somehow)
+    if not call_id:
+        raise Exception(
+            f"Jive: Handling withdraw event {event_id} - Unable to find call_id='{call_id}'! There should already be an associated call_id for an earlier announce event but none was found!"
+        )
+
     event.peerlogic_call_id = call_id
     event.save()
 
