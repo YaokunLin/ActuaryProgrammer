@@ -125,8 +125,8 @@ class JiveAWSRecordingBucket(AuditTrailModel):
 class JiveChannel(AuditTrailModel):
     """
     Channels represent a destination to deliver events from the Jive API to.  Channels define where events are delivered.
-    Channels have a limited lifespan but can be refreshed to extend it.  When a channel is created a user defined
-    signature is set and will be included with every request.  Channels are linked to a user through the `JiveConnection`
+    Channels have a limited lifespan but we can extend it.  When a channel is created a user defined signature is set
+    and will be included with every request.  Channels are linked to a user through the `JiveConnection`
     and can have many resourced linked to them.  Any dependent resource will cascade deletes when a channel is deleted.
 
     https://developer.goto.com/GoToConnect#section/Getting-Started/Step-Two:-Open-a-WebSocket-or-Use-Your-Notification-Channel

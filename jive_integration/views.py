@@ -335,9 +335,9 @@ class JiveChannelViewSet(viewsets.ModelViewSet):
             channel.save()
             log.info(f"Jive: Set JiveChannel to inactive with pk='{channel.pk}', active='{channel.active}'")
 
-        JiveChannelSerializer(channel)
+        jive_channel_serializer = JiveChannelSerializer(channel)
         return Response(
-            status=status.HTTP_200_OK, data={"channel": JiveChannelSerializer(channel).data, "successfully_deleted_jive_side": successfully_deleted_jive_side}
+            status=status.HTTP_200_OK, data={"channel": jive_channel_serializer.data, "successfully_deleted_jive_side": successfully_deleted_jive_side}
         )
 
 
@@ -360,9 +360,9 @@ class JiveConnectionViewSet(viewsets.ModelViewSet):
         connection = JiveConnection.objects.get(pk=pk)
         log.info(f"Got JiveConnection from database with pk='{pk}'")
 
-        log.info(f"Refreshing connection for JiveConnection with pk='{pk}'")
+        log.info(f"Resynced connection for JiveConnection with pk='{pk}'")
         response_data = resync_connection(connection=connection, request=request)
-        log.info(f"Refreshed connection for JiveConnection with pk='{pk}'")
+        log.info(f"Resynced connection for JiveConnection with pk='{pk}'")
 
         return Response(status=status.HTTP_200_OK, data=response_data)
 
@@ -435,7 +435,7 @@ class JiveAWSRecordingBucketViewSet(viewsets.ViewSet):
 @permission_classes([])
 def cron(request):
     """
-    Jive event subscriptions must be refreshed every week. Additionally, there is no push event when a line is added
+    Jive event subscriptions must be resynced every week. Additionally, there is no push event when a line is added
     or removed from an account.   This endpoint will sync the lines from jive for each active connection.  Connections
     are prioritized by the longest interval since the last sync.  Any stale or invalid channels will be garbage
     collected though the records may remain in the database for a period to ensure any latent events sent to the
