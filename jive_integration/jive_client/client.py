@@ -235,6 +235,22 @@ class JiveClient:
         channel.expires_at = timezone.now() + timedelta(seconds=response_body.get("channelLifetime"))
         channel.save()
 
+    def delete_webhook_channel(self, channel: JiveChannel) -> JiveChannel:
+        endpoint = f"https://api.jive.com/notification-channel/v1/channels/{channel.name}/{channel.source_jive_id}"
+        log.info(f"Jive: Sending DELETE to endpoint='{endpoint}'")
+        resp = self.__request(method="delete", url=endpoint)
+
+        resp.raise_for_status()
+
+        log.info(f"Jive: DELETE to endpoint='{endpoint}' successful - no response body.")
+
+        log.info(f"Jive: Saving JiveChannel channel='{channel}' with active=False")
+        channel.active = False
+        channel.save()
+        log.info(f"Jive: Saved JiveChannel channel='{channel}' with active=False")
+
+        return channel
+
     def create_session(self, channel: JiveChannel) -> JiveSession:
         """
         Create a session on the Jive API and record the reference url.
@@ -254,6 +270,7 @@ class JiveClient:
             log.info(f"Saving Jive Session to the database: channel='{channel}', url={body['self']}")
             session = JiveSession.objects.create(channel=channel, url=body["self"])
             log.info(f"Saved session.id='{session.id}' to the database")
+            return session
         except KeyError as exc:
             raise APIResponseException("failed to parse session response") from exc
 

@@ -278,7 +278,7 @@ def handle_withdraw_event(
     return (event, call_id)  # TODO this violates the types in the function contract
 
 
-def refresh_connection(connection: JiveConnection, request: Request):
+def resync_connection(connection: JiveConnection, request: Request):
     # to avoid timeouts we want to complete execution in 30s
     deadline = datetime.now() + timedelta(seconds=60)
     jive: JiveClient = JiveClient(client_id=settings.JIVE_CLIENT_ID, client_secret=settings.JIVE_CLIENT_SECRET, refresh_token=connection.refresh_token)
