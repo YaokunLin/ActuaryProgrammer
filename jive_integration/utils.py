@@ -216,6 +216,7 @@ def handle_withdraw_event(
     event.save()
     log.info(f"{log_prefix} Associated call_id='{call_id}'.")
 
+    log_prefix = f"{log_prefix} call_id='{call_id}' -"
     log.info(f"{log_prefix} Extracting recording count from {event_id}")
     jive_request_recordings = jive_request_data_key_value_pair.get("recordings", [])
     recording_count = len(jive_request_recordings)
@@ -223,7 +224,7 @@ def handle_withdraw_event(
 
     if recording_count == 0:
         # TODO: call Jive API to see if there is a corresponding Voicemail
-        log.info(f"{log_prefix} Updating Peerlogic call end time and duration. call_id='{call_id}'")
+        log.info(f"{log_prefix} Updating Peerlogic call end time and duration.")
         peerlogic_call = Call.objects.get(pk=call_id)
         peerlogic_call.call_end_time = end_time
         peerlogic_call.duration_seconds = peerlogic_call.call_end_time - peerlogic_call.call_start_time
@@ -242,6 +243,7 @@ def handle_withdraw_event(
             )
             return event, call_id
 
+    log.info(f"{log_prefix} Updating returned recording data.")
     recordings = []
     for recording in jive_request_recordings:
         filename_encoded = recording["filename"]
@@ -251,7 +253,9 @@ def handle_withdraw_event(
         recordings.append([ord, filename, filename_encoded])
 
     recordings = sorted(recordings, key=lambda r: r[0])
+    log.info(f"{log_prefix} Updated returned recording data. recordings='{recordings}'")
 
+    log.info(f"{log_prefix} Processing recordings. Persisting them to ")
     for recording in recordings:
         ord = recording[0]
         filename = recording[1]
@@ -267,20 +271,20 @@ def handle_withdraw_event(
             f"{log_prefix} Updated Peerlogic call with the following fields: peerlogic_call.call_connection='{peerlogic_call.call_connection}', peerlogic_call.call_end_time='{peerlogic_call.call_end_time}', peerlogic_call.duration_seconds='{peerlogic_call.duration_seconds}'"
         )
 
-        log.info(
-            f"{log_prefix} Creating Peerlogic CallPartial with peerlogic_call.id='{peerlogic_call.id}',  time_interaction_started='{peerlogic_call.call_start_time}' and time_interaction_ended='{ord}'."
-        )
+        log.info(f"{log_prefix} Creating Peerlogic CallPartial time_interaction_started='{peerlogic_call.call_start_time}' and time_interaction_ended='{ord}'.")
 
         jive_leg_created_time = event.data_created
-
         cp = CallPartial.objects.create(call=peerlogic_call, time_interaction_started=jive_leg_created_time, time_interaction_ended=end_time)
         log.info(
             f"{log_prefix} Created Peerlogic CallPartial with cp.id='{cp.id}', peerlogic_call.id='{peerlogic_call.id}', time_interaction_started='{peerlogic_call.call_start_time}' and time_interaction_ended='{end_time}'."
         )
 
+        log.info(f"{log_prefix} Updating event with CallPartial id = cp.id='{cp.id}'")
         event.peerlogic_call_partial_id = cp.id
         event.save()
+        log.info(f"{log_prefix} Updated event with CallPartial id = cp.id='{cp.id}'")
 
+        log.info(f"{log_prefix} Publishing leg b ready event.")
         publish_leg_b_ready_event(
             jive_call_subscription_id=source_jive_id,
             voip_provider_id=voip_provider_id,
@@ -292,6 +296,7 @@ def handle_withdraw_event(
                 "bucket_name": bucket_name,
             },
         )
+        log.info(f"{log_prefix} Published leg b ready event.")
 
     return event, call_id
 
