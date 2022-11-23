@@ -314,11 +314,12 @@ class JiveChannelViewSet(viewsets.ModelViewSet):
         jive: JiveClient = JiveClient(client_id=settings.JIVE_CLIENT_ID, client_secret=settings.JIVE_CLIENT_SECRET, refresh_token=connection.refresh_token)
         log.info("Jive: Instantiated JiveClient with connection.id='{connection.id}'")
 
-        log.info(f"Jive: Deactivating connection for JiveChannel with pk='{pk}'")
-        response_data = jive.delete_webhook_channel(channel=channel)
-        log.info(f"Jive: Successfully Deactivated connection for JiveChannel with pk='{pk}'")
+        log.info(f"Jive: Deleting webhook channel jive-side and deactivating peerlogic-side for JiveChannel with pk='{pk}'")
+        channel = jive.delete_webhook_channel(channel=channel)
+        log.info(f"Jive: Successfully deleted webhook channel jive-side and deactivated peerlogic-side for JiveChannel with pk='{channel.pk}', active='{channel.active}'")
 
-        return Response(status=status.HTTP_200_OK, data=response_data)
+        JiveChannelSerializer(channel)
+        return Response(status=status.HTTP_200_OK, data=JiveChannelSerializer(channel).data)
 
 
 class JiveConnectionViewSet(viewsets.ModelViewSet):
