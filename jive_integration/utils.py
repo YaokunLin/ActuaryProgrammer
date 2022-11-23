@@ -197,7 +197,7 @@ def handle_withdraw_event(
     event: JiveSubscriptionEventExtract,
     jive_request_data_key_value_pair: Dict,
     bucket_name: str,
-) -> JiveSubscriptionEventExtract:
+) -> Tuple[JiveSubscriptionEventExtract, str]:
     call_id = get_call_id_from_previous_announce_events_by_originator_id(jive_originator_id)
     log.info(f"Jive: Call ID is {call_id}")
     event.peerlogic_call_id = call_id
@@ -277,7 +277,7 @@ def handle_withdraw_event(
             },
         )
 
-    return (event, call_id)  # TODO this violates the types in the function contract
+    return event, call_id
 
 
 def resync_connection(connection: JiveConnection, request: Request):
