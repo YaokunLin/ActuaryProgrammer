@@ -198,7 +198,7 @@ def handle_withdraw_event(
     jive_request_data_key_value_pair: Dict,
     bucket_name: str,
 ) -> Tuple[JiveSubscriptionEventExtract, str]:
-    call_id = get_call_id_from_previous_announce_events_by_originator_id(jive_originator_id)
+    call_id = get_call_id_from_previous_announce_events_by_originator_id(jive_originator_id)  # TODO, can this handle a None?
     log.info(f"Jive: Call ID is {call_id}")
     event.peerlogic_call_id = call_id
     event.save()
