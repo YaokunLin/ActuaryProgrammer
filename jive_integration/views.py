@@ -111,9 +111,10 @@ def webhook(request):
         timestamp_of_request: datetime = dateutil.parser.isoparser().isoparse(req["timestamp"])
         content = json.loads(req["content"])
     except (json.JSONDecodeError, KeyError):
-        log.error(f"{log_prefix} Could not determine timestemp of request. Invalid response sent to webhook. Invalidating webhook.")
+        log.error(f"{log_prefix} Could not determine timestamp of request. Invalid response sent to webhook.")
         return HttpResponse(status=status.HTTP_406_NOT_ACCEPTABLE)
 
+    log.info(f"{log_prefix} Validating event")
     end_time = timestamp_of_request
     jive_request_data_key_value_pair: Dict = content.get("data", {})
     jive_originator_id = jive_request_data_key_value_pair.get("originatorId")
@@ -123,13 +124,15 @@ def webhook(request):
 
     if not subscription_event_serializer_is_valid:
         log.error(
-            f"{log_prefix} Error from subscription_event_serializer validation from jive_originator_id='{jive_originator_id}': errors='{subscription_event_serializer.errors}'. Setting response to invalid."
+            f"{log_prefix} Error from subscription_event_serializer validation from jive_originator_id='{jive_originator_id}': errors='{subscription_event_serializer.errors}'. Setting response to invalid. Further processing will resume but may throw errors."
         )
         response = Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": subscription_event_serializer.errors})
 
+    log.info(f"{log_prefix} Validated event.")
     event = subscription_event_serializer.save()
-
     log.prefix = f"{log_prefix} event='{event.id}'"
+    log.info(f"{log_prefix} Event saved. event='{event}'")
+
     dialed_number = jive_request_data_key_value_pair.get("ani", "")
     if dialed_number:
         # Example ani's:
