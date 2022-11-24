@@ -76,6 +76,20 @@ def generate_jive_callback_url(
 def webhook(request):
     # https://api.jive.com/call-reports/v1/recordings/4428338e-826b-40af-b4a0-d01a2010f525?organizationId=af93983c-ec29-4aca-8516-b8ab36b587d1
 
+    # Documentation on webhook: https://developer.goto.com/GoToConnect/#section/Webhook
+    #
+    # BE CAREFUL WITH THE RESPONSE STATUS CODES returned from this endpoint. Certain statues will disable the webhook for the GoTo account!
+    #
+    # Webhook URL Becoming Invalid
+    # - If the server returns a 410 Gone or a 404 Not Found on a request, the webhook channel will be automatically deleted.
+    # Webhook Request Failure
+    # - In the case where the response received is a server error (5XX), the webhook request will follow the retry policy.
+    # Webhook Request Timeout
+    # - A Webhook notification is considered incomplete or timed out if a response is not provided in 4,000 ms or less.
+    # - The webhook notification request will follow the retry policy.
+    # Webhook Request Retry Policy
+    # - In the event that a webhook request failed, the webhook request will be retried up to 2 more times in quick succession before it is abandoned.
+
     log_prefix = "Jive: Webhook received event."
     log.info(f"{log_prefix} headers='{request.headers}' body='{request.body}'")
 
