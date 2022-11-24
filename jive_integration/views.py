@@ -200,7 +200,7 @@ def webhook(request):
             log.info(f"{log_prefix} Handled jive withdraw event.")
         except Exception as e:
             log.exception(f"{log_prefix} Exception='{e}' occurred during withdraw event.")
-            return response  # still return a success otherwise we may kill the source channel from sending future events - needs verification 2022-11-23
+            return response  # must return here since we may not have a valid call_id
 
     # always get the call_id onto the event
     event.peerlogic_call_id = call_id
