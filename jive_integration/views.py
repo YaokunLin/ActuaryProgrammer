@@ -40,7 +40,7 @@ from jive_integration.models import JiveAWSRecordingBucket, JiveChannel, JiveAPI
 from jive_integration.serializers import (
     JiveAWSRecordingBucketSerializer,
     JiveChannelSerializer,
-    JiveConnectionSerializer,
+    JiveAPICredentialsSerializer,
     JiveSubscriptionEventExtractSerializer,
 )
 from jive_integration.utils import (
@@ -48,7 +48,7 @@ from jive_integration.utils import (
     get_call_id_from_previous_announce_events_by_originator_id,
     get_or_create_call_id,
     handle_withdraw_event,
-    resync_connection,
+    resync_from_credentials,
     parse_webhook_from_header,
     get_channel_from_source_jive_id,
     wait_for_peerlogic_call,
@@ -224,7 +224,7 @@ def authentication_connect_url(request: Request):
 def authentication_callback(request: Request):
     """
     This view will exchange the given authentication code for an access token from the Jive authentication API.
-    Refresh tokens are stored on `JiveConnection` objects and linked to a practice.  If a connection object is not
+    Refresh tokens are stored on `JiveAPICredentials` objects and linked to a practice.  If a jive_api_credentials object is not
     found for the given user one will be created.
 
     https://developer.goto.com/guides/Authentication/03_HOW_accessToken/
@@ -251,18 +251,18 @@ def authentication_callback(request: Request):
         raise ValidationError({"errors": {"principal": "email is missing from your submission - are you logged in?"}})
 
     log.info("Jive: Refresh token to get account key and organization key.")
-    jive.get_token()
+    jive.refresh_for_new_token()
     log.info("Jive: Done refreshing token")
 
-    log.info(f"Jive: Checking for existing JiveConnection with principal={principal}.")
-    connection: JiveAPICredentials = None
+    log.info(f"Jive: Checking for existing JiveAPICredentials with principal={principal}.")
+    jive_api_credentials: JiveAPICredentials = None
     with suppress(JiveAPICredentials.DoesNotExist):
-        connection = JiveAPICredentials.objects.get(practice_telecom__practice__agent__user__email=principal)
-        if connection:
-            log.info(f"Jive: Found existing JiveConnection with principal={principal}.")
+        jive_api_credentials = JiveAPICredentials.objects.get(practice_telecom__practice__agent__user__email=principal)
+        if jive_api_credentials:
+            log.info(f"Jive: Found existing JiveAPICredentials with principal={principal}.")
 
-    if not connection:
-        log.info(f"Jive: No existing JiveConnection exists with user email principal={principal}.")
+    if not jive_api_credentials:
+        log.info(f"Jive: No existing JiveAPICredentials exists with user email principal={principal}.")
         log.info(f"Jive: Validating a Practice Telecom exists with voip_provider__integration_type of JIVE and principal='{principal}'.")
         # TODO: deal with users with multiple practices (Organizations ACL)
         practice_telecom, errors = get_validated_practice_telecom(voip_provider__integration_type=VoipProviderIntegrationTypes.JIVE, email=principal)
@@ -272,23 +272,23 @@ def authentication_callback(request: Request):
         log.info(f"Jive: Successfully validated a Practice Telecom exists with voip_provider__integration_type of JIVE and principal='{principal}'.")
 
         log.info(
-            f"Jive: Creating Jive Connection with practice_telecom='{practice_telecom}', account_key='{jive.account_key}', email='{principal}', organizer_key='{jive.organizer_key}' and scope='{scope}'."
+            f"Jive: Creating JiveAPICredentials with practice_telecom='{practice_telecom}', account_key='{jive.account_key}', email='{principal}', organizer_key='{jive.organizer_key}' and scope='{scope}'."
         )
-        connection = JiveAPICredentials(practice_telecom=practice_telecom, email=principal)
+        jive_api_credentials = JiveAPICredentials(practice_telecom=practice_telecom, email=principal)
 
-    connection.access_token = jive.access_token
-    connection.refresh_token = jive.refresh_token
-    connection.account_key = jive.account_key
-    connection.organizer_key = jive.organizer_key
-    connection.email = principal
-    connection.scope = scope
-    log.info(f"Jive: Saving JiveConnection with access_token='{jive.access_token}.")
-    connection.save()
-    log.info(f"Jive: Saved JiveConnection to the database with id='{connection.id}'.")
+    jive_api_credentials.access_token = jive.access_token
+    jive_api_credentials.refresh_token = jive.refresh_token
+    jive_api_credentials.account_key = jive.account_key
+    jive_api_credentials.organizer_key = jive.organizer_key
+    jive_api_credentials.email = principal
+    jive_api_credentials.scope = scope
+    log.info(f"Jive: Saving JiveAPICredentials with access_token='{jive.access_token}.")
+    jive_api_credentials.save()
+    log.info(f"Jive: Saved JiveAPICredentials to the database with id='{jive_api_credentials.id}'.")
 
-    resync_connection(connection=connection, request=request)
+    resync_from_credentials(jive_api_credentials=jive_api_credentials, request=request)
 
-    query_string_to_append_to_redirect_url = {"connection_id": connection.id}
+    query_string_to_append_to_redirect_url = {"connection_id": jive_api_credentials.id}
     # TODO: redirect them back to the application - need to know what route though
     # return redirect(urlencode(query_string_to_append_to_redirect_url))
     return HttpResponse(status=204)
@@ -304,23 +304,20 @@ class JiveChannelViewSet(viewsets.ModelViewSet):
         return super().get_queryset().filter(connection=self.kwargs.get("connection_pk"))
 
     def destroy(self, request, pk=None, connection_pk=None):
-        if not (self.request.user.is_staff or self.request.user.is_superuser) and not does_practice_of_user_own_connection(connection_id=pk, user=request.user):
+        if not (self.request.user.is_staff or self.request.user.is_superuser) and not does_practice_of_user_own_jive_api_credentials(
+            connection_id=pk, user=request.user
+        ):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         log.info(f"Jive: Getting JiveChannel from database with pk='{pk}'")
         channel = get_object_or_404(self.get_queryset(), pk=pk)
         log.info(f"Jive: Got JiveChannel from database with pk='{pk}'")
 
-        connection = channel.connection
+        jive_api_credentials = channel.connection
 
-        log.info(f"Jive: Instantiating JiveClient with connection.id='{connection.id}'")
-        jive: JiveClient = JiveClient(
-            client_id=settings.JIVE_CLIENT_ID,
-            client_secret=settings.JIVE_CLIENT_SECRET,
-            access_token=connection.access_token,
-            refresh_token=connection.refresh_token,
-        )
-        log.info("Jive: Instantiated JiveClient with connection.id='{connection.id}'")
+        log.info(f"Jive: Instantiating JiveClient with jive_api_credentials.id='{jive_api_credentials.id}'")
+        jive: JiveClient = JiveClient(client_id=settings.JIVE_CLIENT_ID, client_secret=settings.JIVE_CLIENT_SECRET, jive_api_credentials=jive_api_credentials)
+        log.info("Jive: Instantiated JiveClient with jive_api_credentials.id='{jive_api_credentials.id}'")
 
         successfully_deleted_jive_side = False
 
@@ -345,9 +342,9 @@ class JiveChannelViewSet(viewsets.ModelViewSet):
         )
 
 
-class JiveConnectionViewSet(viewsets.ModelViewSet):
+class JiveAPICredentialsViewSet(viewsets.ModelViewSet):
     queryset = JiveAPICredentials.objects.all().order_by("-modified_at")
-    serializer_class = JiveConnectionSerializer
+    serializer_class = JiveAPICredentialsSerializer
     filter_fields = ["practice_telecom", "active"]
     permission_classes = [IsAdminUser]
 
@@ -357,28 +354,30 @@ class JiveConnectionViewSet(viewsets.ModelViewSet):
         request,
         pk=None,
     ):
-        if not (self.request.user.is_staff or self.request.user.is_superuser) and not does_practice_of_user_own_connection(connection_id=pk, user=request.user):
+        if not (self.request.user.is_staff or self.request.user.is_superuser) and not does_practice_of_user_own_jive_api_credentials(
+            jive_api_credentials_id=pk, user=request.user
+        ):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        log.info(f"Getting JiveConnection from database with pk='{pk}'")
-        connection = JiveAPICredentials.objects.get(pk=pk)
-        log.info(f"Got JiveConnection from database with pk='{pk}'")
+        log.info(f"Getting JiveAPICredentials from database with pk='{pk}'")
+        jive_api_credentials = JiveAPICredentials.objects.get(pk=pk)
+        log.info(f"Got JiveAPICredentials from database with pk='{pk}'")
 
-        log.info(f"Resynced connection for JiveConnection with pk='{pk}'")
-        response_data = resync_connection(connection=connection, request=request)
-        log.info(f"Resynced connection for JiveConnection with pk='{pk}'")
+        log.info(f"Resynced jive_api_credentials for JiveAPICredentials with pk='{pk}'")
+        response_data = resync_from_credentials(jive_api_credentials=jive_api_credentials, request=request)
+        log.info(f"Resynced jive_api_credentials for JiveAPICredentials with pk='{pk}'")
 
         return Response(status=status.HTTP_200_OK, data=response_data)
 
 
-def does_practice_of_user_own_connection(connection_id: str, user: User) -> bool:
-    connection = JiveAPICredentials.objects.get(pk=connection_id)
-    return get_practice_telecoms_belonging_to_user(user).filter(id=connection.practice_telecom.id).exists()
+def does_practice_of_user_own_jive_api_credentials(jive_api_credentials_id: str, user: User) -> bool:
+    jive_api_credentials = JiveAPICredentials.objects.get(pk=jive_api_credentials_id)
+    return get_practice_telecoms_belonging_to_user(user).filter(id=jive_api_credentials.practice_telecom.id).exists()
 
 
 class JiveAWSRecordingBucketViewSet(viewsets.ViewSet):
     queryset = JiveAPICredentials.objects.all().order_by("-modified_at")
-    serializer_class = JiveConnectionSerializer
+    serializer_class = JiveAPICredentialsSerializer
 
     def get_queryset(self):
         buckets_qs = JiveAWSRecordingBucket.objects.none()
@@ -403,8 +402,8 @@ class JiveAWSRecordingBucketViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     def create(self, request, connection_pk=None):
-        if not (self.request.user.is_staff or self.request.user.is_superuser) and not does_practice_of_user_own_connection(
-            connection_id=connection_pk, user=request.user
+        if not (self.request.user.is_staff or self.request.user.is_superuser) and not does_practice_of_user_own_jive_api_credentials(
+            jive_api_credentials_id=connection_pk, user=request.user
         ):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -418,7 +417,7 @@ class JiveAWSRecordingBucketViewSet(viewsets.ViewSet):
 
     @action(detail=True, methods=["post"])
     def bucket_credentials(self, request, connection_pk=None, pk=None):
-        if not (self.request.user.is_staff or self.request.user.is_superuser) and not does_practice_of_user_own_connection(
+        if not (self.request.user.is_staff or self.request.user.is_superuser) and not does_practice_of_user_own_jive_api_credentials(
             connection_id=connection_pk, user=request.user
         ):
             return Response(status=status.HTTP_404_NOT_FOUND)
@@ -440,8 +439,8 @@ class JiveAWSRecordingBucketViewSet(viewsets.ViewSet):
 def cron(request):
     """
     Jive event subscriptions must be resynced every week. Additionally, there is no push event when a line is added
-    or removed from an account.   This endpoint will sync the lines from jive for each active connection.  Connections
-    are prioritized by the longest interval since the last sync.  Any stale or invalid channels will be garbage
+    or removed from an account.   This endpoint will sync the lines from jive for each active jive_api_credentials.
+    JiveAPICredentials are prioritized by the longest interval since the last sync.  Any stale or invalid channels will be garbage
     collected though the records may remain in the database for a period to ensure any latent events sent to the
     webhook receiver will still be routed correctly.
     """
@@ -450,9 +449,9 @@ def cron(request):
     # cleanup any expired channels, this will cascade to sessions and lines
     JiveChannel.objects.filter(expires_at__lt=timezone.now()).delete()
 
-    # for each user connection
-    for connection in JiveAPICredentials.objects.filter(active=True).order_by("-last_sync"):
-        log.info(f"Jive: found connection: {connection}")
-        resync_connection(connection=connection, request=request)
+    # for each user jive_api_credentials
+    for jive_api_credentials in JiveAPICredentials.objects.filter(active=True).order_by("-last_sync"):
+        log.info(f"Jive: found jive_api_credentials: {jive_api_credentials}")
+        resync_from_credentials(jive_api_credentials=jive_api_credentials, request=request)
 
     return HttpResponse(status=202)

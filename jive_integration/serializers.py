@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 CAMELCASE_REGEX_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
 
 
-class JiveConnectionSerializer(serializers.ModelSerializer):
+class JiveAPICredentialsSerializer(serializers.ModelSerializer):
     class Meta:
         model = JiveAPICredentials
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "last_sync"]

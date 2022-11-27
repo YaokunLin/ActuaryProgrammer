@@ -4,7 +4,7 @@ from rest_framework_nested import routers
 from jive_integration.views import (
     JiveAWSRecordingBucketViewSet,
     JiveChannelViewSet,
-    JiveConnectionViewSet,
+    JiveAPICredentialsViewSet,
     authentication_callback,
     authentication_connect,
     authentication_connect_url,
@@ -15,11 +15,11 @@ from jive_integration.views import (
 app_name = "jive_integration"
 
 jive_integration_root_router = routers.SimpleRouter()
-jive_integration_root_router.register(r"connections", JiveConnectionViewSet, basename="jive-connections")
+jive_integration_root_router.register(r"jive-api-credentials", JiveAPICredentialsViewSet, basename="jive-api-credentials")
 
-connection_router = routers.NestedSimpleRouter(jive_integration_root_router, r"connections", lookup="connection")
-connection_router.register(r"channels", JiveChannelViewSet, basename="connection-channels")
-connection_router.register(r"recording-buckets", JiveAWSRecordingBucketViewSet, basename="connection-recording-buckets")
+jive_api_credentials_router = routers.NestedSimpleRouter(jive_integration_root_router, r"jive-api-credentials", lookup="connection")
+jive_api_credentials_router.register(r"channels", JiveChannelViewSet, basename="connection-channels")
+jive_api_credentials_router.register(r"recording-buckets", JiveAWSRecordingBucketViewSet, basename="connection-recording-buckets")
 
 urlpatterns = [
     path("auth/connect-url", authentication_connect_url, name="authentication-connect-url"),
@@ -29,5 +29,5 @@ urlpatterns = [
     path("cron", cron, name="cron"),
     # Routers
     path(r"", include(jive_integration_root_router.urls)),
-    path(r"", include(connection_router.urls)),
+    path(r"", include(jive_api_credentials_router.urls)),
 ]
