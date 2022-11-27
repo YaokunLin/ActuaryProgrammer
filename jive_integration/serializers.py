@@ -9,7 +9,7 @@ from core.serializers import UnixEpochDateField
 from jive_integration.models import (
     JiveAWSRecordingBucket,
     JiveChannel,
-    JiveConnection,
+    JiveAPICredentials,
     JiveSubscriptionEventExtract,
 )
 
@@ -20,7 +20,7 @@ CAMELCASE_REGEX_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
 
 class JiveConnectionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = JiveConnection
+        model = JiveAPICredentials
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "last_sync"]
         fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "practice_telecom", "last_sync", "active"]
 

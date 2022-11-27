@@ -36,7 +36,7 @@ from core.validation import (
 )
 from jive_integration.field_choices import JiveEventTypeChoices
 from jive_integration.jive_client.client import JiveClient
-from jive_integration.models import JiveAWSRecordingBucket, JiveChannel, JiveConnection, JiveLine
+from jive_integration.models import JiveAWSRecordingBucket, JiveChannel, JiveAPICredentials, JiveLine
 from jive_integration.serializers import (
     JiveAWSRecordingBucketSerializer,
     JiveChannelSerializer,
@@ -255,9 +255,9 @@ def authentication_callback(request: Request):
     log.info("Jive: Done refreshing token")
 
     log.info(f"Jive: Checking for existing JiveConnection with principal={principal}.")
-    connection: JiveConnection = None
-    with suppress(JiveConnection.DoesNotExist):
-        connection = JiveConnection.objects.get(practice_telecom__practice__agent__user__email=principal)
+    connection: JiveAPICredentials = None
+    with suppress(JiveAPICredentials.DoesNotExist):
+        connection = JiveAPICredentials.objects.get(practice_telecom__practice__agent__user__email=principal)
         if connection:
             log.info(f"Jive: Found existing JiveConnection with principal={principal}.")
 
@@ -274,14 +274,15 @@ def authentication_callback(request: Request):
         log.info(
             f"Jive: Creating Jive Connection with practice_telecom='{practice_telecom}', account_key='{jive.account_key}', email='{principal}', organizer_key='{jive.organizer_key}' and scope='{scope}'."
         )
-        connection = JiveConnection(practice_telecom=practice_telecom, email=principal)
+        connection = JiveAPICredentials(practice_telecom=practice_telecom, email=principal)
 
+    connection.access_token = jive.access_token
     connection.refresh_token = jive.refresh_token
     connection.account_key = jive.account_key
     connection.organizer_key = jive.organizer_key
     connection.email = principal
     connection.scope = scope
-    log.info(f"Jive: Saving JiveConnection with refresh_token='{jive.refresh_token}.")
+    log.info(f"Jive: Saving JiveConnection with access_token='{jive.access_token}.")
     connection.save()
     log.info(f"Jive: Saved JiveConnection to the database with id='{connection.id}'.")
 
@@ -313,7 +314,12 @@ class JiveChannelViewSet(viewsets.ModelViewSet):
         connection = channel.connection
 
         log.info(f"Jive: Instantiating JiveClient with connection.id='{connection.id}'")
-        jive: JiveClient = JiveClient(client_id=settings.JIVE_CLIENT_ID, client_secret=settings.JIVE_CLIENT_SECRET, refresh_token=connection.refresh_token)
+        jive: JiveClient = JiveClient(
+            client_id=settings.JIVE_CLIENT_ID,
+            client_secret=settings.JIVE_CLIENT_SECRET,
+            access_token=connection.access_token,
+            refresh_token=connection.refresh_token,
+        )
         log.info("Jive: Instantiated JiveClient with connection.id='{connection.id}'")
 
         successfully_deleted_jive_side = False
@@ -340,7 +346,7 @@ class JiveChannelViewSet(viewsets.ModelViewSet):
 
 
 class JiveConnectionViewSet(viewsets.ModelViewSet):
-    queryset = JiveConnection.objects.all().order_by("-modified_at")
+    queryset = JiveAPICredentials.objects.all().order_by("-modified_at")
     serializer_class = JiveConnectionSerializer
     filter_fields = ["practice_telecom", "active"]
     permission_classes = [IsAdminUser]
@@ -355,7 +361,7 @@ class JiveConnectionViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         log.info(f"Getting JiveConnection from database with pk='{pk}'")
-        connection = JiveConnection.objects.get(pk=pk)
+        connection = JiveAPICredentials.objects.get(pk=pk)
         log.info(f"Got JiveConnection from database with pk='{pk}'")
 
         log.info(f"Resynced connection for JiveConnection with pk='{pk}'")
@@ -366,12 +372,12 @@ class JiveConnectionViewSet(viewsets.ModelViewSet):
 
 
 def does_practice_of_user_own_connection(connection_id: str, user: User) -> bool:
-    connection = JiveConnection.objects.get(pk=connection_id)
+    connection = JiveAPICredentials.objects.get(pk=connection_id)
     return get_practice_telecoms_belonging_to_user(user).filter(id=connection.practice_telecom.id).exists()
 
 
 class JiveAWSRecordingBucketViewSet(viewsets.ViewSet):
-    queryset = JiveConnection.objects.all().order_by("-modified_at")
+    queryset = JiveAPICredentials.objects.all().order_by("-modified_at")
     serializer_class = JiveConnectionSerializer
 
     def get_queryset(self):
@@ -445,7 +451,7 @@ def cron(request):
     JiveChannel.objects.filter(expires_at__lt=timezone.now()).delete()
 
     # for each user connection
-    for connection in JiveConnection.objects.filter(active=True).order_by("-last_sync"):
+    for connection in JiveAPICredentials.objects.filter(active=True).order_by("-last_sync"):
         log.info(f"Jive: found connection: {connection}")
         resync_connection(connection=connection, request=request)
 

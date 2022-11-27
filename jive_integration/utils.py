@@ -22,7 +22,7 @@ from jive_integration.exceptions import RefreshTokenNoLongerRefreshableException
 from jive_integration.jive_client.client import JiveClient, Line
 from jive_integration.models import (
     JiveChannel,
-    JiveConnection,
+    JiveAPICredentials,
     JiveLine,
     JiveSession,
     JiveSubscriptionEventExtract,
@@ -293,10 +293,15 @@ def handle_withdraw_event(
     return event, call_id
 
 
-def resync_connection(connection: JiveConnection, request: Request):
+def resync_connection(connection: JiveAPICredentials, request: Request):
     # to avoid timeouts we want to complete execution in 30s
     deadline = datetime.now() + timedelta(seconds=60)
-    jive: JiveClient = JiveClient(client_id=settings.JIVE_CLIENT_ID, client_secret=settings.JIVE_CLIENT_SECRET, refresh_token=connection.refresh_token)
+    jive: JiveClient = JiveClient(
+        client_id=settings.JIVE_CLIENT_ID,
+        client_secret=settings.JIVE_CLIENT_SECRET,
+        access_token=connection.access_token,
+        refresh_token=connection.refresh_token,
+    )
     if deadline < datetime.now():
         raise RefreshTokenNoLongerRefreshableException()
 

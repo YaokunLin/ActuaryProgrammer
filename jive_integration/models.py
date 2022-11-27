@@ -14,7 +14,7 @@ from jive_integration.field_choices import JiveEventTypeChoices, JiveLegStateCho
 log = logging.getLogger(__name__)
 
 
-class JiveConnection(AuditTrailModel):
+class JiveAPICredentials(AuditTrailModel):
     """
     Represents the link between a user and all the associated models required to receive call events.  The refresh token
     from the user's inital authentication is stored and used to an access token for interfacing with the Jive API.
@@ -22,6 +22,7 @@ class JiveConnection(AuditTrailModel):
 
     id = ShortUUIDField(primary_key=True, editable=False)
     # token_type = "Bearer"
+    access_token = models.TextField(blank=True)
     refresh_token = models.TextField(blank=True)
     scope = models.TextField(blank=True)
     # firstName
@@ -39,7 +40,7 @@ class JiveConnection(AuditTrailModel):
 
 class JiveAWSRecordingBucket(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
-    connection = models.OneToOneField(JiveConnection, on_delete=models.SET_NULL, null=True, related_name="bucket")
+    connection = models.OneToOneField(JiveAPICredentials, on_delete=models.SET_NULL, null=True, related_name="bucket")
     bucket_name = models.CharField(blank=True, max_length=63)  # https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html
     access_key_id = models.CharField(blank=True, max_length=128)  # https://docs.aws.amazon.com/IAM/latest/APIReference/API_AccessKey.html
     username = models.CharField(blank=True, max_length=64)  # https://docs.aws.amazon.com/IAM/latest/APIReference/API_User.html
@@ -134,7 +135,8 @@ class JiveChannel(AuditTrailModel):
 
     id = ShortUUIDField(primary_key=True, editable=False)
 
-    connection = models.ForeignKey(JiveConnection, on_delete=models.CASCADE)
+    connection = models.ForeignKey(JiveAPICredentials, on_delete=models.CASCADE)
+    practice_telecom = models.ForeignKey("core.PracticeTelecom", null=True, on_delete=models.SET_NULL)
 
     name = ShortUUIDField(unique=True)
     source_jive_id = models.CharField(unique=True, max_length=256)
