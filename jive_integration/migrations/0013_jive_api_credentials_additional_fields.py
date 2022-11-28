@@ -11,7 +11,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('core', '0021_auto_20221114_2028'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('jive_integration', '0012_rename_jive_connection'),
+        ('jive_integration', '0012_rename_jive_connection_to_jive_api_credentials'),
     ]
 
     operations = [
