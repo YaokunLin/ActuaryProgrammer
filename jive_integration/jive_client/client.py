@@ -238,7 +238,7 @@ class JiveClient:
         signature.update(uuid.uuid4().bytes)
         signature = signature.hexdigest()
 
-        channel = JiveChannel.objects.create(connection=jive_api_credentials, signature=signature, expires_at=timezone.now() + timedelta(seconds=lifetime))
+        channel = JiveChannel.objects.create(jive_api_credentials=jive_api_credentials, signature=signature, expires_at=timezone.now() + timedelta(seconds=lifetime))
         endpoint = f"https://api.jive.com/notification-channel/v1/channels/{channel.name}"
 
         try:

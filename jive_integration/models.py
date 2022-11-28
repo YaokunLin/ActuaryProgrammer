@@ -31,7 +31,7 @@ class JiveAPICredentials(AuditTrailModel):
     organizer_key = models.CharField(max_length=20, blank=True)
     # version
     # account_type
-    email = models.TextField(blank=True)  # is the user principal (email) with super admin priviledges
+    email = models.TextField(blank=True)  # is the user principal (email) with super admin privileges
     practice_telecom = models.ForeignKey("core.PracticeTelecom", null=True, on_delete=models.SET_NULL)
 
     last_sync = models.DateTimeField(auto_now_add=True)
@@ -40,7 +40,9 @@ class JiveAPICredentials(AuditTrailModel):
 
 class JiveAWSRecordingBucket(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
-    connection = models.OneToOneField(JiveAPICredentials, on_delete=models.SET_NULL, null=True, related_name="bucket")
+    jive_api_credentials = models.OneToOneField(JiveAPICredentials, on_delete=models.SET_NULL, null=True, related_name="bucket")
+    # TODO: link to practice_telecom instead
+    # practice_telecom = models.OneToOneField(PracticeTelecom, on_delete=models.SET_NULL, null=True, related_name="bucket")
     bucket_name = models.CharField(blank=True, max_length=63)  # https://docs.aws.amazon.com/AmazonS3/latest/userguide/bucketnamingrules.html
     access_key_id = models.CharField(blank=True, max_length=128)  # https://docs.aws.amazon.com/IAM/latest/APIReference/API_AccessKey.html
     username = models.CharField(blank=True, max_length=64)  # https://docs.aws.amazon.com/IAM/latest/APIReference/API_User.html
@@ -59,7 +61,7 @@ class JiveAWSRecordingBucket(AuditTrailModel):
         # * buckets must be 63 characters or less
         # * usernames must be 64 characters or less
         # we only have room for 2 ids each 22 characters for a total of 50 chars
-        return f"jive-{self.connection.practice_telecom.practice.id}-{self.id}"
+        return f"jive-{self.jive_api_credentials.practice_telecom.practice.id}-{self.id}"
 
     def generate_aws_bucket_name(self) -> str:
         """
@@ -84,7 +86,7 @@ class JiveAWSRecordingBucket(AuditTrailModel):
         This is for easy searchability within the S3 and IAM consoles
         """
 
-        return f"jive-{self.id}-{self.connection.id}-{self.connection.practice_telecom.id}-{self.connection.practice_telecom.practice.id}"
+        return f"jive-{self.id}-{self.jive_api_credentials.id}-{self.jive_api_credentials.practice_telecom.id}-{self.jive_api_credentials.practice_telecom.practice.id}"
 
     def create_bucket(self) -> str:
         """Burn in the bucket name"""
@@ -135,8 +137,10 @@ class JiveChannel(AuditTrailModel):
 
     id = ShortUUIDField(primary_key=True, editable=False)
 
-    connection = models.ForeignKey(JiveAPICredentials, on_delete=models.CASCADE)
-    practice_telecom = models.ForeignKey("core.PracticeTelecom", null=True, on_delete=models.SET_NULL)
+    jive_api_credentials = models.ForeignKey(JiveAPICredentials, on_delete=models.CASCADE)
+
+    # TODO: link to practice_telecom instead
+    # practice_telecom = models.ForeignKey("core.PracticeTelecom", null=True, on_delete=models.SET_NULL)
 
     name = ShortUUIDField(unique=True)
     source_jive_id = models.CharField(unique=True, max_length=256)

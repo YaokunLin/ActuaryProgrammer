@@ -300,7 +300,7 @@ def resync_from_credentials(jive_api_credentials: JiveAPICredentials, request: R
     if deadline < datetime.now():
         raise RefreshTokenNoLongerRefreshableException()
 
-    for channel in JiveChannel.objects.filter(connection=jive_api_credentials, active=True):
+    for channel in JiveChannel.objects.filter(jive_api_credentials=jive_api_credentials, active=True):
         log.info(f"Jive: found channel: {channel}")
         # if a channel refresh fails we mark it as inactive
         try:
@@ -312,7 +312,7 @@ def resync_from_credentials(jive_api_credentials: JiveAPICredentials, request: R
             channel.save()
 
     # get the current lines with an active channel for this jive_api_credentials
-    line_results = JiveLine.objects.filter(session__channel__connection=jive_api_credentials, session__channel__active=True).values_list(
+    line_results = JiveLine.objects.filter(session__channel__jive_api_credentials=jive_api_credentials, session__channel__active=True).values_list(
         "source_jive_id", "source_organization_jive_id"
     )
     current_lines = {Line(r[0], r[1]) for r in line_results}
@@ -329,11 +329,11 @@ def resync_from_credentials(jive_api_credentials: JiveAPICredentials, request: R
 
     if add_lines:
         # get the latest active channel for this jive_api_credentials
-        channel = JiveChannel.objects.filter(connection=jive_api_credentials, active=True, expires_at__gt=timezone.now()).order_by("-expires_at").first()
+        channel = JiveChannel.objects.filter(jive_api_credentials=jive_api_credentials, active=True, expires_at__gt=timezone.now()).order_by("-expires_at").first()
 
         # if no channels are found create one
         if not channel:
-            log.info(f"Jive: no active webhook channel found for connection='{jive_api_credentials}', creating one.")
+            log.info(f"Jive: no active webhook channel found for jive_api_credentials='{jive_api_credentials}', creating one.")
             webhook_url = request.build_absolute_uri(reverse("jive_integration:webhook-receiver"))
 
             # Jive will only accept a https url so we always replace it, the only case where this would not
@@ -360,7 +360,7 @@ def resync_from_credentials(jive_api_credentials: JiveAPICredentials, request: R
         log.info(f"Jive: subscribed to {add_lines} with session='{session}'")
         # TODO: better error handling from above client call
 
-    # record sync event to ensure all jive_api_credentials (formerly called connections) get a chance to be synced
+    # record sync event to ensure all jive_api_credentials (formerly called jive_api_credentialss) get a chance to be synced
     # TODO: determine if we should not update this when some channel, session, line or jive_api_credentials has an error
     # It's led to issues understanding staleness of jive_api_credentials because it's ALWAYS updated.
     jive_api_credentials.last_sync = timezone.now()
