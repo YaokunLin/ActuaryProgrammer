@@ -20,11 +20,6 @@ class Migration(migrations.Migration):
             name='access_token',
             field=models.TextField(blank=True),
         ),
-        migrations.AddField(
-            model_name='jivechannel',
-            name='practice_telecom',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='core.practicetelecom'),
-        ),
         migrations.AlterField(
             model_name='jiveapicredentials',
             name='created_by',

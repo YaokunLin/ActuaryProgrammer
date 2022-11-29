@@ -329,7 +329,9 @@ def resync_from_credentials(jive_api_credentials: JiveAPICredentials, request: R
 
     if add_lines:
         # get the latest active channel for this jive_api_credentials
-        channel = JiveChannel.objects.filter(jive_api_credentials=jive_api_credentials, active=True, expires_at__gt=timezone.now()).order_by("-expires_at").first()
+        channel = (
+            JiveChannel.objects.filter(jive_api_credentials=jive_api_credentials, active=True, expires_at__gt=timezone.now()).order_by("-expires_at").first()
+        )
 
         # if no channels are found create one
         if not channel:

@@ -34,13 +34,12 @@ class JiveAWSRecordingBucketSerializer(serializers.ModelSerializer):
             "created_at",
             "modified_by",
             "modified_at",
-            "jive_api_credentials",
             "access_key_id",
             "username",
             "policy_arn",
             "bucket_name",
         ]
-        fields = ["id", "jive_api_credentials", "access_key_id", "username", "policy_arn", "bucket_name"]
+        fields = ["id", "practice_telecom", "access_key_id", "username", "policy_arn", "bucket_name"]
 
 
 class JiveChannelSerializer(serializers.ModelSerializer):

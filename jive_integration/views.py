@@ -301,12 +301,11 @@ class JiveChannelViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminUser]
 
     def get_queryset(self):
-        return super().get_queryset().filter(practice_telecom=self.kwargs.get("practice_telecom_pk"))
+        return super().get_queryset().filter(jive_api_credentials=self.kwargs.get("jive_api_credentials_pk"))
 
-    def destroy(self, request, pk=None, practice_telecom_pk=None):
-        if not (self.request.user.is_staff or self.request.user.is_superuser) and not does_practice_of_user_own_jive_api_credentials(
-            connection_id=pk, user=request.user
-        ):
+    def destroy(self, request, pk=None, jive_api_credentials_pk=None):
+        # TODO: non-admin
+        if not (self.request.user.is_staff or self.request.user.is_superuser):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         log.info(f"Jive: Getting JiveChannel from database with pk='{pk}'")
@@ -374,9 +373,11 @@ def does_practice_of_user_own_jive_api_credentials(jive_api_credentials_id: str,
     jive_api_credentials = JiveAPICredentials.objects.get(pk=jive_api_credentials_id)
     return get_practice_telecoms_belonging_to_user(user).filter(id=jive_api_credentials.practice_telecom.id).exists()
 
-class JiveAWSRecordingBucketViewSet(viewsets.ViewSet):
+
+class JiveAWSRecordingBucketViewSet(viewsets.ModelViewSet):
     queryset = JiveAWSRecordingBucket.objects.all().order_by("-modified_at")
     serializer_class = JiveAWSRecordingBucketSerializer
+    filter_fields = ["practice_telecom"]
 
     def get_queryset(self):
         buckets_qs = JiveAWSRecordingBucket.objects.none()
@@ -389,20 +390,12 @@ class JiveAWSRecordingBucketViewSet(viewsets.ViewSet):
             buckets_qs = JiveAWSRecordingBucket.objects.filter(practice_telecom__id__in=practice_telecom_ids)
         return buckets_qs.order_by("-modified_at")
 
-    def list(self, request: Request, practice_telecom_pk: str = None) -> Response:
-        queryset = self.get_queryset().filter(practice_telecom_id=practice_telecom_pk)
-        serializer = JiveAWSRecordingBucketSerializer(queryset, many=True)
-        return Response(serializer.data)
-
-    def retrieve(self, request: Request, pk: str = None, practice_telecom_pk: str = None) -> Response:
-        queryset = self.get_queryset().filter(practice_telecom_id=practice_telecom_pk)
-        bucket = get_object_or_404(queryset, pk=pk)
-        serializer = JiveAWSRecordingBucketSerializer(bucket)
-        return Response(serializer.data)
-
     def create(self, request: Request, practice_telecom_pk: str = None) -> Response:
         # TODO: test non-admin request
-        if not (self.request.user.is_staff or self.request.user.is_superuser or practice_telecom_pk in get_practice_telecoms_belonging_to_user(request.user)):
+        practice_telecom_pk = self.request.data.get("practice_telecom")
+        if not (practice_telecom_pk) and (
+            self.request.user.is_staff or self.request.user.is_superuser or practice_telecom_pk in get_practice_telecoms_belonging_to_user(request.user)
+        ):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         log.info(f"Jive: Creating JiveAWSRecordingBucket for practice_telecom_pk='{practice_telecom_pk}")
@@ -414,8 +407,9 @@ class JiveAWSRecordingBucketViewSet(viewsets.ViewSet):
         return Response(status=status.HTTP_201_CREATED, data=serializer.data)
 
     @action(detail=True, methods=["post"])
-    def bucket_credentials(self, request: Request, pk: str = None, practice_telecom_pk: str = None) -> Response:
+    def bucket_credentials(self, request: Request, pk: str = None) -> Response:
         # TODO: test non-admin request
+        practice_telecom_pk = self.request.data.get("practice_telecom_pk")
         if not (self.request.user.is_staff or self.request.user.is_superuser or practice_telecom_pk in get_practice_telecoms_belonging_to_user(request.user)):
             return Response(status=status.HTTP_404_NOT_FOUND)
 

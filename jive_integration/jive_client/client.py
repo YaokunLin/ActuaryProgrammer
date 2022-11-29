@@ -52,11 +52,16 @@ class _Authentication(AuthBase):
         refresh_token: Optional[str] = None,
         jive_api_credentials: Optional[JiveAPICredentials] = None,
     ):
+        if jive_api_credentials:
+            self._access_token = jive_api_credentials.access_token
+            self._refresh_token = jive_api_credentials.refresh_token
+        else:
+            self._access_token = access_token
+            self._refresh_token = refresh_token
+
         self._client_id = client_id
         self._client_secret = client_secret
         self._account_key = None
-        self._access_token = access_token
-        self._refresh_token = refresh_token
         self._jive_api_credentials = jive_api_credentials
 
     def __call__(self, r: requests.Request):
@@ -138,7 +143,7 @@ class _Authentication(AuthBase):
             self._scope: Optional[str] = body.get("scope")
             self._principal: Optional[str] = body.get("principal")  # email address associated to the account
             self._refresh_token: str = body["refresh_token"]
-            # TODO: save off __token_expires_at
+            # TODO: save off __token_expires_at if we care
             self.__token_expires_at: float = (datetime.utcnow() + timedelta(seconds=body["expires_in"])).timestamp()
         except (KeyError, IndexError) as exc:
             logging.debug(f"invalid token response: {resp.content}")
@@ -150,7 +155,8 @@ class _Authentication(AuthBase):
             self._jive_api_credentials.account_key = self._account_key
             self._jive_api_credentials.organizer_key = self._organizer_key
             self._jive_api_credentials.scope = self._scope
-            self._jive_api_credentials.email = self._principal
+            if self._principal:
+                self._jive_api_credentials.email = self._principal
             # TODO: save off __token_expires_at
             self._jive_api_credentials.save()
 
@@ -238,7 +244,9 @@ class JiveClient:
         signature.update(uuid.uuid4().bytes)
         signature = signature.hexdigest()
 
-        channel = JiveChannel.objects.create(jive_api_credentials=jive_api_credentials, signature=signature, expires_at=timezone.now() + timedelta(seconds=lifetime))
+        channel = JiveChannel.objects.create(
+            jive_api_credentials=jive_api_credentials, signature=signature, expires_at=timezone.now() + timedelta(seconds=lifetime)
+        )
         endpoint = f"https://api.jive.com/notification-channel/v1/channels/{channel.name}"
 
         try:
