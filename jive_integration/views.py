@@ -37,6 +37,7 @@ from core.validation import (
 from jive_integration.field_choices import JiveEventTypeChoices
 from jive_integration.jive_client.client import JiveClient
 from jive_integration.models import JiveAWSRecordingBucket, JiveChannel, JiveAPICredentials, JiveLine
+
 from jive_integration.serializers import (
     JiveAWSRecordingBucketSerializer,
     JiveChannelSerializer,
@@ -46,11 +47,12 @@ from jive_integration.serializers import (
 from jive_integration.utils import (
     create_peerlogic_call,
     get_call_id_from_previous_announce_events_by_originator_id,
+    get_channel_from_source_jive_id,
     get_or_create_call_id,
     handle_withdraw_event,
     resync_from_credentials,
     parse_webhook_from_header,
-    get_channel_from_source_jive_id,
+    resync_connection,
     wait_for_peerlogic_call,
 )
 
@@ -85,12 +87,10 @@ def webhook(request):
     webhook = parse_webhook_from_header(request.headers.get("signature-input"))
     jive_channel = get_channel_from_source_jive_id(webhook)
     if not jive_channel or not jive_channel.active:
-        # TODO: 404 was immediately expiring the webhook. this is actually not recoverable right now if we have no other
-        # channel activated - we'll shoot ourselves in the foot until we understand this
         log.error(
             f"Jive: Active JiveChannel record does not exist for webhook='{webhook}' - Doing nothing. See https://peerlogictech.atlassian.net/wiki/spaces/PL/pages/471891982/Misconfiguration+Troubleshooting+-+Manual+Backend+Steps#Delete%2FExpire-a-Webhook for more info on how to make sure this expired properly."
         )
-        return Response(status=status.HTTP_200_OK, data={"signature": "invalid"})
+        return Response(status=status.HTTP_404_NOT_FOUND, data={"signature": "invalid"})
 
     try:
         req = json.loads(request.body)
