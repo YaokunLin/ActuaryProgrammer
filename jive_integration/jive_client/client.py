@@ -163,10 +163,7 @@ class _Authentication(AuthBase):
 
 class JiveClient:
     """
-
-    TODO: 1. accept a JiveAPICredentials
-    TODO: 2. save the refresh token to the cache and DATABASE in parents
-    TODO: 3. change the above functionality in step 2 - refresh token to the cache and DATABASE in client directly
+    TODO: Save the refresh token to the cache and try using cache instead of DB
     """
 
     base_url: str = "https://api.jive.com"
@@ -178,8 +175,6 @@ class JiveClient:
         self,
         client_id: str,
         client_secret: str,
-        access_token: Optional[str] = None,
-        refresh_token: Optional[str] = None,
         jive_api_credentials: Optional[JiveAPICredentials] = None,
         api_base_url: str = "",
     ):
