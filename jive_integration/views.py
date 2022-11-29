@@ -52,7 +52,6 @@ from jive_integration.utils import (
     handle_withdraw_event,
     resync_from_credentials,
     parse_webhook_from_header,
-    resync_connection,
     wait_for_peerlogic_call,
 )
 
