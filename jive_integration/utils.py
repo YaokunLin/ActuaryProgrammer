@@ -22,7 +22,7 @@ from jive_integration.exceptions import RefreshTokenNoLongerRefreshableException
 from jive_integration.jive_client.client import JiveClient, Line
 from jive_integration.models import (
     JiveChannel,
-    JiveConnection,
+    JiveAPICredentials,
     JiveLine,
     JiveSession,
     JiveSubscriptionEventExtract,
@@ -301,14 +301,14 @@ def handle_withdraw_event(
     return event, call_id
 
 
-def resync_connection(connection: JiveConnection, request: Request):
+def resync_from_credentials(jive_api_credentials: JiveAPICredentials, request: Request):
     # to avoid timeouts we want to complete execution in 30s
     deadline = datetime.now() + timedelta(seconds=60)
-    jive: JiveClient = JiveClient(client_id=settings.JIVE_CLIENT_ID, client_secret=settings.JIVE_CLIENT_SECRET, refresh_token=connection.refresh_token)
+    jive: JiveClient = JiveClient(client_id=settings.JIVE_CLIENT_ID, client_secret=settings.JIVE_CLIENT_SECRET, jive_api_credentials=jive_api_credentials)
     if deadline < datetime.now():
         raise RefreshTokenNoLongerRefreshableException()
 
-    for channel in JiveChannel.objects.filter(connection=connection, active=True):
+    for channel in JiveChannel.objects.filter(jive_api_credentials=jive_api_credentials, active=True):
         log.info(f"Jive: found channel: {channel}")
         # if a channel refresh fails we mark it as inactive
         try:
@@ -319,37 +319,39 @@ def resync_connection(connection: JiveConnection, request: Request):
             channel.active = False
             channel.save()
 
-    # get the current lines with an active channel for this connection
-    line_results = JiveLine.objects.filter(session__channel__connection=connection, session__channel__active=True).values_list(
+    # get the current lines with an active channel for this jive_api_credentials
+    line_results = JiveLine.objects.filter(session__channel__jive_api_credentials=jive_api_credentials, session__channel__active=True).values_list(
         "source_jive_id", "source_organization_jive_id"
     )
     current_lines = {Line(r[0], r[1]) for r in line_results}
-    external_lines: Set[Line] = set(jive.list_lines_all_users(connection.account_key))
+    external_lines: Set[Line] = set(jive.list_lines_all_users(jive_api_credentials.account_key))
 
     # compute new lines
     add_lines = external_lines - current_lines
     remove_lines = current_lines - external_lines
 
-    log.info(f"Jive: found {len(add_lines)} new lines and {len(remove_lines)} invalid lines for connection {connection.id}.")
+    log.info(f"Jive: found {len(add_lines)} new lines and {len(remove_lines)} invalid lines using jive_api_credentials {jive_api_credentials.id}.")
 
     # delete the removed lines
     JiveLine.objects.filter(source_jive_id__in=remove_lines).delete()
 
     if add_lines:
-        # get the latest active channel for this connection
-        channel = JiveChannel.objects.filter(connection=connection, active=True, expires_at__gt=timezone.now()).order_by("-expires_at").first()
+        # get the latest active channel for this jive_api_credentials
+        channel = (
+            JiveChannel.objects.filter(jive_api_credentials=jive_api_credentials, active=True, expires_at__gt=timezone.now()).order_by("-expires_at").first()
+        )
 
         # if no channels are found create one
         if not channel:
-            log.info(f"Jive: no active webhook channel found for connection='{connection}', creating one.")
+            log.info(f"Jive: no active webhook channel found for jive_api_credentials='{jive_api_credentials}', creating one.")
             webhook_url = request.build_absolute_uri(reverse("jive_integration:webhook-receiver"))
 
             # Jive will only accept a https url so we always replace it, the only case where this would not
             # be an https url is a development environment.
             webhook_url = webhook_url.replace("http://", "https://")
 
-            channel = jive.create_webhook_channel(connection=connection, webhook_url=webhook_url)
-            log.info(f"Jive: created channel='{channel}' for connection='{connection}'.")
+            channel = jive.create_webhook_channel(jive_api_credentials=jive_api_credentials, webhook_url=webhook_url)
+            log.info(f"Jive: created channel='{channel}' for jive_api_credentials='{jive_api_credentials}'.")
             # TODO: better error handling from above client call
 
         # get the latest session for this channel
@@ -368,11 +370,11 @@ def resync_connection(connection: JiveConnection, request: Request):
         log.info(f"Jive: subscribed to {add_lines} with session='{session}'")
         # TODO: better error handling from above client call
 
-    # record sync event to ensure all connections get a chance to be synced
-    # TODO: determine if we should not update this when some channel, session, line or connection has an error
-    # It's led to issues understanding staleness of connections because it's ALWAYS updated.
-    connection.last_sync = timezone.now()
-    connection.save()
+    # record sync event to ensure all jive_api_credentials (formerly called jive_api_credentialss) get a chance to be synced
+    # TODO: determine if we should not update this when some channel, session, line or jive_api_credentials has an error
+    # It's led to issues understanding staleness of jive_api_credentials because it's ALWAYS updated.
+    jive_api_credentials.last_sync = timezone.now()
+    jive_api_credentials.save()
 
 
 def parse_webhook_from_header(header: str) -> str:

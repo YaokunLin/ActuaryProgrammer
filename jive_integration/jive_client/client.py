@@ -7,9 +7,11 @@ from typing import List, Optional
 
 import requests
 from django.utils import timezone
+from rest_framework import status
 from requests.auth import AuthBase, HTTPBasicAuth
+from jive_integration.exceptions import RefreshTokenNoLongerRefreshableException
 
-from jive_integration.models import JiveChannel, JiveConnection, JiveLine, JiveSession
+from jive_integration.models import JiveChannel, JiveAPICredentials, JiveLine, JiveSession
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
@@ -40,38 +42,64 @@ class APIResponseException(Exception):
 
 
 class _Authentication(AuthBase):
+    """
+    https://developer.goto.com/guides/Authentication/05_HOW_refreshToken/
+
+    The scenarios at the bottom of the page really illustrate why we have the daily "cron" to refresh credentials in bulk.
+    """
+
     _authentication_url: str = "https://authentication.logmeininc.com"
     _goto_api_url: str = "https://api.getgo.com"
 
-    def __init__(self, client_id: str, client_secret: str, refresh_token: Optional[str] = None):
+    def __init__(
+        self,
+        client_id: str,
+        client_secret: str,
+        access_token: Optional[str] = None,
+        refresh_token: Optional[str] = None,
+        jive_api_credentials: Optional[JiveAPICredentials] = None,
+    ):
+        if jive_api_credentials:
+            self._access_token = jive_api_credentials.access_token
+            self._access_token_expires_at = jive_api_credentials.access_token_expires_at
+            self._refresh_token = jive_api_credentials.refresh_token
+            self._scope = jive_api_credentials.scope
+        else:
+            self._access_token = access_token
+            self._refresh_token = refresh_token
+
         self._client_id = client_id
         self._client_secret = client_secret
-        self._access_token = None
         self._account_key = None
-        self._refresh_token = refresh_token
+        self._jive_api_credentials = jive_api_credentials
 
     def __call__(self, r: requests.Request):
         """
-        Before sending the request check if the access token has expired and refresh it if so.  Update the outgoing
+        Before sending the request check if the access token is present and not expired. If not, update the outgoing
         request with a valid access token header.
         """
-        if not self._access_token or self.__token_expires_at < datetime.utcnow().timestamp():
-            self._get_token()
+        if not self._access_token or (self._access_token_expires_at and timezone.now() >= self._access_token_expires_at):
+            self.refresh_for_new_token()
 
-        r.headers["Authorization"] = "Bearer " + self._access_token
+        r.headers["Authorization"] = f"Bearer {self._access_token}"
 
         return r
 
     @property
-    def refresh_token(self):
+    def access_token(self) -> str:
+        return self._access_token
+
+    @property
+    def refresh_token(self) -> str:
         return self._refresh_token
 
-    def _get_token(self):
+    def refresh_for_new_token(self):
         """
         Exchange the refresh token for a valid access token.
 
         https://developer.goto.com/guides/HowTos/05_HOW_refreshToken/
         """
+        log.info(f"Refreshing for a new token for self._jive_api_credentials.id={self._jive_api_credentials.id}")
         resp: requests.Response = requests.request(
             method="post",
             url=urllib.parse.urljoin(self._goto_api_url, "/oauth/v2/token"),
@@ -104,7 +132,7 @@ class _Authentication(AuthBase):
 
         self.__parse_token_response(resp)
 
-    def __parse_token_response(self, resp: requests.Response):
+    def __parse_token_response(self, resp: requests.Response) -> None:
         """
         Assume a json response with a minimum of an `access_token` and `refresh_token` key.
         """
@@ -118,33 +146,62 @@ class _Authentication(AuthBase):
 
         body = resp.json()
 
+        log.info(f"Successfully refreshed for a new token for self._jive_api_credentials.id={self._jive_api_credentials.id}")
         try:
-            self._access_token: str = body.get("access_token")
+            self._access_token: str = body["access_token"]
             self._account_key: Optional[str] = body.get("account_key")
             self._organizer_key: Optional[str] = body.get("organizer_key")
-            self._scope: Optional[str] = body.get("scope")
+            self._scope: Optional[str] = body.get("scope", self._scope)
             self._principal: Optional[str] = body.get("principal")  # email address associated to the account
             self._refresh_token: str = body["refresh_token"]
-            self.__token_expires_at: float = (datetime.utcnow() + timedelta(seconds=body["expires_in"])).timestamp()
+            self._access_token_expires_at: datetime = timezone.now() + timedelta(seconds=body["expires_in"])
         except (KeyError, IndexError) as exc:
             logging.debug(f"invalid token response: {resp.content}")
             raise APIResponseException("failed to parse token response") from exc
 
+        if self._jive_api_credentials:
+            self._jive_api_credentials.access_token = self._access_token
+            self._jive_api_credentials.refresh_token = self._refresh_token
+            self._jive_api_credentials.account_key = self._account_key
+            self._jive_api_credentials.organizer_key = self._organizer_key
+            self._jive_api_credentials.scope = self._scope
+            self._jive_api_credentials.access_token_expires_at = self._access_token_expires_at
+            if self._principal:
+                self._jive_api_credentials.email = self._principal
+            log.info(f"Saving self._jive_api_credentials to RDBMS: {self._jive_api_credentials.id}")
+            self._jive_api_credentials.save()
+            log.info(f"Saved self._jive_api_credentials to RDBMS: {self._jive_api_credentials.id}")
+
 
 class JiveClient:
+    """
+    TODO: Save the refresh token to the cache and try using cache instead of DB
+    """
+
     base_url: str = "https://api.jive.com"
 
     __auth: _Authentication
     __session: requests.Session
 
-    def __init__(self, client_id: str, client_secret: str, refresh_token: Optional[str] = None, api_base_url: str = ""):
-        self.__auth = _Authentication(client_id=client_id, client_secret=client_secret, refresh_token=refresh_token)
+    def __init__(
+        self,
+        client_id: str,
+        client_secret: str,
+        jive_api_credentials: Optional[JiveAPICredentials] = None,
+        api_base_url: str = "",
+    ):
+        self.__auth = _Authentication(client_id=client_id, client_secret=client_secret, jive_api_credentials=jive_api_credentials)
 
         self.__session = requests.Session()
         self.__session.auth = self.__auth
+        self.__jive_api_credentials = jive_api_credentials
 
         if api_base_url:
             self._base_url = api_base_url
+
+    @property
+    def jive_api_credentials(self):
+        return self.__jive_api_credentials
 
     @property
     def refresh_token(self):
@@ -152,7 +209,7 @@ class JiveClient:
 
     @property
     def access_token(self):
-        return self.__auth._access_token
+        return self.__auth.access_token
 
     @property
     def principal(self):
@@ -170,8 +227,8 @@ class JiveClient:
     def account_key(self):
         return self.__auth._account_key
 
-    def get_token(self):
-        return self.__auth._get_token()
+    def refresh_for_new_token(self):
+        self.__auth.refresh_for_new_token()
 
     def exchange_code(self, code: str, request_uri: str):
         """
@@ -179,7 +236,7 @@ class JiveClient:
         """
         self.__auth.exchange_code(code, request_uri)
 
-    def create_webhook_channel(self, connection: JiveConnection, webhook_url: str, lifetime: int = 2592000) -> JiveChannel:
+    def create_webhook_channel(self, jive_api_credentials: JiveAPICredentials, webhook_url: str, lifetime: int = 2592000) -> JiveChannel:
         """
         Create a record for the intended channel and request the channel from the Jive API.  If the request fails
         the record will be deleted.
@@ -194,7 +251,9 @@ class JiveClient:
         signature.update(uuid.uuid4().bytes)
         signature = signature.hexdigest()
 
-        channel = JiveChannel.objects.create(connection=connection, signature=signature, expires_at=timezone.now() + timedelta(seconds=lifetime))
+        channel = JiveChannel.objects.create(
+            jive_api_credentials=jive_api_credentials, signature=signature, expires_at=timezone.now() + timedelta(seconds=lifetime)
+        )
         endpoint = f"https://api.jive.com/notification-channel/v1/channels/{channel.name}"
 
         try:
@@ -352,4 +411,13 @@ class JiveClient:
         if not kwargs["headers"].get("Accept"):
             kwargs["headers"]["Accept"] = "application/json"
 
-        return self.__session.request(*args, **kwargs)
+        response = self.__session.request(*args, **kwargs)
+
+        if response.status_code == status.HTTP_401_UNAUTHORIZED:
+            self.refresh_for_new_token()
+            # Retry:
+            response = self.__session.request(*args, **kwargs)
+            if response.status_code == status.HTTP_401_UNAUTHORIZED:
+                raise RefreshTokenNoLongerRefreshableException()
+
+        return response
