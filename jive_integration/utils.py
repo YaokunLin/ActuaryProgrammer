@@ -211,10 +211,10 @@ def handle_withdraw_event(
             f"{log_prefix} Unable to find call_id='{call_id}'! There should already be an associated call_id for an earlier announce event but none was found!"
         )
 
-    log.info(f"{log_prefix} Associating call_id='{call_id}' and saving.")
+    log.info(f"{log_prefix} Associating call_id='{call_id}' and saving to RDBMS.")
     event.peerlogic_call_id = call_id
     event.save()
-    log.info(f"{log_prefix} Associated call_id='{call_id}'.")
+    log.info(f"{log_prefix} Associated call_id='{call_id}' and saved to RDBMS.")
 
     log_prefix = f"{log_prefix} call_id='{call_id}' -"
     log.info(f"{log_prefix} Extracting recording count from {event_id}")
