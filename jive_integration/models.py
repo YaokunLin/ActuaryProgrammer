@@ -24,6 +24,7 @@ class JiveAPICredentials(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     # token_type = "Bearer"
     access_token = models.TextField(blank=True)
+    access_token_expires_at = models.DateTimeField(null=True)
     refresh_token = models.TextField(blank=True)
     scope = models.TextField(blank=True)
     # firstName
@@ -34,7 +35,6 @@ class JiveAPICredentials(AuditTrailModel):
     # account_type
     email = models.TextField(blank=True)  # is the user principal (email) with super admin privileges
     practice_telecom = models.ForeignKey("core.PracticeTelecom", null=True, on_delete=models.SET_NULL)
-
     last_sync = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(default=True)
 

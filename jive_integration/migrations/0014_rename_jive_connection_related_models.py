@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('jive_integration', '0013_jive_api_credentials_additional_fields'),
+        ('jive_integration', '0013_jiveapicredentials_additional_fields'),
     ]
 
     operations = [
