@@ -102,7 +102,7 @@ def webhook(request):
     jive_channel = get_channel_from_source_jive_id(webhook)
     if not jive_channel or not jive_channel.active:
         log.error(
-            f"{log_prefix} Active JiveChannel record does not exist for webhook! - Sending response to invalidate the webhook. jive_channel='{jive_channel}'"
+            f"{log_prefix} Active JiveChannel record does not exist for webhook! - Sending response to invalidate the webhook. jive_channel='{jive_channel}'. If this is a practice that should stay connected, you must run resync for them immediately in order to recreate the channel and to not miss call data!"
         )
         return Response(status=status.HTTP_404_NOT_FOUND, data={"signature": "invalid"})
 
