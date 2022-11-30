@@ -207,15 +207,20 @@ class JiveClient:
                 },
             )
             response_body = resp.json()
-
             resp.raise_for_status()
+
             log.info(f"Jive: POST to endpoint='{endpoint}' gave a response_body='{response_body}'")
-            channel.source_jive_id = response_body.get("channelId")
+            channel_id = response_body.get("channelId")
+            channel.source_jive_id = channel_id
             channel.save()
+            log.info(f"Jive: Updated channel='{channel}' channelId='{channel_id}'")
+
         except Exception as exc:
-            log.warn(f"Could not create channel in Jive, deleting from Peerlogic API.")
+            message = f"Could not create channel in Jive, deleting from Peerlogic API."
+            log.warning(message)
             channel.delete()
-            raise exc
+            message = f"Could not create channel in Jive, deleted from Peerlogic API."
+            raise APIResponseException(message) from exc
 
         return channel
 
@@ -227,7 +232,6 @@ class JiveClient:
         resp = self.__request(method="put", url=endpoint)
 
         resp.raise_for_status()
-
         response_body = resp.json()
 
         log.info(f"Jive: POST to endpoint='{endpoint}' gave a response_body='{response_body}'")
@@ -237,11 +241,11 @@ class JiveClient:
 
     def delete_webhook_channel(self, channel: JiveChannel) -> JiveChannel:
         endpoint = f"https://api.jive.com/notification-channel/v1/channels/{channel.name}/{channel.source_jive_id}"
+
         log.info(f"Jive: Sending DELETE to endpoint='{endpoint}'")
         resp = self.__request(method="delete", url=endpoint)
-
+        log.info(f"Jive: Sent DELETE to endpoint='{endpoint}'. Verifying status.")
         resp.raise_for_status()
-
         log.info(f"Jive: DELETE to endpoint='{endpoint}' successful - no response body.")
 
         log.info(f"Jive: Saving JiveChannel channel='{channel}' with active=False")
@@ -260,9 +264,7 @@ class JiveClient:
         dependency: channelID not channel Id
         """
         resp = self.__request(method="post", url="https://realtime.jive.com/v2/session", json={"channelId": channel.source_jive_id})
-
         resp.raise_for_status()
-
         body = resp.json()
 
         try:
@@ -303,9 +305,7 @@ class JiveClient:
         lines: List[Line] = []
 
         resp = self.__request(method="get", path="/users/v1/lines")
-
         resp.raise_for_status()
-
         body = resp.json()
 
         try:
@@ -326,9 +326,7 @@ class JiveClient:
         lines: List[Line] = []
 
         resp = self.__request(method="get", path=f"/users/v1/users?accountKey={account_key}")
-
         resp.raise_for_status()
-
         body = resp.json()
 
         try:

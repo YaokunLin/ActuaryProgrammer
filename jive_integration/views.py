@@ -1,19 +1,16 @@
-import base64
 import json
 import logging
 from contextlib import suppress
 from datetime import datetime
-from time import sleep
 from typing import Dict, Optional
-from urllib.parse import urlencode, urlparse
 
 import dateutil.parser
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
-from rest_framework import mixins, status, viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import (
     action,
     api_view,
@@ -26,8 +23,6 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 
-from calls.field_choices import CallDirectionTypes
-from calls.models import Call
 from core.field_choices import VoipProviderIntegrationTypes
 from core.models import User
 from core.validation import (
@@ -81,17 +76,33 @@ def generate_jive_callback_url(
 def webhook(request):
     # https://api.jive.com/call-reports/v1/recordings/4428338e-826b-40af-b4a0-d01a2010f525?organizationId=af93983c-ec29-4aca-8516-b8ab36b587d1
 
-    log.info(f"Jive webhook: Headers: '{request.headers}' POST body '{request.body}'")
+    # Documentation on webhook: https://developer.goto.com/GoToConnect/#section/Webhook
+    #
+    # BE CAREFUL WITH THE RESPONSE STATUS CODES returned from this endpoint. Certain statues will disable the webhook for the GoTo account!
+    #
+    # Webhook URL Becoming Invalid
+    # - If the server returns a 410 Gone or a 404 Not Found on a request, the webhook channel will be automatically deleted.
+    # Webhook Request Failure
+    # - In the case where the response received is a server error (5XX), the webhook request will follow the retry policy.
+    # Webhook Request Timeout
+    # - A Webhook notification is considered incomplete or timed out if a response is not provided in 4,000 ms or less.
+    # - The webhook notification request will follow the retry policy.
+    # Webhook Request Retry Policy
+    # - In the event that a webhook request failed, the webhook request will be retried up to 2 more times in quick succession before it is abandoned.
+
+    log_prefix = "Jive: Webhook received event."
+    log.info(f"{log_prefix} headers='{request.headers}' body='{request.body}'")
 
     response = HttpResponse(status=202)
     #
     # VALIDATION
     #
     webhook = parse_webhook_from_header(request.headers.get("signature-input"))
+    log_prefix = f"{log_prefix}. webhook='{webhook}'"
     jive_channel = get_channel_from_source_jive_id(webhook)
     if not jive_channel or not jive_channel.active:
         log.error(
-            f"Jive: Active JiveChannel record does not exist for webhook='{webhook}' - Doing nothing. See https://peerlogictech.atlassian.net/wiki/spaces/PL/pages/471891982/Misconfiguration+Troubleshooting+-+Manual+Backend+Steps#Delete%2FExpire-a-Webhook for more info on how to make sure this expired properly."
+            f"{log_prefix} Active JiveChannel record does not exist for webhook! - Sending response to invalidate the webhook. jive_channel='{jive_channel}'. If this is a practice that should stay connected, you must run resync for them immediately in order to recreate the channel and to not miss call data!"
         )
         return Response(status=status.HTTP_404_NOT_FOUND, data={"signature": "invalid"})
 
@@ -100,8 +111,10 @@ def webhook(request):
         timestamp_of_request: datetime = dateutil.parser.isoparser().isoparse(req["timestamp"])
         content = json.loads(req["content"])
     except (json.JSONDecodeError, KeyError):
+        log.error(f"{log_prefix} Could not determine timestamp of request. Invalid response sent to webhook.")
         return HttpResponse(status=status.HTTP_406_NOT_ACCEPTABLE)
 
+    log.info(f"{log_prefix} Validating event")
     end_time = timestamp_of_request
     jive_request_data_key_value_pair: Dict = content.get("data", {})
     jive_originator_id = jive_request_data_key_value_pair.get("originatorId")
@@ -110,12 +123,15 @@ def webhook(request):
     subscription_event_data = subscription_event_serializer.validated_data
 
     if not subscription_event_serializer_is_valid:
-        log.exception(
-            f"Jive: Error from subscription_event_serializer validation from jive_originator_id {jive_originator_id}: {subscription_event_serializer.errors}"
+        log.error(
+            f"{log_prefix} Error from subscription_event_serializer validation from jive_originator_id='{jive_originator_id}': errors='{subscription_event_serializer.errors}'. Setting response to invalid. Further processing will resume but may throw errors."
         )
         response = Response(status=status.HTTP_400_BAD_REQUEST, data={"errors": subscription_event_serializer.errors})
 
+    log.info(f"{log_prefix} Validated event.")
     event = subscription_event_serializer.save()
+    log.prefix = f"{log_prefix} event='{event.id}'"
+    log.info(f"{log_prefix} Event saved. event='{event}'")
 
     dialed_number = jive_request_data_key_value_pair.get("ani", "")
     if dialed_number:
@@ -127,9 +143,9 @@ def webhook(request):
 
     source_jive_id = content.get("subId")
     source_organization_jive_id = jive_request_data_key_value_pair.get("originatorOrganizationId")
-    log.info(f"Jive: Checking we have a JiveLine with originatorOrganizationId='{source_organization_jive_id}'")
+    log.info(f"{log_prefix} Checking we have a JiveLine with originatorOrganizationId='{source_organization_jive_id}'")
     line: JiveLine = JiveLine.objects.filter(source_organization_jive_id=source_organization_jive_id).first()
-    log.info(f"Jive: JiveLine found with originatorOrganizationId='{source_organization_jive_id}'")
+    log.info(f"{log_prefix} JiveLine found with originatorOrganizationId='{source_organization_jive_id}'")
 
     channel = line.session.channel
     subscription_event_data.update({"jive_channel_id": channel.id})
@@ -145,15 +161,13 @@ def webhook(request):
     call_id = ""
     jive_event_type = content.get("type")
     if jive_event_type == JiveEventTypeChoices.ANNOUNCE:
-        log.info(f"Jive: Received jive announce event: event.id='{event.id}'")
-        peerlogic_call = None
+        log.info(f"{log_prefix} Received jive announce event")
 
         call_exists, call_id = get_or_create_call_id(jive_originator_id)
         if call_exists:
             peerlogic_call = wait_for_peerlogic_call(call_id=call_id)
-
-        if not call_exists:
-            log.info(f"Jive: No previous peerlogic call found from previous events in the database - Creating peerlogic call from event.id='{event.id}'")
+        else:
+            log.info(f"{log_prefix} No previous peerlogic call found from previous events in the database - Creating peerlogic call.")
             try:
                 peerlogic_call = create_peerlogic_call(
                     call_id=call_id,
@@ -163,28 +177,30 @@ def webhook(request):
                     practice=practice,
                 )
                 call_id = peerlogic_call.id
-                log.info(f"Jive: Created Peerlogic Call object with id='{peerlogic_call.id}' from event.id='{event.id}'")
+                log.info(f"Jive: Created Peerlogic Call object with id='{peerlogic_call.id}'.")
             except ValidationError:
-                log.exception(f"Error creating a new Peerlogic call from event.id='{event.id}'")
+                log.exception(f"Error creating a new Peerlogic call.")
 
     elif jive_event_type == JiveEventTypeChoices.REPLACE:
-        log.info(f"Jive: Received jive replace event: event.id='{event.id}'")
+        log.info(f"{log_prefix} Received jive replace event.")
         call_id = get_call_id_from_previous_announce_events_by_originator_id(jive_originator_id)
 
     elif jive_event_type == JiveEventTypeChoices.WITHDRAW:
-        log.info(f"Jive: Received jive withdraw event: event.id='{event.id}'")
+        log.info(f"{log_prefix} Received jive withdraw event.")
         try:
             event, call_id = handle_withdraw_event(
                 jive_originator_id=jive_originator_id,
                 source_jive_id=source_jive_id,
                 voip_provider_id=voip_provider_id,
-                end_time=timestamp_of_request,
+                end_time=end_time,
                 event=event,
                 jive_request_data_key_value_pair=jive_request_data_key_value_pair,
                 bucket_name=bucket_name,
             )
-        except Exception:
-            log.exception(f"Jive: Exception during withdraw event: event.id='{event.id}'")
+            log.info(f"{log_prefix} Handled jive withdraw event.")
+        except Exception as e:
+            log.exception(f"{log_prefix} Exception='{e}' occurred during withdraw event.")
+            return response  # must return here since we may not have a valid call_id
 
     # always get the call_id onto the event
     event.peerlogic_call_id = call_id
@@ -309,9 +325,9 @@ class JiveChannelViewSet(viewsets.ModelViewSet):
         if not (self.request.user.is_staff or self.request.user.is_superuser) and not does_practice_of_user_own_connection(connection_id=pk, user=request.user):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        log.info(f"Getting JiveConnection from database with pk='{pk}'")
+        log.info(f"Jive: Getting JiveConnection from database with pk='{pk}'")
         connection = JiveConnection.objects.get(pk=connection_pk)
-        log.info(f"Got JiveConnection from database with pk='{pk}'")
+        log.info(f"Jive: Got JiveConnection from database with pk='{pk}'")
 
         log.info(f"Jive: Getting JiveChannel from database with pk='{pk}'")
         channel = JiveChannel.objects.get(pk=pk)
@@ -321,19 +337,17 @@ class JiveChannelViewSet(viewsets.ModelViewSet):
         jive: JiveClient = JiveClient(client_id=settings.JIVE_CLIENT_ID, client_secret=settings.JIVE_CLIENT_SECRET, refresh_token=connection.refresh_token)
         log.info("Jive: Instantiated JiveClient with connection.id='{connection.id}'")
 
-        successfully_deleted_jive_side = False
-
         log.info(f"Jive: Deleting webhook channel jive-side and deactivating peerlogic-side for JiveChannel with pk='{pk}'")
+        successfully_deleted_jive_side = False  # this is not needed in the current code but is kept here in case someone modifies the code-path below
         try:
             channel = jive.delete_webhook_channel(channel=channel)
             successfully_deleted_jive_side = True
             log.info(
                 f"Jive: Successfully deleted webhook channel jive-side and deactivated peerlogic-side for JiveChannel with pk='{channel.pk}', active='{channel.active}'"
             )
-
-        except Exception:
-            log.exception(f"Jive: Could not delete webhook channel channel={channel}. Setting to inactive in the RDBMS.")
-            successfully_deleted_jive_side = False  # we know it's set above, explicitly setting it here.
+        except Exception as e:
+            log.exception(f"Jive: Could not delete webhook channel channel={channel}. Encountered exception='{e}' Setting to inactive in the RDBMS.")
+            successfully_deleted_jive_side = False
             channel.active = False
             channel.save()
             log.info(f"Jive: Set JiveChannel to inactive with pk='{channel.pk}', active='{channel.active}'")
