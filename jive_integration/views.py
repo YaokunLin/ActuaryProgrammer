@@ -338,6 +338,7 @@ class JiveChannelViewSet(viewsets.ModelViewSet):
         log.info("Jive: Instantiated JiveClient with connection.id='{connection.id}'")
 
         log.info(f"Jive: Deleting webhook channel jive-side and deactivating peerlogic-side for JiveChannel with pk='{pk}'")
+        successfully_deleted_jive_side = False  # this is not needed in the current code but is kept here in case someone modifies the code-path below
         try:
             channel = jive.delete_webhook_channel(channel=channel)
             successfully_deleted_jive_side = True
