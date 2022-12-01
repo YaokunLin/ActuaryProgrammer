@@ -137,6 +137,13 @@ export GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1
 export GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1
 ```
 
+"WARNING: The Python lzma extension was not compiled. Missing the lzma lib?"
+If you get the following warning during a python install with pyenv. Perform the following updates.
+
+```bash
+brew install xz
+```
+
 Some google libs require a rust compiler.
 
 ```bash
