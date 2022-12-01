@@ -1,13 +1,14 @@
-import shortuuid
-from django.conf import settings
-from django.core.management.base import BaseCommand, CommandError
-from django.db import connection, transaction
-
 import requests
+from django.conf import settings
+from django.core.management.base import BaseCommand
+from django.db import transaction
 
 from core.clients.netsapiens_client import NetsapiensAPIClient
 from core.models import Organization, Practice, PracticeTelecom, VoipProvider
-from netsapiens_integration.models import NetsapiensAPICredentials, NetsapiensCallSubscription
+from netsapiens_integration.models import (
+    NetsapiensAPICredentials,
+    NetsapiensCallSubscription,
+)
 
 
 class Command(BaseCommand):
@@ -29,7 +30,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"Got netsapiens credentials with pk='{ns_creds.pk}'"))
 
         with transaction.atomic():
-            practice_name = options['practice_name']
+            practice_name = options["practice_name"]
             self.stdout.write(f"Creating organization with name='{practice_name}'")
             organization = Organization.objects.create(name=practice_name)
             self.stdout.write(self.style.SUCCESS(f"Created organization with pk='{organization.pk}'"))
