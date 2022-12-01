@@ -1,5 +1,5 @@
 from django.conf import settings
-from rest_framework.pagination import _positive_int, PageNumberPagination
+from rest_framework.pagination import PageNumberPagination, _positive_int
 from rest_framework.response import Response
 
 

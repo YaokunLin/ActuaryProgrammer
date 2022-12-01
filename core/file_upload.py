@@ -1,5 +1,6 @@
-from gcloud.storage.blob import Blob
 from typing import Dict, List
+
+from gcloud.storage.blob import Blob
 
 
 class FileToUpload(object):

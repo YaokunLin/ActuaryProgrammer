@@ -2,10 +2,9 @@ import logging
 from datetime import timedelta
 
 from django.conf import settings
+from gcloud.storage import Bucket, Client
 from google.auth import compute_engine
 from google.auth.transport import requests
-from gcloud.storage import Client, Bucket
-
 
 log = logging.getLogger(__name__)
 
