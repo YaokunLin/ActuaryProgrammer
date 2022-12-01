@@ -29,20 +29,18 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"Got netsapiens credentials with pk='{ns_creds.pk}'"))
 
         with transaction.atomic():
-
-            self.stdout.write(f"Creating organization with name='{options['practice_name']}'")
-            organization = Organization.objects.create(name=options['practice_name'])
+            practice_name = options['practice_name']
+            self.stdout.write(f"Creating organization with name='{practice_name}'")
+            organization = Organization.objects.create(name=practice_name)
             self.stdout.write(self.style.SUCCESS(f"Created organization with pk='{organization.pk}'"))
 
-
-            self.stdout.write(f"Creating practice with name='{options['practice_name']}'")
-            practice = Practice.objects.create(name=options["practice_name"], active=True, organization=organization)
+            self.stdout.write(f"Creating practice with name='{practice_name}'")
+            practice = Practice.objects.create(name=practice_name, active=True, organization=organization)
             self.stdout.write(self.style.SUCCESS(f"Created practice with pk='{practice.pk}'"))
 
             self.stdout.write(f"Creating practice telecom with domain='{options['practice_voip_domain']}'")
             practice_telecom = PracticeTelecom.objects.create(voip_provider=voip_provider, domain=options["practice_voip_domain"], practice=practice)
             self.stdout.write(self.style.SUCCESS(f"Created practice telecom with pk='{practice_telecom.pk}'"))
-
 
             self.stdout.write(f"Creating netsapiens_call_subscription with practice_telecom='{practice_telecom.pk}'")
             netsapiens_call_subscription = NetsapiensCallSubscription.objects.create(practice_telecom=practice_telecom, active=True)
