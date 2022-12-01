@@ -1,9 +1,8 @@
 from typing import Any, Optional
 
 from django.apps import apps
-from django.db import models
-from django.db import IntegrityError
 from django.contrib.auth.models import UserManager as _UserManager
+from django.db import IntegrityError, models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 

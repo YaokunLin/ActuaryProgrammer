@@ -31,12 +31,16 @@ from core.validation import (
 )
 from jive_integration.field_choices import JiveEventTypeChoices
 from jive_integration.jive_client.client import JiveClient
-from jive_integration.models import JiveAWSRecordingBucket, JiveChannel, JiveAPICredentials, JiveLine
-
+from jive_integration.models import (
+    JiveAPICredentials,
+    JiveAWSRecordingBucket,
+    JiveChannel,
+    JiveLine,
+)
 from jive_integration.serializers import (
+    JiveAPICredentialsSerializer,
     JiveAWSRecordingBucketSerializer,
     JiveChannelSerializer,
-    JiveAPICredentialsSerializer,
     JiveSubscriptionEventExtractSerializer,
 )
 from jive_integration.utils import (
@@ -45,8 +49,8 @@ from jive_integration.utils import (
     get_channel_from_source_jive_id,
     get_or_create_call_id,
     handle_withdraw_event,
-    resync_from_credentials,
     parse_webhook_from_header,
+    resync_from_credentials,
     wait_for_peerlogic_call,
 )
 

@@ -1,13 +1,12 @@
 from rest_framework import views
 from rest_framework.response import Response
+
 from calls.analytics.intents.field_choices import (
-    CallOutcomeTypes,
     CallOutcomeReasonTypes,
+    CallOutcomeTypes,
     CallPurposeTypes,
 )
-from calls.analytics.interactions.field_choices import (
-    AgentInteractionMetricTypes,
-)
+from calls.analytics.interactions.field_choices import AgentInteractionMetricTypes
 from calls.analytics.participants.field_choices import (
     EngagementPersonaTypes,
     NonAgentEngagementPersonaTypes,

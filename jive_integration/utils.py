@@ -21,8 +21,8 @@ from core.validation import is_extension
 from jive_integration.exceptions import RefreshTokenNoLongerRefreshableException
 from jive_integration.jive_client.client import JiveClient, Line
 from jive_integration.models import (
-    JiveChannel,
     JiveAPICredentials,
+    JiveChannel,
     JiveLine,
     JiveSession,
     JiveSubscriptionEventExtract,
