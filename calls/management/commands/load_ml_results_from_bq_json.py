@@ -84,7 +84,7 @@ class Command(BaseCommand):
             practice_id = bq_call.pop("practice_id")
         else:
             practice_id = practice_override_id
-            del bq_call["practice_id"]
+            bq_call.pop("practice_id", None)
 
         practice = self._get_practice_from_practice_id(practice_id)
 
@@ -105,22 +105,22 @@ class Command(BaseCommand):
         call_agent_interactions = bq_call.pop("call_agent_interaction")
 
         # Mentioned
-        call_company_mentioned = bq_call.pop("call_company_discussed")
-        call_insurance_mentioned = bq_call.pop("call_insurance_discussed")
-        call_procedure_mentioned = bq_call.pop("call_procedure_discussed")
-        call_product_mentioned = bq_call.pop("call_product_discussed")
-        call_symptom_mentioned = bq_call.pop("call_symptom_discussed")
+        call_company_mentioned = bq_call.pop("call_company_discussed", [])
+        call_insurance_mentioned = bq_call.pop("call_insurance_discussed", [])
+        call_procedure_mentioned = bq_call.pop("call_procedure_discussed", [])
+        call_product_mentioned = bq_call.pop("call_product_discussed", [])
+        call_symptom_mentioned = bq_call.pop("call_symptom_discussed", [])
 
         call_purpose = bq_call.pop("call_purpose")
         non_agent_engagement_persona_info = bq_call.pop("non_agent_engagement_persona_info")
 
         # Not necessary
-        del bq_call["caller_type_info"]  # TODO: remove from schema, deprecated
-        del bq_call["call_pause"]  # TODO: Implement when we're determining longest pause again
-        del bq_call["call_transcription"]
-        del bq_call["call_transcription_fragment"]
-        del bq_call["insert_timestamp"]
-        del bq_call["domain"]  # TODO: remove from all extracts
+        bq_call.pop("caller_type_info", None)  # TODO: remove from schema, deprecated
+        bq_call.pop("call_pause", None)  # TODO: Implement when we're determining longest pause again
+        bq_call.pop("call_transcription", None)
+        bq_call.pop("call_transcription_fragment", None)
+        bq_call.pop("insert_timestamp", None)
+        bq_call.pop("domain", None)  # TODO: remove from all extracts
         # del bq_call["site_id"]
 
         defaults.update(bq_call)
