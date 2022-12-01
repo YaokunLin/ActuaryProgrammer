@@ -74,7 +74,7 @@ def webhook(request):
 
     # Documentation on webhook: https://developer.goto.com/GoToConnect/#section/Webhook
     #
-    # BE CAREFUL WITH THE RESPONSE STATUS CODES returned from this endpoint. Certain statues will disable the webhook for the GoTo account!
+    # BE CAREFUL WITH THE RESPONSE STATUS CODES returned from this endpoint. Certain statuses will disable the webhook for the GoTo account!
     #
     # Webhook URL Becoming Invalid
     # - If the server returns a 410 Gone or a 404 Not Found on a request, the webhook channel will be automatically deleted.
