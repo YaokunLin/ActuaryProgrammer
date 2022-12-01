@@ -1,18 +1,12 @@
-from datetime import (
-    datetime,
-)
 import io
 import logging
 import os
-from typing import (
-    Callable,
-    Dict,
-    List,
-)
+from datetime import datetime
+from typing import Callable, Dict, List
 
-from pydantic import parse_obj_as
 import requests
 import requests.compat
+from pydantic import parse_obj_as
 from urllib3.response import HTTPResponse
 
 from devtools.api_clients.api_client import (
@@ -30,9 +24,10 @@ from devtools.api_clients.models.peerlogic_api_models import (
     NetsapiensAPICredentials,
     TelecomCallerNameInfo,
 )
-
-from devtools.api_clients.netsapiens_api_client import NetsapiensAuthToken, NetsapiensRefreshToken
-
+from devtools.api_clients.netsapiens_api_client import (
+    NetsapiensAuthToken,
+    NetsapiensRefreshToken,
+)
 
 log = logging.getLogger(__name__)
 
