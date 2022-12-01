@@ -1,5 +1,4 @@
 import json
-import os
 
 from typing import Dict
 from django.conf import settings
@@ -44,10 +43,13 @@ class Command(BaseCommand):
         month = options["month"]
         starting_blobname = options["starting_blobname"]
 
-        self.stdout.write(f"Loading blobs with options['month']={month}, starting at options['starting_blobname']='{starting_blobname}'")
-        bucket = storage.Bucket(settings.CLOUD_STORAGE_CLIENT, settings.BUCKET_NAME_BQ_CALL_ANALYTICS_EXTRACTS)
+        bucket_name = settings.BUCKET_NAME_BQ_CALL_ANALYTICS_EXTRACTS
+        self.stdout.write(
+            f"Loading blobs as configured by env-var 'BUCKET_NAME_BQ_CALL_ANALYTICS_EXTRACTS' bucket_name='{bucket_name}' with options['month']={month}, starting at options['starting_blobname']='{starting_blobname}'"
+        )
+        bucket = storage.Bucket(settings.CLOUD_STORAGE_CLIENT, bucket_name)
 
-        # List the objects stored in your Cloud Storage buckets, which are ordered in the list lexicographically by name.
+        # List the objects stored in your Cloud Storage buckets, which are ordered in the list lexicographically by name
         # https://cloud.google.com/storage/docs/listing-objects
         # No need to sort filename
         blob_list = list(settings.CLOUD_STORAGE_CLIENT.list_blobs(bucket, prefix=month))
