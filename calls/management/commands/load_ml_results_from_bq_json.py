@@ -1,15 +1,15 @@
 import json
-
 from typing import Dict
+
 from django.conf import settings
 from django.core.management.base import BaseCommand
-
-
 from google.cloud import storage
-from oauth2_provider.models import (
-    get_application_model,
+from oauth2_provider.models import get_application_model
+
+from calls.analytics.intents.field_choices import (
+    CallOutcomeReasonTypes,
+    CallOutcomeTypes,
 )
-from calls.analytics.intents.field_choices import CallOutcomeReasonTypes, CallOutcomeTypes
 from calls.analytics.intents.models import (
     CallMentionedInsurance,
     CallMentionedProcedure,

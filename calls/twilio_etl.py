@@ -5,12 +5,11 @@ from twilio.rest import Client
 from twilio.rest.lookups.v1.phone_number import PhoneNumberInstance
 
 from .field_choices import (
-    TelecomCallerNameInfoTypes,
     TelecomCallerNameInfoSourceTypes,
+    TelecomCallerNameInfoTypes,
     TelecomCarrierTypes,
 )
 from .models import TelecomCallerNameInfo
-
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)
