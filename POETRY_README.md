@@ -71,7 +71,7 @@ pyenv local 3.7.9
 curl -sSL https://install.python-poetry.org | python3 -
 ```
 
-if the install above does't work, or if you just want more information about poetry you can visit [https://python-poetry.org/docs/]
+If the install above doesn't work, or if you just want more information about poetry you can visit [https://python-poetry.org/docs/]
 
 ### using poetry to set up virtual environment
 
@@ -104,7 +104,7 @@ docker-compose up -d redis postgres
 
 ### Updating dependencies
 
-> :warning: **NEVER MANUALLY CHANGE poetry.lock, and try to avoid manually changing `tool.poetry` sections in pyproject.toml**
+>**NEVER MANUALLY CHANGE poetry.lock, and try to avoid manually changing `tool.poetry` sections in pyproject.toml**
 To update, remove and install dependencies, use the poetry CLI [add](https://python-poetry.org/docs/cli/#add) and [remove](https://python-poetry.org/docs/cli/#remove)
 If it is a development-only dependency, ensure you use `--dev`!
 
@@ -129,8 +129,8 @@ Since we don't have prebuilt wheels, you'll have a few extra steps to get up and
 Ensure the following environment variables are set (~/.zshrc probably):
 
 ```bash
-export LDFLAGS="-L/opt/homebrew/opt/openssl@1.1/lib"
-export CPPFLAGS="-I/opt/homebrew/opt/openssl@1.1/include"
+export LDFLAGS="-L/opt/homebrew/opt/openssl@3/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/openssl@3/include"
 export GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1
 export GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1
 ```
@@ -144,9 +144,9 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 Psycopg2 requires some other host dependencies:
 
 ```bash
-brew install postgresql
+brew install postgresql@14
 brew install openssl
-brew link openssl
+brew link --force openssl
 ```
 
 As always, follow any prompts/instructions from the output of those commands above.
