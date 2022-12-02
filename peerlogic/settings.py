@@ -40,6 +40,7 @@ REGION = os.environ.get("REGION", "us-west4")
 PROJECT_NUMBER = os.getenv("PROJECT_NUMBER", "148263976475")
 ENV_CONFIG_SECRET_NAME = os.environ.get("ENV_CONFIG_SECRET_NAME", "peerlogic-api-env")
 ENVIRONMENT = os.environ.get("ENVIRONMENT", "local")
+raise Exception(ENVIRONMENT)
 
 if IN_GCP:
     # Pull secrets from Secret Manager
