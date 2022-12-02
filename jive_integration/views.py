@@ -29,6 +29,7 @@ from core.validation import (
     get_practice_telecoms_belonging_to_user,
     get_validated_practice_telecom,
 )
+from jive_integration.exceptions import RefreshTokenNoLongerRefreshableException
 from jive_integration.field_choices import JiveEventTypeChoices
 from jive_integration.jive_client.client import JiveClient
 from jive_integration.models import JiveAWSRecordingBucket, JiveChannel, JiveAPICredentials, JiveLine
@@ -266,7 +267,13 @@ def authentication_callback(request: Request):
         raise ValidationError({"errors": {"principal": "email is missing from your submission - are you logged in?"}})
 
     log.info("Jive: Refresh token to get account key and organization key.")
-    jive.refresh_for_new_token()
+    try:
+        jive.refresh_for_new_token()
+    except RefreshTokenNoLongerRefreshableException as e:
+        raise ValidationError({"errors": {"refresh_token": "Your account is no longer able to connect to Peerlogic - contact support@peerlogic.com."}})
+    except Exception as e:
+        # unexpected exceptions 500 internal server error
+        log.exception(e)
     log.info("Jive: Done refreshing token.")
 
     log.info(f"Jive: Checking for existing JiveAPICredentials with principal={principal}.")
@@ -455,6 +462,10 @@ def cron(request):
     # for each user jive_api_credentials
     for jive_api_credentials in JiveAPICredentials.objects.filter(active=True).order_by("-last_sync"):
         log.info(f"Jive: found jive_api_credentials: {jive_api_credentials}")
-        resync_from_credentials(jive_api_credentials=jive_api_credentials, request=request)
+        try:
+            resync_from_credentials(jive_api_credentials=jive_api_credentials, request=request)
+        except RefreshTokenNoLongerRefreshableException as e:
+            log.exception(e)
+            log.info(f"Found not refreshable connection for jive_api_credentials.id='{jive_api_credentials.id}'. Continuing.")
 
     return HttpResponse(status=202)

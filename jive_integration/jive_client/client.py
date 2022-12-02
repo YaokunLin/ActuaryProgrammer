@@ -96,7 +96,12 @@ class _Authentication(AuthBase):
         request with a valid access token header.
         """
         if not self._access_token or (self._access_token_expires_at and timezone.now() >= self._access_token_expires_at):
-            self.refresh_for_new_token()
+            log.info("Jive: Access token not present or expired, refreshing for a new access and refresh token.")
+            try:
+                self.refresh_for_new_token()
+            except Exception as e:
+                raise e
+            log.info("Jive: Done refreshing token.")
 
         r.headers["Authorization"] = f"Bearer {self._access_token}"
 
@@ -117,20 +122,21 @@ class _Authentication(AuthBase):
         https://developer.goto.com/guides/HowTos/05_HOW_refreshToken/
         """
         log.info(f"Jive: Refreshing for a new token for self._jive_api_credentials.id={self._jive_api_credentials.id}")
+
+        request_body = {
+            "grant_type": "refresh_token",
+            "refresh_token": self._refresh_token,
+        }
+        log.debug(f"Jive: Refresh token request_body={request_body}, self._client_id='{self._client_id}', self._client_secret='{self._client_secret}'")
         response: requests.Response = requests.request(
             method="post",
             url=urllib.parse.urljoin(self._goto_api_url, "/oauth/v2/token"),
             auth=HTTPBasicAuth(self._client_id, self._client_secret),
             headers={"Content-Type": "application/x-www-form-urlencoded"},
-            data={
-                "grant_type": "refresh_token",
-                "refresh_token": self._refresh_token,
-            },
+            data=request_body,
         )
 
-        print(response)
-
-        self.__detect_bad_auth_response(response=response, token_type=OAuthTokenTypes.REFRESH_TOKEN)
+        self.__detect_bad_auth_response(response, OAuthTokenTypes.REFRESH_TOKEN)
         self.__parse_token_response(response=response, token_type=OAuthTokenTypes.REFRESH_TOKEN)
 
     def exchange_code(self, code: str, redirect_uri: str):
@@ -153,7 +159,7 @@ class _Authentication(AuthBase):
         self.__detect_bad_auth_response(response=response, token_type=OAuthTokenTypes.ACCESS_TOKEN)
         self.__parse_token_response(response=response, token_type=OAuthTokenTypes.ACCESS_TOKEN)
 
-    def __detect_bad_auth_response(response: requests.Response, token_type: OAuthTokenTypes) -> None:
+    def __detect_bad_auth_response(self, response: Optional[requests.Response], token_type: OAuthTokenTypes) -> None:
         # When giving an expired refresh token (with all other parameters correct),
         # a 400 response with the most cryptic error comes back from the Jive side:
         REFRESH_TOKEN_NO_LONGER_REFRESHABLE_JIVE_RESPONSE_DATA = {"error": "invalid_request", "error_description": "Required parameter(s) missing or wrong."}
@@ -161,7 +167,7 @@ class _Authentication(AuthBase):
         try:
             response.raise_for_status()
         except Exception as e:
-            msg = f"Problem occurred parsing token response"
+            msg = f"Jive: Problem occurred from auth response"
             if response is not None:
                 response_data = safe_get_response_json(response)
                 if token_type == OAuthTokenTypes.REFRESH_TOKEN and response_data == REFRESH_TOKEN_NO_LONGER_REFRESHABLE_JIVE_RESPONSE_DATA:
@@ -169,8 +175,6 @@ class _Authentication(AuthBase):
                 if response.text:
                     msg = f"{msg}. Response text: '{response.text}'"
             raise Exception(msg)
-
-        return response
 
     def __parse_token_response(self, response: requests.Response, token_type: OAuthTokenTypes) -> None:
         """
@@ -449,10 +453,20 @@ class JiveClient:
         response = self.__session.request(*args, **kwargs)
 
         if response.status_code == status.HTTP_401_UNAUTHORIZED:
-            self.refresh_for_new_token()
+            log.info("Jive: Status code is a 401, refreshing for a new access and refresh token.")
+            try:
+                self.refresh_for_new_token()
+            except Exception as e:
+                raise e
+            log.info("Jive: Done refreshing token.")
             # Retry:
+            log.info(f"Jive: Retrying original request with args='{args}' and kwargs='{kwargs}'")
             response = self.__session.request(*args, **kwargs)
+            log.info(f"Jive: Retry response is '{response}' with original request args='{args}' and kwargs='{kwargs}'")
             if response.status_code == status.HTTP_401_UNAUTHORIZED:
+                log.info(
+                    f"Jive: Retry response still unauthorized, giving up. response.status_code='{response.status_code}' with original request args='{args}' and kwargs='{kwargs}'"
+                )
                 raise RefreshTokenNoLongerRefreshableException()
 
         return response
