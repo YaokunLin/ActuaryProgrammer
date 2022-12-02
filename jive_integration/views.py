@@ -383,8 +383,14 @@ class JiveAPICredentialsViewSet(viewsets.ModelViewSet):
         log.info(f"Got JiveAPICredentials from database with pk='{pk}'")
 
         log.info(f"Resyncing jive_api_credentials for JiveAPICredentials with pk='{pk}'")
-        response_data = resync_from_credentials(jive_api_credentials=jive_api_credentials, request=request)
-        log.info(f"Resynced jive_api_credentials for JiveAPICredentials with pk='{pk}'")
+        try:
+            response_data = resync_from_credentials(jive_api_credentials=jive_api_credentials, request=request)
+        except RefreshTokenNoLongerRefreshableException as e:
+            error_message = f"Jive: resync endpoint: Found no longer refreshable api credentials for jive_api_credentials.id='{jive_api_credentials.id}."
+            log.exception(error_message)
+            raise ValidationError({"error": error_message})
+
+        log.info(f"Jive: Resynced jive_api_credentials for JiveAPICredentials with pk='{pk}'")
 
         return Response(status=status.HTTP_200_OK, data=response_data)
 

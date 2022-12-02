@@ -700,15 +700,13 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
             log.info(f"Saved data from twilio for phone_number: '{phone_number}'")
         except TwilioException as e:
             log.exception(
-                f"Unable to call Twilio to obtain or update caller name information for: '{phone_number}'. This does not mean we were unable to fulfill the request for data if we have a stale value available.",
-                e,
+                f"Unable to call Twilio to obtain or update caller name information for: '{phone_number}'. This does not mean we were unable to fulfill the request for data if we have a stale value available."
             )
         except ValueError as e:
-            log.exception(f"Problems occurred extracting values from Twilio's response for: '{phone_number}'", e)
+            log.exception(f"Problems occurred extracting values from Twilio's response for: '{phone_number}'")
         except DatabaseError as e:
             log.exception(
-                f"Problem occurred saving updated values for phone number: '{phone_number}'. This does not mean we were unable to fulfill the request for data if we have a stale value available",
-                e,
+                f"Problem occurred saving updated values for phone number: '{phone_number}'. This does not mean we were unable to fulfill the request for data if we have a stale value available"
             )
 
         # validate that we have a legitimate value from the database
