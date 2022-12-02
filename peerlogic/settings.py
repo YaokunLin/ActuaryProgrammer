@@ -79,6 +79,7 @@ SENTRY_ENABLED = os.getenv("SENTRY_ENABLED", "").lower() in (
 SENTRY_DSN = os.getenv("SENTRY_DSN", "")
 SENTRY_TRACE_SAMPLE_RATE = float(os.getenv("SENTRY_TRACE_SAMPLE_RATE", 0.2))  # Trace sample rate 0.0-1.0 where 1.0 is 100%
 if SENTRY_ENABLED:
+    log.info("Sentry is enabled! ENVIRONMENT: %s, SAMPLE_RATE: %s, DSN: %s", ENVIRONMENT, SENTRY_TRACE_SAMPLE_RATE, SENTRY_DSN)
     import sentry_sdk
     from sentry_sdk.integrations.django import DjangoIntegration
 
