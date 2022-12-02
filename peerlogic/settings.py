@@ -30,19 +30,6 @@ log = logging.getLogger(__name__)
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-        },
-    },
-    "root": {
-        "handlers": ["console"],
-        "level": "INFO",
-    },
-}
 
 PROJECT_ID = os.getenv("PROJECT_ID", "peerlogic-api-dev")
 GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT", None)  # WE'RE IN GCP
@@ -69,6 +56,25 @@ else:
 GKE_APPLICATION = os.getenv("GKE_APPLICATION", False)
 
 DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
+
+if DEBUG == True:
+    LOG_LEVEL = "DEBUG"
+else:
+    LOG_LEVEL = "INFO"
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": LOG_LEVEL,
+    },
+}
 
 # Sentry integration
 SENTRY_ENABLED = os.getenv("SENTRY_ENABLED", "").lower() in {
@@ -178,7 +184,7 @@ try:
     TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS = int(env_var)
 except (ValueError, TypeError) as error:
     if env_var != None:
-        log.exception(error)
+        log.exception("TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS not provided")
     log.info(f"Setting TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS to the default of {TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS_DEFAULT}")
     TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS = TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS_DEFAULT
 
@@ -196,7 +202,7 @@ try:
     SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS = int(env_var)
 except (ValueError, TypeError) as error:
     if env_var != None:
-        log.exception(error)
+        log.exception("SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS not provided")
     log.info(f"Setting SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS to the default of {SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS_DEFAULT}")
     SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS = SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS_DEFAULT
 
@@ -269,7 +275,7 @@ try:
     PUBLISH_FUTURE_TIMEOUT_IN_SECONDS = int(env_var)
 except (ValueError, TypeError) as error:
     if env_var != None:
-        log.exception(error)
+        log.exception("PUBLISH_FUTURE_TIMEOUT_IN_SECONDS not provided")
     log.info(f"Setting PUBLISH_FUTURE_TIMEOUT_IN_SECONDS to the default of {PUBLISH_FUTURE_TIMEOUT_IN_SECONDS_DEFAULT}")
     PUBLISH_FUTURE_TIMEOUT_IN_SECONDS = PUBLISH_FUTURE_TIMEOUT_IN_SECONDS_DEFAULT
 
