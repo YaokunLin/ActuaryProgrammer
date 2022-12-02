@@ -193,7 +193,7 @@ class _Authentication(AuthBase):
             self._access_token: str = body["access_token"]
             self._account_key: Optional[str] = body.get("account_key")
             self._organizer_key: Optional[str] = body.get("organizer_key")
-            self._scope: Optional[str] = body.get("scope", self._scope)
+            self._scope: Optional[str] = body.get("scope")
             self._principal: Optional[str] = body.get("principal")  # email address associated to the account
             self._refresh_token: str = body["refresh_token"]
             self._access_token_expires_at: datetime = timezone.now() + timedelta(seconds=body["expires_in"])
@@ -206,7 +206,8 @@ class _Authentication(AuthBase):
             self._jive_api_credentials.refresh_token = self._refresh_token
             self._jive_api_credentials.account_key = self._account_key
             self._jive_api_credentials.organizer_key = self._organizer_key
-            self._jive_api_credentials.scope = self._scope
+            if self._scope is not None:
+                self._jive_api_credentials.scope
             self._jive_api_credentials.access_token_expires_at = self._access_token_expires_at
             if self._principal:
                 self._jive_api_credentials.email = self._principal
