@@ -180,7 +180,7 @@ try:
     TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS = int(env_var)
 except (ValueError, TypeError) as error:
     if env_var != None:
-        log.exception(error)
+        log.exception("TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS not provided")
     log.info(f"Setting TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS to the default of {TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS_DEFAULT}")
     TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS = TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS_DEFAULT
 
@@ -198,7 +198,7 @@ try:
     SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS = int(env_var)
 except (ValueError, TypeError) as error:
     if env_var != None:
-        log.exception(error)
+        log.exception("SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS not provided")
     log.info(f"Setting SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS to the default of {SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS_DEFAULT}")
     SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS = SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS_DEFAULT
 
@@ -271,7 +271,7 @@ try:
     PUBLISH_FUTURE_TIMEOUT_IN_SECONDS = int(env_var)
 except (ValueError, TypeError) as error:
     if env_var != None:
-        log.exception(error)
+        log.exception("PUBLISH_FUTURE_TIMEOUT_IN_SECONDS not provided")
     log.info(f"Setting PUBLISH_FUTURE_TIMEOUT_IN_SECONDS to the default of {PUBLISH_FUTURE_TIMEOUT_IN_SECONDS_DEFAULT}")
     PUBLISH_FUTURE_TIMEOUT_IN_SECONDS = PUBLISH_FUTURE_TIMEOUT_IN_SECONDS_DEFAULT
 

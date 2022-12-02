@@ -135,7 +135,7 @@ class LoginView(APIView):
             raise api_exception
         except Exception as e:
             # unexpected exceptions 500 internal server error
-            log.exception(e)
+            log.exception("Internal Server Error")
             return Response(status=500, data={"detail": "Server Error"})
 
     #

@@ -274,10 +274,7 @@ def authentication_callback(request: Request):
     try:
         jive.refresh_for_new_token()
     except RefreshTokenNoLongerRefreshableException as e:
-        raise ValidationError({"errors": {"refresh_token": "Your account is no longer able to connect to Peerlogic - contact support@peerlogic.com."}})
-    except Exception as e:
-        # unexpected exceptions 500 internal server error
-        log.exception(e)
+        raise ValidationError({"errors": {"refresh_token": "Your GoTo account is no longer able to connect to Peerlogic - contact support@peerlogic.com."}})
     log.info("Jive: Done refreshing token.")
 
     log.info(f"Jive: Checking for existing JiveAPICredentials with principal={principal}.")
@@ -469,7 +466,6 @@ def cron(request):
         try:
             resync_from_credentials(jive_api_credentials=jive_api_credentials, request=request)
         except RefreshTokenNoLongerRefreshableException as e:
-            log.exception(e)
-            log.info(f"Found not refreshable connection for jive_api_credentials.id='{jive_api_credentials.id}'. Continuing.")
+            log.exception(f"Found not refreshable connection for jive_api_credentials.id='{jive_api_credentials.id}. Continuing.")
 
     return HttpResponse(status=202)

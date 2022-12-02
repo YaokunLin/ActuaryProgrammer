@@ -103,10 +103,7 @@ class _Authentication(AuthBase):
         """
         if not self._access_token or (self._access_token_expires_at and timezone.now() >= self._access_token_expires_at):
             log.info("Jive: Access token not present or expired, refreshing for a new access and refresh token.")
-            try:
-                self.refresh_for_new_token()
-            except Exception as e:
-                raise e
+            self.refresh_for_new_token()
             log.info("Jive: Done refreshing token.")
 
         r.headers["Authorization"] = f"Bearer {self._access_token}"
@@ -460,12 +457,10 @@ class JiveClient:
 
         if response.status_code == status.HTTP_401_UNAUTHORIZED:
             log.info("Jive: Status code is a 401, refreshing for a new access and refresh token.")
-            try:
-                self.refresh_for_new_token()
-            except Exception as e:
-                raise e
+            self.refresh_for_new_token()
             log.info("Jive: Done refreshing token.")
             # Retry:
+            # TODO: PTECH-1568 remove these sensitive logs once we understand and solve why refreshes don't seem to be happening in time.
             log.info(f"Jive: Retrying original request with args='{args}' and kwargs='{kwargs}'")
             response = self.__session.request(*args, **kwargs)
             log.info(f"Jive: Retry response is '{response}' with original request args='{args}' and kwargs='{kwargs}'")
