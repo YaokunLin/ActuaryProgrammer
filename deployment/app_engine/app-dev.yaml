@@ -16,7 +16,10 @@
 
 # [START django_app]
 # [START gaestd_py_django_app_yaml]
-runtime: python37
+runtime: python
+runtime_config:
+  python_version: 3.7
+env: flex
 service: default
 instance_class: F4_1G
 
