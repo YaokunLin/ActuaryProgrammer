@@ -71,13 +71,14 @@ GKE_APPLICATION = os.getenv("GKE_APPLICATION", False)
 DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
 
 # Sentry integration
-SENTRY_ENABLED = os.getenv("SENTRY_ENABLED", "").lower() in (
+SENTRY_ENABLED = os.getenv("SENTRY_ENABLED", "").lower() in {
     "t",
     "true",
     "1",
-)
+}
 SENTRY_DSN = os.getenv("SENTRY_DSN", "")
 SENTRY_TRACE_SAMPLE_RATE = float(os.getenv("SENTRY_TRACE_SAMPLE_RATE", 0.2))  # Trace sample rate 0.0-1.0 where 1.0 is 100%
+log.info("Checking Sentry")
 if SENTRY_ENABLED:
     log.info("Sentry is enabled! ENVIRONMENT: %s, SAMPLE_RATE: %s, DSN: %s", ENVIRONMENT, SENTRY_TRACE_SAMPLE_RATE, SENTRY_DSN)
     import sentry_sdk
@@ -110,6 +111,8 @@ if SENTRY_ENABLED:
         before_send=scrub_sensitive_information,
         environment=ENVIRONMENT,
     )
+else:
+    log.info("Sentry is disabled!")
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
