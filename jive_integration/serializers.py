@@ -7,9 +7,9 @@ from rest_framework import serializers
 
 from core.serializers import UnixEpochDateField
 from jive_integration.models import (
+    JiveAPICredentials,
     JiveAWSRecordingBucket,
     JiveChannel,
-    JiveAPICredentials,
     JiveSubscriptionEventExtract,
 )
 

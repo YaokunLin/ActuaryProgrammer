@@ -2,9 +2,9 @@ from django.urls import include, path
 from rest_framework_nested import routers
 
 from jive_integration.views import (
+    JiveAPICredentialsViewSet,
     JiveAWSRecordingBucketViewSet,
     JiveChannelViewSet,
-    JiveAPICredentialsViewSet,
     authentication_callback,
     authentication_connect,
     authentication_connect_url,

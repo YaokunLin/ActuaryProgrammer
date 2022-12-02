@@ -1,15 +1,14 @@
 from django.urls import path
 from rest_framework import routers
 
-
 from .views import (
     AdminUserViewset,
     AgentViewset,
     ClientViewset,
     CoreFieldChoicesView,
     LoginView,
-    OrganizationViewSet,
     MyProfileView,
+    OrganizationViewSet,
     PatientViewset,
     PracticeTelecomViewSet,
     PracticeViewSet,

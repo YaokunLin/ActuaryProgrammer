@@ -27,3 +27,13 @@ class IndustryTypes(models.TextChoices):
 class VoipProviderIntegrationTypes(models.TextChoices):
     NETSAPIENS = "netsapiens"
     JIVE = "jive", _("GoTo / Jive")
+
+
+class OAuthTokenTypes(models.TextChoices):
+    ACCESS_TOKEN = "access_token"
+    ID_TOKEN = "id_token"
+    REFRESH_TOKEN = "refresh_token"
+
+
+class OAuthCodeTypes(models.TextChoices):
+    AUTHORIZATION_CODE = "authorization_code"

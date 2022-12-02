@@ -28,6 +28,8 @@ google-cloud-pubsub==2.9.0
 google-cloud-secret-manager==2.8.0
 google-cloud-storage==2.1.0
 gunicorn==20.0.4
+# TODO: Remove one python is upgraded https://stackoverflow.com/questions/73929564/entrypoints-object-has-no-attribute-get-digital-ocean
+importlib-metadata<5.0
 numpy==1.21.1
 pandas==1.3.5
 psycopg2-binary==2.8.6
@@ -36,6 +38,7 @@ python-dotenv==0.15.0
 redis==3.5.3
 requests==2.25.1
 ringcentral==0.7.13
+sentry-sdk==1.11.1
 shortuuid==1.0.1
 twilio==7.3.2
 wheel==0.35.1
