@@ -124,7 +124,7 @@ class _Authentication(AuthBase):
 
         https://developer.goto.com/guides/HowTos/05_HOW_refreshToken/
         """
-        log.info(f"Jive: Refreshing for a new token for self._jive_api_credentials.id={self._jive_api_credentials.id}")
+        log.info(f"Jive: Refreshing for a new token for self._jive_api_credentials.id={self._jive_api_credentials.id if self._jive_api_credentials else ''}")
 
         request_body = {
             "grant_type": "refresh_token",
