@@ -5,6 +5,7 @@ from django_extensions.db.fields import ShortUUIDField
 from phonenumber_field.modelfields import PhoneNumberField
 
 from core.abstract_models import AuditTrailModel
+
 from .field_choices import MessagePriorities, PeerlogicMessageStatuses
 
 

@@ -3,12 +3,11 @@ from rest_framework import routers
 
 from .views import (
     AdminNetsapiensAPICredentialsViewset,
-    netsapiens_call_subscription_event_receiver_view,
     NetsapiensAPICredentialsViewset,
-    NetsapiensCdr2ExtractViewset,
     NetsapiensCallSubscriptionViewset,
+    NetsapiensCdr2ExtractViewset,
+    netsapiens_call_subscription_event_receiver_view,
 )
-
 
 app_name = "netsapiens_integration"
 

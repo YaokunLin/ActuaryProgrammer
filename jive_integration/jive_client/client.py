@@ -8,12 +8,18 @@ from typing import List, Optional
 
 import requests
 from django.utils import timezone
-from rest_framework import status
 from requests.auth import AuthBase, HTTPBasicAuth
-from core.field_choices import OAuthCodeTypes, OAuthTokenTypes
+from core.field_choices import OAuthTokenTypes
 from jive_integration.exceptions import RefreshTokenNoLongerRefreshableException
+from rest_framework import status
 
-from jive_integration.models import JiveChannel, JiveAPICredentials, JiveLine, JiveSession
+from jive_integration.exceptions import RefreshTokenNoLongerRefreshableException
+from jive_integration.models import (
+    JiveAPICredentials,
+    JiveChannel,
+    JiveLine,
+    JiveSession,
+)
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)

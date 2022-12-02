@@ -3,7 +3,6 @@ from typing import List
 
 from django.conf import settings
 
-
 log = logging.getLogger(__name__)
 
 

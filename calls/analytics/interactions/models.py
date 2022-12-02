@@ -1,9 +1,13 @@
 import logging
-from calls.analytics.interactions.field_choices import AgentInteractionMetricTypes, AgentInteractionGroupType
-from core.abstract_models import AuditTrailModel
+
 from django.db import models
 from django_extensions.db.fields import ShortUUIDField
 
+from calls.analytics.interactions.field_choices import (
+    AgentInteractionGroupType,
+    AgentInteractionMetricTypes,
+)
+from core.abstract_models import AuditTrailModel
 from core.models import Agent
 
 # Get an instance of a logger

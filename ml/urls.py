@@ -1,8 +1,7 @@
 from django.urls import include, path
 from rest_framework_nested import routers
 
-
-from ml.views import MLFieldChoicesView, MLModelViewset, MLModelResultHistoryViewset
+from ml.views import MLFieldChoicesView, MLModelResultHistoryViewset, MLModelViewset
 
 router = routers.SimpleRouter()
 

@@ -32,12 +32,16 @@ from core.validation import (
 from jive_integration.exceptions import RefreshTokenNoLongerRefreshableException
 from jive_integration.field_choices import JiveEventTypeChoices
 from jive_integration.jive_client.client import JiveClient
-from jive_integration.models import JiveAWSRecordingBucket, JiveChannel, JiveAPICredentials, JiveLine
-
+from jive_integration.models import (
+    JiveAPICredentials,
+    JiveAWSRecordingBucket,
+    JiveChannel,
+    JiveLine,
+)
 from jive_integration.serializers import (
+    JiveAPICredentialsSerializer,
     JiveAWSRecordingBucketSerializer,
     JiveChannelSerializer,
-    JiveAPICredentialsSerializer,
     JiveSubscriptionEventExtractSerializer,
 )
 from jive_integration.utils import (
@@ -46,8 +50,8 @@ from jive_integration.utils import (
     get_channel_from_source_jive_id,
     get_or_create_call_id,
     handle_withdraw_event,
-    resync_from_credentials,
     parse_webhook_from_header,
+    resync_from_credentials,
     wait_for_peerlogic_call,
 )
 
@@ -75,7 +79,7 @@ def webhook(request):
 
     # Documentation on webhook: https://developer.goto.com/GoToConnect/#section/Webhook
     #
-    # BE CAREFUL WITH THE RESPONSE STATUS CODES returned from this endpoint. Certain statues will disable the webhook for the GoTo account!
+    # BE CAREFUL WITH THE RESPONSE STATUS CODES returned from this endpoint. Certain statuses will disable the webhook for the GoTo account!
     #
     # Webhook URL Becoming Invalid
     # - If the server returns a 410 Gone or a 404 Not Found on a request, the webhook channel will be automatically deleted.

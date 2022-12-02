@@ -1,12 +1,9 @@
-from functools import wraps
 import logging
-from typing import (
-    Callable,
-)
+from functools import wraps
+from typing import Callable
 
 import requests
 import requests.compat
-
 
 log = logging.getLogger(__name__)
 

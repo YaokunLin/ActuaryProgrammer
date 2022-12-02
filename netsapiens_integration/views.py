@@ -5,11 +5,12 @@ from django.conf import settings
 from django.shortcuts import get_object_or_404
 from google.api_core.exceptions import PermissionDenied
 from rest_framework import status, viewsets
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from rest_framework.permissions import (
-    AllowAny,
-    IsAdminUser,
+from rest_framework.decorators import (
+    api_view,
+    authentication_classes,
+    permission_classes,
 )
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 
 from core.models import PracticeTelecom

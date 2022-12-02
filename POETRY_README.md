@@ -28,54 +28,55 @@ xcode-select --install
 brew install pyenv
 ```
 
-Appropriate python version via Pyenv (3.7.9 at time of writing)
+Install the appropriate python version via Pyenv. See pyproject.toml for the latest version (3.7.15 as of 2022-12-01).
+
 
 ```bash
-pyenv install 3.7.9
+pyenv install 3.7.15
 ```
 
-It may not be possible to install the python version above.
-
-```bash
-pyenv install 3.7.12
-```
-
-to check installed version of python through pyenv run;
+Check that this was installed on your system and appears when listed:
 
 ```bash
 pyenv versions
 ```
 
-Before continuing, it is necessary to ensure your python version is correct and use pyenv. Run the following commands in the root of your directory.
+Set this version of python for peerlogic-api. In the root of the directory run:
+
+```bash
+pyenv local 3.7.15
+```
+
+Now check that we're using this binary and version for peerlogic-api.
 
 ```bash
 which python
 ```
 
-This will check if you are running pyenv; you should see `/Users/<name>/.pyenv/shims/python`
+You should see `/Users/<name>/.pyenv/shims/python`. Anything else is incorrect and means you need to check your
+preceding work.
+
+Check the version of python you are running.
 
 ```bash
 python --version
 ```
 
-This will check the version of python you are running. You should see python set to 3.7.9 or 3.7.12, respectively; if not, set to one of the two versions. You need to run one of the following commands.
+You should see python set to 3.7.15.
 
-```bash
-pyenv local 3.7.12
-pyenv local 3.7.9
-```
-
-### install and use Poetry
+### Install and use Poetry
 
 ```bash
 curl -sSL https://install.python-poetry.org | python3 -
 ```
 
-if the install above does't work, or if you just want more information about poetry you can visit [https://python-poetry.org/docs/]
+If the installation above doesn't work, or if you just want more information about poetry you can visit
+[https://python-poetry.org/docs/].
 
 ### using poetry to set up virtual environment
 
 Tell poetry to honor your pyenv version:
+
 ```bash
 poetry config virtualenvs.prefer-active-python true
 ```
@@ -104,13 +105,14 @@ docker-compose up -d redis postgres
 
 ### Updating dependencies
 
-> :warning: **NEVER MANUALLY CHANGE poetry.lock, and try to avoid manually changing `tool.poetry` sections in pyproject.toml**
-To update, remove and install dependencies, use the poetry CLI [add](https://python-poetry.org/docs/cli/#add) and [remove](https://python-poetry.org/docs/cli/#remove)
-If it is a development-only dependency, ensure you use `--dev`!
+>**NEVER MANUALLY CHANGE poetry.lock, and try to avoid manually changing `tool.poetry` sections in pyproject.toml**
+> To update, remove and install dependencies, use the poetry CLI [add](https://python-poetry.org/docs/cli/#add)
+> and [remove](https://python-poetry.org/docs/cli/#remove)
+> If it is a development-only dependency, ensure you use `--dev`!
 
 ### Pre-commit Hooks
 
-We have pre-commit hooks which execute inside of the poetry environment for consistency. If you'd like to enable them, just run:
+We have pre-commit hooks which execute inside the poetry environment for consistency.
 
 ```bash
 pre-commit install
@@ -129,13 +131,20 @@ Since we don't have prebuilt wheels, you'll have a few extra steps to get up and
 Ensure the following environment variables are set (~/.zshrc probably):
 
 ```bash
-export LDFLAGS="-L/opt/homebrew/opt/openssl@1.1/lib"
-export CPPFLAGS="-I/opt/homebrew/opt/openssl@1.1/include"
+export LDFLAGS="-L/opt/homebrew/opt/openssl@3/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/openssl@3/include"
 export GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1
 export GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1
 ```
 
-Some of the google libs require a rust compiler.
+"WARNING: The Python lzma extension was not compiled. Missing the lzma lib?"
+If you get the following warning during a python install with pyenv. Perform the following updates.
+
+```bash
+brew install xz
+```
+
+Some google libs require a rust compiler.
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -144,9 +153,9 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 Psycopg2 requires some other host dependencies:
 
 ```bash
-brew install postgresql
+brew install postgresql@14
 brew install openssl
-brew link openssl
+brew link --force openssl
 ```
 
 As always, follow any prompts/instructions from the output of those commands above.

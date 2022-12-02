@@ -14,6 +14,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 import io
 import logging
 import os
+from contextlib import suppress
 from datetime import timedelta
 
 import boto3 as boto3
@@ -38,6 +39,7 @@ IN_GCP = GOOGLE_CLOUD_PROJECT != None
 REGION = os.environ.get("REGION", "us-west4")
 PROJECT_NUMBER = os.getenv("PROJECT_NUMBER", "148263976475")
 ENV_CONFIG_SECRET_NAME = os.environ.get("ENV_CONFIG_SECRET_NAME", "peerlogic-api-env")
+ENVIRONMENT = os.environ.get("ENVIRONMENT", "local")
 
 if IN_GCP:
     # Pull secrets from Secret Manager
@@ -73,6 +75,46 @@ LOGGING = {
         "level": LOG_LEVEL,
     },
 }
+
+# Sentry integration
+SENTRY_ENABLED = os.getenv("SENTRY_ENABLED", "").lower() in (
+    "t",
+    "true",
+    "1",
+)
+SENTRY_DSN = os.getenv("SENTRY_DSN", "")
+SENTRY_TRACE_SAMPLE_RATE = float(os.getenv("SENTRY_TRACE_SAMPLE_RATE", 0.2))  # Trace sample rate 0.0-1.0 where 1.0 is 100%
+if SENTRY_ENABLED:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+
+    def scrub_sensitive_information(event, hint):
+        """
+        Sentry does decent server-side scrubbing, but we ought not send some stuff in the first place
+
+        If we find ourselves extending this much, perhaps a different pattern is in order
+        """
+        with suppress(Exception):
+            del event["request"]["headers"]["Authorization"]
+        with suppress(Exception):
+            del event["request"]["cookies"]
+        return event
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[
+            DjangoIntegration(),
+        ],
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for performance monitoring.
+        # We recommend adjusting this value in production.
+        traces_sample_rate=SENTRY_TRACE_SAMPLE_RATE,
+        # If you wish to associate users to errors (assuming you are using
+        # django.contrib.auth) you may enable sending PII data.
+        send_default_pii=True,
+        before_send=scrub_sensitive_information,
+        environment=ENVIRONMENT,
+    )
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
