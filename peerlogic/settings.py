@@ -39,8 +39,6 @@ IN_GCP = GOOGLE_CLOUD_PROJECT != None
 REGION = os.environ.get("REGION", "us-west4")
 PROJECT_NUMBER = os.getenv("PROJECT_NUMBER", "148263976475")
 ENV_CONFIG_SECRET_NAME = os.environ.get("ENV_CONFIG_SECRET_NAME", "peerlogic-api-env")
-ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
-raise Exception(ENVIRONMENT)
 
 if IN_GCP:
     # Pull secrets from Secret Manager
@@ -62,6 +60,8 @@ if DEBUG == True:
     LOG_LEVEL = "DEBUG"
 else:
     LOG_LEVEL = "INFO"
+
+ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
 
 LOGGING = {
     "version": 1,
@@ -85,9 +85,7 @@ SENTRY_ENABLED = os.getenv("SENTRY_ENABLED", "").lower() in {
 }
 SENTRY_DSN = os.getenv("SENTRY_DSN", "")
 SENTRY_TRACE_SAMPLE_RATE = float(os.getenv("SENTRY_TRACE_SAMPLE_RATE", 0.2))  # Trace sample rate 0.0-1.0 where 1.0 is 100%
-log.info("Checking Sentry")
 if SENTRY_ENABLED:
-    log.info("Sentry is enabled! ENVIRONMENT: %s, SAMPLE_RATE: %s, DSN: %s", ENVIRONMENT, SENTRY_TRACE_SAMPLE_RATE, SENTRY_DSN)
     import sentry_sdk
     from sentry_sdk.integrations.django import DjangoIntegration
 
@@ -118,8 +116,6 @@ if SENTRY_ENABLED:
         before_send=scrub_sensitive_information,
         environment=ENVIRONMENT,
     )
-else:
-    log.info("Sentry is disabled!")
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
