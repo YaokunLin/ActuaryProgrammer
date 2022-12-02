@@ -34,5 +34,6 @@ class OAuthTokenTypes(models.TextChoices):
     ID_TOKEN = "id_token"
     REFRESH_TOKEN = "refresh_token"
 
+
 class OAuthCodeTypes(models.TextChoices):
     AUTHORIZATION_CODE = "authorization_code"
