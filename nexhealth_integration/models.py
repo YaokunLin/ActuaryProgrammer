@@ -1,12 +1,12 @@
-from django.contrib.postgres.fields import ArrayField, JSONField
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django_extensions.db.fields import ShortUUIDField
 from phonenumber_field.modelfields import PhoneNumberField
 
-from core.abstract_models import AuditTrailModel
+from core.abstract_models import DateTimeOnlyAuditTrailModel
 
 
-class APIRequest(AuditTrailModel):
+class APIRequest(DateTimeOnlyAuditTrailModel):
     """
     Capture all details about a request made to NexHealth and (if applicable) the response received
     """
@@ -19,19 +19,23 @@ class APIRequest(AuditTrailModel):
     request_path = models.TextField(blank=True, db_index=True)
     request_query_parameters = models.JSONField(null=True)  # Array of objects with key, value
     request_url = models.TextField(blank=False, db_index=True)
+    request_nh_id = models.PositiveIntegerField(null=True, db_index=True)
+    request_nh_location_id = models.PositiveIntegerField(null=True, db_index=True)
+    request_nh_resource = models.CharField(max_length=128, null=True, db_index=True)
+    request_nh_subdomain_id = models.PositiveIntegerField(null=True, db_index=True)
 
     response_body = models.TextField(null=True)
     response_headers = models.JSONField(null=True)
-    response_nh_code = models.NullBooleanField()
+    response_nh_code = models.BooleanField(null=True)
     response_nh_count = models.PositiveIntegerField(null=True)
-    response_nh_data = JSONField(null=True)
-    response_nh_description = JSONField(null=True)
-    response_nh_error = JSONField(null=True)
+    response_nh_data = models.JSONField(null=True)
+    response_nh_description = models.JSONField(null=True)
+    response_nh_error = models.JSONField(null=True)
     response_status = models.PositiveSmallIntegerField(null=True, db_index=True)
     response_time_sec = models.PositiveIntegerField(null=True)
 
 
-class Institution(AuditTrailModel):
+class Institution(DateTimeOnlyAuditTrailModel):
     """
     Typically nalagous to an "Organization" in Peerlogic
 
@@ -45,19 +49,19 @@ class Institution(AuditTrailModel):
     peerlogic_organization = models.ForeignKey(to="core.Organization", on_delete=models.SET_NULL, null=True)
     peerlogic_practice = models.ForeignKey(to="core.Practice", on_delete=models.SET_NULL, null=True)
 
-    appointment_types_location_scoped = models.NullBooleanField()
+    appointment_types_location_scoped = models.BooleanField(null=True)
     country_code = models.CharField(max_length=3)
     emrs = ArrayField(models.CharField(max_length=128), default=list)
-    is_appt_categories_location_specific = models.NullBooleanField()
-    is_sync_notifications = models.NullBooleanField()
+    is_appt_categories_location_specific = models.BooleanField(null=True)
+    is_sync_notifications = models.BooleanField(null=True)
     name = models.CharField(max_length=255, db_index=True)
-    notify_insert_fails = models.NullBooleanField()
+    notify_insert_fails = models.BooleanField(null=True)
     phone_extension = models.CharField(max_length=64, db_index=True, null=True, blank=True)
     phone_number = PhoneNumberField(null=True, blank=True, db_index=True)
     subdomain = models.CharField(max_length=128, db_index=True)
 
 
-class Location(AuditTrailModel):
+class Location(DateTimeOnlyAuditTrailModel):
     """
     Similar to a "Practice" in Peerlogic
 
@@ -98,13 +102,13 @@ class Location(AuditTrailModel):
     email = models.EmailField(null=True)
     foreign_id = models.CharField(max_length=255, null=True, db_index=True)
     foreign_id_type = models.CharField(max_length=255, null=True)
-    insert_appt_client = models.NullBooleanField()
+    insert_appt_client = models.BooleanField(null=True)
     latitude = models.PositiveSmallIntegerField(null=True)
     longitude = models.PositiveSmallIntegerField(null=True)
-    map_by_operatory = models.NullBooleanField()
+    map_by_operatory = models.BooleanField(null=True)
     name = models.CharField(max_length=255, db_index=True)
     phone_number = PhoneNumberField(null=True, blank=True, db_index=True)
-    set_availability_by_operatory = models.NullBooleanField()
+    set_availability_by_operatory = models.BooleanField(null=True)
     state = models.CharField(max_length=64, null=True)
     street_address = models.CharField(max_length=255, null=True)
     street_address_2 = models.CharField(max_length=255, null=True)
@@ -112,7 +116,7 @@ class Location(AuditTrailModel):
     zip_code = models.CharField(max_length=12, null=True)
 
 
-class Provider(AuditTrailModel):
+class Provider(DateTimeOnlyAuditTrailModel):
     """
     Represents an employee who can provide care at a "Location"
 
@@ -131,7 +135,7 @@ class Provider(AuditTrailModel):
     institution = models.ForeignKey(to=Institution, on_delete=models.SET_NULL, null=True, related_name="providers")
 
     availabilities = models.JSONField(null=True)  # https://docs.nexhealth.com/reference/availabilities-1
-    bio = JSONField(null=True)
+    bio = models.JSONField(null=True)
     phone_number = PhoneNumberField(null=True, blank=True, db_index=True)  # From bio JSON
     date_of_birth = models.DateField(null=True)  # From bio JSON
     display_name = models.CharField(max_length=255, null=True)
@@ -145,7 +149,7 @@ class Provider(AuditTrailModel):
     npi = models.CharField(max_length=128, db_index=True)
 
 
-class LocationProvider(AuditTrailModel):
+class LocationProvider(DateTimeOnlyAuditTrailModel):
     """
     Links Location to Provider
     """
@@ -158,10 +162,10 @@ class LocationProvider(AuditTrailModel):
     location = models.ForeignKey(to=Location, on_delete=models.SET_NULL, null=True)
     provider = models.ForeignKey(to=Provider, on_delete=models.SET_NULL, null=True)
 
-    is_bookable = models.NullBooleanField()
+    is_bookable = models.BooleanField(null=True)
 
 
-class Patient(AuditTrailModel):
+class Patient(DateTimeOnlyAuditTrailModel):
     """
     Similar to a "Patient" in Peerlogic
     Note: One NexHealth Patient may link to numerous Peerlogic Patients
@@ -193,11 +197,11 @@ class Patient(AuditTrailModel):
         related_name="patients",
     )
 
-    adjustments = JSONField(null=True)  # https://docs.nexhealth.com/reference/adjustments
+    adjustments = models.JSONField(null=True)  # https://docs.nexhealth.com/reference/adjustments
     balance_amount = models.CharField(max_length=32, null=True, blank=False)
     balance_currency = models.CharField(max_length=3, null=True, blank=False)
-    bio = JSONField(null=True)
-    charges = JSONField(null=True)  # https://docs.nexhealth.com/reference/getcharges
+    bio = models.JSONField(null=True)
+    charges = models.JSONField(null=True)  # https://docs.nexhealth.com/reference/getcharges
     date_of_birth = models.DateField(null=True)  # From bio JSON
     first_name = models.CharField(max_length=255)
     foreign_id = models.CharField(max_length=255, null=True, db_index=True)
@@ -205,12 +209,12 @@ class Patient(AuditTrailModel):
     last_name = models.CharField(max_length=255)
     middle_name = models.CharField(max_length=255)
     name = models.CharField(max_length=255, db_index=True)
-    payments = JSONField(null=True)  # https://docs.nexhealth.com/reference/getpayments
+    payments = models.JSONField(null=True)  # https://docs.nexhealth.com/reference/getpayments
     phone_number = PhoneNumberField(null=True, blank=True, db_index=True)  # From bio JSON
-    unsubscribe_sms = models.NullBooleanField()
+    unsubscribe_sms = models.BooleanField(null=True)
 
 
-class Procedure(AuditTrailModel):
+class Procedure(DateTimeOnlyAuditTrailModel):
     """
     Similar to a "Procedure" in Peerlogic
 
@@ -228,7 +232,7 @@ class Procedure(AuditTrailModel):
     provider = models.ForeignKey(to="nexhealth_integration.Provider", on_delete=models.SET_NULL, null=True, related_name="procedures")
     patient = models.ForeignKey(to="nexhealth_integration.Patient", on_delete=models.SET_NULL, null=True, related_name="procedures")
 
-    body_site = JSONField(null=True)  # e.g. {"tooth": "14", "surface": "MOD"}
+    body_site = models.JSONField(null=True)  # e.g. {"tooth": "14", "surface": "MOD"}
     code = models.CharField(max_length=128, db_index=True)
     end_date = models.DateField(null=True)
     fee_amount = models.CharField(max_length=32, null=True, blank=False)
@@ -239,7 +243,7 @@ class Procedure(AuditTrailModel):
     status = models.CharField(max_length=32)  # treatment_planned/planned, scheduled, completed, inactive, referred
 
 
-class Appointment(AuditTrailModel):
+class Appointment(DateTimeOnlyAuditTrailModel):
     """
     Links a Patient, Location, Provider and Procedure
 
@@ -289,7 +293,7 @@ class Appointment(AuditTrailModel):
     unavailable = models.BooleanField()
 
 
-class InsurancePlan(AuditTrailModel):
+class InsurancePlan(DateTimeOnlyAuditTrailModel):
     """
     NexHealth Reference: https://docs.nexhealth.com/reference/insurance-plans
     """
@@ -310,7 +314,7 @@ class InsurancePlan(AuditTrailModel):
     foreign_id_type = models.CharField(max_length=255, null=True)
 
 
-class InsuranceCoverage(AuditTrailModel):
+class InsuranceCoverage(DateTimeOnlyAuditTrailModel):
     """
     NexHealth Reference: https://docs.nexhealth.com/reference/getpatientsidinsurancecoverages
     """

@@ -25,3 +25,16 @@ class AuditTrailModel(models.Model):
     class Meta:
         abstract = True
         get_latest_by = "modified_at"
+
+
+class DateTimeOnlyAuditTrailModel(models.Model):
+    """
+    Similar to AuditTrailModel, except does not track created_by or modified_by
+    """
+
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    modified_at = models.DateTimeField(auto_now=True, db_index=True)
+
+    class Meta:
+        abstract = True
+        get_latest_by = "modified_at"
