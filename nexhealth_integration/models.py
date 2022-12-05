@@ -224,6 +224,10 @@ class Patient(DateTimeOnlyAuditTrailModel):
 
 
 class NexHealthPatientLink(models.Model):
+    """
+    Through-model linking NexHealth Integration Patient to Peerlogic Patient
+    """
+
     nh_patient = models.ForeignKey(to=Patient, on_delete=models.CASCADE)
     peerlogic_patient = models.ForeignKey(to="core.Patient", on_delete=models.CASCADE)
 
