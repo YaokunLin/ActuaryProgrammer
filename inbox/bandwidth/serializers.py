@@ -1,15 +1,17 @@
 import logging
 from typing import Dict
+
 from django.conf import settings
 from django.db.models.fields import CharField
+from drf_compound_fields.fields import ListField
+from phonenumber_field.serializerfields import PhoneNumberField
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from drf_compound_fields.fields import ListField
-
-from phonenumber_field.serializerfields import PhoneNumberField
-from inbox.field_choices import bandwidth_value_to_peerlogic_message_status_map, PeerlogicMessageStatuses
-
+from inbox.field_choices import (
+    PeerlogicMessageStatuses,
+    bandwidth_value_to_peerlogic_message_status_map,
+)
 from inbox.models import SMSMessage
 
 log = logging.getLogger(__name__)

@@ -1,5 +1,5 @@
-from datetime import datetime
 import logging
+from datetime import datetime
 from typing import Dict, Tuple
 
 from django.conf import settings
@@ -8,7 +8,6 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
 from .models import Agent, Practice, PracticeTelecom, User, UserTelecom
-
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)

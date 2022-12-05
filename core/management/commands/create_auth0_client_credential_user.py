@@ -1,10 +1,7 @@
 from django.conf import settings
 from django.core.management.base import BaseCommand
+from oauth2_provider.models import get_application_model
 
-
-from oauth2_provider.models import (
-    get_application_model,
-)
 from core.models import User
 
 Application = get_application_model()

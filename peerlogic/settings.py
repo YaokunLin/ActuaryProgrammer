@@ -14,6 +14,7 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 import io
 import logging
 import os
+from contextlib import suppress
 from datetime import timedelta
 
 import boto3 as boto3
@@ -29,19 +30,6 @@ log = logging.getLogger(__name__)
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-        },
-    },
-    "root": {
-        "handlers": ["console"],
-        "level": "INFO",
-    },
-}
 
 PROJECT_ID = os.getenv("PROJECT_ID", "peerlogic-api-dev")
 GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT", None)  # WE'RE IN GCP
@@ -67,6 +55,67 @@ else:
 GKE_APPLICATION = os.getenv("GKE_APPLICATION", False)
 
 DEBUG = os.getenv("DJANGO_DEBUG", "True") == "True"
+
+if DEBUG == True:
+    LOG_LEVEL = "DEBUG"
+else:
+    LOG_LEVEL = "INFO"
+
+ENVIRONMENT = os.getenv("ENVIRONMENT", "local")
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": LOG_LEVEL,
+    },
+}
+
+# Sentry integration
+SENTRY_ENABLED = os.getenv("SENTRY_ENABLED", "").lower() in {
+    "t",
+    "true",
+    "1",
+}
+SENTRY_DSN = os.getenv("SENTRY_DSN", "")
+SENTRY_TRACE_SAMPLE_RATE = float(os.getenv("SENTRY_TRACE_SAMPLE_RATE", 0.2))  # Trace sample rate 0.0-1.0 where 1.0 is 100%
+if SENTRY_ENABLED:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+
+    def scrub_sensitive_information(event, hint):
+        """
+        Sentry does decent server-side scrubbing, but we ought not send some stuff in the first place
+
+        If we find ourselves extending this much, perhaps a different pattern is in order
+        """
+        with suppress(Exception):
+            del event["request"]["headers"]["Authorization"]
+        with suppress(Exception):
+            del event["request"]["cookies"]
+        return event
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[
+            DjangoIntegration(),
+        ],
+        # Set traces_sample_rate to 1.0 to capture 100%
+        # of transactions for performance monitoring.
+        # We recommend adjusting this value in production.
+        traces_sample_rate=SENTRY_TRACE_SAMPLE_RATE,
+        # If you wish to associate users to errors (assuming you are using
+        # django.contrib.auth) you may enable sending PII data.
+        send_default_pii=True,
+        before_send=scrub_sensitive_information,
+        environment=ENVIRONMENT,
+    )
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
@@ -132,7 +181,7 @@ try:
     TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS = int(env_var)
 except (ValueError, TypeError) as error:
     if env_var != None:
-        log.exception(error)
+        log.exception("TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS not provided")
     log.info(f"Setting TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS to the default of {TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS_DEFAULT}")
     TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS = TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS_DEFAULT
 
@@ -150,7 +199,7 @@ try:
     SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS = int(env_var)
 except (ValueError, TypeError) as error:
     if env_var != None:
-        log.exception(error)
+        log.exception("SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS not provided")
     log.info(f"Setting SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS to the default of {SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS_DEFAULT}")
     SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS = SIGNED_STORAGE_URL_EXPIRATION_IN_HOURS_DEFAULT
 
@@ -223,7 +272,7 @@ try:
     PUBLISH_FUTURE_TIMEOUT_IN_SECONDS = int(env_var)
 except (ValueError, TypeError) as error:
     if env_var != None:
-        log.exception(error)
+        log.exception("PUBLISH_FUTURE_TIMEOUT_IN_SECONDS not provided")
     log.info(f"Setting PUBLISH_FUTURE_TIMEOUT_IN_SECONDS to the default of {PUBLISH_FUTURE_TIMEOUT_IN_SECONDS_DEFAULT}")
     PUBLISH_FUTURE_TIMEOUT_IN_SECONDS = PUBLISH_FUTURE_TIMEOUT_IN_SECONDS_DEFAULT
 

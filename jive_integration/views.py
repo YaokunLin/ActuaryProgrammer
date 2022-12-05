@@ -29,14 +29,19 @@ from core.validation import (
     get_practice_telecoms_belonging_to_user,
     get_validated_practice_telecom,
 )
+from jive_integration.exceptions import RefreshTokenNoLongerRefreshableException
 from jive_integration.field_choices import JiveEventTypeChoices
 from jive_integration.jive_client.client import JiveClient
-from jive_integration.models import JiveAWSRecordingBucket, JiveChannel, JiveAPICredentials, JiveLine
-
+from jive_integration.models import (
+    JiveAPICredentials,
+    JiveAWSRecordingBucket,
+    JiveChannel,
+    JiveLine,
+)
 from jive_integration.serializers import (
+    JiveAPICredentialsSerializer,
     JiveAWSRecordingBucketSerializer,
     JiveChannelSerializer,
-    JiveAPICredentialsSerializer,
     JiveSubscriptionEventExtractSerializer,
 )
 from jive_integration.utils import (
@@ -45,8 +50,8 @@ from jive_integration.utils import (
     get_channel_from_source_jive_id,
     get_or_create_call_id,
     handle_withdraw_event,
-    resync_from_credentials,
     parse_webhook_from_header,
+    resync_from_credentials,
     wait_for_peerlogic_call,
 )
 
@@ -74,7 +79,7 @@ def webhook(request):
 
     # Documentation on webhook: https://developer.goto.com/GoToConnect/#section/Webhook
     #
-    # BE CAREFUL WITH THE RESPONSE STATUS CODES returned from this endpoint. Certain statues will disable the webhook for the GoTo account!
+    # BE CAREFUL WITH THE RESPONSE STATUS CODES returned from this endpoint. Certain statuses will disable the webhook for the GoTo account!
     #
     # Webhook URL Becoming Invalid
     # - If the server returns a 410 Gone or a 404 Not Found on a request, the webhook channel will be automatically deleted.
@@ -266,8 +271,11 @@ def authentication_callback(request: Request):
         raise ValidationError({"errors": {"principal": "email is missing from your submission - are you logged in?"}})
 
     log.info("Jive: Refresh token to get account key and organization key.")
-    jive.refresh_for_new_token()
-    log.info("Jive: Done refreshing token")
+    try:
+        jive.refresh_for_new_token()
+    except RefreshTokenNoLongerRefreshableException as e:
+        raise ValidationError({"errors": {"refresh_token": "Your GoTo account is no longer able to connect to Peerlogic - contact support@peerlogic.com."}})
+    log.info("Jive: Done refreshing token.")
 
     log.info(f"Jive: Checking for existing JiveAPICredentials with principal={principal}.")
     jive_api_credentials: JiveAPICredentials = None
@@ -374,9 +382,15 @@ class JiveAPICredentialsViewSet(viewsets.ModelViewSet):
         jive_api_credentials = JiveAPICredentials.objects.get(pk=pk)
         log.info(f"Got JiveAPICredentials from database with pk='{pk}'")
 
-        log.info(f"Resynced jive_api_credentials for JiveAPICredentials with pk='{pk}'")
-        response_data = resync_from_credentials(jive_api_credentials=jive_api_credentials, request=request)
-        log.info(f"Resynced jive_api_credentials for JiveAPICredentials with pk='{pk}'")
+        log.info(f"Resyncing jive_api_credentials for JiveAPICredentials with pk='{pk}'")
+        try:
+            response_data = resync_from_credentials(jive_api_credentials=jive_api_credentials, request=request)
+        except RefreshTokenNoLongerRefreshableException as e:
+            error_message = f"Jive: resync endpoint: Found no longer refreshable api credentials for jive_api_credentials.id='{jive_api_credentials.id}."
+            log.exception(error_message)
+            raise ValidationError({"error": error_message})
+
+        log.info(f"Jive: Resynced jive_api_credentials for JiveAPICredentials with pk='{pk}'")
 
         return Response(status=status.HTTP_200_OK, data=response_data)
 
@@ -455,6 +469,9 @@ def cron(request):
     # for each user jive_api_credentials
     for jive_api_credentials in JiveAPICredentials.objects.filter(active=True).order_by("-last_sync"):
         log.info(f"Jive: found jive_api_credentials: {jive_api_credentials}")
-        resync_from_credentials(jive_api_credentials=jive_api_credentials, request=request)
+        try:
+            resync_from_credentials(jive_api_credentials=jive_api_credentials, request=request)
+        except RefreshTokenNoLongerRefreshableException as e:
+            log.exception(f"Found not refreshable connection for jive_api_credentials.id='{jive_api_credentials.id}. Continuing.")
 
     return HttpResponse(status=202)

@@ -1,11 +1,11 @@
-from django.db import models
 from django.conf import settings
-
+from django.db import models
 from django_extensions.db.fields import ShortUUIDField
 
 from core.abstract_models import AuditTrailModel
-from .managers import CadenceManager
+
 from .field_choices import CADENCES
+from .managers import CadenceManager
 
 
 class Cadence(AuditTrailModel):

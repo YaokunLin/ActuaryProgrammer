@@ -1,13 +1,18 @@
-from datetime import datetime
 import logging
+from datetime import datetime
 from typing import Dict
-from django.conf import settings
 
+from django.conf import settings
 from django.db import models
 from django_extensions.db.fields import ShortUUIDField
 
 from core.abstract_models import AuditTrailModel
-from core.aws_iam_helpers import attach_user_policy, create_access_key, create_user, create_call_recording_iam_policy_for_bucket
+from core.aws_iam_helpers import (
+    attach_user_policy,
+    create_access_key,
+    create_call_recording_iam_policy_for_bucket,
+    create_user,
+)
 from core.aws_s3_helpers import create_bucket
 from core.models import PracticeTelecom
 from jive_integration.field_choices import JiveEventTypeChoices, JiveLegStateChoices

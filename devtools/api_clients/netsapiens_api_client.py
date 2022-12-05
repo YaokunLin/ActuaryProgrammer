@@ -1,21 +1,13 @@
-from datetime import datetime
 import logging
-from typing import (
-    Callable,
-    Dict,
-    List,
-)
-from urllib3.response import HTTPResponse
+from datetime import datetime
+from typing import Callable, Dict, List
 
-from pydantic import (
-    BaseModel,
-    parse_obj_as,
-)
 import requests
 import requests.compat
+from pydantic import BaseModel, parse_obj_as
+from urllib3.response import HTTPResponse
 
 from devtools.api_clients.api_client import APIClient
-
 
 log = logging.getLogger(__name__)
 
