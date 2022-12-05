@@ -128,7 +128,7 @@ class Provider(AuditTrailModel):
     nh_last_sync_time = models.DateTimeField(null=True)
     nh_updated_at = models.DateTimeField(null=True)
 
-    institution = models.ForeignKey(to=Institution, on_delete=models.SET_NULL, null=True)
+    institution = models.ForeignKey(to=Institution, on_delete=models.SET_NULL, null=True, related_name="providers")
 
     availabilities = models.JSONField(null=True)  # https://docs.nexhealth.com/reference/availabilities-1
     bio = JSONField(null=True)
@@ -182,7 +182,7 @@ class Patient(AuditTrailModel):
     nh_updated_at = models.DateTimeField(null=True)
 
     guarantor = models.ForeignKey(to="nexhealth_integration.Patient", on_delete=models.CASCADE, null=True, related_name="depdendents")
-    institution = models.ForeignKey(to=Institution, on_delete=models.SET_NULL, null=True)
+    institution = models.ForeignKey(to=Institution, on_delete=models.SET_NULL, null=True, related_name="patients")
     providers = models.ManyToManyField(
         to=Provider,
         through="nexhealth_integration.Appointment",
@@ -319,8 +319,8 @@ class InsuranceCoverage(AuditTrailModel):
     nh_insurance_plan_id = models.PositiveIntegerField(db_index=True)
     nh_patient_id = models.PositiveIntegerField(db_index=True)
 
-    insurance_plan = models.ForeignKey(to=InsurancePlan, on_delete=models.SET_NULL, null=True)
-    patient = models.ForeignKey(to=Patient, on_delete=models.SET_NULL, null=True)
+    insurance_plan = models.ForeignKey(to=InsurancePlan, on_delete=models.SET_NULL, null=True, related_name="insurance_coverages")
+    patient = models.ForeignKey(to=Patient, on_delete=models.SET_NULL, null=True, related_name="insurance_coverages")
 
     effective_date = models.DateField()
     expiration_date = models.DateField()
