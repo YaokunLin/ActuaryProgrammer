@@ -310,6 +310,7 @@ INSTALLED_APPS = [
     "jive_integration",
     "netsapiens_integration",
     "ringcentral_integration",
+    "nexhealth_integration",
 ]
 
 MIDDLEWARE = [
