@@ -196,6 +196,15 @@ class Patient(DateTimeOnlyAuditTrailModel):
         ),
         related_name="patients",
     )
+    peerlogic_patients = models.ManyToManyField(
+        to="core.Patient",
+        through="nexhealth_integration.NexHealthPatientLink",
+        through_fields=(
+            "nh_patient",
+            "peerlogic_patient",
+        ),
+        related_name="nexhealth_patients",
+    )
 
     adjustments = models.JSONField(null=True)  # https://docs.nexhealth.com/reference/adjustments
     balance_amount = models.CharField(max_length=32, null=True, blank=False)
@@ -212,6 +221,11 @@ class Patient(DateTimeOnlyAuditTrailModel):
     payments = models.JSONField(null=True)  # https://docs.nexhealth.com/reference/getpayments
     phone_number = PhoneNumberField(null=True, blank=True, db_index=True)  # From bio JSON
     unsubscribe_sms = models.BooleanField(null=True)
+
+
+class NexHealthPatientLink(models.Model):
+    nh_patient = models.ForeignKey(to=Patient, on_delete=models.CASCADE)
+    peerlogic_patient = models.ForeignKey(to="core.Patient", on_delete=models.CASCADE)
 
 
 class Procedure(DateTimeOnlyAuditTrailModel):
