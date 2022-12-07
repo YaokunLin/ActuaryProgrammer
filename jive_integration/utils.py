@@ -80,8 +80,8 @@ def create_peerlogic_call(call_id: str, jive_request_data_key_value_pair: Dict, 
         "practice": practice,
         "call_start_time": start_time,
         "duration_seconds": timedelta(seconds=0),
-        # connect_duration_seconds logic is in handle withdraw event
-        # progress_time_seconds is in handle withdraw event
+        "connect_duration_seconds": timedelta(seconds=0),
+        "progress_time_seconds": timedelta(seconds=0),
         # hold_time_seconds not available from GoTo
         "call_direction": call_direction,
         "sip_callee_extension": sip_callee_extension,
@@ -137,6 +137,7 @@ def get_or_create_call_id(originator_id: str) -> Tuple[bool, str]:
     exists_in_db = False
     return exists_in_db, call_id
 
+
 def calculate_connect_duration(originator_id: str) -> int:
     # Grab first jive ringing state for the call id
     ringing_event = (
@@ -162,6 +163,7 @@ def calculate_progress_time(originator_id: str, end_time: datetime) -> int:
     if end_time and answered_event:
         return end_time - answered_event.created_at
     return None
+
 
 def get_call_id_from_previous_announce_events_by_originator_id(originator_id: str) -> str:
     log.info(f"Jive: Checking if there is a previous announce subscription event with this originator_id='{originator_id}' in the RDBMS.")
@@ -183,30 +185,47 @@ def get_channel_from_source_jive_id(webhook: str) -> Optional[JiveChannel]:
         return None
 
 
-def calculate_connect_duration(originator_id: str) -> int:
-    # Grab first jive ringing state for the call id
-    ringing_event = (
-        JiveSubscriptionEventExtract.objects.filter(data_state=JiveLegStateChoices.CREATED, data_originator_id=originator_id).order_by("-data_created").first()
-    )
-    # Grab first jive answer state for the call id
-    answered_event = (
-        JiveSubscriptionEventExtract.objects.filter(data_state=JiveLegStateChoices.ANSWERED, data_originator_id=originator_id).order_by("-data_created").first()
-    )
+def calculate_connect_duration(
+    first_answer_event: Optional[JiveSubscriptionEventExtract], first_ring_event: Optional[JiveSubscriptionEventExtract]
+) -> timedelta:
     # Subtract the time
-    if ringing_event and answered_event:
-        return answered_event.created_at - ringing_event.created_at
+    if first_ring_event and first_answer_event:
+        return first_answer_event.data_created - first_ring_event.data_created
+    return timedelta(seconds=0)
+
+
+def calculate_progress_time(
+    end_time: datetime, first_answer_event: Optional[JiveSubscriptionEventExtract], first_ring_event: Optional[JiveSubscriptionEventExtract]
+) -> timedelta:
+    # this is normal call where talking commenced
+    if end_time and first_answer_event:
+        return end_time - first_answer_event.data_created
+
+    # calls that are unanswered
+    if not first_answer_event:
+        return end_time - first_ring_event.data_created
+
+    if not first_ring_event:
+        log.warning(f"Potential problem occurred calculating progress time. No answered_event or ringing_event found!")
+        return timedelta(seconds=0)
+
     return None
 
 
-def calculate_progress_time(originator_id: str, end_time: datetime) -> int:
-    # Grab first jive answer state for the call id
-    answered_event = (
-        JiveSubscriptionEventExtract.objects.filter(data_state=JiveLegStateChoices.ANSWERED, data_originator_id=originator_id).order_by("-data_created").first()
-    )
+def calculate_missed_or_connected(
+    first_answer_event: Optional[JiveSubscriptionEventExtract], first_ring_event: Optional[JiveSubscriptionEventExtract]
+) -> CallConnectionTypes:
+    # this is normal call where talking commenced
+    if first_answer_event:
+        return CallConnectionTypes.CONNECTED
 
-    # Subtract the time
-    if end_time and answered_event:
-        return end_time - answered_event.created_at
+    # calls that are unanswered
+    if not first_answer_event:
+        return CallConnectionTypes.MISSED
+
+    if not first_ring_event:
+        return CallConnectionTypes.MISSED
+
     return None
 
 
@@ -283,9 +302,21 @@ def handle_withdraw_event(
         peerlogic_call.duration_seconds = peerlogic_call.call_end_time - peerlogic_call.call_start_time
         # If this was a transfer that didn't pick up, the original call was answered, so keep the original details intact
         if peerlogic_call.call_connection != CallConnectionTypes.CONNECTED:
-            peerlogic_call.call_connection = CallConnectionTypes.MISSED
-            peerlogic_call.progress_time_seconds = calculate_progress_time(originator_id=jive_originator_id, end_time=end_time)
-            peerlogic_call.connect_duration_seconds = calculate_connect_duration(originator_id=jive_originator_id)
+            first_answer_event = (
+                JiveSubscriptionEventExtract.objects.filter(data_state=JiveLegStateChoices.ANSWERED, data_originator_id=jive_originator_id)
+                .order_by("-data_created")
+                .first()
+            )
+            first_ring_event = (
+                JiveSubscriptionEventExtract.objects.filter(data_state=JiveLegStateChoices.CREATED, data_originator_id=jive_originator_id)
+                .order_by("-data_created")
+                .first()
+            )
+            peerlogic_call.progress_time_seconds = calculate_progress_time(
+                first_answer_event=first_answer_event, first_ring_event=first_ring_event, end_time=end_time
+            )
+            peerlogic_call.connect_duration_seconds = calculate_connect_duration(first_answer_event=first_answer_event, first_ring_event=first_ring_event)
+            peerlogic_call.call_connection = calculate_missed_or_connected(first_answer_event=first_answer_event, first_ring_event=first_ring_event)
         peerlogic_call.save()
         log.info(
             f"{log_prefix} Updated Peerlogic call with the following fields: peerlogic_call.call_connection='{peerlogic_call.call_connection}', peerlogic_call.call_end_time='{peerlogic_call.call_end_time}', peerlogic_call.duration_seconds='{peerlogic_call.duration_seconds}'"
@@ -322,9 +353,21 @@ def handle_withdraw_event(
         peerlogic_call = Call.objects.get(pk=call_id)
         peerlogic_call.call_end_time = end_time
         peerlogic_call.duration_seconds = peerlogic_call.call_end_time - peerlogic_call.call_start_time
-        peerlogic_call.progress_time_seconds = calculate_progress_time(originator_id=jive_originator_id, end_time=end_time)
-        peerlogic_call.connect_duration_seconds = calculate_connect_duration(originator_id=jive_originator_id)
-        peerlogic_call.call_connection = CallConnectionTypes.CONNECTED
+        first_answer_event = (
+            JiveSubscriptionEventExtract.objects.filter(data_state=JiveLegStateChoices.ANSWERED, data_originator_id=jive_originator_id)
+            .order_by("-data_created")
+            .first()
+        )
+        first_ring_event = (
+            JiveSubscriptionEventExtract.objects.filter(data_state=JiveLegStateChoices.CREATED, data_originator_id=jive_originator_id)
+            .order_by("-data_created")
+            .first()
+        )
+        peerlogic_call.progress_time_seconds = calculate_progress_time(
+            first_answer_event=first_answer_event, first_ring_event=first_ring_event, end_time=end_time
+        )
+        peerlogic_call.connect_duration_seconds = calculate_connect_duration(first_answer_event=first_answer_event, first_ring_event=first_ring_event)
+        peerlogic_call.call_connection = calculate_missed_or_connected(first_answer_event=first_answer_event, first_ring_event=first_ring_event)
         peerlogic_call.save()
         log.info(
             f"{log_prefix} Updated Peerlogic call_id='{call_id}' with the following fields: peerlogic_call.call_connection='{peerlogic_call.call_connection}', peerlogic_call.call_end_time='{peerlogic_call.call_end_time}', peerlogic_call.duration_seconds='{peerlogic_call.duration_seconds}'"
