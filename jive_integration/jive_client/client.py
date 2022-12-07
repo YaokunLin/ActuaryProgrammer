@@ -377,6 +377,12 @@ class JiveClient:
             return session
         except KeyError as exc:
             raise APIResponseException("failed to parse session response") from exc
+        except Exception as e:
+            msg = "Jive: Exception Raised in create_session"
+            if resp is not None and resp.text:
+                msg = f"{msg}. Response text: '{resp.text}'"
+            raise Exception(msg)
+
 
     def create_session_dialog_subscription(self, session: JiveSession, *lines: Line):
         """
