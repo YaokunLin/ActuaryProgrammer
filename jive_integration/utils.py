@@ -281,9 +281,11 @@ def handle_withdraw_event(
         peerlogic_call = Call.objects.get(pk=call_id)
         peerlogic_call.call_end_time = end_time
         peerlogic_call.duration_seconds = peerlogic_call.call_end_time - peerlogic_call.call_start_time
-        peerlogic_call.progress_time_seconds = calculate_progress_time(originator_id=jive_originator_id, end_time=end_time)
-        peerlogic_call.connect_duration_seconds = calculate_connect_duration(originator_id=jive_originator_id)
-        peerlogic_call.call_connection = CallConnectionTypes.MISSED
+        # If this was a transfer that didn't pick up, the original call was answered, so keep the original details intact
+        if peerlogic_call.call_connection != CallConnectionTypes.CONNECTED:
+            peerlogic_call.call_connection = CallConnectionTypes.MISSED
+            peerlogic_call.progress_time_seconds = calculate_progress_time(originator_id=jive_originator_id, end_time=end_time)
+            peerlogic_call.connect_duration_seconds = calculate_connect_duration(originator_id=jive_originator_id)
         peerlogic_call.save()
         log.info(
             f"{log_prefix} Updated Peerlogic call with the following fields: peerlogic_call.call_connection='{peerlogic_call.call_connection}', peerlogic_call.call_end_time='{peerlogic_call.call_end_time}', peerlogic_call.duration_seconds='{peerlogic_call.duration_seconds}'"
