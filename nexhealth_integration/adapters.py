@@ -5,6 +5,7 @@ from nexhealth_integration.models import (
     APIRequest,
     Appointment,
     Institution,
+    Location,
     Patient,
     Procedure,
     Provider,
@@ -36,6 +37,49 @@ def create_or_update_institution_from_dict(
 
     return Institution.objects.update_or_create(
         nh_id=nh_id,
+        defaults=defaults,
+    )
+
+
+def create_or_update_location_from_dict(
+    data: Dict,
+    institution: Optional[Institution] = None,
+    peerlogic_practice: Optional[core_models.Practice] = None,
+) -> Tuple[Location, bool]:
+    nh_id = data["id"]
+    nh_institution_id = data["institution_id"]
+    defaults = {
+        "nh_id": nh_id,
+        "nh_institution_id": nh_institution_id,
+        "nh_created_at": data["created_at"],
+        "nh_inactive": data["inactive"],
+        "nh_last_sync_time": data["last_sync_time"],
+        "nh_updated_at": data["updated_at"],
+        "city": data["city"],
+        "email": data["email"],
+        "foreign_id": data["foreign_id"],
+        "foreign_id_type": data["foreign_id_type"],
+        "insert_appt_client": data["insert_appt_client"],
+        "latitude": data["latitude"],
+        "longitude": data["longitude"],
+        "map_by_operatory": data["map_by_operatory"],
+        "name": data["name"],
+        "phone_number": data["phone_number"],
+        "set_availability_by_operatory": data["set_availability_by_operatory"],
+        "state": data["state"],
+        "street_address": data["street_address"],
+        "street_address_2": data["street_address_2"],
+        "tz": data["tz"],
+        "zip_code": data["zip_code"],
+    }
+    if institution:
+        defaults["institution_id"] = institution.id
+    if peerlogic_practice:
+        defaults["peerlogic_practice_id"] = peerlogic_practice.id
+
+    return Location.objects.update_or_create(
+        nh_id=nh_id,
+        nh_institution_id=nh_institution_id,
         defaults=defaults,
     )
 
@@ -72,7 +116,7 @@ def create_or_update_procedure_from_dict(
         defaults["provider_id"] = provider.id
 
     return Procedure.objects.update_or_create(
-        nh_appointment_id=nh_appointment_id,
         nh_id=nh_id,
+        nh_appointment_id=nh_appointment_id,
         defaults=defaults,
     )
