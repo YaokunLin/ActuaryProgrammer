@@ -73,16 +73,16 @@ def create_peerlogic_call(call_id: str, jive_request_data_key_value_pair: Dict, 
             sip_callee_number = f"+1{jive_callee_number}"
         if not sip_callee_number:
             sip_callee_number = jive_callee_number
-        # TODO: Logic for outbound caller number for practice - no ani present
+        # TODO: call Jive API to determine outbound caller number for practice - no ani present
 
     call_fields = {
         "id": call_id,
         "practice": practice,
         "call_start_time": start_time,
         "duration_seconds": timedelta(seconds=0),
-        # TODO: connect_duration_seconds logic
-        # TODO: progress_time_seconds logic
-        # TODO: hold_time_seconds logic
+        # connect_duration_seconds logic is in handle withdraw event
+        # progress_time_seconds is in handle withdraw event
+        # hold_time_seconds not available from GoTo
         "call_direction": call_direction,
         "sip_callee_extension": sip_callee_extension,
         "sip_callee_number": sip_callee_number,
