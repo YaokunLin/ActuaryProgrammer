@@ -1,5 +1,6 @@
 import json
 from dataclasses import dataclass
+from datetime import datetime
 from logging import getLogger
 from traceback import format_exc
 from typing import Dict, List, Optional
@@ -108,17 +109,118 @@ class NexHealthAPIClient:
 
     # --- Begin public methods ---
     def get_location(self) -> APIRequest:
+        """
+        NexHealth Reference: https://docs.nexhealth.com/reference/getlocationsid
+        """
         nh_resource = "locations"
         url_path = f"/{nh_resource}/{self._location_id}"
         return self._request("GET", url_path, nh_resource, nh_id=self._location_id, include_location_and_subdomain_params=False)
 
     def get_institution(self, nh_id: int) -> APIRequest:
+        """
+        NexHealth Reference: https://docs.nexhealth.com/reference/getinstitutionsid
+        """
         nh_resource = "institutions"
         url_path = f"/{nh_resource}/{nh_id}"
         return self._request("GET", url_path, nh_resource, nh_id=nh_id, include_location_and_subdomain_params=False)
 
-    def get_patients(self, per_page: int = 300) -> APIRequest:
+    def get_patients(
+        self,
+        page: int = 1,
+        per_page: int = 300,
+        include_new_patients: bool = True,
+        include_non_patients: Optional[bool] = None,
+        include_different_location_patients: bool = False,
+        name: Optional[str] = None,
+        email: Optional[str] = None,
+        phone_number: Optional[str] = None,
+        sort: str = "created_at",
+        include_upcoming_appts: bool = False,
+        include_charges: bool = False,
+        include_payments: bool = False,
+        include_adjustments: bool = False,
+        include_procedures: bool = False,
+        include_insurance_coverages: bool = False,
+    ) -> APIRequest:
+        """
+        NexHealth Reference: https://docs.nexhealth.com/reference/getpatients
+        """
         nh_resource = "patients"
         url_path = f"/{nh_resource}"
-        params = {"per_page": per_page}
+        params = {
+            "page": page,
+            "per_page": per_page,
+            "new_patient": include_new_patients,
+            "non_patient": include_non_patients,
+            "location_strict": not include_different_location_patients,
+            "sort": sort,
+        }
+        if name is not None:
+            params["name"] = name
+        if email is not None:
+            params["email"] = email
+        if phone_number is not None:
+            params["phone_number"] = phone_number
+        include = []
+        if include_upcoming_appts:
+            include.append("upcoming_appts")
+        if include_charges:
+            include.append("charges")
+        if include_procedures:
+            include.append("procedures")
+        if include_payments:
+            include.append("payments")
+        if include_adjustments:
+            include.append("adjustments")
+        if include_insurance_coverages:
+            include.append("insurance_coverages")
+        if include:
+            params["include[]"] = include
+        return self._request("GET", url_path, nh_resource, params=params)
+
+    def get_appointments(
+        self,
+        start_time: datetime,
+        end_time: datetime,
+        page: int = 1,
+        per_page: int = 300,
+        updated_since: Optional[datetime] = None,
+        is_cancelled: Optional[bool] = None,
+        patient_id: Optional[int] = None,
+        appointment_type_id: Optional[int] = None,
+        include_patients: bool = False,
+        include_booking_details: bool = False,
+        include_procedures: bool = False,
+        include_descriptors: bool = False,
+    ) -> APIRequest:
+        """
+        NexHealth Reference: https://docs.nexhealth.com/reference/getappointments
+        """
+        nh_resource = "appointments"
+        url_path = f"/{nh_resource}"
+        params = {
+            "start": start_time.isoformat(),
+            "end": end_time.isoformat(),
+            "page": page,
+            "per_page": per_page,
+        }
+        if updated_since is not None:
+            params["updated_since"] = updated_since
+        if is_cancelled is not None:
+            params["cancelled"] = is_cancelled
+        if patient_id is not None:
+            params["patient_id"] = patient_id
+        if appointment_type_id is not None:
+            params["appointment_type_id"] = appointment_type_id
+        include = []
+        if include_patients:
+            include.append("patient")
+        if include_booking_details:
+            include.append("booking_details")
+        if include_procedures:
+            include.append("procedures")
+        if include_descriptors:
+            include.append("descriptors")
+        if include:
+            params["include[]"] = include
         return self._request("GET", url_path, nh_resource, params=params)

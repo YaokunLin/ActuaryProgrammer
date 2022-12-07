@@ -51,7 +51,7 @@ class Institution(DateTimeOnlyAuditTrailModel):
 
     id = ShortUUIDField(primary_key=True)
 
-    nh_id = models.PositiveIntegerField(db_index=True)
+    nh_id = models.PositiveIntegerField(unique=True)
 
     peerlogic_organization = models.ForeignKey(to="core.Organization", on_delete=models.SET_NULL, null=True, related_name="nexhealth_institutions")
     peerlogic_practice = models.ForeignKey(to="core.Practice", on_delete=models.SET_NULL, null=True, related_name="nexhealth_institutions")
@@ -63,7 +63,6 @@ class Institution(DateTimeOnlyAuditTrailModel):
     is_sync_notifications = models.BooleanField(null=True)
     name = models.CharField(max_length=255, db_index=True)
     notify_insert_fails = models.BooleanField(null=True)
-    phone_extension = models.CharField(max_length=64, db_index=True, null=True, blank=True)
     phone_number = PhoneNumberField(null=True, blank=True, db_index=True)
     subdomain = models.CharField(max_length=128, db_index=True)
 
@@ -122,6 +121,9 @@ class Location(DateTimeOnlyAuditTrailModel):
     tz = models.CharField(max_length=128, null=True)
     zip_code = models.CharField(max_length=12, null=True)
 
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["nh_id", "nh_institution_id"], name="nh_unique_location_with_institution")]
+
 
 class Provider(DateTimeOnlyAuditTrailModel):
     """
@@ -155,6 +157,9 @@ class Provider(DateTimeOnlyAuditTrailModel):
     name = models.CharField(max_length=255, db_index=True)
     npi = models.CharField(max_length=128, db_index=True)
 
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["nh_id", "nh_institution_id"], name="nh_unique_provider_with_institution")]
+
 
 class LocationProvider(DateTimeOnlyAuditTrailModel):
     """
@@ -170,6 +175,9 @@ class LocationProvider(DateTimeOnlyAuditTrailModel):
     provider = models.ForeignKey(to=Provider, on_delete=models.SET_NULL, null=True)
 
     is_bookable = models.BooleanField(null=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["nh_location_id", "nh_provider_id"], name="nh_unique_provider_with_location")]
 
 
 class Patient(DateTimeOnlyAuditTrailModel):
@@ -229,6 +237,9 @@ class Patient(DateTimeOnlyAuditTrailModel):
     phone_number = PhoneNumberField(null=True, blank=True, db_index=True)  # From bio JSON
     unsubscribe_sms = models.BooleanField(null=True)
 
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["nh_id", "nh_institution_id"], name="nh_unique_patient_with_institution")]
+
 
 class NexHealthPatientLink(models.Model):
     """
@@ -237,6 +248,9 @@ class NexHealthPatientLink(models.Model):
 
     nh_patient = models.ForeignKey(to=Patient, on_delete=models.CASCADE)
     peerlogic_patient = models.ForeignKey(to="core.Patient", on_delete=models.CASCADE)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["nh_patient_id", "peerlogic_patient_id"], name="nh_unique_patient_with_peerlogic_patient")]
 
 
 class Procedure(DateTimeOnlyAuditTrailModel):
@@ -266,6 +280,9 @@ class Procedure(DateTimeOnlyAuditTrailModel):
     start_date = models.DateField(null=True)
 
     status = models.CharField(max_length=32)  # treatment_planned/planned, scheduled, completed, inactive, referred
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["nh_id", "nh_appointment_id"], name="nh_unique_procedure_with_appointment")]
 
 
 class Appointment(DateTimeOnlyAuditTrailModel):
@@ -317,13 +334,16 @@ class Appointment(DateTimeOnlyAuditTrailModel):
     timezone_offset = models.TextField(max_length=128, null=True, blank=True)
     unavailable = models.BooleanField()
 
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["nh_id", "nh_location_id"], name="nh_unique_appointment_with_location")]
+
 
 class InsurancePlan(DateTimeOnlyAuditTrailModel):
     """
     NexHealth Reference: https://docs.nexhealth.com/reference/insurance-plans
     """
 
-    nh_id = models.PositiveIntegerField(db_index=True)
+    nh_id = models.PositiveIntegerField(unique=True)
 
     country_code = models.CharField(max_length=3)
     state = models.CharField(max_length=64, null=True)
@@ -356,3 +376,6 @@ class InsuranceCoverage(DateTimeOnlyAuditTrailModel):
     priority = models.PositiveSmallIntegerField()
     subscriber_num = models.CharField(max_length=128)
     subscription_relation = models.CharField(max_length=128)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["nh_id", "nh_patient_id"], name="nh_unique_insurance_coverage_with_patient")]
