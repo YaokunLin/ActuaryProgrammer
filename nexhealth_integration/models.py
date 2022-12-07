@@ -11,33 +11,40 @@ class APIRequest(DateTimeOnlyAuditTrailModel):
     Capture all details about a request made to NexHealth and (if applicable) the response received
     """
 
+    class Status(models.TextChoices):
+        created = "CREATED"
+        error = "ERROR"
+        completed = "COMPLETED"
+
     id = ShortUUIDField(primary_key=True)
 
     request_body = models.TextField(blank=True)
     request_headers = models.JSONField(null=True)
     request_method = models.TextField(blank=False, db_index=True)
     request_path = models.TextField(blank=True, db_index=True)
-    request_query_parameters = models.JSONField(null=True)  # Array of objects with key, value
+    request_query_parameters = models.JSONField(null=True)  # Array of tuples
     request_url = models.TextField(blank=False, db_index=True)
     request_nh_id = models.PositiveIntegerField(null=True, db_index=True)
     request_nh_location_id = models.PositiveIntegerField(null=True, db_index=True)
     request_nh_resource = models.CharField(max_length=128, null=True, db_index=True)
-    request_nh_subdomain_id = models.PositiveIntegerField(null=True, db_index=True)
+    request_nh_subdomain = models.CharField(max_length=128, null=True, db_index=True)
+    request_status = models.CharField(max_length=16, blank=False, null=False, choices=Status.choices, db_index=True)
+    request_error_details = models.TextField(null=True, blank=True)
 
     response_body = models.TextField(null=True)
     response_headers = models.JSONField(null=True)
     response_nh_code = models.BooleanField(null=True)
     response_nh_count = models.PositiveIntegerField(null=True)
     response_nh_data = models.JSONField(null=True)
-    response_nh_description = models.JSONField(null=True)
-    response_nh_error = models.JSONField(null=True)
+    response_nh_description = models.JSONField(null=True)  # Array of strings
+    response_nh_error = models.JSONField(null=True)  # Array of strings
     response_status = models.PositiveSmallIntegerField(null=True, db_index=True)
-    response_time_sec = models.PositiveIntegerField(null=True)
+    response_time_sec = models.FloatField(null=True)
 
 
 class Institution(DateTimeOnlyAuditTrailModel):
     """
-    Typically nalagous to an "Organization" in Peerlogic
+    Similar to an "Organization" in Peerlogic
 
     NexHealth Reference: https://docs.nexhealth.com/reference/institutions-1
     """
@@ -46,8 +53,8 @@ class Institution(DateTimeOnlyAuditTrailModel):
 
     nh_id = models.PositiveIntegerField(db_index=True)
 
-    peerlogic_organization = models.ForeignKey(to="core.Organization", on_delete=models.SET_NULL, null=True)
-    peerlogic_practice = models.ForeignKey(to="core.Practice", on_delete=models.SET_NULL, null=True)
+    peerlogic_organization = models.ForeignKey(to="core.Organization", on_delete=models.SET_NULL, null=True, related_name="nexhealth_institutions")
+    peerlogic_practice = models.ForeignKey(to="core.Practice", on_delete=models.SET_NULL, null=True, related_name="nexhealth_institutions")
 
     appointment_types_location_scoped = models.BooleanField(null=True)
     country_code = models.CharField(max_length=3)
@@ -77,8 +84,8 @@ class Location(DateTimeOnlyAuditTrailModel):
     nh_last_sync_time = models.DateTimeField(null=True)
     nh_updated_at = models.DateTimeField(null=True)
 
-    institution = models.ForeignKey(to=Institution, on_delete=models.SET_NULL, null=True)
-    peerlogic_practice = models.ForeignKey(to="core.Practice", on_delete=models.SET_NULL, null=True)
+    institution = models.ForeignKey(to=Institution, on_delete=models.SET_NULL, null=True, related_name="locations")
+    peerlogic_practice = models.ForeignKey(to="core.Practice", on_delete=models.SET_NULL, null=True, related_name="nexhealth_locations")
     providers = models.ManyToManyField(
         to="nexhealth_integration.Provider",
         through="nexhealth_integration.LocationProvider",
