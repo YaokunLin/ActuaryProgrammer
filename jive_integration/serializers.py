@@ -7,8 +7,9 @@ from rest_framework import serializers
 
 from core.serializers import UnixEpochDateField
 from jive_integration.models import (
+    JiveAPICredentials,
     JiveAWSRecordingBucket,
-    JiveConnection,
+    JiveChannel,
     JiveSubscriptionEventExtract,
 )
 
@@ -17,9 +18,9 @@ log = logging.getLogger(__name__)
 CAMELCASE_REGEX_PATTERN = re.compile(r"(?<!^)(?=[A-Z])")
 
 
-class JiveConnectionSerializer(serializers.ModelSerializer):
+class JiveAPICredentialsSerializer(serializers.ModelSerializer):
     class Meta:
-        model = JiveConnection
+        model = JiveAPICredentials
         read_only_fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "last_sync"]
         fields = ["id", "created_by", "created_at", "modified_by", "modified_at", "practice_telecom", "last_sync", "active"]
 
@@ -33,13 +34,35 @@ class JiveAWSRecordingBucketSerializer(serializers.ModelSerializer):
             "created_at",
             "modified_by",
             "modified_at",
-            "connection",
             "access_key_id",
             "username",
             "policy_arn",
             "bucket_name",
         ]
-        fields = ["id", "connection", "access_key_id", "username", "policy_arn", "bucket_name"]
+        fields = ["id", "practice_telecom", "access_key_id", "username", "policy_arn", "bucket_name"]
+
+
+class JiveChannelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = JiveChannel
+        read_only_fields = [
+            "id",
+            "jive_api_credentials",
+            "name",
+            "source_jive_id",
+            "signature",
+            "expires_at",
+            "active",
+        ]
+        fields = [
+            "id",
+            "jive_api_credentials",
+            "name",
+            "source_jive_id",
+            "signature",
+            "expires_at",
+            "active",
+        ]
 
 
 class JiveSubscriptionEventExtractSerializer(serializers.ModelSerializer):

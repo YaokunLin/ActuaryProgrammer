@@ -225,11 +225,18 @@ Google Cloud credentials are necessary to access the database. Your environment 
     ./environment-connect/connect.sh dev run api python3 manage.py create_netsapiens_integration {peerlogic_root_api_url}, {voip_provider_id}, {practice_name}, {practice_voip_domain}
     ```
 
-    NOTE: double check the peerlogic_root_api_url. It's not as easy as just swapping out "dev", "stage", and "prod" as the subdomains themselves are different!
+    NOTE: double check the peerlogic_root_api_url - make sure you're using one of the following:
+    * Dev: https://api.dev.peerlogic.com
+    * Stage: https://api.stage.peerlogic.com
+    * Prod: https://api.prod.peerlogic.com
+
+    NOT the appspot domains! Deprecated.
 
     ```bash
-    ./environment-connect/connect.sh dev run api python3 manage.py create_netsapiens_integration https://peerlogic-api-prod.wm.r.appspot.com drFoXEnEwrN28Gowp3CoRN "Thunderbird Dental Studio" dentaldesignstudios_thunderbird
+    ./environment-connect/connect.sh dev run api python3 manage.py create_netsapiens_integration https://api.prod.peerlogic.com drFoXEnEwrN28Gowp3CoRN "ThunderbirdDentalStudio" dentaldesignstudios_thunderbird
     ```
+
+    If you need spaces in the name, you must change them in the admin for each of the outputted Organization and Practice ids. Say, "ThunderbirdDentalStudio" to "Thunderbird Dental Studio"
 
 ### Management Command - Create Client Credential Auth User
 

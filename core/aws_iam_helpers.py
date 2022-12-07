@@ -6,7 +6,6 @@ from django.conf import settings
 
 from core.pydantic_models.aws_models import AccessKey, IAMPolicy, User
 
-
 log = logging.getLogger(__name__)
 
 
@@ -48,9 +47,9 @@ def create_call_recording_iam_policy_for_bucket(policy_name: str, bucket_name: s
         ],
     }
 
-    log.info(f"AWS: Creating write-only iam policy with policy_name='{policy_name}', bucket_name='{bucket_name}'")
+    log.info(f"AWS: Creating recording bucket iam policy with policy_name='{policy_name}', bucket_name='{bucket_name}'")
     response = settings.IAM_CLIENT.create_policy(PolicyName=policy_name, PolicyDocument=json.dumps(s3_managed_policy))
-    log.info(f"AWS: Created write-only iam policy with policy_name='{policy_name}', bucket_name='{bucket_name}', response='{response}'")
+    log.info(f"AWS: Created recording bucket iam policy with policy_name='{policy_name}', bucket_name='{bucket_name}', response='{response}'")
     return IAMPolicy(**response.get("Policy", {}))
 
 

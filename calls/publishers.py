@@ -2,9 +2,7 @@ import logging
 
 from django.conf import settings
 
-
 from core.pubsub_helpers import publish_event
-
 
 # Get an instance of a logger
 log = logging.getLogger(__name__)

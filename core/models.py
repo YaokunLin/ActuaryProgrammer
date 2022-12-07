@@ -136,9 +136,12 @@ class Practice(AuditTrailModel):
     def __str__(self):
         return self.name
 
-    # This is to mimick Django's group model
-    def natural_key(self):
-        return (self.name,)
+    # May revisit and make an additional shadow Django group abstraction;
+    # Causes issues in DRF serializers when saving pks - tries to save the name
+    # instead of the id/pk
+    # # This is to mimick Django's group model
+    # def natural_key(self):
+    #     return (self.name,)
 
     objects = PracticeManager()
 

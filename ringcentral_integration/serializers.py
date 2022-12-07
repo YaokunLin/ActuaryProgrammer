@@ -51,6 +51,7 @@ class RingCentralCallLegSerializer(serializers.ModelSerializer):
     time_start = UnixEpochDateField(required=False)
     voip_provider_id = serializers.CharField(required=False)
     peerlogic_call_partial_id = serializers.CharField(required=False)
+
     class Meta:
         model = RingCentralCallLeg
         read_only_fields = ["id", "created_at", "modified_at"]
