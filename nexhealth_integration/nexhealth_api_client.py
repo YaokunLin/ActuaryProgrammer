@@ -30,7 +30,7 @@ class NexHealthAPIClient:
         count: Optional[int] = None
         data: Optional[Dict] = None
 
-    def __init__(self, root_api_url: str, api_token: str, location_id: int, subdomain: str) -> None:
+    def __init__(self, root_api_url: str, api_token: str, nh_institution_id: int, nh_location_id: int, subdomain: str) -> None:
         self._session = requests.Session()
         self._session.headers = {
             "Authorization": api_token,
@@ -38,7 +38,8 @@ class NexHealthAPIClient:
             "Content-Type": "application/json",
         }
         self._root_api_url = root_api_url
-        self._location_id = location_id
+        self._nh_location_id = nh_location_id
+        self._nh_institution_id = nh_institution_id
         self._subdomain = subdomain
 
     def _request(
@@ -56,7 +57,7 @@ class NexHealthAPIClient:
         if include_location_and_subdomain_params:
             if params is None:
                 params = {}
-            params["location_id"] = self._location_id
+            params["location_id"] = self._nh_location_id
             params["subdomain"] = self._subdomain
 
         full_url = url
@@ -65,11 +66,13 @@ class NexHealthAPIClient:
             full_url = f"{url}?{urlencode(params)}"
 
         request_record = APIRequest.objects.create(
+            client_nh_institution_id=self._nh_institution_id,
+            client_nh_location_id=self._nh_location_id,
             request_body=json.dumps(data) if data else "",
             request_headers=headers,
             request_method=method,
             request_nh_id=nh_id,
-            request_nh_location_id=self._location_id if include_location_and_subdomain_params else None,
+            request_nh_location_id=self._nh_location_id if include_location_and_subdomain_params else None,
             request_nh_resource=nh_resource,
             request_nh_subdomain=self._subdomain if include_location_and_subdomain_params else None,
             request_path=url_path,
@@ -81,7 +84,7 @@ class NexHealthAPIClient:
         try:
             response = self._session.request(method, url, params=params, data=data, headers=headers)
             log.info(
-                f"[NexHealth] Received response for APIRequest ({request_record.id}): {method} {url_path} - {response.status_code} in {response.elapsed.total_seconds()} sec"
+                f"[NexHealth] Received response for APIRequest ({request_record.id}): {method} {url_path} - {response.status_code} - {response.elapsed.total_seconds()} sec"
             )
             self._process_api_response(request_record, response)
         except Exception:  # noqa
@@ -113,32 +116,32 @@ class NexHealthAPIClient:
         NexHealth Reference: https://docs.nexhealth.com/reference/getlocationsid
         """
         nh_resource = "locations"
-        url_path = f"/{nh_resource}/{self._location_id}"
-        return self._request("GET", url_path, nh_resource, nh_id=self._location_id, include_location_and_subdomain_params=False)
+        url_path = f"/{nh_resource}/{self._nh_location_id}"
+        return self._request("GET", url_path, nh_resource, nh_id=self._nh_location_id, include_location_and_subdomain_params=False)
 
-    def get_institution(self, nh_id: int) -> APIRequest:
+    def get_institution(self) -> APIRequest:
         """
         NexHealth Reference: https://docs.nexhealth.com/reference/getinstitutionsid
         """
         nh_resource = "institutions"
-        url_path = f"/{nh_resource}/{nh_id}"
-        return self._request("GET", url_path, nh_resource, nh_id=nh_id, include_location_and_subdomain_params=False)
+        url_path = f"/{nh_resource}/{self._nh_institution_id}"
+        return self._request("GET", url_path, nh_resource, nh_id=self._nh_institution_id, include_location_and_subdomain_params=False)
 
     def get_patients(
         self,
         page: int = 1,
         per_page: int = 300,
-        include_new_patients: bool = True,
-        include_non_patients: Optional[bool] = None,
-        include_different_location_patients: bool = False,
+        sort: str = "created_at",
+        new_patients: Optional[bool] = None,
+        non_patients: Optional[bool] = None,
         name: Optional[str] = None,
         email: Optional[str] = None,
         phone_number: Optional[str] = None,
-        sort: str = "created_at",
+        include_different_location_patients: bool = False,
         include_upcoming_appts: bool = False,
-        include_charges: bool = False,
-        include_payments: bool = False,
-        include_adjustments: bool = False,
+        include_charges: bool = True,
+        include_payments: bool = True,
+        include_adjustments: bool = True,
         include_procedures: bool = False,
         include_insurance_coverages: bool = False,
     ) -> APIRequest:
@@ -150,17 +153,20 @@ class NexHealthAPIClient:
         params = {
             "page": page,
             "per_page": per_page,
-            "new_patient": include_new_patients,
-            "non_patient": include_non_patients,
             "location_strict": not include_different_location_patients,
             "sort": sort,
         }
+        if new_patients is not None:
+            params["new_patient"] = new_patients
+        if non_patients is not None:
+            params["non_patient"] = non_patients
         if name is not None:
             params["name"] = name
         if email is not None:
             params["email"] = email
         if phone_number is not None:
             params["phone_number"] = phone_number
+
         include = []
         if include_upcoming_appts:
             include.append("upcoming_appts")
@@ -189,9 +195,9 @@ class NexHealthAPIClient:
         patient_id: Optional[int] = None,
         appointment_type_id: Optional[int] = None,
         include_patients: bool = False,
-        include_booking_details: bool = False,
+        include_booking_details: bool = True,
         include_procedures: bool = False,
-        include_descriptors: bool = False,
+        include_descriptors: bool = True,
     ) -> APIRequest:
         """
         NexHealth Reference: https://docs.nexhealth.com/reference/getappointments

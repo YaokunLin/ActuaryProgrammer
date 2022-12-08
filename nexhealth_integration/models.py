@@ -18,6 +18,11 @@ class APIRequest(DateTimeOnlyAuditTrailModel):
 
     id = ShortUUIDField(primary_key=True)
 
+    # These come directly from the NexHealthAPIClient
+    client_nh_location_id = models.PositiveIntegerField(null=True, db_index=True)
+    client_nh_institution_id = models.PositiveIntegerField(null=True, db_index=True)
+
+    # These are mandatory fields set on creation
     request_body = models.TextField(blank=True)
     request_headers = models.JSONField(null=True)
     request_method = models.TextField(blank=False, db_index=True)
@@ -25,11 +30,10 @@ class APIRequest(DateTimeOnlyAuditTrailModel):
     request_query_parameters = models.JSONField(null=True)  # Array of tuples
     request_url = models.TextField(blank=False, db_index=True)
     request_nh_id = models.PositiveIntegerField(null=True, db_index=True)
-    request_nh_location_id = models.PositiveIntegerField(null=True, db_index=True)
+    request_nh_location_id = models.PositiveIntegerField(null=True)
     request_nh_resource = models.CharField(max_length=128, null=True, db_index=True)
     request_nh_subdomain = models.CharField(max_length=128, null=True, db_index=True)
     request_status = models.CharField(max_length=16, blank=False, null=False, choices=Status.choices, db_index=True)
-    request_error_details = models.TextField(null=True, blank=True)
 
     response_body = models.TextField(null=True)
     response_headers = models.JSONField(null=True)
@@ -37,9 +41,16 @@ class APIRequest(DateTimeOnlyAuditTrailModel):
     response_nh_count = models.PositiveIntegerField(null=True)
     response_nh_data = models.JSONField(null=True)
     response_nh_description = models.JSONField(null=True)  # Array of strings
-    response_nh_error = models.JSONField(null=True)  # Array of strings
     response_status = models.PositiveSmallIntegerField(null=True, db_index=True)
     response_time_sec = models.FloatField(null=True)
+
+    # Errors:
+    # request_error_details will only be filled when we encounter an error making a request
+    #   A 400 response, for example, will NOT result in a request_error_details
+    #   Things that might fill in here: timeout/egress issue, SSL issue, certain 5XX cases
+    request_error_details = models.TextField(null=True, blank=True)
+    # response_nh_error will contain details for validation error sorts of things
+    response_nh_error = models.JSONField(null=True)  # Array of strings
 
 
 class Institution(DateTimeOnlyAuditTrailModel):
@@ -147,14 +158,14 @@ class Provider(DateTimeOnlyAuditTrailModel):
     bio = models.JSONField(null=True)
     phone_number = PhoneNumberField(null=True, blank=True, db_index=True)  # From bio JSON
     date_of_birth = models.DateField(null=True)  # From bio JSON
-    display_name = models.CharField(max_length=255, null=True)
+    display_name = models.CharField(max_length=255, null=True, blank=True)
     email = models.EmailField(null=True)
-    first_name = models.CharField(max_length=255)
+    first_name = models.CharField(max_length=255, null=True, blank=True)
     foreign_id = models.CharField(max_length=255, null=True, db_index=True)
     foreign_id_type = models.CharField(max_length=255, null=True)
-    last_name = models.CharField(max_length=255)
-    middle_name = models.CharField(max_length=255)
-    name = models.CharField(max_length=255, db_index=True)
+    last_name = models.CharField(max_length=255, null=True, blank=True)
+    middle_name = models.CharField(max_length=255, null=True, blank=True)
+    name = models.CharField(max_length=255, db_index=True, null=True, blank=True)
     npi = models.CharField(max_length=128, db_index=True)
 
     class Meta:
@@ -193,7 +204,7 @@ class Patient(DateTimeOnlyAuditTrailModel):
     id = ShortUUIDField(primary_key=True)
 
     nh_created_at = models.DateTimeField()
-    nh_guarantor_id = models.PositiveIntegerField(db_index=True)
+    nh_guarantor_id = models.PositiveIntegerField(db_index=True, null=True)
     nh_id = models.PositiveIntegerField(db_index=True)
     nh_inactive = models.BooleanField()
     nh_institution_id = models.PositiveIntegerField(db_index=True)
@@ -226,13 +237,12 @@ class Patient(DateTimeOnlyAuditTrailModel):
     balance_currency = models.CharField(max_length=3, null=True, blank=False)
     bio = models.JSONField(null=True)
     charges = models.JSONField(null=True)  # https://docs.nexhealth.com/reference/getcharges
-    date_of_birth = models.DateField(null=True)  # From bio JSON
-    first_name = models.CharField(max_length=255)
+    first_name = models.CharField(max_length=255, null=True, blank=True)
     foreign_id = models.CharField(max_length=255, null=True, db_index=True)
     foreign_id_type = models.CharField(max_length=255, null=True)
-    last_name = models.CharField(max_length=255)
-    middle_name = models.CharField(max_length=255)
-    name = models.CharField(max_length=255, db_index=True)
+    last_name = models.CharField(max_length=255, null=True, blank=True)
+    middle_name = models.CharField(max_length=255, null=True, blank=True)
+    name = models.CharField(max_length=255, db_index=True, null=True, blank=True)
     payments = models.JSONField(null=True)  # https://docs.nexhealth.com/reference/getpayments
     phone_number = PhoneNumberField(null=True, blank=True, db_index=True)  # From bio JSON
     unsubscribe_sms = models.BooleanField(null=True)
@@ -267,6 +277,8 @@ class Procedure(DateTimeOnlyAuditTrailModel):
     nh_patient_id = models.PositiveIntegerField(db_index=True)
     nh_provider_id = models.PositiveIntegerField(db_index=True)
 
+    nh_institution_id = models.PositiveIntegerField(db_index=True)
+
     appointment = models.ForeignKey(to="nexhealth_integration.Appointment", on_delete=models.SET_NULL, null=True, related_name="procedures")
     provider = models.ForeignKey(to="nexhealth_integration.Provider", on_delete=models.SET_NULL, null=True, related_name="procedures")
     patient = models.ForeignKey(to="nexhealth_integration.Patient", on_delete=models.SET_NULL, null=True, related_name="procedures")
@@ -282,7 +294,9 @@ class Procedure(DateTimeOnlyAuditTrailModel):
     status = models.CharField(max_length=32)  # treatment_planned/planned, scheduled, completed, inactive, referred
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=["nh_id", "nh_appointment_id"], name="nh_unique_procedure_with_appointment")]
+        constraints = [
+            models.UniqueConstraint(fields=["nh_id", "nh_institution_id", "nh_appointment_id"], name="nh_unique_procedure_with_institution_and_appointment")
+        ]
 
 
 class Appointment(DateTimeOnlyAuditTrailModel):
@@ -303,39 +317,42 @@ class Appointment(DateTimeOnlyAuditTrailModel):
     nh_patient_id = models.PositiveIntegerField(db_index=True)
     nh_provider_id = models.PositiveIntegerField(db_index=True)
     nh_updated_at = models.DateTimeField(null=True)
+    nh_institution_id = models.PositiveIntegerField(db_index=True)
+    nh_deleted = models.BooleanField()
 
     location = models.ForeignKey(to="nexhealth_integration.Location", on_delete=models.SET_NULL, null=True, related_name="appointments")
     patient = models.ForeignKey(to="nexhealth_integration.Patient", on_delete=models.SET_NULL, null=True, related_name="appointments")
     provider = models.ForeignKey(to="nexhealth_integration.Provider", on_delete=models.SET_NULL, null=True, related_name="appointments")
 
-    cancelled = models.BooleanField()
+    cancelled = models.BooleanField(null=True)
     cancelled_at = models.DateTimeField(null=True)
-    checked_out = models.BooleanField()
+    checked_out = models.BooleanField(null=True)
     checked_out_at = models.DateTimeField(null=True)
     checkin_at = models.DateTimeField(null=True)
-    confirmed = models.BooleanField()
+    confirmed = models.BooleanField(null=True)
     confirmed_at = models.DateTimeField(null=True)
     end_time = models.DateTimeField(null=True)
     foreign_id = models.CharField(max_length=255, null=True, db_index=True)
     foreign_id_type = models.CharField(max_length=255, null=True)
-    is_guardian = models.BooleanField()
-    is_new_clients_patient = models.BooleanField()
-    is_past_patient = models.BooleanField()
+    is_guardian = models.BooleanField(null=True)
+    is_new_clients_patient = models.BooleanField(null=True)
+    is_past_patient = models.BooleanField(null=True)
     misc = models.JSONField(null=True)  # e.g. {"is_booked_on_nexhealth": true}
-    nh_deleted = models.BooleanField()
     note = models.TextField(null=True, blank=True)
-    patient_confirmed = models.BooleanField()
+    patient_confirmed = models.BooleanField(null=True)
     patient_confirmed_at = models.DateTimeField(null=True)
-    patient_missed = models.BooleanField()
+    patient_missed = models.BooleanField(null=True)
     provider_name = models.CharField(max_length=255, null=True)
     referrer = models.CharField(max_length=255, null=True)
-    sooner_if_possible = models.BooleanField()
+    sooner_if_possible = models.BooleanField(null=True)
     start_time = models.DateTimeField(null=True)
     timezone_offset = models.TextField(max_length=128, null=True, blank=True)
-    unavailable = models.BooleanField()
+    unavailable = models.BooleanField(null=True)
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=["nh_id", "nh_location_id"], name="nh_unique_appointment_with_location")]
+        constraints = [
+            models.UniqueConstraint(fields=["nh_id", "nh_location_id", "nh_institution_id"], name="nh_unique_appointment_with_institution_and_location")
+        ]
 
 
 class InsurancePlan(DateTimeOnlyAuditTrailModel):
@@ -367,6 +384,7 @@ class InsuranceCoverage(DateTimeOnlyAuditTrailModel):
     nh_id = models.PositiveIntegerField(db_index=True)
     nh_insurance_plan_id = models.PositiveIntegerField(db_index=True)
     nh_patient_id = models.PositiveIntegerField(db_index=True)
+    nh_institution_id = models.PositiveIntegerField(db_index=True)
 
     insurance_plan = models.ForeignKey(to=InsurancePlan, on_delete=models.SET_NULL, null=True, related_name="insurance_coverages")
     patient = models.ForeignKey(to=Patient, on_delete=models.SET_NULL, null=True, related_name="insurance_coverages")
@@ -378,4 +396,6 @@ class InsuranceCoverage(DateTimeOnlyAuditTrailModel):
     subscription_relation = models.CharField(max_length=128)
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=["nh_id", "nh_patient_id"], name="nh_unique_insurance_coverage_with_patient")]
+        constraints = [
+            models.UniqueConstraint(fields=["nh_id", "nh_patient_id", "nh_institution_id"], name="nh_unique_insurance_coverage_with_patient_and_institution")
+        ]
