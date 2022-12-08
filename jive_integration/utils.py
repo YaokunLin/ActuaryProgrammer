@@ -163,7 +163,7 @@ def calculate_connect_duration(
 ) -> timedelta:
     # Subtract the time
     if first_ring_event and first_answer_event:
-        return first_answer_event.data_created - first_ring_event.data_created
+        return first_answer_event.created_at - first_ring_event.created_at
     return timedelta(seconds=0)
 
 
