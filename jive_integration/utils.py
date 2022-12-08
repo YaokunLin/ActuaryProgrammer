@@ -301,6 +301,11 @@ def handle_withdraw_event(
         peerlogic_call.call_end_time = end_time
         peerlogic_call.duration_seconds = peerlogic_call.call_end_time - peerlogic_call.call_start_time
         # If this was a transfer that didn't pick up, the original call was answered, so keep the original details intact
+        # Example
+        # 1. a call comes in
+        # 2. someone answers, and transfers to another party at the practice
+        # 3. that person did not pick up the phone
+        # 4. the call is already answered, don't recalculate.
         if peerlogic_call.call_connection != CallConnectionTypes.CONNECTED:
             first_answer_event = (
                 JiveSubscriptionEventExtract.objects.filter(data_state=JiveLegStateChoices.ANSWERED, data_originator_id=jive_originator_id)
