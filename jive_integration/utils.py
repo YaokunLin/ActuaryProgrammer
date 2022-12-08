@@ -245,7 +245,6 @@ def calculate_and_save_time_fields_for_peerlogic_call(peerlogic_call: Call, end_
     # 2. someone answers, and transfers to another party at the practice
     # 3. that person did not pick up the phone
     # 4. the call is already answered, don't recalculate.
-    # TODO: We can change this to missed instead, if we want to treat it as a missed call but we will want to make it consistent with Peerlogic Voice/NS
     if peerlogic_call.call_connection != CallConnectionTypes.CONNECTED:
         first_answer_event = (
             JiveSubscriptionEventExtract.objects.filter(data_state=JiveLegStateChoices.ANSWERED, data_originator_id=jive_originator_id)
