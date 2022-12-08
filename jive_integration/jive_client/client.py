@@ -188,7 +188,9 @@ class _Authentication(AuthBase):
 
         body = response.json()
 
-        log.info(f"Jive: Successfully {self._logging_prefix.get(token_type)} for self._jive_api_credentials.id={self._jive_api_credentials.id if self._jive_api_credentials else ''}")
+        log.info(
+            f"Jive: Successfully {self._logging_prefix.get(token_type)} for self._jive_api_credentials.id={self._jive_api_credentials.id if self._jive_api_credentials else ''}"
+        )
         try:
             self._access_token: str = body["access_token"]
             self._account_key: Optional[str] = body.get("account_key")
@@ -377,6 +379,11 @@ class JiveClient:
             return session
         except KeyError as exc:
             raise APIResponseException("failed to parse session response") from exc
+        except Exception as e:
+            msg = "Jive: Exception Raised in create_session"
+            if resp is not None and resp.text:
+                msg = f"{msg}. Response text: '{resp.text}'"
+            raise Exception(msg)
 
     def create_session_dialog_subscription(self, session: JiveSession, *lines: Line):
         """
