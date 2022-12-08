@@ -4,8 +4,11 @@ from typing import Dict, Optional
 import phonenumbers
 
 
-def parse_nh_datetime_str(nh_datetime_str: str) -> datetime.datetime:
-    nh_datetime_str = nh_datetime_str.replace("Z", "")
+def parse_nh_datetime_str(nh_datetime_str: Optional[str]) -> Optional[datetime.datetime]:
+    if nh_datetime_str is None:
+        return
+
+    nh_datetime_str = nh_datetime_str.replace("Z", "+00:00")
     return datetime.datetime.fromisoformat(nh_datetime_str)
 
 

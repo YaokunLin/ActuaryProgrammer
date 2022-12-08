@@ -55,10 +55,10 @@ def create_or_update_location_from_dict(
     defaults = {
         "nh_id": nh_id,
         "nh_institution_id": nh_institution_id,
-        "nh_created_at": data["created_at"],
+        "nh_created_at": parse_nh_datetime_str(data["created_at"]),
         "nh_inactive": data["inactive"],
-        "nh_last_sync_time": data["last_sync_time"],
-        "nh_updated_at": data["updated_at"],
+        "nh_last_sync_time": parse_nh_datetime_str(data["last_sync_time"]),
+        "nh_updated_at": parse_nh_datetime_str(data["updated_at"]),
         "city": data["city"],
         "email": data["email"],
         "foreign_id": data["foreign_id"],
@@ -98,11 +98,11 @@ def create_or_update_patient_from_dict(
     defaults = {
         "nh_id": nh_id,
         "nh_institution_id": nh_institution_id,
-        "nh_created_at": data["created_at"],
+        "nh_created_at": parse_nh_datetime_str(data["created_at"]),
         "nh_guarantor_id": data["guarantor_id"],
         "nh_inactive": data["inactive"],
-        "nh_last_sync_time": data["last_sync_time"],
-        "nh_updated_at": data["updated_at"],
+        "nh_last_sync_time": parse_nh_datetime_str(data["last_sync_time"]),
+        "nh_updated_at": parse_nh_datetime_str(data["updated_at"]),
         "balance_amount": data["balance"]["amount"] if data["balance"] else None,
         "balance_currency": data["balance"]["currency"] if data["balance"] else None,
         "bio": data["bio"],
@@ -146,9 +146,9 @@ def create_or_update_appointment_from_dict(
         "nh_id": nh_id,
         "nh_institution_id": nh_institution_id,
         "nh_location_id": nh_location_id,
-        "nh_created_at": data["created_at"],
-        "nh_last_sync_time": data["last_sync_time"],
-        "nh_updated_at": data["updated_at"],
+        "nh_created_at": parse_nh_datetime_str(data["created_at"]),
+        "nh_last_sync_time": parse_nh_datetime_str(data["last_sync_time"]),
+        "nh_updated_at": parse_nh_datetime_str(data["updated_at"]),
         "nh_patient_id": data["patient_id"],
         "nh_provider_id": data["provider_id"],
         "nh_operatory_id": data["operatory_id"],
@@ -227,6 +227,43 @@ def create_or_update_procedure_from_dict(
     return Procedure.objects.update_or_create(
         nh_id=nh_id,
         nh_appointment_id=nh_appointment_id,
+        nh_institution_id=nh_institution_id,
+        defaults=defaults,
+    )
+
+
+def create_or_update_provider_from_dict(
+    data: Dict,
+    institution: Optional[Institution] = None,
+) -> Tuple[Provider, bool]:
+    nh_id = data["id"]
+    nh_institution_id = data["institution_id"]
+    defaults = {
+        "nh_institution_id": nh_institution_id,
+        "nh_id": nh_id,
+        "nh_created_at": parse_nh_datetime_str(data["created_at"]),
+        "nh_inactive": data["inactive"],
+        "nh_last_sync_time": parse_nh_datetime_str(data["last_sync_time"]),
+        "nh_updated_at": parse_nh_datetime_str(data["updated_at"]),
+        "availabilities": data["availabilities"],
+        "bio": data["bio"],
+        "phone_number": get_best_phone_number_from_bio(data["bio"]),
+        "display_name": data["display_name"],
+        "email": data["email"],
+        "first_name": data["first_name"],
+        "foreign_id": data["foreign_id"],
+        "foreign_id_type": data["foreign_id_type"],
+        "last_name": data["last_name"],
+        "middle_name": data["middle_name"],
+        "name": data["name"],
+        "npi": data["npi"],
+    }
+    if institution:
+        defaults["institution_id"] = institution.id
+
+    return Provider.objects.update_or_create(
+        nh_id=nh_id,
+        nh_institution_id=nh_institution_id,
         defaults=defaults,
     )
 

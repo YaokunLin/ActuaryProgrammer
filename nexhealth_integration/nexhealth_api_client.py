@@ -127,7 +127,7 @@ class NexHealthAPIClient:
         url_path = f"/{nh_resource}/{self._nh_institution_id}"
         return self._request("GET", url_path, nh_resource, nh_id=self._nh_institution_id, include_location_and_subdomain_params=False)
 
-    def get_patients(
+    def list_patients(
         self,
         page: int = 1,
         per_page: int = 300,
@@ -184,7 +184,7 @@ class NexHealthAPIClient:
             params["include[]"] = include
         return self._request("GET", url_path, nh_resource, params=params)
 
-    def get_appointments(
+    def list_appointments(
         self,
         start_time: datetime,
         end_time: datetime,
@@ -196,7 +196,7 @@ class NexHealthAPIClient:
         appointment_type_id: Optional[int] = None,
         include_patients: bool = False,
         include_booking_details: bool = True,
-        include_procedures: bool = False,
+        include_procedures: bool = True,
         include_descriptors: bool = True,
     ) -> APIRequest:
         """
@@ -227,6 +227,43 @@ class NexHealthAPIClient:
             include.append("procedures")
         if include_descriptors:
             include.append("descriptors")
+        if include:
+            params["include[]"] = include
+        return self._request("GET", url_path, nh_resource, params=params)
+
+    def list_providers(
+        self,
+        page: int = 1,
+        per_page: int = 300,
+        updated_since: Optional[datetime] = None,
+        foreign_id: Optional[str] = None,
+        requestable: Optional[bool] = None,
+        inactive: Optional[bool] = None,
+        include_locations: bool = False,
+        include_availabilities: bool = True,
+    ) -> APIRequest:
+        """
+        NexHealth Reference: https://docs.nexhealth.com/reference/getproviders
+        """
+        nh_resource = "providers"
+        url_path = f"/{nh_resource}"
+        params = {
+            "page": page,
+            "per_page": per_page,
+        }
+        if updated_since is not None:
+            params["updated_since"] = updated_since
+        if foreign_id is not None:
+            params["foreign_id"] = foreign_id
+        if requestable is not None:
+            params["requestable"] = requestable
+        if inactive is not None:
+            params["inactive"] = inactive
+        include = []
+        if include_locations:
+            include.append("locations")
+        if include_availabilities:
+            include.append("availabilities")
         if include:
             params["include[]"] = include
         return self._request("GET", url_path, nh_resource, params=params)

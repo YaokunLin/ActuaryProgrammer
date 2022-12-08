@@ -157,7 +157,6 @@ class Provider(DateTimeOnlyAuditTrailModel):
     availabilities = models.JSONField(null=True)  # https://docs.nexhealth.com/reference/availabilities-1
     bio = models.JSONField(null=True)
     phone_number = PhoneNumberField(null=True, blank=True, db_index=True)  # From bio JSON
-    date_of_birth = models.DateField(null=True)  # From bio JSON
     display_name = models.CharField(max_length=255, null=True, blank=True)
     email = models.EmailField(null=True)
     first_name = models.CharField(max_length=255, null=True, blank=True)
