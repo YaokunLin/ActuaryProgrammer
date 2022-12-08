@@ -417,7 +417,6 @@ class JiveAWSRecordingBucketViewSet(viewsets.ModelViewSet):
         return buckets_qs.order_by("-modified_at")
 
     def create(self, request: Request, practice_telecom_pk: str = None) -> Response:
-        # TODO: test non-admin request
         practice_telecom_pk = self.request.data.get("practice_telecom")
         if not (practice_telecom_pk) and (
             self.request.user.is_staff or self.request.user.is_superuser or practice_telecom_pk in get_practice_telecoms_belonging_to_user(request.user)
@@ -434,7 +433,6 @@ class JiveAWSRecordingBucketViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["post"])
     def bucket_credentials(self, request: Request, pk: str = None) -> Response:
-        # TODO: test non-admin request
         practice_telecom_pk = self.request.data.get("practice_telecom_pk")
         if not (self.request.user.is_staff or self.request.user.is_superuser or practice_telecom_pk in get_practice_telecoms_belonging_to_user(request.user)):
             return Response(status=status.HTTP_404_NOT_FOUND)
