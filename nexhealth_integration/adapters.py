@@ -5,6 +5,8 @@ from nexhealth_integration.models import (
     APIRequest,
     Appointment,
     Institution,
+    InsuranceCoverage,
+    InsurancePlan,
     Location,
     Patient,
     Procedure,
@@ -268,4 +270,60 @@ def create_or_update_provider_from_dict(
     )
 
 
-# TODO Kyle: Should all IDs just be unique with institution ultimately? I think so.
+def create_or_update_insurance_plan_from_dict(
+    data: Dict,
+) -> Tuple[InsurancePlan, bool]:
+    nh_id = data["id"]
+    defaults = {
+        "nh_id": nh_id,
+        "country_code": data["country_code"],
+        "state": data["state"],
+        "address": data["address"],
+        "address2": data["address2"],
+        "city": data["city"],
+        "zip_code": data["zip_code"],
+        "name": data["name"],
+        "payer_id": data["payer_id"],
+        "group_num": data["group_num"],
+        "employer_name": data["employer_name"],
+        "foreign_id": data["foreign_id"],
+        "foreign_id_type": data["foreign_id_type"],
+    }
+
+    return InsurancePlan.objects.update_or_create(
+        nh_id=nh_id,
+        defaults=defaults,
+    )
+
+
+def create_or_update_insurance_coverage_from_dict(
+    data: Dict,
+    nh_institution_id: int,
+    patient: Optional[Patient] = None,
+    insurance_plan: Optional[InsurancePlan] = None,
+) -> Tuple[InsuranceCoverage, bool]:
+    nh_id = data["id"]
+    nh_patient_id = data["patient_id"]
+    nh_insurance_plan_id = data["insurance_plan_id"]
+    defaults = {
+        "nh_institution_id": nh_institution_id,
+        "nh_id": nh_id,
+        "nh_patient_id": nh_patient_id,
+        "nh_insurance_plan_id": nh_insurance_plan_id,
+        "effective_date": data["effective_date"],  # TODO Kyle: Type
+        "expiration_date": data["expiration_date"],  # TODO Kyle: Type
+        "priority": data["priority"],
+        "subscriber_num": data["subscriber_num"],
+        "subscription_relation": data["subscription_relation"],
+    }
+    if patient and patient.nh_id == nh_patient_id:
+        defaults["patient_id"] = patient.id
+    if insurance_plan and insurance_plan.nh_id == nh_insurance_plan_id:
+        defaults["insurance_plan_id"] = insurance_plan.id
+
+    return InsuranceCoverage.objects.update_or_create(
+        nh_id=nh_id,
+        nh_institution_id=nh_institution_id,
+        nh_patient_id=nh_patient_id,
+        defaults=defaults,
+    )
