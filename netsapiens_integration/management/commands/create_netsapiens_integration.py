@@ -1,3 +1,4 @@
+from typing import Dict, List
 import requests
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -29,6 +30,15 @@ class Command(BaseCommand):
         ns_creds = NetsapiensAPICredentials.objects.get(pk=settings.PEERLOGIC_NETSAPIENS_API_CREDENTIALS_ID)
         self.stdout.write(self.style.SUCCESS(f"Got netsapiens credentials with pk='{ns_creds.pk}'"))
 
+        netsapiens_api_client = NetsapiensAPIClient(root_api_url=ns_creds.api_url)
+        netsapiens_api_client.login(username=ns_creds.username, password=ns_creds.password, client_id=ns_creds.client_id, client_secret=ns_creds.client_secret)
+
+        practice_voip_domain = options["practice_voip_domain"]
+        self.stdout.write(f"Checking domain entered exists in Netsapiens, practice_voip_domain='{practice_voip_domain}'")
+        domain_response = netsapiens_api_client.get_domain(practice_voip_domain)
+        domains: List[Dict] = domain_response.json()
+        self.stdout.write(f"Domain entered exists in Netsapiens, practice_voip_domain='{practice_voip_domain}', domains='{domains}'")
+
         with transaction.atomic():
             practice_name = options["practice_name"]
             self.stdout.write(f"Creating organization with name='{practice_name}'")
@@ -46,11 +56,6 @@ class Command(BaseCommand):
             self.stdout.write(f"Creating netsapiens_call_subscription with practice_telecom='{practice_telecom.pk}'")
             netsapiens_call_subscription = NetsapiensCallSubscription.objects.create(practice_telecom=practice_telecom, active=True)
             self.stdout.write(self.style.SUCCESS(f"Created netsapiens_call_subscription with pk='{netsapiens_call_subscription.pk}'"))
-
-            netsapiens_api_client = NetsapiensAPIClient(root_api_url=ns_creds.api_url)
-            netsapiens_api_client.login(
-                username=ns_creds.username, password=ns_creds.password, client_id=ns_creds.client_id, client_secret=ns_creds.client_secret
-            )
 
             # Call ns-api to create event Subscription - from core1 side
             post_url = f"{options['peerlogic_root_api_url']}{netsapiens_call_subscription.call_subscription_uri}"
