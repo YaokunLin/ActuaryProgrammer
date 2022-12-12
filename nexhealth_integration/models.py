@@ -3,10 +3,10 @@ from django.db import models
 from django_extensions.db.fields import ShortUUIDField
 from phonenumber_field.modelfields import PhoneNumberField
 
-from core.abstract_models import DateTimeOnlyAuditTrailModel
+from core.abstract_models import AuditTrailDateTimeOnlyModel
 
 
-class APIRequest(DateTimeOnlyAuditTrailModel):
+class APIRequest(AuditTrailDateTimeOnlyModel):
     """
     Capture all details about a request made to NexHealth and (if applicable) the response received
     """
@@ -53,7 +53,7 @@ class APIRequest(DateTimeOnlyAuditTrailModel):
     response_nh_error = models.JSONField(null=True)  # Array of strings
 
 
-class Institution(DateTimeOnlyAuditTrailModel):
+class Institution(AuditTrailDateTimeOnlyModel):
     """
     Similar to an "Organization" in Peerlogic
 
@@ -78,7 +78,7 @@ class Institution(DateTimeOnlyAuditTrailModel):
     phone_number = PhoneNumberField(null=True, blank=True, db_index=True)
 
 
-class Location(DateTimeOnlyAuditTrailModel):
+class Location(AuditTrailDateTimeOnlyModel):
     """
     Similar to a "Practice" in Peerlogic
 
@@ -117,7 +117,7 @@ class Location(DateTimeOnlyAuditTrailModel):
         constraints = [models.UniqueConstraint(fields=["nh_id", "nh_institution_id"], name="nh_unique_location_with_institution")]
 
 
-class Provider(DateTimeOnlyAuditTrailModel):
+class Provider(AuditTrailDateTimeOnlyModel):
     """
     Represents an employee who can provide care at a "Location"
 
@@ -150,7 +150,7 @@ class Provider(DateTimeOnlyAuditTrailModel):
         constraints = [models.UniqueConstraint(fields=["nh_id", "nh_institution_id"], name="nh_unique_provider_with_institution")]
 
 
-class LocationProvider(DateTimeOnlyAuditTrailModel):
+class LocationProvider(AuditTrailDateTimeOnlyModel):
     """
     Links Location to Provider
     """
@@ -167,7 +167,7 @@ class LocationProvider(DateTimeOnlyAuditTrailModel):
         constraints = [models.UniqueConstraint(fields=["nh_location_id", "nh_provider_id", "nh_institution_id"], name="nh_unique_provider_with_location")]
 
 
-class Patient(DateTimeOnlyAuditTrailModel):
+class Patient(AuditTrailDateTimeOnlyModel):
     """
     Similar to a "Patient" in Peerlogic
     Note: One NexHealth Patient may link to numerous Peerlogic Patients
@@ -228,7 +228,7 @@ class NexHealthPatientLink(models.Model):
         constraints = [models.UniqueConstraint(fields=["nexhealth_patient_id", "peerlogic_patient_id"], name="unique_nexhealth_patient_with_peerlogic_patient")]
 
 
-class Procedure(DateTimeOnlyAuditTrailModel):
+class Procedure(AuditTrailDateTimeOnlyModel):
     """
     Similar to a "Procedure" in Peerlogic except that it's bount to a single appointment
 
@@ -260,7 +260,7 @@ class Procedure(DateTimeOnlyAuditTrailModel):
         ]
 
 
-class Appointment(DateTimeOnlyAuditTrailModel):
+class Appointment(AuditTrailDateTimeOnlyModel):
     """
     Links a Patient, Location, Provider and Procedure
 
@@ -312,7 +312,7 @@ class Appointment(DateTimeOnlyAuditTrailModel):
         ]
 
 
-class InsurancePlan(DateTimeOnlyAuditTrailModel):
+class InsurancePlan(AuditTrailDateTimeOnlyModel):
     """
     NexHealth Reference: https://docs.nexhealth.com/reference/insurance-plans
     """
@@ -337,7 +337,7 @@ class InsurancePlan(DateTimeOnlyAuditTrailModel):
         constraints = [models.UniqueConstraint(fields=["nh_id", "nh_institution_id"], name="nh_unique_insurance_plan_with_institution")]
 
 
-class InsuranceCoverage(DateTimeOnlyAuditTrailModel):
+class InsuranceCoverage(AuditTrailDateTimeOnlyModel):
     """
     NexHealth Reference: https://docs.nexhealth.com/reference/getpatientsidinsurancecoverages
     """

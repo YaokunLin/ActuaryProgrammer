@@ -37,7 +37,7 @@ class NexHealthAPIClient:
             "Accept": "application/vnd.Nexhealth+json; version=2",
             "Content-Type": "application/json",
         }
-        self._root_api_url = root_api_url
+        self._root_api_url = f"{root_api_url.rstrip('/')}/"
         self._nh_location_id = nh_location_id
         self._nh_institution_id = nh_institution_id
         self._subdomain = subdomain
@@ -108,7 +108,7 @@ class NexHealthAPIClient:
             request_record.response_nh_description = response_obj.description
             request_record.response_nh_error = response_obj.error
         except Exception:  # noqa
-            log.exception("[NexHealth] Error updating APIRequest ({request_record.id}) from response!")
+            log.exception(f"[NexHealth] Error updating APIRequest ({request_record.id}) from response!")
 
     # --- Begin public methods ---
     def get_location(self) -> APIRequest:

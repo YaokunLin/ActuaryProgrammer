@@ -27,7 +27,7 @@ class AuditTrailModel(models.Model):
         get_latest_by = "modified_at"
 
 
-class DateTimeOnlyAuditTrailModel(models.Model):
+class AuditTrailDateTimeOnlyModel(models.Model):
     """
     Similar to AuditTrailModel, except does not track created_by or modified_by
     """

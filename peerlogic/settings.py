@@ -574,6 +574,12 @@ S3_CLIENT = BOTO_SESSION.client("s3", region_name=AWS_DEFAULT_REGION)
 IAM_CLIENT = BOTO_SESSION.client("iam")
 
 
+# NexHealth (https://www.nexhealth.com/)
+NEXHEALTH_PAGE_SIZE: int = env("NEXHEALTH_PAGE_SIZE", cast=int, default=300)
+NEXHEALTH_API_ROOT_URL: str = env("NEXHEALTH_API_ROOT_URL", cast=str, default="https://nexhealth.info/")
+NEXHEALTH_API_TOKEN: str = env("NEXHEALTH_API_TOKEN", cast=str, default="")
+
+
 #
 # Testing
 #
