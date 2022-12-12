@@ -63,6 +63,7 @@ class Institution(DateTimeOnlyAuditTrailModel):
     id = ShortUUIDField(primary_key=True)
 
     nh_id = models.PositiveIntegerField(unique=True)
+    nh_subdomain = models.CharField(max_length=128, unique=True)
 
     peerlogic_organization = models.ForeignKey(to="core.Organization", on_delete=models.SET_NULL, null=True, related_name="nexhealth_institutions")
     peerlogic_practice = models.ForeignKey(to="core.Practice", on_delete=models.SET_NULL, null=True, related_name="nexhealth_institutions")
@@ -75,7 +76,6 @@ class Institution(DateTimeOnlyAuditTrailModel):
     name = models.CharField(max_length=255, db_index=True)
     notify_insert_fails = models.BooleanField(null=True)
     phone_number = PhoneNumberField(null=True, blank=True, db_index=True)
-    subdomain = models.CharField(max_length=128, db_index=True)
 
 
 class Location(DateTimeOnlyAuditTrailModel):
@@ -94,26 +94,7 @@ class Location(DateTimeOnlyAuditTrailModel):
     nh_last_sync_time = models.DateTimeField(null=True)
     nh_updated_at = models.DateTimeField(null=True)
 
-    institution = models.ForeignKey(to=Institution, on_delete=models.SET_NULL, null=True, related_name="locations")
     peerlogic_practice = models.ForeignKey(to="core.Practice", on_delete=models.SET_NULL, null=True, related_name="nexhealth_locations")
-    providers = models.ManyToManyField(
-        to="nexhealth_integration.Provider",
-        through="nexhealth_integration.LocationProvider",
-        through_fields=(
-            "location",
-            "provider",
-        ),
-        related_name="locations",
-    )
-    patients = models.ManyToManyField(
-        to="nexhealth_integration.Patient",
-        through="nexhealth_integration.Appointment",
-        through_fields=(
-            "location",
-            "patient",
-        ),
-        related_name="locations",
-    )
 
     city = models.CharField(max_length=255, null=True)
     email = models.EmailField(null=True)
@@ -152,8 +133,6 @@ class Provider(DateTimeOnlyAuditTrailModel):
     nh_last_sync_time = models.DateTimeField(null=True)
     nh_updated_at = models.DateTimeField(null=True)
 
-    institution = models.ForeignKey(to=Institution, on_delete=models.SET_NULL, null=True, related_name="providers")
-
     availabilities = models.JSONField(null=True)  # https://docs.nexhealth.com/reference/availabilities-1
     bio = models.JSONField(null=True)
     phone_number = PhoneNumberField(null=True, blank=True, db_index=True)  # From bio JSON
@@ -178,16 +157,14 @@ class LocationProvider(DateTimeOnlyAuditTrailModel):
 
     id = ShortUUIDField(primary_key=True)
 
-    nh_location_id = models.PositiveIntegerField()
-    nh_provider_id = models.PositiveIntegerField()
-
-    location = models.ForeignKey(to=Location, on_delete=models.SET_NULL, null=True)
-    provider = models.ForeignKey(to=Provider, on_delete=models.SET_NULL, null=True)
+    nh_location_id = models.PositiveIntegerField(db_index=True)
+    nh_provider_id = models.PositiveIntegerField(db_index=True)
+    nh_institution_id = models.PositiveIntegerField(db_index=True)
 
     is_bookable = models.BooleanField(null=True)
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=["nh_location_id", "nh_provider_id"], name="nh_unique_provider_with_location")]
+        constraints = [models.UniqueConstraint(fields=["nh_location_id", "nh_provider_id", "nh_institution_id"], name="nh_unique_provider_with_location")]
 
 
 class Patient(DateTimeOnlyAuditTrailModel):
@@ -210,22 +187,11 @@ class Patient(DateTimeOnlyAuditTrailModel):
     nh_last_sync_time = models.DateTimeField(null=True)
     nh_updated_at = models.DateTimeField(null=True)
 
-    guarantor = models.ForeignKey(to="nexhealth_integration.Patient", on_delete=models.CASCADE, null=True, related_name="depdendents")
-    institution = models.ForeignKey(to=Institution, on_delete=models.SET_NULL, null=True, related_name="patients")
-    providers = models.ManyToManyField(
-        to=Provider,
-        through="nexhealth_integration.Appointment",
-        through_fields=(
-            "patient",
-            "provider",
-        ),
-        related_name="patients",
-    )
     peerlogic_patients = models.ManyToManyField(
         to="core.Patient",
         through="nexhealth_integration.NexHealthPatientLink",
         through_fields=(
-            "nh_patient",
+            "nexhealth_patient",
             "peerlogic_patient",
         ),
         related_name="nexhealth_patients",
@@ -255,16 +221,16 @@ class NexHealthPatientLink(models.Model):
     Through-model linking NexHealth Integration Patient to Peerlogic Patient
     """
 
-    nh_patient = models.ForeignKey(to=Patient, on_delete=models.CASCADE)
+    nexhealth_patient = models.ForeignKey(to=Patient, on_delete=models.CASCADE)
     peerlogic_patient = models.ForeignKey(to="core.Patient", on_delete=models.CASCADE)
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=["nh_patient_id", "peerlogic_patient_id"], name="nh_unique_patient_with_peerlogic_patient")]
+        constraints = [models.UniqueConstraint(fields=["nexhealth_patient_id", "peerlogic_patient_id"], name="unique_nexhealth_patient_with_peerlogic_patient")]
 
 
 class Procedure(DateTimeOnlyAuditTrailModel):
     """
-    Similar to a "Procedure" in Peerlogic
+    Similar to a "Procedure" in Peerlogic except that it's bount to a single appointment
 
     NexHealth Reference: https://docs.nexhealth.com/reference/procedures
     """
@@ -278,10 +244,6 @@ class Procedure(DateTimeOnlyAuditTrailModel):
 
     nh_institution_id = models.PositiveIntegerField(db_index=True)
 
-    appointment = models.ForeignKey(to="nexhealth_integration.Appointment", on_delete=models.SET_NULL, null=True, related_name="procedures")
-    provider = models.ForeignKey(to="nexhealth_integration.Provider", on_delete=models.SET_NULL, null=True, related_name="procedures")
-    patient = models.ForeignKey(to="nexhealth_integration.Patient", on_delete=models.SET_NULL, null=True, related_name="procedures")
-
     body_site = models.JSONField(null=True)  # e.g. {"tooth": "14", "surface": "MOD"}
     code = models.CharField(max_length=128, db_index=True)
     end_date = models.DateField(null=True)
@@ -294,7 +256,7 @@ class Procedure(DateTimeOnlyAuditTrailModel):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["nh_id", "nh_institution_id", "nh_appointment_id"], name="nh_unique_procedure_with_institution_and_appointment")
+            models.UniqueConstraint(fields=["nh_id", "nh_appointment_id", "nh_institution_id"], name="nh_unique_procedure_with_institution_and_appointment")
         ]
 
 
@@ -318,10 +280,6 @@ class Appointment(DateTimeOnlyAuditTrailModel):
     nh_updated_at = models.DateTimeField(null=True)
     nh_institution_id = models.PositiveIntegerField(db_index=True)
     nh_deleted = models.BooleanField()
-
-    location = models.ForeignKey(to="nexhealth_integration.Location", on_delete=models.SET_NULL, null=True, related_name="appointments")
-    patient = models.ForeignKey(to="nexhealth_integration.Patient", on_delete=models.SET_NULL, null=True, related_name="appointments")
-    provider = models.ForeignKey(to="nexhealth_integration.Provider", on_delete=models.SET_NULL, null=True, related_name="appointments")
 
     cancelled = models.BooleanField(null=True)
     cancelled_at = models.DateTimeField(null=True)
@@ -360,6 +318,7 @@ class InsurancePlan(DateTimeOnlyAuditTrailModel):
     """
 
     nh_id = models.PositiveIntegerField(unique=True)
+    nh_institution_id = models.PositiveIntegerField(db_index=True)
 
     country_code = models.CharField(max_length=3)
     state = models.CharField(max_length=64, null=True)
@@ -367,12 +326,15 @@ class InsurancePlan(DateTimeOnlyAuditTrailModel):
     address2 = models.CharField(max_length=255, null=True)
     city = models.CharField(max_length=255, null=True)
     zip_code = models.CharField(max_length=12, null=True)
-    name = models.CharField(max_length=255)
-    payer_id = models.CharField(max_length=64)
-    group_num = models.CharField(max_length=64)
-    employer_name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, null=True)
+    payer_id = models.CharField(max_length=64, null=True)
+    group_num = models.CharField(max_length=64, null=True)
+    employer_name = models.CharField(max_length=255, null=True)
+    # Note: No foreign_id_type on this one!
     foreign_id = models.CharField(max_length=255, null=True, db_index=True)
-    foreign_id_type = models.CharField(max_length=255, null=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["nh_id", "nh_institution_id"], name="nh_unique_insurance_plan_with_institution")]
 
 
 class InsuranceCoverage(DateTimeOnlyAuditTrailModel):
@@ -384,9 +346,6 @@ class InsuranceCoverage(DateTimeOnlyAuditTrailModel):
     nh_insurance_plan_id = models.PositiveIntegerField(db_index=True)
     nh_patient_id = models.PositiveIntegerField(db_index=True)
     nh_institution_id = models.PositiveIntegerField(db_index=True)
-
-    insurance_plan = models.ForeignKey(to=InsurancePlan, on_delete=models.SET_NULL, null=True, related_name="insurance_coverages")
-    patient = models.ForeignKey(to=Patient, on_delete=models.SET_NULL, null=True, related_name="insurance_coverages")
 
     effective_date = models.DateField()
     expiration_date = models.DateField()

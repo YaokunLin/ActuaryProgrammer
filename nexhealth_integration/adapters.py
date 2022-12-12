@@ -1,5 +1,7 @@
 from typing import Dict, Optional, Tuple
 
+from django.db.transaction import atomic
+
 from core import models as core_models
 from nexhealth_integration.models import (
     APIRequest,
@@ -26,6 +28,7 @@ def create_or_update_institution_from_dict(
     nh_id = data["id"]
     defaults = {
         "nh_id": nh_id,
+        "nh_subdomain": data["subdomain"],
         "appointment_types_location_scoped": data["appointment_types_location_scoped"],
         "country_code": data["country_code"],
         "emrs": data["emrs"],
@@ -34,7 +37,6 @@ def create_or_update_institution_from_dict(
         "name": data["name"],
         "notify_insert_fails": data["notify_insert_fails"],
         "phone_number": data["phone_number"],
-        "subdomain": data["subdomain"],
     }
     if peerlogic_organization:
         defaults["peerlogic_organization_id"] = peerlogic_organization.id
@@ -49,7 +51,6 @@ def create_or_update_institution_from_dict(
 
 def create_or_update_location_from_dict(
     data: Dict,
-    institution: Optional[Institution] = None,
     peerlogic_practice: Optional[core_models.Practice] = None,
 ) -> Tuple[Location, bool]:
     nh_id = data["id"]
@@ -78,8 +79,6 @@ def create_or_update_location_from_dict(
         "tz": data["tz"],
         "zip_code": data["zip_code"],
     }
-    if institution:
-        defaults["institution_id"] = institution.id
     if peerlogic_practice:
         defaults["peerlogic_practice_id"] = peerlogic_practice.id
 
@@ -90,11 +89,7 @@ def create_or_update_location_from_dict(
     )
 
 
-def create_or_update_patient_from_dict(
-    data: Dict,
-    institution: Optional[Institution] = None,
-    guarantor: Optional[Patient] = None,
-) -> Tuple[Patient, bool]:
+def create_or_update_patient_from_dict(data: Dict, create_or_update_related_insurances: bool = False) -> Tuple[Patient, bool]:
     nh_id = data["id"]
     nh_institution_id = data["institution_id"]
     defaults = {
@@ -117,10 +112,6 @@ def create_or_update_patient_from_dict(
         "phone_number": get_best_phone_number_from_bio(data["bio"]),
         "unsubscribe_sms": data["unsubscribe_sms"],
     }
-    if institution is not None:
-        defaults["institution_id"] = institution.id
-    if guarantor is not None:
-        defaults["guarantor_id"] = guarantor.id
 
     # Payments, charges and adjustments are only optionally
     #   included in API responses. Don't set these if not included!
@@ -128,20 +119,20 @@ def create_or_update_patient_from_dict(
         if k in data:
             defaults[k] = data[k]
 
-    return Patient.objects.update_or_create(
-        nh_id=nh_id,
-        nh_institution_id=nh_institution_id,
-        defaults=defaults,
-    )
+    with atomic():
+        if create_or_update_related_insurances:
+            InsuranceCoverage.objects.filter(nh_patient_id=nh_id, nh_institution_id=nh_institution_id).delete()
+            for coverage_data in data.get("insurance_coverages", []):
+                create_or_update_insurance_coverage_from_dict(coverage_data, nh_institution_id, create_or_update_related_insurance_plans=True)
+
+        return Patient.objects.update_or_create(
+            nh_id=nh_id,
+            nh_institution_id=nh_institution_id,
+            defaults=defaults,
+        )
 
 
-def create_or_update_appointment_from_dict(
-    data: Dict,
-    nh_institution_id: int,
-    location: Optional[Location] = None,
-    provider: Optional[Provider] = None,
-    patient: Optional[Patient] = None,
-) -> Tuple[Appointment, bool]:
+def create_or_update_appointment_from_dict(data: Dict, nh_institution_id: int, create_or_update_related_procedures: bool = False) -> Tuple[Appointment, bool]:
     nh_id = data["id"]
     nh_location_id = data["location_id"]
     defaults = {
@@ -180,26 +171,21 @@ def create_or_update_appointment_from_dict(
         "timezone_offset": data["timezone_offset"],
         "unavailable": data["unavailable"],
     }
-    if location is not None:
-        defaults["location_id"] = location.id
-    if provider is not None:
-        defaults["provider_id"] = provider.id
-    if patient is not None:
-        defaults["patient_id"] = patient.id
+    with atomic():
+        if create_or_update_related_procedures:
+            for procedure_data in data.get("procedures", []):
+                create_or_update_procedure_from_dict(procedure_data, nh_institution_id)
 
-    return Appointment.objects.update_or_create(
-        nh_id=nh_id,
-        nh_institution_id=nh_institution_id,
-        defaults=defaults,
-    )
+        return Appointment.objects.update_or_create(
+            nh_id=nh_id,
+            nh_institution_id=nh_institution_id,
+            defaults=defaults,
+        )
 
 
 def create_or_update_procedure_from_dict(
     data: Dict,
     nh_institution_id: int,
-    appointment: Optional[Appointment] = None,
-    patient: Optional[Patient] = None,
-    provider: Optional[Provider] = None,
 ) -> Tuple[Procedure, bool]:
     nh_id = data["id"]
     nh_appointment_id = data["appointment_id"]
@@ -219,12 +205,6 @@ def create_or_update_procedure_from_dict(
         "start_date": data["start_date"],
         "status": data["status"],
     }
-    if appointment and appointment.nh_id == nh_appointment_id:
-        defaults["appointment_id"] = appointment.id
-    if patient and patient.nh_id == nh_patient_id:
-        defaults["patient_id"] = patient.id
-    if provider and provider.nh_id == nh_provider_id:
-        defaults["provider_id"] = provider.id
 
     return Procedure.objects.update_or_create(
         nh_id=nh_id,
@@ -236,7 +216,6 @@ def create_or_update_procedure_from_dict(
 
 def create_or_update_provider_from_dict(
     data: Dict,
-    institution: Optional[Institution] = None,
 ) -> Tuple[Provider, bool]:
     nh_id = data["id"]
     nh_institution_id = data["institution_id"]
@@ -260,8 +239,6 @@ def create_or_update_provider_from_dict(
         "name": data["name"],
         "npi": data["npi"],
     }
-    if institution:
-        defaults["institution_id"] = institution.id
 
     return Provider.objects.update_or_create(
         nh_id=nh_id,
@@ -270,11 +247,10 @@ def create_or_update_provider_from_dict(
     )
 
 
-def create_or_update_insurance_plan_from_dict(
-    data: Dict,
-) -> Tuple[InsurancePlan, bool]:
+def create_or_update_insurance_plan_from_dict(data: Dict, nh_institution_id: int) -> Tuple[InsurancePlan, bool]:
     nh_id = data["id"]
     defaults = {
+        "nh_institution_id": nh_institution_id,
         "nh_id": nh_id,
         "country_code": data["country_code"],
         "state": data["state"],
@@ -286,12 +262,12 @@ def create_or_update_insurance_plan_from_dict(
         "payer_id": data["payer_id"],
         "group_num": data["group_num"],
         "employer_name": data["employer_name"],
-        "foreign_id": data["foreign_id"],
-        "foreign_id_type": data["foreign_id_type"],
+        "foreign_id": data.get("foreign_id"),
     }
 
     return InsurancePlan.objects.update_or_create(
         nh_id=nh_id,
+        nh_institution_id=nh_institution_id,
         defaults=defaults,
     )
 
@@ -299,12 +275,11 @@ def create_or_update_insurance_plan_from_dict(
 def create_or_update_insurance_coverage_from_dict(
     data: Dict,
     nh_institution_id: int,
-    patient: Optional[Patient] = None,
-    insurance_plan: Optional[InsurancePlan] = None,
+    create_or_update_related_insurance_plans: bool = False,
 ) -> Tuple[InsuranceCoverage, bool]:
     nh_id = data["id"]
     nh_patient_id = data["patient_id"]
-    nh_insurance_plan_id = data["insurance_plan_id"]
+    nh_insurance_plan_id = data["plan"]["id"]
     defaults = {
         "nh_institution_id": nh_institution_id,
         "nh_id": nh_id,
@@ -316,10 +291,8 @@ def create_or_update_insurance_coverage_from_dict(
         "subscriber_num": data["subscriber_num"],
         "subscription_relation": data["subscription_relation"],
     }
-    if patient and patient.nh_id == nh_patient_id:
-        defaults["patient_id"] = patient.id
-    if insurance_plan and insurance_plan.nh_id == nh_insurance_plan_id:
-        defaults["insurance_plan_id"] = insurance_plan.id
+    if create_or_update_related_insurance_plans:
+        create_or_update_insurance_plan_from_dict(data["plan"], nh_institution_id)
 
     return InsuranceCoverage.objects.update_or_create(
         nh_id=nh_id,

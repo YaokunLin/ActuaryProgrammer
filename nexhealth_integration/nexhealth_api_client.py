@@ -143,7 +143,7 @@ class NexHealthAPIClient:
         include_payments: bool = True,
         include_adjustments: bool = True,
         include_procedures: bool = False,
-        include_insurance_coverages: bool = False,
+        include_insurance_coverages: bool = True,
     ) -> APIRequest:
         """
         NexHealth Reference: https://docs.nexhealth.com/reference/getpatients
@@ -194,7 +194,7 @@ class NexHealthAPIClient:
         is_cancelled: Optional[bool] = None,
         patient_id: Optional[int] = None,
         appointment_type_id: Optional[int] = None,
-        include_patients: bool = False,
+        include_patients: bool = False,  # patient_id will still be included
         include_booking_details: bool = True,
         include_procedures: bool = True,
         include_descriptors: bool = True,
@@ -267,3 +267,25 @@ class NexHealthAPIClient:
         if include:
             params["include[]"] = include
         return self._request("GET", url_path, nh_resource, params=params)
+
+    def list_insurance_plans(
+        self, page: int = 1, per_page: int = 300, payer_id: Optional[str] = None, group_num: Optional[str] = None, include_patient_coverages: bool = False
+    ):
+        """
+        NexHealth Reference: https://sandbox.nexhealth.com/insurance_plans
+        """
+        nh_resource = "insurance_plans"
+        url_path = f"/{nh_resource}"
+        params = {
+            "page": page,
+            "per_page": per_page,
+            "subdomain": self._subdomain,
+        }
+        if payer_id is not None:
+            params["payer_id"] = payer_id
+        if group_num is not None:
+            params["group_num"] = group_num
+        if include_patient_coverages:
+            params["include[]"] = ["patient_coverages"]
+
+        return self._request("GET", url_path, nh_resource, params=params, include_location_and_subdomain_params=False)
