@@ -668,6 +668,17 @@ Django = ">=1.11"
 djangorestframework = ">=3.6.0"
 
 [[package]]
+name = "envparse"
+version = "0.2.0"
+description = "Simple environment variable parsing"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.extras]
+testing = ["pytest"]
+
+[[package]]
 name = "exceptiongroup"
 version = "1.0.0rc9"
 description = "Backport of PEP 654 (exception groups)"
@@ -1894,7 +1905,7 @@ testing = ["func-timeout", "jaraco.itertools", "pytest (>=6)", "pytest-black (>=
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.15"
-content-hash = "494390df9576e1a36d79b7ac8def09cfdf8e04d6323a05e7336eae271ea0a999"
+content-hash = "549ccf1efb25c5803e47c4482e2a841ddeaa9211a1fb13a8e5974f78e330607d"
 
 [metadata.files]
 amqp = [
@@ -2293,6 +2304,9 @@ drf-compound-fields = [
 drf-nested-routers = [
     {file = "drf-nested-routers-0.93.4.tar.gz", hash = "sha256:01aa556b8c08608bb74fb34f6ca065a5183f2cda4dc0478192cc17a2581d71b0"},
     {file = "drf_nested_routers-0.93.4-py2.py3-none-any.whl", hash = "sha256:996b77f3f4dfaf64569e7b8f04e3919945f90f95366838ca5b8bed9dd709d6c5"},
+]
+envparse = [
+    {file = "envparse-0.2.0.tar.gz", hash = "sha256:4f3b9a27bb55d27f124eb4adf006fec05e4588891c9a054a183a112645056eb7"},
 ]
 exceptiongroup = [
     {file = "exceptiongroup-1.0.0rc9-py3-none-any.whl", hash = "sha256:2e3c3fc1538a094aab74fad52d6c33fc94de3dfee3ee01f187c0e0c72aec5337"},

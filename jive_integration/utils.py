@@ -138,33 +138,6 @@ def get_or_create_call_id(originator_id: str) -> Tuple[bool, str]:
     return exists_in_db, call_id
 
 
-def calculate_connect_duration(originator_id: str) -> int:
-    # Grab first jive ringing state for the call id
-    ringing_event = (
-        JiveSubscriptionEventExtract.objects.filter(data_state=JiveLegStateChoices.CREATED, data_originator_id=originator_id).order_by("-data_created").first()
-    )
-    # Grab first jive answer state for the call id
-    answered_event = (
-        JiveSubscriptionEventExtract.objects.filter(data_state=JiveLegStateChoices.ANSWERED, data_originator_id=originator_id).order_by("-data_created").first()
-    )
-    # Subtract the time
-    if ringing_event and answered_event:
-        return answered_event.created_at - ringing_event.created_at
-    return None
-
-
-def calculate_progress_time(originator_id: str, end_time: datetime) -> int:
-    # Grab first jive answer state for the call id
-    answered_event = (
-        JiveSubscriptionEventExtract.objects.filter(data_state=JiveLegStateChoices.ANSWERED, data_originator_id=originator_id).order_by("-data_created").first()
-    )
-
-    # Subtract the time
-    if end_time and answered_event:
-        return end_time - answered_event.created_at
-    return None
-
-
 def get_call_id_from_previous_announce_events_by_originator_id(originator_id: str) -> str:
     log.info(f"Jive: Checking if there is a previous announce subscription event with this originator_id='{originator_id}' in the RDBMS.")
     try:
@@ -190,7 +163,7 @@ def calculate_connect_duration(
 ) -> timedelta:
     # Subtract the time
     if first_ring_event and first_answer_event:
-        return first_answer_event.data_created - first_ring_event.data_created
+        return first_answer_event.created_at - first_ring_event.created_at
     return timedelta(seconds=0)
 
 
@@ -272,7 +245,6 @@ def calculate_and_save_time_fields_for_peerlogic_call(peerlogic_call: Call, end_
     # 2. someone answers, and transfers to another party at the practice
     # 3. that person did not pick up the phone
     # 4. the call is already answered, don't recalculate.
-    # TODO: We can change this to missed instead, if we want to treat it as a missed call but we will want to make it consistent with Peerlogic Voice/NS
     if peerlogic_call.call_connection != CallConnectionTypes.CONNECTED:
         first_answer_event = (
             JiveSubscriptionEventExtract.objects.filter(data_state=JiveLegStateChoices.ANSWERED, data_originator_id=jive_originator_id)
