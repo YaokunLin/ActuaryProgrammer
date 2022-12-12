@@ -1,5 +1,6 @@
 import datetime
-from typing import Dict, Optional
+from logging import LoggerAdapter
+from typing import Any, Dict, Optional, Tuple
 
 import phonenumbers
 
@@ -33,3 +34,11 @@ def get_best_phone_number_from_bio(bio_data: Optional[Dict]) -> Optional[str]:
             return value
         except phonenumbers.NumberParseException:  # noqa
             continue
+
+
+class NexHealthLogAdapter(LoggerAdapter):
+    def __init__(self, logger, extra=None):
+        super().__init__(logger, None)
+
+    def process(self, msg: str, kwargs: Any) -> Tuple[str, Any]:
+        return f"[NexHealth] {msg}", kwargs

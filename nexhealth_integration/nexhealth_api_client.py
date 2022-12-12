@@ -9,8 +9,9 @@ from urllib.parse import urlencode, urljoin
 import requests
 
 from nexhealth_integration.models import APIRequest
+from nexhealth_integration.utils import NexHealthLogAdapter
 
-log = getLogger(__name__)
+log = NexHealthLogAdapter(getLogger(__name__))
 
 
 class NexHealthAPIClient:
@@ -30,7 +31,7 @@ class NexHealthAPIClient:
         count: Optional[int] = None
         data: Optional[Dict] = None
 
-    def __init__(self, root_api_url: str, api_token: str, nh_institution_id: int, nh_location_id: int, subdomain: str) -> None:
+    def __init__(self, root_api_url: str, api_token: str, nh_institution_id: int, nh_location_id: int, subdomain: str, max_per_page: int = 300) -> None:
         self._session = requests.Session()
         self._session.headers = {
             "Authorization": api_token,
@@ -41,6 +42,7 @@ class NexHealthAPIClient:
         self._nh_location_id = nh_location_id
         self._nh_institution_id = nh_institution_id
         self._subdomain = subdomain
+        self._max_per_page = max_per_page
 
     def _request(
         self,
@@ -80,11 +82,11 @@ class NexHealthAPIClient:
             request_url=full_url,
             request_status=APIRequest.Status.created,
         )
-        log.info(f"[NexHealth] Initiating APIRequest ({request_record.id}): {method} {url_path}")
+        log.info(f"Initiating APIRequest ({request_record.id}): {method} {url_path}")
         try:
             response = self._session.request(method, url, params=params, data=data, headers=headers)
             log.info(
-                f"[NexHealth] Received response for APIRequest ({request_record.id}): {method} {url_path} - {response.status_code} - {response.elapsed.total_seconds()} sec"
+                f"Received response for APIRequest ({request_record.id}): {method} {url_path} - {response.status_code} - {response.elapsed.total_seconds()} sec"
             )
             self._process_api_response(request_record, response)
         except Exception:  # noqa
@@ -108,7 +110,7 @@ class NexHealthAPIClient:
             request_record.response_nh_description = response_obj.description
             request_record.response_nh_error = response_obj.error
         except Exception:  # noqa
-            log.exception(f"[NexHealth] Error updating APIRequest ({request_record.id}) from response!")
+            log.exception(f"Error updating APIRequest ({request_record.id}) from response!")
 
     # --- Begin public methods ---
     def get_location(self) -> APIRequest:
@@ -130,7 +132,7 @@ class NexHealthAPIClient:
     def list_patients(
         self,
         page: int = 1,
-        per_page: int = 300,
+        per_page: Optional[int] = None,
         sort: str = "created_at",
         new_patients: Optional[bool] = None,
         non_patients: Optional[bool] = None,
@@ -152,7 +154,7 @@ class NexHealthAPIClient:
         url_path = f"/{nh_resource}"
         params = {
             "page": page,
-            "per_page": per_page,
+            "per_page": per_page if per_page is not None else self._max_per_page,
             "location_strict": not include_different_location_patients,
             "sort": sort,
         }
@@ -189,7 +191,7 @@ class NexHealthAPIClient:
         start_time: datetime,
         end_time: datetime,
         page: int = 1,
-        per_page: int = 300,
+        per_page: Optional[int] = None,
         updated_since: Optional[datetime] = None,
         is_cancelled: Optional[bool] = None,
         patient_id: Optional[int] = None,
@@ -208,7 +210,7 @@ class NexHealthAPIClient:
             "start": start_time.isoformat(),
             "end": end_time.isoformat(),
             "page": page,
-            "per_page": per_page,
+            "per_page": per_page if per_page is not None else self._max_per_page,
         }
         if updated_since is not None:
             params["updated_since"] = updated_since
@@ -234,7 +236,7 @@ class NexHealthAPIClient:
     def list_providers(
         self,
         page: int = 1,
-        per_page: int = 300,
+        per_page: Optional[int] = None,
         updated_since: Optional[datetime] = None,
         foreign_id: Optional[str] = None,
         requestable: Optional[bool] = None,
@@ -249,7 +251,7 @@ class NexHealthAPIClient:
         url_path = f"/{nh_resource}"
         params = {
             "page": page,
-            "per_page": per_page,
+            "per_page": per_page if per_page is not None else self._max_per_page,
         }
         if updated_since is not None:
             params["updated_since"] = updated_since
@@ -269,7 +271,12 @@ class NexHealthAPIClient:
         return self._request("GET", url_path, nh_resource, params=params)
 
     def list_insurance_plans(
-        self, page: int = 1, per_page: int = 300, payer_id: Optional[str] = None, group_num: Optional[str] = None, include_patient_coverages: bool = False
+        self,
+        page: int = 1,
+        per_page: Optional[int] = None,
+        payer_id: Optional[str] = None,
+        group_num: Optional[str] = None,
+        include_patient_coverages: bool = False,
     ):
         """
         NexHealth Reference: https://sandbox.nexhealth.com/insurance_plans
@@ -278,7 +285,7 @@ class NexHealthAPIClient:
         url_path = f"/{nh_resource}"
         params = {
             "page": page,
-            "per_page": per_page,
+            "per_page": per_page if per_page is not None else self._max_per_page,
             "subdomain": self._subdomain,
         }
         if payer_id is not None:
