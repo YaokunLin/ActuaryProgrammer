@@ -20,6 +20,12 @@ runtime: python37
 service: default
 instance_class: F4_1G
 
+env_variables:
+  GUNICORN_MAX_REQUESTS: 30000
+  GUNICORN_MAX_REQUEST_JITTER: 200
+
+entrypoint: gunicorn -b :$PORT --workers 8 --max-requests $GUNICORN_MAX_REQUESTS --max-requests-jitter $GUNICORN_MAX_REQUEST_JITTER main:app
+
 network:
   instance_ip_mode: internal
 
