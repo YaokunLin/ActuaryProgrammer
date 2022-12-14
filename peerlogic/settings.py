@@ -21,6 +21,7 @@ import boto3 as boto3
 import requests
 from corsheaders.defaults import default_headers as cors_default_allowed_headers
 from dotenv import load_dotenv
+from envparse import env
 from google.cloud import pubsub_v1, secretmanager, storage
 from requests.auth import HTTPBasicAuth
 
@@ -120,7 +121,7 @@ if SENTRY_ENABLED:
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost", os.getenv("DJANGO_ALLOWED_HOSTS", "*")]
+ALLOWED_HOSTS = env("ALLOWED_HOSTS", cast=list)
 if GKE_APPLICATION == "True":
     ALLOWED_HOSTS.append(os.getenv("KUBERNETES_SERVICE_HOST"))
 
