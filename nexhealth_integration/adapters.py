@@ -16,7 +16,7 @@ from nexhealth_integration.models import (
     Provider,
 )
 from nexhealth_integration.utils import (
-    get_best_phone_number_from_bio,
+    get_phone_numbers_from_bio,
     parse_nh_datetime_str,
 )
 
@@ -110,8 +110,8 @@ def update_or_create_patient_from_dict(data: Dict, create_or_update_related_insu
         "last_name": data["last_name"],
         "middle_name": data["middle_name"],
         "name": data["name"],
-        "phone_number": get_best_phone_number_from_bio(data["bio"]),
         "unsubscribe_sms": data["unsubscribe_sms"],
+        **get_phone_numbers_from_bio(data["bio"]),
     }
 
     # Payments, charges and adjustments are only optionally
@@ -227,7 +227,6 @@ def update_or_create_provider_from_dict(data: Dict, synchronize_locations: bool 
         "nh_updated_at": parse_nh_datetime_str(data["updated_at"]),
         "availabilities": data["availabilities"],
         "bio": data["bio"],
-        "phone_number": get_best_phone_number_from_bio(data["bio"]),
         "display_name": data["display_name"],
         "email": data["email"],
         "first_name": data["first_name"],
@@ -237,6 +236,7 @@ def update_or_create_provider_from_dict(data: Dict, synchronize_locations: bool 
         "middle_name": data["middle_name"],
         "name": data["name"],
         "npi": data["npi"],
+        **get_phone_numbers_from_bio(data["bio"]),
     }
     if synchronize_locations:
         LocationProvider.objects.filter(nh_institution_id=nh_institution_id, nh_provider_id=nh_id).delete()

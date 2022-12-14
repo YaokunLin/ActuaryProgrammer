@@ -135,7 +135,11 @@ class Provider(AuditTrailDateTimeOnlyModel):
 
     availabilities = models.JSONField(null=True)  # https://docs.nexhealth.com/reference/availabilities-1
     bio = models.JSONField(null=True)
+    phone_number_best = PhoneNumberField(null=True, blank=True, db_index=True)  # From bio JSON
     phone_number = PhoneNumberField(null=True, blank=True, db_index=True)  # From bio JSON
+    phone_number_mobile = PhoneNumberField(null=True, blank=True, db_index=True)  # From bio JSON
+    phone_number_home = PhoneNumberField(null=True, blank=True, db_index=True)  # From bio JSON
+    phone_number_work = PhoneNumberField(null=True, blank=True, db_index=True)  # From bio JSON
     display_name = models.CharField(max_length=255, null=True, blank=True)
     email = models.EmailField(null=True)
     first_name = models.CharField(max_length=255, null=True, blank=True)
@@ -205,7 +209,12 @@ class Patient(AuditTrailDateTimeOnlyModel):
     middle_name = models.CharField(max_length=255, null=True, blank=True)
     name = models.CharField(max_length=255, db_index=True, null=True, blank=True)
     payments = models.JSONField(null=True)  # https://docs.nexhealth.com/reference/getpayments
+    phone_number_best = PhoneNumberField(null=True, blank=True, db_index=True)  # From bio JSON
     phone_number = PhoneNumberField(null=True, blank=True, db_index=True)  # From bio JSON
+    phone_number_mobile = PhoneNumberField(null=True, blank=True, db_index=True)  # From bio JSON
+    phone_number_home = PhoneNumberField(null=True, blank=True, db_index=True)  # From bio JSON
+    phone_number_work = PhoneNumberField(null=True, blank=True, db_index=True)  # From bio JSON
+
     unsubscribe_sms = models.BooleanField(null=True)
 
     class Meta:
