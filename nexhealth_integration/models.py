@@ -150,18 +150,14 @@ class Provider(AuditTrailDateTimeOnlyModel):
         constraints = [models.UniqueConstraint(fields=["nh_id", "nh_institution_id"], name="nh_unique_provider_with_institution")]
 
 
-class LocationProvider(AuditTrailDateTimeOnlyModel):
+class LocationProvider(models.Model):
     """
     Links Location to Provider
     """
 
-    id = ShortUUIDField(primary_key=True)
-
     nh_location_id = models.PositiveIntegerField(db_index=True)
     nh_provider_id = models.PositiveIntegerField(db_index=True)
     nh_institution_id = models.PositiveIntegerField(db_index=True)
-
-    is_bookable = models.BooleanField(null=True)
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["nh_location_id", "nh_provider_id", "nh_institution_id"], name="nh_unique_provider_with_location")]

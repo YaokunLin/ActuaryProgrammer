@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from logging import getLogger
 from traceback import format_exc
-from typing import Dict, List, Optional
+from typing import Any, Callable, Dict, Generator, List, Optional
 from urllib.parse import urlencode, urljoin
 
 import requests
@@ -113,6 +113,7 @@ class NexHealthAPIClient:
             log.exception(f"Error updating APIRequest ({request_record.id}) from response!")
 
     # --- Begin public methods ---
+    # --- Detail ---
     def get_location(self) -> APIRequest:
         """
         NexHealth Reference: https://docs.nexhealth.com/reference/getlocationsid
@@ -128,6 +129,38 @@ class NexHealthAPIClient:
         nh_resource = "institutions"
         url_path = f"/{nh_resource}/{self._nh_institution_id}"
         return self._request("GET", url_path, nh_resource, nh_id=self._nh_institution_id, include_location_and_subdomain_params=False)
+
+    # --- List ---
+    def iterate_list_requests(self, api_client_method: Callable, **kwargs: Any) -> Generator[APIRequest, None, None]:
+        """
+        For list endpoints, this method will yield APIRequest objects per page until all results are returned
+        """
+
+        def _should_keep_requesting(api_request: APIRequest, page: int, per_page: int) -> bool:
+            total_count = api_request.response_nh_count
+
+            if not api_request.response_nh_code:
+                return False
+
+            if not total_count:
+                return False
+
+            if per_page * page >= total_count:
+                return False
+
+            return True
+
+        page = 1
+        per_page = kwargs.get("per_page", self._max_per_page)
+        kwargs["per_page"] = per_page
+
+        while True:
+            kwargs["page"] = page
+            api_request = api_client_method(**kwargs)
+            yield api_request
+            if not _should_keep_requesting(api_request, page, per_page):
+                break
+            page += 1
 
     def list_patients(
         self,

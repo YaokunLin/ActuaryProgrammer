@@ -10,6 +10,7 @@ from nexhealth_integration.models import (
     InsuranceCoverage,
     InsurancePlan,
     Location,
+    LocationProvider,
     Patient,
     Procedure,
     Provider,
@@ -20,7 +21,7 @@ from nexhealth_integration.utils import (
 )
 
 
-def create_or_update_institution_from_dict(
+def update_or_create_institution_from_dict(
     data: Dict,
     peerlogic_organization: Optional[core_models.Organization] = None,
     peerlogic_practice: Optional[core_models.Practice] = None,
@@ -49,7 +50,7 @@ def create_or_update_institution_from_dict(
     )
 
 
-def create_or_update_location_from_dict(
+def update_or_create_location_from_dict(
     data: Dict,
     peerlogic_practice: Optional[core_models.Practice] = None,
 ) -> Tuple[Location, bool]:
@@ -89,7 +90,7 @@ def create_or_update_location_from_dict(
     )
 
 
-def create_or_update_patient_from_dict(data: Dict, create_or_update_related_insurances: bool = False) -> Tuple[Patient, bool]:
+def update_or_create_patient_from_dict(data: Dict, create_or_update_related_insurances: bool = False) -> Tuple[Patient, bool]:
     nh_id = data["id"]
     nh_institution_id = data["institution_id"]
     defaults = {
@@ -123,7 +124,7 @@ def create_or_update_patient_from_dict(data: Dict, create_or_update_related_insu
         if create_or_update_related_insurances:
             InsuranceCoverage.objects.filter(nh_patient_id=nh_id, nh_institution_id=nh_institution_id).delete()
             for coverage_data in data.get("insurance_coverages", []):
-                create_or_update_insurance_coverage_from_dict(coverage_data, nh_institution_id, create_or_update_related_insurance_plans=True)
+                update_or_create_insurance_coverage_from_dict(coverage_data, nh_institution_id, create_or_update_related_insurance_plans=True)
 
         return Patient.objects.update_or_create(
             nh_id=nh_id,
@@ -132,7 +133,7 @@ def create_or_update_patient_from_dict(data: Dict, create_or_update_related_insu
         )
 
 
-def create_or_update_appointment_from_dict(data: Dict, nh_institution_id: int, create_or_update_related_procedures: bool = False) -> Tuple[Appointment, bool]:
+def update_or_create_appointment_from_dict(data: Dict, nh_institution_id: int, create_or_update_related_procedures: bool = False) -> Tuple[Appointment, bool]:
     nh_id = data["id"]
     nh_location_id = data["location_id"]
     defaults = {
@@ -174,7 +175,7 @@ def create_or_update_appointment_from_dict(data: Dict, nh_institution_id: int, c
     with atomic():
         if create_or_update_related_procedures:
             for procedure_data in data.get("procedures", []):
-                create_or_update_procedure_from_dict(procedure_data, nh_institution_id)
+                update_or_create_procedure_from_dict(procedure_data, nh_institution_id)
 
         return Appointment.objects.update_or_create(
             nh_id=nh_id,
@@ -183,7 +184,7 @@ def create_or_update_appointment_from_dict(data: Dict, nh_institution_id: int, c
         )
 
 
-def create_or_update_procedure_from_dict(
+def update_or_create_procedure_from_dict(
     data: Dict,
     nh_institution_id: int,
 ) -> Tuple[Procedure, bool]:
@@ -214,9 +215,7 @@ def create_or_update_procedure_from_dict(
     )
 
 
-def create_or_update_provider_from_dict(
-    data: Dict,
-) -> Tuple[Provider, bool]:
+def update_or_create_provider_from_dict(data: Dict, synchronize_locations: bool = True) -> Tuple[Provider, bool]:
     nh_id = data["id"]
     nh_institution_id = data["institution_id"]
     defaults = {
@@ -239,6 +238,14 @@ def create_or_update_provider_from_dict(
         "name": data["name"],
         "npi": data["npi"],
     }
+    if synchronize_locations:
+        LocationProvider.objects.filter(nh_institution_id=nh_institution_id, nh_provider_id=nh_id).delete()
+        LocationProvider.objects.bulk_create(
+            (
+                LocationProvider(nh_provider_id=nh_id, nh_location_id=d["location_id"], nh_institution_id=nh_institution_id)
+                for d in data.get("provider_requestables", [])
+            )
+        )
 
     return Provider.objects.update_or_create(
         nh_id=nh_id,
@@ -247,7 +254,24 @@ def create_or_update_provider_from_dict(
     )
 
 
-def create_or_update_insurance_plan_from_dict(data: Dict, nh_institution_id: int) -> Tuple[InsurancePlan, bool]:
+def get_or_create_location_provider(
+    nh_location_id: int,
+    nh_provider_id: int,
+    nh_institution_id: int,
+) -> Tuple[LocationProvider, bool]:
+    return LocationProvider.objects.get_or_create(
+        nh_location_id=nh_location_id,
+        nh_provider_id=nh_provider_id,
+        nh_institution_id=nh_institution_id,
+        defaults={
+            "nh_location_id": nh_location_id,
+            "nh_provider_id": nh_provider_id,
+            "nh_institution_id": nh_institution_id,
+        },
+    )
+
+
+def update_or_create_insurance_plan_from_dict(data: Dict, nh_institution_id: int) -> Tuple[InsurancePlan, bool]:
     nh_id = data["id"]
     defaults = {
         "nh_institution_id": nh_institution_id,
@@ -272,7 +296,7 @@ def create_or_update_insurance_plan_from_dict(data: Dict, nh_institution_id: int
     )
 
 
-def create_or_update_insurance_coverage_from_dict(
+def update_or_create_insurance_coverage_from_dict(
     data: Dict,
     nh_institution_id: int,
     create_or_update_related_insurance_plans: bool = False,
@@ -292,7 +316,7 @@ def create_or_update_insurance_coverage_from_dict(
         "subscription_relation": data["subscription_relation"],
     }
     if create_or_update_related_insurance_plans:
-        create_or_update_insurance_plan_from_dict(data["plan"], nh_institution_id)
+        update_or_create_insurance_plan_from_dict(data["plan"], nh_institution_id)
 
     return InsuranceCoverage.objects.update_or_create(
         nh_id=nh_id,
