@@ -43,9 +43,7 @@ handlers:
 # required when static routes are defined, but can be omitted (along with
 # the entire handlers section) when there are no static files defined.
 - url: /.*
-  http_headers:
-    X-XSS-Protection: 1; mode=block
-    Strict-Transport-Security: max-age=63072000
+  script: auto
 
 # [END gaestd_py_django_app_yaml]
 # [END django_app]
