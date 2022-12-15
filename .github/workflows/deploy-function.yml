@@ -91,7 +91,7 @@ jobs:
           event_trigger_type: google.pubsub.topic.publish
           event_trigger_resource: projects/peerlogic-api-${{ env.GCP_ENV }}/topics/${{ env.GCP_ENV }}-foo
           deploy_timeout: 900
-          timeout: 7200
+          timeout: 540
 
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
