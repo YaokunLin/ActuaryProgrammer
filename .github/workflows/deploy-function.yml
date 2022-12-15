@@ -104,8 +104,8 @@ jobs:
       - name: Configure deadletter - Foo
         run: |
           gcloud pubsub subscriptions update \
-          "gcf-cf-${{ env.GCP_ENV }}-${{ env.BASE_NAME }}-${{ env.REGION }}-${{ env.GCP_ENV }}-foo" \
-          --dead-letter-topic="${{ env.GCP_ENV }}-${{ env.BASE_NAME }}-failed" \
+          "gcf-cf-${{ env.GCP_ENV }}-${{ env.BASE_NAME }}-foo-${{ env.REGION }}-${{ env.GCP_ENV }}-foo" \
+          --dead-letter-topic="${{ env.GCP_ENV }}-foo-failed" \
           --dead-letter-topic-project="peerlogic-api-${{ env.GCP_ENV }}" \
           --max-delivery-attempts=6 \
           --min-retry-delay=2m
