@@ -35,6 +35,7 @@ jobs:
           echo "GCP_ENV=dev" >> $GITHUB_OUTPUT
           echo "GCP_PROJECT=148263976475" >> $GITHUB_ENV
           echo "BASE_NAME=peerlogic-api" >> $GITHUB_ENV
+# TODO Kyle: Put these conditionals back minus the seds
 #           sed -i 's/GCPENVIRONMENT/dev/g' env.vars.yaml
 #          if [[ ${{ github.ref }} == "refs/heads/main" ]]
 #          then
@@ -63,11 +64,6 @@ jobs:
           workload_identity_provider: "projects/${{ env.GCP_PROJECT }}/locations/global/workloadIdentityPools/${{ env.BASE_NAME }}/providers/${{ env.BASE_NAME }}"
           service_account: "github-sa@peerlogic-api-${{ env.GCP_ENV }}.iam.gserviceaccount.com"
 
-# TODO Kyle: Might not hafta do dis
-#      - name: Save env secret to file
-#        run: |
-#          gcloud secrets versions access latest --secret=peerlogic-api-env-safe > deploy.env
-
       - name: Copy requirements.txt to root
         run: |
           cp requirements/requirements.txt requirements.txt
@@ -82,17 +78,13 @@ jobs:
           entry_point: foo
           max_instances: 1
           memory_mb: 512
-#          region: "${{ env.REGION }}"
-# TODO Kyle: Might not hafta do dis
-#          env_vars_file: deploy.env
-#          secret_volumes: '/.env=projects/${{ env.GCP_PROJECT }}/secrets/peerlogic-api-env/versions/'
+          region: "${{ env.REGION }}"
           event_trigger_retry: true
           event_trigger_type: google.pubsub.topic.publish
           event_trigger_resource: projects/peerlogic-api-${{ env.GCP_ENV }}/topics/${{ env.GCP_ENV }}-foo
           deploy_timeout: 900
           timeout: 540
           vpc_connector: "projects/peerlogic-api-${{ env.GCP_ENV }}/locations/us-west4/connectors/peerlogic-api-${{ env.GCP_ENV }}"
-          region: us-west4
 
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
@@ -108,14 +100,14 @@ jobs:
         uses: 'google-github-actions/setup-gcloud@v0'
 
 #      # TODO Kyle: We should have one of these for every function we want to deploy
-#      - name: Configure deadletter - Foo
-#        run: |
-#          gcloud pubsub subscriptions update \
-#          "gcf-cf-${{ env.GCP_ENV }}-${{ env.BASE_NAME }}-${{ env.REGION }}-${{ env.GCP_ENV }}-foo" \
-#          --dead-letter-topic="${{ env.GCP_ENV }}-${{ env.BASE_NAME }}-failed" \
-#          --dead-letter-topic-project="peerlogic-api-${{ env.GCP_ENV }}" \
-#          --max-delivery-attempts=6 \
-#          --min-retry-delay=2m
+      - name: Configure deadletter - Foo
+        run: |
+          gcloud pubsub subscriptions update \
+          "gcf-cf-${{ env.GCP_ENV }}-${{ env.BASE_NAME }}-${{ env.REGION }}-${{ env.GCP_ENV }}-foo" \
+          --dead-letter-topic="${{ env.GCP_ENV }}-${{ env.BASE_NAME }}-failed" \
+          --dead-letter-topic-project="peerlogic-api-${{ env.GCP_ENV }}" \
+          --max-delivery-attempts=6 \
+          --min-retry-delay=2m
 
   slackFailureNotification:
     needs: deploy_cloud_function
