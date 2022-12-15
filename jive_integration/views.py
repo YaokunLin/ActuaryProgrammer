@@ -151,11 +151,12 @@ def webhook(request):
     channel = line.session.channel
     subscription_event_data.update({"jive_channel_id": channel.id})
 
-    voip_provider_id = line.session.channel.jive_api_credentials.practice_telecom.voip_provider_id
-    practice = line.session.channel.jive_api_credentials.practice_telecom.practice
+    practice_telecom = line.session.channel.jive_api_credentials.practice_telecom
+    voip_provider_id = practice_telecom.voip_provider_id
+    practice = practice_telecom.practice
 
     # Bucket can be overridden for our testing jive account
-    bucket_name = line.session.channel.jive_api_credentials.bucket.bucket_name
+    bucket_name = practice_telecom.bucket.bucket_name
     if settings.TEST_JIVE_PRACTICE_ID == practice.id:
         bucket_name = settings.JIVE_BUCKET_NAME
 
