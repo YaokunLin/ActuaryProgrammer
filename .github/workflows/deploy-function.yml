@@ -35,6 +35,7 @@ jobs:
           echo "GCP_ENV=dev" >> $GITHUB_OUTPUT
           echo "GCP_PROJECT=148263976475" >> $GITHUB_ENV
           echo "BASE_NAME=peerlogic-api" >> $GITHUB_ENV
+          echo "REGION=us-west4${{ env.REGION }}" >> $GITHUB_ENV
 # TODO Kyle: Put these conditionals back minus the seds
 #           sed -i 's/GCPENVIRONMENT/dev/g' env.vars.yaml
 #          if [[ ${{ github.ref }} == "refs/heads/main" ]]
@@ -84,7 +85,7 @@ jobs:
           event_trigger_resource: projects/peerlogic-api-${{ env.GCP_ENV }}/topics/${{ env.GCP_ENV }}-foo
           deploy_timeout: 900
           timeout: 540
-          vpc_connector: "projects/peerlogic-api-${{ env.GCP_ENV }}/locations/us-west4/connectors/peerlogic-api-${{ env.GCP_ENV }}"
+          vpc_connector: "projects/peerlogic-api-${{ env.GCP_ENV }}/locations/${{ env.REGION }}/connectors/peerlogic-api-${{ env.GCP_ENV }}"
 
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
