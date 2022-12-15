@@ -39,7 +39,7 @@ def is_call_park_dial(phone_number: str) -> bool:
     # digits after asterisk
     # cases where *37x  is dialed
     # https://support.goto.com/connect/help/how-do-i-use-call-parking
-    if phone_number[0] == "*" and 3 <= len(phone_number) <= 6:
+    if phone_number.startswith("*37") and 3 <= len(phone_number) <= 6:
         return True
 
     return False
