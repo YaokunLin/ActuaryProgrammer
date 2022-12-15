@@ -1,0 +1,136 @@
+---
+name: Deploy
+
+on:
+  push:
+    branches:
+      - feature/nexhealth
+# TODO Kyle: Correct branches
+#      - development
+#      - 'hotfix/**'
+#      - 'release/**'
+#      - main
+
+concurrency:
+  group: ci-${{ github.ref }}
+
+jobs:
+  deploy_cloud_function:
+    runs-on: ubuntu-latest
+    outputs:
+      gcpenv: ${{ steps.setenv.outputs.GCP_ENV }}
+      basename: ${{ steps.setenv.outputs.BASE_NAME }}
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set deployment variables
+        id: setenv
+        run: |
+           echo "GCP_ENV=dev" >> $GITHUB_ENV
+           echo "GCP_ENV=dev" >> $GITHUB_OUTPUT
+           echo "GCP_PROJECT=148263976475" >> $GITHUB_ENV
+#           sed -i 's/GCPENVIRONMENT/dev/g' env.vars.yaml
+#          if [[ ${{ github.ref }} == "refs/heads/main" ]]
+#          then
+#          echo "GCP_ENV=prod" >> $GITHUB_ENV
+#          echo "GCP_ENV=prod" >> $GITHUB_OUTPUT
+#          echo "GCP_PROJECT=339409233783" >> $GITHUB_ENV
+#          sed -i 's/GCPENVIRONMENT/prod/g' env.vars.yaml
+#          elif [[ ${{ github.ref }} == "refs/heads/development" ]]
+#          then
+#          echo "GCP_ENV=dev" >> $GITHUB_ENV
+#          echo "GCP_ENV=dev" >> $GITHUB_OUTPUT
+#          echo "GCP_PROJECT=148263976475" >> $GITHUB_ENV
+#          sed -i 's/GCPENVIRONMENT/dev/g' env.vars.yaml
+#          else
+#          echo "GCP_ENV=stage" >> $GITHUB_ENV
+#          echo "GCP_ENV=stage" >> $GITHUB_OUTPUT
+#          echo "GCP_PROJECT=945726277583" >> $GITHUB_ENV
+#          sed -i 's/GCPENVIRONMENT/stage/g' env.vars.yaml
+#          fi
+#          cat env.vars.yaml
+
+      - name: Authenticate to GCP
+        id: auth
+        uses: google-github-actions/auth@v0
+        with:
+          workload_identity_provider: "projects/${{ env.GCP_PROJECT }}/locations/global/workloadIdentityPools/${{ env.BASE_NAME }}/providers/${{ env.BASE_NAME }}"
+          service_account: "github-sa@peerlogic-api-${{ env.GCP_ENV }}.iam.gserviceaccount.com"
+
+# TODO Kyle: Might not hafta do dis
+#      - name: Save env secret to file
+#        run: |
+#          gcloud secrets versions access latest --secret=peerlogic-api-env-safe > deploy.env
+
+      - name: Copy requirements.txt to root
+        run: |
+          cp requirements/requirements.txt requirements.txt
+
+      # TODO Kyle: We should have one of these for every function we want to deploy
+      - name: Deploy Cloud Function - Foo
+        uses: 'google-github-actions/deploy-cloud-functions@v0'
+        with:
+          name: "cf-${{ env.GCP_ENV }}-${{ env.BASE_NAME }}-foo"
+          runtime: 'python39'
+          project_id: "peerlogic-api-${{ env.GCP_ENV }}"
+          source_dir: .
+          entry_point: foo
+          max_instances: 1
+          memory_mb: 512
+          region: "${{ env.REGION }}"
+# TODO Kyle: Might not hafta do dis
+#          env_vars_file: deploy.env
+          secret_volumes: '.env=projects/${{ env.GCP_PROJECT }}/secrets/peerlogic-api-env/versions/'
+          event_trigger_retry: true
+          event_trigger_type: google.pubsub.topic.publish
+          event_trigger_resource: projects/peerlogic-api-${{ env.GCP_ENV }}/topics/${{ env.GCP_ENV }}-foo
+
+      - name: Slack Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: ${{ env.GCP_ENV }}-deployments
+          SLACK_COLOR: '#3278BD'
+          SLACK_TITLE: Cloud Function Deploy Complete
+          SLACK_USERNAME: Deploying Function ${{ env.BASE_NAME }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_ICON_EMOJI: github
+
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v0'
+
+#      # TODO Kyle: We should have one of these for every function we want to deploy
+#      - name: Configure deadletter - Foo
+#        run: |
+#          gcloud pubsub subscriptions update \
+#          "gcf-cf-${{ env.GCP_ENV }}-${{ env.BASE_NAME }}-${{ env.REGION }}-${{ env.GCP_ENV }}-foo" \
+#          --dead-letter-topic="${{ env.GCP_ENV }}-${{ env.BASE_NAME }}-failed" \
+#          --dead-letter-topic-project="peerlogic-api-${{ env.GCP_ENV }}" \
+#          --max-delivery-attempts=6 \
+#          --min-retry-delay=2m
+
+  slackFailureNotification:
+    needs: deploy_cloud_function
+    runs-on: ubuntu-latest
+    if: always()
+    name: Slack Failure Notification
+    steps:
+      # run this action to get workflow conclusion
+      # You can get conclusion via env (env.WORKFLOW_CONCLUSION)
+      - uses: technote-space/workflow-conclusion-action@v2
+      - name: Slack Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: ${{ needs.deploy_cloud_function.outputs.gcpenv }}-deployments
+          SLACK_COLOR: '#f54242'
+          SLACK_TITLE: Function Deploy or PubSub Config Failed
+          SLACK_USERNAME: ${{ needs.deploy_cloud_function.outputs.basename }}
+          SLACK_MESSAGE: Workflow Failed
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_ICON_EMOJI: boom
+          MSG_MINIMAL: true
+        if: env.WORKFLOW_CONCLUSION == 'failure'  # notify only if failure
