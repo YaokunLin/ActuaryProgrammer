@@ -83,7 +83,7 @@ jobs:
           entry_point: foo
           max_instances: 1
           memory_mb: 512
-          region: "${{ env.REGION }}"
+#          region: "${{ env.REGION }}"
 # TODO Kyle: Might not hafta do dis
 #          env_vars_file: deploy.env
           secret_volumes: '.env=projects/${{ env.GCP_PROJECT }}/secrets/peerlogic-api-env/versions/'
@@ -92,6 +92,8 @@ jobs:
           event_trigger_resource: projects/peerlogic-api-${{ env.GCP_ENV }}/topics/${{ env.GCP_ENV }}-foo
           deploy_timeout: 900
           timeout: 540
+          vpc_connector: projects/peerlogic-api-{{ env.GCP_ENV }}/locations/us-west4/connectors/peerlogic-api-{{ env.GCP_ENV }}
+          region: us-west4
 
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
