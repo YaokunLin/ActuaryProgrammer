@@ -34,7 +34,7 @@ class Command(BaseCommand):
         netsapiens_api_client.login(username=ns_creds.username, password=ns_creds.password, client_id=ns_creds.client_id, client_secret=ns_creds.client_secret)
 
         practice_voip_domain = options["practice_voip_domain"]
-        self.stdout.write(f"Checking domain entered exists in Netsapiens, practice_voip_domain='{practice_voip_domain}'")
+        self.stdout.write(f"Checking whether entered domain exists in Netsapiens, practice_voip_domain='{practice_voip_domain}'")
         domain_response = netsapiens_api_client.get_domain(practice_voip_domain)
         domains: List[Dict] = domain_response.json()
         self.stdout.write(f"Domain entered exists in Netsapiens, practice_voip_domain='{practice_voip_domain}', domains='{domains}'")
