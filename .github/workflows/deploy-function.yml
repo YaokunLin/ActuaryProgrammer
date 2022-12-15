@@ -31,9 +31,10 @@ jobs:
       - name: Set deployment variables
         id: setenv
         run: |
-           echo "GCP_ENV=dev" >> $GITHUB_ENV
-           echo "GCP_ENV=dev" >> $GITHUB_OUTPUT
-           echo "GCP_PROJECT=148263976475" >> $GITHUB_ENV
+          echo "GCP_ENV=dev" >> $GITHUB_ENV
+          echo "GCP_ENV=dev" >> $GITHUB_OUTPUT
+          echo "GCP_PROJECT=148263976475" >> $GITHUB_ENV
+          echo "BASE_NAME=peerlogic-api" >> $GITHUB_ENV
 #           sed -i 's/GCPENVIRONMENT/dev/g' env.vars.yaml
 #          if [[ ${{ github.ref }} == "refs/heads/main" ]]
 #          then
