@@ -85,7 +85,7 @@ jobs:
 #          region: "${{ env.REGION }}"
 # TODO Kyle: Might not hafta do dis
 #          env_vars_file: deploy.env
-          secret_volumes: '.env=projects/${{ env.GCP_PROJECT }}/secrets/peerlogic-api-env/versions/'
+#          secret_volumes: '/.env=projects/${{ env.GCP_PROJECT }}/secrets/peerlogic-api-env/versions/'
           event_trigger_retry: true
           event_trigger_type: google.pubsub.topic.publish
           event_trigger_resource: projects/peerlogic-api-${{ env.GCP_ENV }}/topics/${{ env.GCP_ENV }}-foo
