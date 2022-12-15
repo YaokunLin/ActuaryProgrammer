@@ -35,6 +35,16 @@ US_TELEPHONE_NUMBER_DIGIT_LENGTH = 10
 log = logging.getLogger(__name__)
 
 
+def is_call_park_dial(phone_number: str) -> bool:
+    # digits after asterisk
+    # cases where *37x  is dialed
+    # https://support.goto.com/connect/help/how-do-i-use-call-parking
+    if phone_number[0] == "*" and 3 <= len(phone_number) <= 6:
+        return True
+
+    return False
+
+
 def create_peerlogic_call(call_id: str, jive_request_data_key_value_pair: Dict, start_time: datetime, dialed_number: str, practice: Practice) -> Call:
     log.info(f"Jive: Creating Peerlogic Call object with start_time='{start_time}'.")
 
@@ -47,27 +57,27 @@ def create_peerlogic_call(call_id: str, jive_request_data_key_value_pair: Dict, 
         call_direction = CallDirectionTypes.OUTBOUND
 
     jive_callee_number = jive_request_data_key_value_pair.get("callee", {}).get("number")
-    jive_callee_number_is_extension = is_extension(jive_callee_number)
+    jive_callee_number_is_internal = is_extension(jive_callee_number) or is_call_park_dial(jive_callee_number)
     jive_caller_number = jive_request_data_key_value_pair.get("caller", {}).get("number")
-    jive_caller_number_is_extension = is_extension(jive_caller_number)
+    jive_caller_number_is_internal = is_extension(jive_caller_number) or is_call_park_dial(jive_caller_number)
     sip_callee_extension = ""
     sip_callee_number = ""
     sip_caller_extension = ""
     sip_caller_number = ""
 
     # both extensions?
-    if jive_callee_number_is_extension and jive_caller_number_is_extension:
+    if jive_callee_number_is_internal and jive_caller_number_is_internal:
         sip_callee_extension = jive_callee_number
         sip_caller_extension = jive_caller_number
         call_direction = CallDirectionTypes.INTERNAL
     else:
         # if just callee is an extension (between 3-6 digits):
-        if jive_callee_number_is_extension:
+        if jive_callee_number_is_internal:
             sip_callee_extension = jive_callee_number
             sip_callee_number = dialed_number
             sip_caller_number = f"+1{jive_caller_number}"
         # if caller is an extension (between 3-6 digits):
-        if jive_caller_number_is_extension:
+        if jive_caller_number_is_internal:
             sip_caller_extension = jive_caller_number
             sip_caller_number = dialed_number
             sip_callee_number = f"+1{jive_callee_number}"
