@@ -79,7 +79,6 @@ jobs:
           name: "cf-${{ env.GCP_ENV }}-${{ env.BASE_NAME }}-foo"
           runtime: 'python39'
           project_id: "peerlogic-api-${{ env.GCP_ENV }}"
-          source_dir: .
           entry_point: foo
           max_instances: 1
           memory_mb: 512
