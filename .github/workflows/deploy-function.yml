@@ -73,17 +73,18 @@ jobs:
       - name: Deploy Cloud Function - Foo
         uses: 'google-github-actions/deploy-cloud-functions@v0'
         with:
-          name: "cf-${{ env.GCP_ENV }}-${{ env.BASE_NAME }}-foo"
-          runtime: 'python39'
-          project_id: "peerlogic-api-${{ env.GCP_ENV }}"
-          entry_point: foo
-          max_instances: 1
-          memory_mb: 512
-          region: "${{ env.REGION }}"
+          deploy_timeout: 900
+          entry_point: nexhealth_foo
+          event_trigger_resource: projects/peerlogic-api-${{ env.GCP_ENV }}/topics/${{ env.GCP_ENV }}-foo
           event_trigger_retry: true
           event_trigger_type: google.pubsub.topic.publish
-          event_trigger_resource: projects/peerlogic-api-${{ env.GCP_ENV }}/topics/${{ env.GCP_ENV }}-foo
-          deploy_timeout: 900
+          max_instances: 1
+          memory_mb: 512
+          name: "cf-${{ env.GCP_ENV }}-${{ env.BASE_NAME }}-foo"
+          project_id: "peerlogic-api-${{ env.GCP_ENV }}"
+          region: "${{ env.REGION }}"
+          runtime: 'python39'
+          source_dir: .
           timeout: 540
           vpc_connector: "projects/peerlogic-api-${{ env.GCP_ENV }}/locations/${{ env.REGION }}/connectors/peerlogic-api-${{ env.GCP_ENV }}"
 

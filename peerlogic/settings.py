@@ -32,18 +32,21 @@ log = logging.getLogger(__name__)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-PROJECT_ID = os.getenv("PROJECT_ID", "peerlogic-api-dev")
-GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT", None)  # WE'RE IN GCP
+PROJECT_ID = os.getenv("PROJECT_ID", "peerlogic-api-dev")  # This does not come directly from GCP
+
+# GOOGLE_CLOUD_PROJECT is set for App Engine
+# GCP_PROJECT is set for Cloud Functions
+GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT", os.environ.get("GCP_PROJECT", None))  # WE'RE IN GCP
 IN_GCP = GOOGLE_CLOUD_PROJECT != None
-# TODO: get region from vm metadata: https://cloud.google.com/compute/docs/metadata/default-metadata-values
-# https://cloud.google.com/appengine/docs/flexible/python/runtime#environment_variables
-REGION = os.environ.get("REGION", "us-west4")
-PROJECT_NUMBER = os.getenv("PROJECT_NUMBER", "148263976475")
+
+# REGION is set for API deploys
+# FUNCTION_REGION is set for Cloud Functions
+REGION = os.environ.get("REGION", os.environ.get("FUNCTION_REGION", "us-west4"))
 ENV_CONFIG_SECRET_NAME = os.environ.get("ENV_CONFIG_SECRET_NAME", "peerlogic-api-env")
 
 if IN_GCP:
     # Pull secrets from Secret Manager
-    PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT")
+    PROJECT_ID = GOOGLE_CLOUD_PROJECT
 
     client = secretmanager.SecretManagerServiceClient()
     name = f"projects/{PROJECT_ID}/secrets/{ENV_CONFIG_SECRET_NAME}/versions/latest"
@@ -119,7 +122,7 @@ if SENTRY_ENABLED:
     )
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "foo")
 
 ALLOWED_HOSTS = env("ALLOWED_HOSTS", cast=list, default=[])
 if GKE_APPLICATION == "True":
