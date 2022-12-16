@@ -108,7 +108,6 @@ jobs:
     needs: deploy_cloud_function_foo
     runs-on: ubuntu-latest
     name: Slack Notification
-    uses: rtCamp/action-slack-notify@v2
     steps:
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
