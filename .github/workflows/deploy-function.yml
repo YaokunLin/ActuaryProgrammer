@@ -118,8 +118,8 @@ jobs:
         env:
           SLACK_CHANNEL: ${{ needs.setup_environment.outputs.gcp_env }}-deployments
           SLACK_COLOR: '#3278BD'
-          SLACK_TITLE: Cloud Function Deploys and Pub/Sub Configs Succeeded
-          SLACK_USERNAME: ${{ needs.setup_environment.outputs.base_name }}
+          SLACK_TITLE: Cloud Function Deploy Complete
+          SLACK_USERNAME: Deploying Function ${{ needs.setup_environment.outputs.base_name }}
           SLACK_MESSAGE: Workflow Succeeded
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_ICON_EMOJI: github
@@ -138,7 +138,7 @@ jobs:
         env:
           SLACK_CHANNEL: ${{ needs.setup_environment.outputs.gcp_env }}-deployments
           SLACK_COLOR: '#f54242'
-          SLACK_TITLE: Cloud Function Deploy or Pub/Sub Config Failed
+          SLACK_TITLE: Function Deploy or PubSub Config Failed
           SLACK_USERNAME: ${{ needs.setup_environment.outputs.base_name }}
           SLACK_MESSAGE: Workflow Failed
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
