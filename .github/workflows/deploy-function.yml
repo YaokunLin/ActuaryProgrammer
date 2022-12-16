@@ -75,6 +75,7 @@ jobs:
         with:
           deploy_timeout: 900
           entry_point: nexhealth_foo
+          env_vars: "REGION=${{ env.REGION }},GOOGLE_CLOUD_PROJECT=peerlogic-api-${{ env.GCP_ENV }}"
           event_trigger_resource: projects/peerlogic-api-${{ env.GCP_ENV }}/topics/${{ env.GCP_ENV }}-foo
           event_trigger_retry: true
           event_trigger_type: google.pubsub.topic.publish

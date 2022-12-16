@@ -34,15 +34,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 PROJECT_ID = os.getenv("PROJECT_ID", "peerlogic-api-dev")  # This does not come directly from GCP
 
-# GOOGLE_CLOUD_PROJECT is set for App Engine
-# GCP_PROJECT is set for Cloud Functions
-GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT", os.environ.get("GCP_PROJECT", None))  # WE'RE IN GCP
+GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT", None)  # WE'RE IN GCP
 IN_GCP = GOOGLE_CLOUD_PROJECT != None
-IN_CLOUD_FUNCTION = os.environ.get("GCP_PROJECT", None) is not None
+IN_CLOUD_FUNCTION = os.environ.get("FUNCTION_TARGET", None) is not None
 
 # REGION is set for API deploys
-# FUNCTION_REGION is set for Cloud Functions
-REGION = os.environ.get("REGION", os.environ.get("FUNCTION_REGION", "us-west4"))
+REGION = os.environ.get("REGION", "us-west4")
 ENV_CONFIG_SECRET_NAME = os.environ.get("ENV_CONFIG_SECRET_NAME", "peerlogic-api-env")
 
 if IN_GCP:
