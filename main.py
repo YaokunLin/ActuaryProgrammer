@@ -15,4 +15,4 @@ log = logging.getLogger(__name__)
 
 
 # noqa
-from nexhealth_integration.cloud_functions.foo import foo as nexhealth_foo
+from nexhealth_integration.cloud_functions.foo import foo
