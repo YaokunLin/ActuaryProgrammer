@@ -38,6 +38,7 @@ PROJECT_ID = os.getenv("PROJECT_ID", "peerlogic-api-dev")  # This does not come 
 # GCP_PROJECT is set for Cloud Functions
 GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT", os.environ.get("GCP_PROJECT", None))  # WE'RE IN GCP
 IN_GCP = GOOGLE_CLOUD_PROJECT != None
+IN_CLOUD_FUNCTION = os.environ.get("GCP_PROJECT", None) is not None
 
 # REGION is set for API deploys
 # FUNCTION_REGION is set for Cloud Functions
@@ -464,7 +465,11 @@ REST_FRAMEWORK = {
 
 
 # [START dbconfig]
-DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
+if IN_GCP and IN_CLOUD_FUNCTION:
+    DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
+else:
+    DB_HOST = os.getenv("DB_HOST_CLOUD_FUNCTION", "127.0.0.1")
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
