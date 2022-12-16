@@ -463,9 +463,9 @@ REST_FRAMEWORK = {
 
 # [START dbconfig]
 if IN_GCP and IN_CLOUD_FUNCTION:
-    DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
-else:
     DB_HOST = os.getenv("DB_HOST_CLOUD_FUNCTION", "127.0.0.1")
+else:
+    DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
 
 DATABASES = {
     "default": {
