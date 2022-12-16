@@ -120,7 +120,6 @@ jobs:
           SLACK_COLOR: '#3278BD'
           SLACK_TITLE: Cloud Function Deploy Complete
           SLACK_USERNAME: Deploying Function ${{ needs.setup_environment.outputs.base_name }}
-          SLACK_MESSAGE: Workflow Succeeded
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_ICON_EMOJI: github
 
