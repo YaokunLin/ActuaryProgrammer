@@ -22,6 +22,7 @@ from core.urls import urlpatterns as core_urlpatterns
 from etl.urls import urlpatterns as etl_urlpatterns
 from inbox.urls import urlpatterns as inbox_urlpatterns
 from ml.urls import urlpatterns as ml_urlpatterns
+from nexhealth_integration.urls import urlpatterns as nexhealth_urlpatterns
 from peerlogic.views import health_check, status
 from reminders.urls import urlpatterns as reminders_urlpatterns
 
@@ -47,5 +48,6 @@ urlpatterns = [
     path("api/", include(inbox_urlpatterns)),
     path("api/", include(ml_urlpatterns)),
     path("api/", include(reminders_urlpatterns)),
+    path("api/nexhealth/", include(nexhealth_urlpatterns)),
     path("oauth/", include("oauth2_provider.urls", namespace="oauth2_provider")),
 ]
