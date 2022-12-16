@@ -30,10 +30,7 @@ def foo(event: Dict, context: Dict) -> None:
     """
 
     log.info(f"Started foo! Event: {event}, Context: {context}")
-    from peerlogic.settings import DB_HOST, IN_CLOUD_FUNCTION
 
-    log.info("IN_CLOUD_FUNCTION: %s", IN_CLOUD_FUNCTION)
-    log.info("DB_HOST: %s", DB_HOST)
     practices = Practice.objects.all()
     log.info(f"There are {len(practices)} practices and the DB totally works!")
     # data = base64.b64decode(event["data"]).decode("utf-8")
