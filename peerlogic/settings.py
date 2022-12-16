@@ -121,7 +121,7 @@ if SENTRY_ENABLED:
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
-ALLOWED_HOSTS = env("ALLOWED_HOSTS", cast=list)
+ALLOWED_HOSTS = env("ALLOWED_HOSTS", cast=list, default=[])
 if GKE_APPLICATION == "True":
     ALLOWED_HOSTS.append(os.getenv("KUBERNETES_SERVICE_HOST"))
 
