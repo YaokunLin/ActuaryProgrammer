@@ -57,7 +57,7 @@ jobs:
       contents: 'read'
       id-token: 'write'
     env:
-      FUNCTION_NAME=foo
+      FUNCTION_NAME: foo
 
     steps:
       - name: Checkout
