@@ -30,7 +30,7 @@ jobs:
         run: |
           echo "BASE_NAME=peerlogic-api" >> $GITHUB_OUTPUT
           echo "REGION=us-west4" >> $GITHUB_OUTPUT
-# TODO Kyle: Remove the next two since they're conditional
+          # TODO Kyle: Remove the next two since they're conditional
           echo "GCP_ENV=dev" >> $GITHUB_OUTPUT
           echo "GCP_PROJECT=148263976475" >> $GITHUB_OUTPUT
 # TODO Kyle: Put these conditionals back minus the seds
@@ -104,8 +104,7 @@ jobs:
 # END Cloud Function Jobs - Do not edit below this line normally -----------------------------------------------------------------------------------------------
 
   slackSuccessNotification:
-    needs:
-      - deploy_cloud_function_foo
+    needs: deploy_cloud_function_foo
     name: Slack Notification
     uses: rtCamp/action-slack-notify@v2
     steps:
@@ -120,8 +119,7 @@ jobs:
           SLACK_ICON_EMOJI: github
 
   slackFailureNotification:
-    needs:
-      - deploy_cloud_function_foo
+    needs: deploy_cloud_function_foo
     runs-on: ubuntu-latest
     if: always()
     name: Slack Failure Notification
