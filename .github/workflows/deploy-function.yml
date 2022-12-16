@@ -50,6 +50,7 @@ jobs:
 
 
 # BEGIN Cloud Function Jobs - Do not edit above this line normally ---------------------------------------------------------------------------------------------
+# See https://github.com/google-github-actions/deploy-cloud-functions for more information
   deploy_cloud_function_foo:
     runs-on: ubuntu-latest
     needs: setup_environment
@@ -96,10 +97,11 @@ jobs:
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v0'
 
+# BEGIN Cloud Function Deadletter Subscriptions ----------------------------------------------------------------------------------------------------------------
       - name: Configure deadletter - Foo
         run: |
           gcloud pubsub subscriptions update \
-          "gcf-cf-${{ needs.setup_environment.outputs.gcp_env }}-${{ needs.setup_environment.outputs.base_name }}-${{ env.FUNCTION_NAME }}-${{ needs.setup_environment.outputs.region }}-${{ needs.setup_environment.outputs.gcp_env }}-foo" \
+          "gcf-cf-${{ needs.setup_environment.outputs.gcp_env }}-${{ needs.setup_environment.outputs.base_name }}-${{ env.FUNCTION_NAME }}-${{ needs.setup_environment.outputs.region }}-${{ needs.setup_environment.outputs.gcp_env }}-${{ env.FUNCTION_NAME }}" \
           --dead-letter-topic="${{ needs.setup_environment.outputs.gcp_env }}-${{ env.FUNCTION_NAME }}-failed" \
           --dead-letter-topic-project="peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}" \
           --max-delivery-attempts=6 \
@@ -109,15 +111,16 @@ jobs:
   slackSuccessNotification:
     needs: [deploy_cloud_function_foo]
     runs-on: ubuntu-latest
-    name: Slack Notification
+    name: Slack Notification - Success
     steps:
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_CHANNEL: ${{ needs.setup_environment.outputs.gcp_env }}-deployments
           SLACK_COLOR: '#3278BD'
-          SLACK_TITLE: Cloud Function Deploys Complete
-          SLACK_USERNAME: Deploying Functions for ${{ needs.setup_environment.outputs.base_name }}
+          SLACK_TITLE: Cloud Function Deploys and Pub/Sub Configs Succeeded
+          SLACK_USERNAME: ${{ needs.setup_environment.outputs.base_name }}
+          SLACK_MESSAGE: Workflow Succeeded
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_ICON_EMOJI: github
 
@@ -125,7 +128,7 @@ jobs:
     needs: [deploy_cloud_function_foo]
     runs-on: ubuntu-latest
     if: always()
-    name: Slack Failure Notification
+    name: Slack Notification - Failure
     steps:
       # run this action to get workflow conclusion
       # You can get conclusion via env (env.WORKFLOW_CONCLUSION)
@@ -135,7 +138,7 @@ jobs:
         env:
           SLACK_CHANNEL: ${{ needs.setup_environment.outputs.gcp_env }}-deployments
           SLACK_COLOR: '#f54242'
-          SLACK_TITLE: Function Deploy or PubSub Config Failed
+          SLACK_TITLE: Cloud Function Deploy or Pub/Sub Config Failed
           SLACK_USERNAME: ${{ needs.setup_environment.outputs.base_name }}
           SLACK_MESSAGE: Workflow Failed
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
