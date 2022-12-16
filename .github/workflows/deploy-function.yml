@@ -49,6 +49,7 @@ jobs:
 
 
 # BEGIN Cloud Function Jobs - Do not edit above this line normally ---------------------------------------------------------------------------------------------
+
   deploy_cloud_function_foo:
     runs-on: ubuntu-latest
     needs: setup_environment
