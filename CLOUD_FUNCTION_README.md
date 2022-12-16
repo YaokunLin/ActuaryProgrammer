@@ -77,6 +77,12 @@ def function_name(event: Dict, context: Dict) -> None:
     log.info("Completed function_name!")
 ```
 
+## Monitoring
+
+> **UNDER CONSTRUCTION**
+>
+> More to come...
+
 ## Example of Adding a Cloud Function
 
 Let's add a new Cloud Function to the [NexHealth Integration app](nexhealth_integration/)!
