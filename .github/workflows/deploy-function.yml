@@ -17,6 +17,7 @@ concurrency:
 jobs:
   setup_environment:
     runs-on: ubuntu-latest
+    id: setenv
     outputs:
       gcp_env: ${{ steps.setenv.outputs.GCP_ENV }}
       base_name: ${{ steps.setenv.outputs.BASE_NAME }}
