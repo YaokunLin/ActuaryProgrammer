@@ -25,10 +25,8 @@ jobs:
     permissions:
       contents: 'read'
       id-token: 'write'
-
     steps:
       - name: Set deployment variables
-        id: setenv
         run: |
           echo "BASE_NAME=peerlogic-api" >> $GITHUB_OUTPUT
           echo "REGION=us-west4" >> $GITHUB_OUTPUT
