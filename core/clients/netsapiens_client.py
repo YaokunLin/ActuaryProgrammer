@@ -156,6 +156,28 @@ class NetsapiensAPIClient(APIClient):
             msg = f"Problem occurred authenticating to url '{url}'."
             raise Exception(msg) from e
 
+    def get_domain(self, domain: str, session: requests.Session = None) -> HTTPResponse:
+        try:
+            response = None  # define for proper logging as needed
+            if not session:
+                session = self.get_session()
+
+            params = {"object": "domain", "action": "read", "domain": domain, "format": "json"}
+            url = self.root_api_url
+
+            response = session.get(url=url, params=params)
+            response.raise_for_status()
+
+            log.info(f"Domain info response: '{response.text}'")
+            return response
+        except Exception as e:
+            if response.status_code == 404:
+                raise ValueError(f"domain not found: {domain}")
+            msg = f"Problem occurred getting domain info from url='{url}', data='{data}'."
+            if response is not None and response.text:
+                msg = f"{msg}. Response text: '{response.text}'. Response code: '{response.status_code}'"
+            raise Exception(msg) from e
+
     def create_event_subscription(self, domain: str, post_url: str, session: requests.Session = None) -> HTTPResponse:
         try:
             response = None  # define for proper logging as needed

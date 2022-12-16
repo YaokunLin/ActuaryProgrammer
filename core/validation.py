@@ -87,6 +87,7 @@ def get_practice_telecoms_belonging_to_user(user: User) -> models.QuerySet[Pract
 
 
 def is_extension(phone_number: str) -> bool:
+    # digits only
     if not phone_number.isdigit():
         return False
     if 3 <= len(phone_number) <= 6:
