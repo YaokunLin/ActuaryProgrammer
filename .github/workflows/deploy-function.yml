@@ -17,7 +17,6 @@ concurrency:
 jobs:
   setup_environment:
     runs-on: ubuntu-latest
-    id: setenv
     outputs:
       gcp_env: ${{ steps.setenv.outputs.GCP_ENV }}
       base_name: ${{ steps.setenv.outputs.BASE_NAME }}
@@ -28,6 +27,7 @@ jobs:
       id-token: 'write'
     steps:
       - name: Set deployment variables
+        id: setenv
         run: |
           echo "BASE_NAME=peerlogic-api" >> $GITHUB_OUTPUT
           echo "REGION=us-west4" >> $GITHUB_OUTPUT
