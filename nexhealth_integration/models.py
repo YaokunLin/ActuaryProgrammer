@@ -4,6 +4,7 @@ from django_extensions.db.fields import ShortUUIDField
 from phonenumber_field.modelfields import PhoneNumberField
 
 from core.abstract_models import AuditTrailDateTimeOnlyModel
+from core.models import Patient as PeerlogicPatient
 
 
 class APIRequest(AuditTrailDateTimeOnlyModel):
@@ -187,16 +188,6 @@ class Patient(AuditTrailDateTimeOnlyModel):
     nh_last_sync_time = models.DateTimeField(null=True)
     nh_updated_at = models.DateTimeField(null=True)
 
-    peerlogic_patients = models.ManyToManyField(
-        to="core.Patient",
-        through="nexhealth_integration.NexHealthPatientLink",
-        through_fields=(
-            "nexhealth_patient",
-            "peerlogic_patient",
-        ),
-        related_name="nexhealth_patients",
-    )
-
     adjustments = models.JSONField(null=True)  # https://docs.nexhealth.com/reference/adjustments
     balance_amount = models.CharField(max_length=32, null=True, blank=False)
     balance_currency = models.CharField(max_length=3, null=True, blank=False)
@@ -220,17 +211,31 @@ class Patient(AuditTrailDateTimeOnlyModel):
     class Meta:
         constraints = [models.UniqueConstraint(fields=["nh_id", "nh_institution_id"], name="nh_unique_patient_with_institution")]
 
+    @property
+    def peerlogic_patients(self) -> "models.query.QuerySet[PeerlogicPatient]":
+        return PeerlogicPatient.objects.filter(
+            id__in=NexHealthPatientLink.objects.filter(
+                nh_institution_id=self.nh_institution_id,
+            )
+        )
+
 
 class NexHealthPatientLink(models.Model):
     """
     Through-model linking NexHealth Integration Patient to Peerlogic Patient
     """
 
-    nexhealth_patient = models.ForeignKey(to=Patient, on_delete=models.CASCADE)
+    nh_institution_id = models.PositiveIntegerField(db_index=True)
+    nh_location_id = models.PositiveIntegerField(db_index=True)
+    nh_patient_id = models.PositiveIntegerField(db_index=True)
     peerlogic_patient = models.ForeignKey(to="core.Patient", on_delete=models.CASCADE)
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=["nexhealth_patient_id", "peerlogic_patient_id"], name="unique_nexhealth_patient_with_peerlogic_patient")]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["nh_institution_id", "nh_location_id", "nh_patient_id", "peerlogic_patient_id"], name="unique_nexhealth_patient_with_peerlogic_patient"
+            )
+        ]
 
 
 class Procedure(AuditTrailDateTimeOnlyModel):
