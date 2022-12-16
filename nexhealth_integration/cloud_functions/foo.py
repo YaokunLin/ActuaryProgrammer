@@ -1,26 +1,12 @@
 # import base64
 # import json
 import logging
-import traceback
 from typing import Dict
 
 from core.models import Practice
+from peerlogic.decorators import try_catch_log
 
 log = logging.getLogger(__name__)
-
-
-def try_catch_log(wrapped_func):
-    def wrapper(*args, **kwargs):
-        try:
-            response = wrapped_func(*args, **kwargs)
-        except Exception as e:
-            # Replace new lines with spaces to prevent several entries which would trigger several errors
-            error_message = traceback.format_exc().replace("\n", "  ")
-            log.critical(error_message)
-            raise e
-        return response
-
-    return wrapper
 
 
 @try_catch_log
