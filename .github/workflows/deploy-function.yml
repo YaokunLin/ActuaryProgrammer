@@ -64,8 +64,8 @@ jobs:
         id: auth
         uses: google-github-actions/auth@v0
         with:
-          workload_identity_provider: "projects/${{ needs.deploy_cloud_function.outputs.gcp_project }}/locations/global/workloadIdentityPools/${{ needs.deploy_cloud_function.outputs.base_name }}/providers/${{ needs.deploy_cloud_function.outputs.base_name }}"
-          service_account: "github-sa@peerlogic-api-${{ needs.deploy_cloud_function.outputs.gcp_env }}.iam.gserviceaccount.com"
+          workload_identity_provider: "projects/${{ needs.setup_environment.outputs.gcp_project }}/locations/global/workloadIdentityPools/${{ needs.setup_environment.outputs.base_name }}/providers/${{ needs.setup_environment.outputs.base_name }}"
+          service_account: "github-sa@peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}.iam.gserviceaccount.com"
 
       - name: Copy requirements.txt to root
         run: |
@@ -76,19 +76,19 @@ jobs:
         with:
           deploy_timeout: 900
           entry_point: nexhealth_foo
-          env_vars: "REGION=${{ needs.deploy_cloud_function.outputs.region }},GOOGLE_CLOUD_PROJECT=peerlogic-api-${{ needs.deploy_cloud_function.outputs.gcp_env }}"
-          event_trigger_resource: projects/peerlogic-api-${{ needs.deploy_cloud_function.outputs.gcp_env }}/topics/${{ needs.deploy_cloud_function.outputs.gcp_env }}-foo
+          env_vars: "REGION=${{ needs.setup_environment.outputs.region }},GOOGLE_CLOUD_PROJECT=peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}"
+          event_trigger_resource: projects/peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}/topics/${{ needs.setup_environment.outputs.gcp_env }}-foo
           event_trigger_retry: true
           event_trigger_type: google.pubsub.topic.publish
           max_instances: 1
           memory_mb: 512
-          name: "cf-${{ needs.deploy_cloud_function.outputs.gcp_env }}-${{ needs.deploy_cloud_function.outputs.base_name }}-foo"
-          project_id: "peerlogic-api-${{ needs.deploy_cloud_function.outputs.gcp_env }}"
-          region: "${{ needs.deploy_cloud_function.outputs.region }}"
+          name: "cf-${{ needs.setup_environment.outputs.gcp_env }}-${{ needs.setup_environment.outputs.base_name }}-foo"
+          project_id: "peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}"
+          region: "${{ needs.setup_environment.outputs.region }}"
           runtime: 'python39'
           source_dir: .
           timeout: 540
-          vpc_connector: "projects/peerlogic-api-${{ needs.deploy_cloud_function.outputs.gcp_env }}/locations/${{ needs.deploy_cloud_function.outputs.region }}/connectors/peerlogic-api-${{ needs.deploy_cloud_function.outputs.gcp_env }}"
+          vpc_connector: "projects/peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}/locations/${{ needs.setup_environment.outputs.region }}/connectors/peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}"
 
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v0'
@@ -96,9 +96,9 @@ jobs:
       - name: Configure deadletter - Foo
         run: |
           gcloud pubsub subscriptions update \
-          "gcf-cf-${{ needs.deploy_cloud_function.outputs.gcp_env }}-${{ needs.deploy_cloud_function.outputs.base_name }}-foo-${{ needs.deploy_cloud_function.outputs.region }}-${{ needs.deploy_cloud_function.outputs.gcp_env }}-foo" \
-          --dead-letter-topic="${{ needs.deploy_cloud_function.outputs.gcp_env }}-foo-failed" \
-          --dead-letter-topic-project="peerlogic-api-${{ needs.deploy_cloud_function.outputs.gcp_env }}" \
+          "gcf-cf-${{ needs.setup_environment.outputs.gcp_env }}-${{ needs.setup_environment.outputs.base_name }}-foo-${{ needs.setup_environment.outputs.region }}-${{ needs.setup_environment.outputs.gcp_env }}-foo" \
+          --dead-letter-topic="${{ needs.setup_environment.outputs.gcp_env }}-foo-failed" \
+          --dead-letter-topic-project="peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}" \
           --max-delivery-attempts=6 \
           --min-retry-delay=2m
 # END Cloud Function Jobs - Do not edit below this line normally -----------------------------------------------------------------------------------------------
@@ -111,10 +111,10 @@ jobs:
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
         env:
-          SLACK_CHANNEL: ${{ needs.deploy_cloud_function.outputs.gcp_env }}-deployments
+          SLACK_CHANNEL: ${{ needs.setup_environment.outputs.gcp_env }}-deployments
           SLACK_COLOR: '#3278BD'
           SLACK_TITLE: Cloud Function Deploys Complete
-          SLACK_USERNAME: Deploying Functions for ${{ needs.deploy_cloud_function.outputs.base_name }}
+          SLACK_USERNAME: Deploying Functions for ${{ needs.setup_environment.outputs.base_name }}
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_ICON_EMOJI: github
 
@@ -130,10 +130,10 @@ jobs:
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
         env:
-          SLACK_CHANNEL: ${{ needs.deploy_cloud_function.outputs.gcp_env }}-deployments
+          SLACK_CHANNEL: ${{ needs.setup_environment.outputs.gcp_env }}-deployments
           SLACK_COLOR: '#f54242'
           SLACK_TITLE: Function Deploy or PubSub Config Failed
-          SLACK_USERNAME: ${{ needs.deploy_cloud_function.outputs.base_name }}
+          SLACK_USERNAME: ${{ needs.setup_environment.outputs.base_name }}
           SLACK_MESSAGE: Workflow Failed
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_ICON_EMOJI: boom
