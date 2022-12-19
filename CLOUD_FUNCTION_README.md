@@ -4,8 +4,8 @@
 
 We leverage [Cloud Functions](https://cloud.google.com/functions) in this project to perform
 asynchronous, potentially long-lived operations with or without robust retry, and triggered
-ad hoc, on a schedule or in response to some event ([Pub/Sub](https://cloud.google.com/pubsub), [Cloud Storage Triggers](https://cloud.google.com/functions/docs/calling/storage), or [Cloud Function Webhook Targets](https://cloud.google.com/run/docs/triggering/webhooks)). For this specific project, more often than not these Cloud Functions will be
-performing operations against our [RDBMS](https://cloud.google.com/sql/docs/postgres) using the [Django ORM](https://docs.djangoproject.com/en/4.1/topics/db/queries/).
+ad hoc, on a schedule or in response to some event ([Pub/Sub](https://cloud.google.com/pubsub), [Cloud Storage Triggers](https://cloud.google.com/functions/docs/readme_images/calling/storage), or [Cloud Function Webhook Targets](https://cloud.google.com/run/docs/readme_images/triggering/webhooks)). For this specific project, more often than not these Cloud Functions will be
+performing operations against our [RDBMS](https://cloud.google.com/sql/docs/readme_images/postgres) using the [Django ORM](https://docs.djangoproject.com/en/4.1/topics/db/queries/).
 
 > **THIS GUIDE IS NOT EXHAUSTIVE**
 >
@@ -45,9 +45,13 @@ This file is broken down into jobs and those jobs are broken down into steps:
       - Checks out the code
       - Authenticates to GCP
       - Copies [requirements.txt](requirements/requirements.txt) to root directory[^1]
-      - Deploys the Cloud Function and configures the [Subscription](https://cloud.google.com/pubsub/docs/create-subscription)
+      - Deploys the Cloud Function and configures the [Subscription](https://cloud.google.com/pubsub/docs/readme_images/create-subscription)
       - Configuration for the Cloud Function can be changed when necessary (e.g. memory, timeout, etc.)[^2]
 3. Job runs to announce success or failure to Slack
+
+It's worth noting that this file contains some pretty important per-cloud-function configuration that may vary.
+More detail is given in our example later, but things like timeout, runtime, instance count, etc. are all controlled
+in this YAML file.
 
 #### Actual Logic
 The actual logic for Cloud Functions can live in any of the app directories in this project.
@@ -103,9 +107,9 @@ We use [Terraform Cloud](https://app.terraform.io/app/peerlogic/workspaces?organ
 
 ## Example of Adding a Cloud Function
 
-Let's add a new Cloud Function to the [NexHealth Integration app](nexhealth_integration/)!
+Let's add a new Cloud Function to the `core` app!
 
-Our function will be called "bar". This function will do is:
+Our function will be called "bar". This function will:
 1. Info log that the function is starting up
 2. Count the number of practices in the system and info log that value
 3. Info log that the function is finished
@@ -121,20 +125,20 @@ Following our best practices, this topic will be backed by a deadletter topic.
 
 First, let's start by creating our Pub/Sub topic in [the appropriate terraform file](https://github.com/peerlogictech/infrastructure/commit/e9b95cc5764f6f31a6666050a450a932457a3674):
 
-![docs/create_pubsub_topic_infra_commit.png](docs/create_pubsub_topic_infra_commit.png)
+![docs/readme_images/create_pubsub_topic_infra_commit.png](docs/readme_images/create_pubsub_topic_infra_commit.png)
 
 After that is committed to the appropriate branch for the environment (dev in our case),
 we need to apply the change via [Terraform Cloud](https://app.terraform.io/app/peerlogic/workspaces?organization_name=peerlogic).
 
-![docs/create_pubsub_topic_tf_cloud.png](docs/create_pubsub_topic_tf_cloud.png)
+![docs/readme_images/create_pubsub_topic_tf_cloud.png](docs/readme_images/create_pubsub_topic_tf_cloud.png)
 
 After the change has been applied, our GCP Pub/Sub topic is created and ready to go:
 
-![docs/gcp_pubsub_topics_bar.png](docs/gcp_pubsub_topics_bar.png)
+![docs/readme_images/gcp_pubsub_topics_bar.png](docs/readme_images/gcp_pubsub_topics_bar.png)
 
 You'll notice a deadletter topic and subscription were created as well:
 
-![docs/gcp_pubsub_subscriptions_bar.png](docs/gcp_pubsub_subscriptions_bar.png)
+![docs/readme_images/gcp_pubsub_subscriptions_bar.png](docs/readme_images/gcp_pubsub_subscriptions_bar.png)
 
 ### Peerlogic API Code Changes
 
@@ -143,7 +147,7 @@ You'll notice a deadletter topic and subscription were created as well:
 Let's define our cloud function in the `core` app! To do this, we'll create a new python package
 in the `core` directory named `cloud_functions`:
 
-![docs/add_cloud_function_code_bar.png](docs/add_cloud_function_code_bar.png)
+![docs/readme_images/add_cloud_function_code_bar.png](docs/readme_images/add_cloud_function_code_bar.png)
 
 Inside this `cloud_functions` directory, we'll
 create our `bar.py` file:
@@ -282,18 +286,24 @@ copy+paste+editing an existing Cloud Function deploy job in the file.
 
 Once our code is merged to the `development` branch, the GitHub action should run and deploy our cloud function:
 
-![docs/github_action_bar_1.png](docs/github_action_bar_1.png)
+![docs/readme_images/github_action_bar_1.png](docs/readme_images/github_action_bar_1.png)
 
-![docs/github_action_bar_2.png](docs/github_action_bar_2.png)
+![docs/readme_images/github_action_bar_2.png](docs/readme_images/github_action_bar_2.png)
 
 
 #### 5. Verifying
 
 Now that our function has deployed, we can publish a message to our Pub/Sub topic to test it!
 
-> **UNDER CONSTRUCTION**
->
-> More to come...
+Let's go to our Pub/Sub topic in the GCP console and use the `Publish Message` button on the `Messages` tab for the topic:
 
-[^1]: https://cloud.google.com/functions/docs/writing#directory-structure-python
+![docs/readme_images/pubsub_publish_message_1.png](docs/readme_images/pubsub_publish_message_1.png)
+
+For the message body, let's just send `{}`. No attributes or anything else. Defaults are fine.
+
+After we've published our message, we can make sure it worked by checking logs:
+
+![docs/readme_images/cloud_function_logs_bar.png](docs/readme_images/cloud_function_logs_bar.png)
+
+[^1]: https://cloud.google.com/functions/docs/readme_images/writing#directory-structure-python
 [^2]: https://github.com/google-github-actions/deploy-cloud-functions
