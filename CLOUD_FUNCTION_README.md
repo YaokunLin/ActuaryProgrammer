@@ -192,7 +192,7 @@ django.setup()
 log = logging.getLogger(__name__)
 
 
-from core.cloud_functions import bar  # noqa
+from core.cloud_functions.bar import bar  # noqa
 
 ```
 
