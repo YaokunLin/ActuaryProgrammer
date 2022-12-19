@@ -27,7 +27,7 @@ performing operations against our [RDBMS](https://cloud.google.com/sql/docs/post
 Cloud Function entrypoints are python functions with a specific signature in a specific file[^1].
 Because of this, we must have a single [main.py](main.py) file for the entire project which has
 the following responsibilities:
-1. Setup the Django environment so that we can use the ORM. This includes loading of general configuration.
+1. Set up the Django environment so that we can use the ORM. This includes loading of general configuration.
 2. Import and expose entrypoints to Cloud Functions which are defined in their respective app directories.
 
 This file should only be importing code from elsewhere. No functions should be defined here.
@@ -134,7 +134,7 @@ After the change has been applied, our GCP Pub/Sub topic is created and ready to
 
 You'll notice a deadletter topic and subscription were created as well:
 
-![docs/gcp_pubsub_subscriptiobns_bar.png](docs/gcp_pubsub_subscriptiobns_bar.png)
+![docs/gcp_pubsub_subscriptions_bar.png](docs/gcp_pubsub_subscriptions_bar.png)
 
 ### Peerlogic API Code Changes
 
@@ -210,10 +210,10 @@ as when we merge and release the code. To do this, we need to add a new job to
 [the GitHub Action YML file](.github/workflows/deploy-function.yml). The job we're adding is best done by
 copy+paste+editing an existing Cloud Function deploy job in the file.
 
-1. The job should be called `deploy_cloud_function_<YOUR_FUNCTION_NAME>`
-2. The job env var `FUNCTION_NAME` should be set to `<YOUR_FUNCTION_NAME>`
-3. Label the "deploy" step as `Deploy Cloud Function - <YOUR_FUNCTION_NAME>`
-4. Label the "deadletter" step as `Configure deadletter - <YOUR_FUNCTION_NAME>`
+1. The job should be called `deploy_cloud_function_<OUR_FUNCTION_NAME>`
+2. The job env var `FUNCTION_NAME` should be set to `<OUR_FUNCTION_NAME>`
+3. Label the "deploy" step as `Deploy Cloud Function - <OUR_FUNCTION_NAME>`
+4. Label the "deadletter" step as `Configure deadletter - <OUR_FUNCTION_NAME>`
 5. Adjust any necessary configuration. Some common params you might want to change include:
   - `event_trigger_type` and `event_trigger_resource` if not using Pub/Sub
   - `max_instances`
@@ -280,7 +280,16 @@ copy+paste+editing an existing Cloud Function deploy job in the file.
 
 #### 4. Deploying
 
-Once your code is merged to the `development` branch, the GitHub action should run and deploy your cloud function:
+Once our code is merged to the `development` branch, the GitHub action should run and deploy our cloud function:
+
+![docs/github_action_bar_1.png](docs/github_action_bar_1.png)
+
+![docs/github_action_bar_2.png](docs/github_action_bar_2.png)
+
+
+#### 5. Verifying
+
+Now that our function has deployed, we can publish a message to our Pub/Sub topic to test it!
 
 > **UNDER CONSTRUCTION**
 >
