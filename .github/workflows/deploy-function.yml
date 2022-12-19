@@ -116,7 +116,7 @@ jobs:
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
         env:
-          SLACK_CHANNEL: ${{ needs.setup_environment.outputs.gcp_env }}-deployments
+          SLACK_CHANNEL: "${{ needs.setup_environment.outputs.gcp_env }}-deployments"
           SLACK_COLOR: '#3278BD'
           SLACK_TITLE: Cloud Function Deploy Complete
           SLACK_USERNAME: Deploying Function ${{ needs.setup_environment.outputs.base_name }}
@@ -135,7 +135,7 @@ jobs:
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
         env:
-          SLACK_CHANNEL: ${{ needs.setup_environment.outputs.gcp_env }}-deployments
+          SLACK_CHANNEL: "${{ needs.setup_environment.outputs.gcp_env }}-deployments"
           SLACK_COLOR: '#f54242'
           SLACK_TITLE: Function Deploy or PubSub Config Failed
           SLACK_USERNAME: ${{ needs.setup_environment.outputs.base_name }}
