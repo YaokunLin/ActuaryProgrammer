@@ -121,7 +121,7 @@ Following our best practices, this topic will be backed by a deadletter topic.
 
 > **NOTE**
 >
-> As we roll out, we'll need to repeat these terraform steps for those environments.
+> As we roll out, we'll need to repeat these terraform steps for other environments.
 
 First, let's start by creating our Pub/Sub topic in [the appropriate terraform file](https://github.com/peerlogictech/infrastructure/commit/e9b95cc5764f6f31a6666050a450a932457a3674):
 
