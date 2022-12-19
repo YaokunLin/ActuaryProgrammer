@@ -17,6 +17,8 @@ performing operations against our [RDBMS](https://cloud.google.com/sql/docs/post
 - [Cloud Functions](https://cloud.google.com/functions)
 - [Pub/Sub](https://cloud.google.com/pubsub)
 - [GitHub Actions Cloud Function Deploy](https://github.com/google-github-actions/deploy-cloud-functions)
+- [Terraform Cloud](https://app.terraform.io/app/peerlogic/workspaces?organization_name=peerlogic)
+- [Terraform GitHub for Cloud Functions and Pub/Sub (Dev)](https://github.com/peerlogictech/infrastructure/blob/main/terraform/dev/function.tf)
 
 ## Implementation / Anatomy
 
@@ -77,11 +79,27 @@ def function_name(event: Dict, context: Dict) -> None:
     log.info("Completed function_name!")
 ```
 
+## Pub/Sub
+
+> **Terraform is dangerous**
+>
+> It's best to enlist the help of your friendly neighborhood ops expert if you're not comfortable
+> managing infrastructure. This is a much deeper topic than will be covered in this README.
+
+
+For our Cloud Functions triggered by Pub/Sub, we maintain Pub/Sub topics with [Terraform](https://www.terraform.io/).
+
+These topics are defined here (dev, for example): [Terraform GitHub for Cloud Functions and Pub/Sub (Dev)](https://github.com/peerlogictech/infrastructure/blob/main/terraform/dev/function.tf)
+
+We use [Terraform Cloud](https://app.terraform.io/app/peerlogic/workspaces?organization_name=peerlogic) to actually execute the Terraform.
+
+
 ## Monitoring
 
-> **UNDER CONSTRUCTION**
->
-> More to come...
+- [Generic Cloud Function Grafana Dashboard](https://grafana.peerlogic.com/d/IhhpMVO4k/cloud-functions-monitoring)
+- [Generic Pub/Sub Grafana Dashboard](https://grafana.peerlogic.com/d/Lsg3nECnz/pub-sub)
+- [Sentry Peerlogic](https://sentry.io/organizations/peerlogic/projects/peerlogic-api/?project=4504255681200128)
+
 
 ## Example of Adding a Cloud Function
 
@@ -95,11 +113,174 @@ Our function will be called "bar". This function will do is:
 We will trigger our function on a Pub/Sub topic, which we are also naming "bar".
 Following our best practices, this topic will be backed by a deadletter topic.
 
-To get messages into our Pub/Sub topic, we will create an admin-only API endpoint.
+### Terraforming
 
-> For simplicity, we're going to be adding on our new function based on the existing configuration for
-> another function, which is called "foo". For now, this is the quickest way to spin up a new cloud function:
-> copy configuration from an existing function in the project.
+> **NOTE**
+>
+> As we roll out, we'll need to repeat these terraform steps for those environments.
+
+First, let's start by creating our Pub/Sub topic in [the appropriate terraform file](https://github.com/peerlogictech/infrastructure/commit/e9b95cc5764f6f31a6666050a450a932457a3674):
+
+![docs/create_pubsub_topic_infra_commit.png](docs/create_pubsub_topic_infra_commit.png)
+
+After that is committed to the appropriate branch for the environment (dev in our case),
+we need to apply the change via [Terraform Cloud](https://app.terraform.io/app/peerlogic/workspaces?organization_name=peerlogic).
+
+![docs/create_pubsub_topic_tf_cloud.png](docs/create_pubsub_topic_tf_cloud.png)
+
+After the change has been applied, our GCP Pub/Sub topic is created and ready to go:
+
+![docs/gcp_pubsub_topics_bar.png](docs/gcp_pubsub_topics_bar.png)
+
+You'll notice a deadletter topic and subscription were created as well:
+
+![docs/gcp_pubsub_subscriptiobns_bar.png](docs/gcp_pubsub_subscriptiobns_bar.png)
+
+### Peerlogic API Code Changes
+
+#### 1. Add the new code
+
+Let's define our cloud function in the `core` app! To do this, we'll create a new python package
+in the `core` directory named `cloud_functions`:
+
+![docs/add_cloud_function_code_bar.png](docs/add_cloud_function_code_bar.png)
+
+Inside this `cloud_functions` directory, we'll
+create our `bar.py` file:
+```python
+import logging
+from typing import Dict
+
+from core.models import Practice
+from peerlogic.decorators import try_catch_log
+
+log = logging.getLogger(__name__)
+
+
+@try_catch_log
+def bar(event: Dict, context: Dict) -> None:
+    """
+    Background Cloud Function to be triggered by Pub/Sub.
+    """
+
+    log.info(f"Started bar! Event: {event}, Context: {context}")
+
+    practices = Practice.objects.all()
+    log.info(f"There are {len(practices)} practices and the DB totally works!")
+    log.info(f"Completed bar!")
+
+```
+
+This just defines one function which takes the arguments `event` and `context`. This is the actual code
+that will be invoked when an event comes over the wire on our Pub/Sub topic.
+
+
+
+#### 2. Expose the new entrypoint
+
+Now that we've added the code we want to execute, let's wire it up. We need to import our newly-created
+function above in [main.py](main.py):
+```python
+import logging
+import os
+
+import django
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "peerlogic.settings")
+
+django.setup()
+log = logging.getLogger(__name__)
+
+
+from core.cloud_functions import bar  # noqa
+
+```
+
+> **NOTE**
+>
+> The name we import our function as is important. This is the name that we will be
+> targeting in our next step. If, for instance, you imported `bar as core_bar` or something
+> along those lines, you would need to note "core_bar" as the function target for configuration
+> going forward.
+
+#### 3. Update the CI configuration
+
+Now that the python code is ready, we need to update our CI configuration to deploy our cloud function
+as when we merge and release the code. To do this, we need to add a new job to
+[the GitHub Action YML file](.github/workflows/deploy-function.yml). The job we're adding is best done by
+copy+paste+editing an existing Cloud Function deploy job in the file.
+
+1. The job should be called `deploy_cloud_function_<YOUR_FUNCTION_NAME>`
+2. The job env var `FUNCTION_NAME` should be set to `<YOUR_FUNCTION_NAME>`
+3. Label the "deploy" step as `Deploy Cloud Function - <YOUR_FUNCTION_NAME>`
+4. Label the "deadletter" step as `Configure deadletter - <YOUR_FUNCTION_NAME>`
+5. Adjust any necessary configuration. Some common params you might want to change include:
+  - `event_trigger_type` and `event_trigger_resource` if not using Pub/Sub
+  - `max_instances`
+  - `memory_mb`
+  - `timeout`
+
+
+```yml
+  deploy_cloud_function_bar:
+    runs-on: ubuntu-latest
+    needs: setup_environment
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    env:
+      FUNCTION_NAME: bar
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Authenticate to GCP
+        id: auth
+        uses: google-github-actions/auth@v0
+        with:
+          workload_identity_provider: "projects/${{ needs.setup_environment.outputs.gcp_project }}/locations/global/workloadIdentityPools/${{ needs.setup_environment.outputs.base_name }}/providers/${{ needs.setup_environment.outputs.base_name }}"
+          service_account: "github-sa@peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}.iam.gserviceaccount.com"
+
+      - name: Copy requirements.txt to root
+        run: |
+          cp requirements/requirements.txt requirements.txt
+
+      - name: Deploy Cloud Function - Bar
+        uses: 'google-github-actions/deploy-cloud-functions@v0'
+        with:
+          deploy_timeout: 900
+          entry_point: ${{ env.FUNCTION_NAME }}
+          env_vars: "REGION=${{ needs.setup_environment.outputs.region }},GOOGLE_CLOUD_PROJECT=peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}"
+          event_trigger_resource: projects/peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}/topics/${{ needs.setup_environment.outputs.gcp_env }}-${{ env.FUNCTION_NAME }}
+          event_trigger_retry: true
+          event_trigger_type: google.pubsub.topic.publish
+          max_instances: 1
+          memory_mb: 512
+          name: "cf-${{ needs.setup_environment.outputs.gcp_env }}-${{ needs.setup_environment.outputs.base_name }}-${{ env.FUNCTION_NAME }}"
+          project_id: "peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}"
+          region: "${{ needs.setup_environment.outputs.region }}"
+          runtime: 'python39'
+          source_dir: .
+          timeout: 540
+          vpc_connector: "projects/peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}/locations/${{ needs.setup_environment.outputs.region }}/connectors/peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}"
+
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v0'
+
+      - name: Configure deadletter - Bar
+        run: |
+          gcloud pubsub subscriptions update \
+          "gcf-cf-${{ needs.setup_environment.outputs.gcp_env }}-${{ needs.setup_environment.outputs.base_name }}-${{ env.FUNCTION_NAME }}-${{ needs.setup_environment.outputs.region }}-${{ needs.setup_environment.outputs.gcp_env }}-${{ env.FUNCTION_NAME }}" \
+          --dead-letter-topic="${{ needs.setup_environment.outputs.gcp_env }}-${{ env.FUNCTION_NAME }}-failed" \
+          --dead-letter-topic-project="peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}" \
+          --max-delivery-attempts=6 \
+          --min-retry-delay=2m
+```
+
+#### 4. Deploying
+
+Once your code is merged to the `development` branch, the GitHub action should run and deploy your cloud function:
 
 > **UNDER CONSTRUCTION**
 >
