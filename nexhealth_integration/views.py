@@ -7,13 +7,25 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK
 
 from core.pubsub_helpers import publish_event
+from nexhealth_integration.serializers import NexHealthInitializePracticeSerializer
 from peerlogic.settings import PUBSUB_TOPIC_PATH_NEXHEALTH_INITIALIZE_PRACTICE
 
 
 @api_view(["POST"])
 @permission_classes([IsAdminUser])
 def initialize_practice(request: Request) -> Response:
-    event_data = {}
+    serializer = NexHealthInitializePracticeSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    event_data = {
+        "appointment_end_time": serializer.validated_data["appointment_end_time"],
+        "appointment_start_time": serializer.validated_data["appointment_start_time"],
+        "is_institution_bound_to_practice": serializer.validated_data["is_institution_bound_to_practice"],
+        "nexhealth_institution_id": serializer.validated_data["nexhealth_institution_id"],
+        "nexhealth_location_id": serializer.validated_data["nexhealth_location_id"],
+        "nexhealth_subdomain": serializer.validated_data["nexhealth_subdomain"],
+        "peerlogic_organization_id": serializer.validated_data["peerlogic_organization_id"],
+        "peerlogic_practice_id": serializer.validated_data["peerlogic_practice_id"],
+    }
     event_attributes = {}
     future = publish_event(event_attributes=event_attributes, event=event_data, topic_path=PUBSUB_TOPIC_PATH_NEXHEALTH_INITIALIZE_PRACTICE)
     futures.wait([future])

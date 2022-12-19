@@ -1,4 +1,6 @@
+import base64
 import datetime
+import json
 import logging
 import os
 from typing import Dict, Optional
@@ -25,24 +27,35 @@ log = NexHealthLogAdapter(logging.getLogger(__name__))
 
 def nexhealth_initialize_practice(event: Dict, context: Dict) -> None:
     log.info(f"Started nexhealth_initialize_practice! Event: {event}, Context: {context}")
-    # TODO Kyle
+    data = json.loads(base64.b64decode(event["data"]).decode())
+    peerlogic_practice = PeerlogicPractice.objects.get(id=data["peerlogic_practice_id"])
+    peerlogic_organization = PeerlogicOrganization.objects.get(id=data["peerlogic_organization_id"])
+    _initialize_nexhealth_records_for_practice(
+        appointment_end_time=datetime.datetime.fromisoformat(data["appointment_end_time"]),
+        appointment_start_time=datetime.datetime.fromisoformat(data["appointment_start_time"]),
+        is_institution_bound_to_practice=data["is_institution_bound_to_practice"],
+        nexhealth_institution_id=data["nexhealth_institution_id"],
+        nexhealth_location_id=data["nexhealth_location_id"],
+        nexhealth_subdomain=data["nexhealth_subdomain"],
+        peerlogic_organization=peerlogic_practice,
+        peerlogic_practice=peerlogic_organization,
+    )
     log.info(f"Completed nexhealth_initialize_practice!")
 
 
 def _initialize_nexhealth_records_for_practice(
+    appointment_end_time: datetime.datetime,
+    appointment_start_time: datetime.datetime,
+    is_institution_bound_to_practice: bool,
     nexhealth_institution_id: int,
-    nexhealth_subdomain: str,
     nexhealth_location_id: int,
+    nexhealth_subdomain: str,
     peerlogic_organization: PeerlogicOrganization,
     peerlogic_practice: PeerlogicPractice,
-    is_institution_bound_to_practice: bool,
-    appointment_start_time: datetime.datetime,
-    appointment_end_time: datetime.datetime,
 ) -> None:
     """
     Create/Update NexHealth DB records for resources pertaining to the given Practice/Organization
     """
-
     log.info(
         f"Initializing NexHealth Integration resources for NexHealth Institution ({nexhealth_institution_id}), "
         f'SubDomain ("{nexhealth_subdomain}"), Location ({nexhealth_location_id}), and Peerlogic '
