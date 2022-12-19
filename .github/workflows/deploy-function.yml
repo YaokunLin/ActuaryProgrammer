@@ -109,7 +109,7 @@ jobs:
 # END Cloud Function Jobs - Do not edit below this line normally -----------------------------------------------------------------------------------------------
 
   slackSuccessNotification:
-    needs: [deploy_cloud_function_foo]
+    needs: [setup_environment, deploy_cloud_function_foo]
     runs-on: ubuntu-latest
     name: Slack Notification - Success
     steps:
@@ -124,7 +124,7 @@ jobs:
           SLACK_ICON_EMOJI: github
 
   slackFailureNotification:
-    needs: [deploy_cloud_function_foo]
+    needs: [setup_environment, deploy_cloud_function_foo]
     runs-on: ubuntu-latest
     if: always()
     name: Slack Notification - Failure
