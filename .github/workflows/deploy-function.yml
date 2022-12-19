@@ -163,14 +163,14 @@ jobs:
 # END Cloud Function Jobs - Do not edit below this line normally -----------------------------------------------------------------------------------------------
 
   slackSuccessNotification:
-    needs: [deploy_cloud_function_foo]
+    needs: [setup_environment, deploy_cloud_function_foo]
     runs-on: ubuntu-latest
     name: Slack Notification - Success
     steps:
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
         env:
-          SLACK_CHANNEL: ${{ needs.setup_environment.outputs.gcp_env }}-deployments
+          SLACK_CHANNEL: "${{ needs.setup_environment.outputs.gcp_env }}-deployments"
           SLACK_COLOR: '#3278BD'
           SLACK_TITLE: Cloud Function Deploy Complete
           SLACK_USERNAME: Deploying Function ${{ needs.setup_environment.outputs.base_name }}
@@ -178,7 +178,7 @@ jobs:
           SLACK_ICON_EMOJI: github
 
   slackFailureNotification:
-    needs: [deploy_cloud_function_foo]
+    needs: [setup_environment, deploy_cloud_function_foo]
     runs-on: ubuntu-latest
     if: always()
     name: Slack Notification - Failure
@@ -189,7 +189,7 @@ jobs:
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
         env:
-          SLACK_CHANNEL: ${{ needs.setup_environment.outputs.gcp_env }}-deployments
+          SLACK_CHANNEL: "${{ needs.setup_environment.outputs.gcp_env }}-deployments"
           SLACK_COLOR: '#f54242'
           SLACK_TITLE: Function Deploy or PubSub Config Failed
           SLACK_USERNAME: ${{ needs.setup_environment.outputs.base_name }}
