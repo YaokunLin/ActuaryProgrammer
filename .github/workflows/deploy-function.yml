@@ -51,14 +51,14 @@ jobs:
 
 # BEGIN Cloud Function Jobs - Do not edit above this line normally ---------------------------------------------------------------------------------------------
 # See https://github.com/google-github-actions/deploy-cloud-functions for more information
-  deploy_cloud_function_foo:
+  deploy_cloud_function_nexhealth_initialize_practice:
     runs-on: ubuntu-latest
     needs: setup_environment
     permissions:
       contents: 'read'
       id-token: 'write'
     env:
-      FUNCTION_NAME: foo
+      FUNCTION_NAME: nexhealth_initialize_practice
 
     steps:
       - name: Checkout
@@ -75,7 +75,7 @@ jobs:
         run: |
           cp requirements/requirements.txt requirements.txt
 
-      - name: Deploy Cloud Function - Foo
+      - name: Deploy Cloud Function - NexHealth Initialize Practice
         uses: 'google-github-actions/deploy-cloud-functions@v0'
         with:
           deploy_timeout: 900
@@ -97,7 +97,7 @@ jobs:
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v0'
 
-      - name: Configure deadletter - Foo
+      - name: Configure deadletter - Initialize Practice
         run: |
           gcloud pubsub subscriptions update \
           "gcf-cf-${{ needs.setup_environment.outputs.gcp_env }}-${{ needs.setup_environment.outputs.base_name }}-${{ env.FUNCTION_NAME }}-${{ needs.setup_environment.outputs.region }}-${{ needs.setup_environment.outputs.gcp_env }}-${{ env.FUNCTION_NAME }}" \
@@ -105,65 +105,10 @@ jobs:
           --dead-letter-topic-project="peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}" \
           --max-delivery-attempts=6 \
           --min-retry-delay=2m
-
-  deploy_cloud_function_bar:
-    runs-on: ubuntu-latest
-    needs: setup_environment
-    permissions:
-      contents: 'read'
-      id-token: 'write'
-    env:
-      FUNCTION_NAME: bar
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Authenticate to GCP
-        id: auth
-        uses: google-github-actions/auth@v0
-        with:
-          workload_identity_provider: "projects/${{ needs.setup_environment.outputs.gcp_project }}/locations/global/workloadIdentityPools/${{ needs.setup_environment.outputs.base_name }}/providers/${{ needs.setup_environment.outputs.base_name }}"
-          service_account: "github-sa@peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}.iam.gserviceaccount.com"
-
-      - name: Copy requirements.txt to root
-        run: |
-          cp requirements/requirements.txt requirements.txt
-
-      - name: Deploy Cloud Function - Bar
-        uses: 'google-github-actions/deploy-cloud-functions@v0'
-        with:
-          deploy_timeout: 900
-          entry_point: ${{ env.FUNCTION_NAME }}
-          env_vars: "REGION=${{ needs.setup_environment.outputs.region }},GOOGLE_CLOUD_PROJECT=peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}"
-          event_trigger_resource: projects/peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}/topics/${{ needs.setup_environment.outputs.gcp_env }}-${{ env.FUNCTION_NAME }}
-          event_trigger_retry: true
-          event_trigger_type: google.pubsub.topic.publish
-          max_instances: 1
-          memory_mb: 512
-          name: "cf-${{ needs.setup_environment.outputs.gcp_env }}-${{ needs.setup_environment.outputs.base_name }}-${{ env.FUNCTION_NAME }}"
-          project_id: "peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}"
-          region: "${{ needs.setup_environment.outputs.region }}"
-          runtime: 'python39'
-          source_dir: .
-          timeout: 540
-          vpc_connector: "projects/peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}/locations/${{ needs.setup_environment.outputs.region }}/connectors/peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}"
-
-      - name: 'Set up Cloud SDK'
-        uses: 'google-github-actions/setup-gcloud@v0'
-
-      - name: Configure deadletter - Bar
-        run: |
-          gcloud pubsub subscriptions update \
-          "gcf-cf-${{ needs.setup_environment.outputs.gcp_env }}-${{ needs.setup_environment.outputs.base_name }}-${{ env.FUNCTION_NAME }}-${{ needs.setup_environment.outputs.region }}-${{ needs.setup_environment.outputs.gcp_env }}-${{ env.FUNCTION_NAME }}" \
-          --dead-letter-topic="${{ needs.setup_environment.outputs.gcp_env }}-${{ env.FUNCTION_NAME }}-failed" \
-          --dead-letter-topic-project="peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}" \
-          --max-delivery-attempts=6 \
-          --min-retry-delay=2m
-# END Cloud Function Jobs - Do not edit below this line normally -----------------------------------------------------------------------------------------------
+# END Cloud Function Jobs --------------------------------------------------------------------------------------------------------------------------------------
 
   slackSuccessNotification:
-    needs: [setup_environment, deploy_cloud_function_foo]
+    needs: [setup_environment, deploy_cloud_function_nexhealth_initialize_practice]
     runs-on: ubuntu-latest
     name: Slack Notification - Success
     steps:
@@ -178,7 +123,7 @@ jobs:
           SLACK_ICON_EMOJI: github
 
   slackFailureNotification:
-    needs: [setup_environment, deploy_cloud_function_foo]
+    needs: [setup_environment, deploy_cloud_function_nexhealth_initialize_practice]
     runs-on: ubuntu-latest
     if: always()
     name: Slack Notification - Failure

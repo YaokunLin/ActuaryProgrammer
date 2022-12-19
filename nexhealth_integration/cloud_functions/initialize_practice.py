@@ -1,7 +1,7 @@
 import datetime
 import logging
 import os
-from typing import Optional
+from typing import Dict, Optional
 
 import django
 
@@ -23,7 +23,13 @@ from peerlogic.settings import (
 log = NexHealthLogAdapter(logging.getLogger(__name__))
 
 
-def initialize_nexhealth_records_for_practice(
+def nexhealth_initialize_practice(event: Dict, context: Dict) -> None:
+    log.info(f"Started nexhealth_initialize_practice! Event: {event}, Context: {context}")
+    # TODO Kyle
+    log.info(f"Completed nexhealth_initialize_practice!")
+
+
+def _initialize_nexhealth_records_for_practice(
     nexhealth_institution_id: int,
     nexhealth_subdomain: str,
     nexhealth_location_id: int,
@@ -148,7 +154,7 @@ if __name__ == "__main__":
     practice = PeerlogicPractice.objects.get(id="39Zg3tQtHppG6jpx6jSxc6")
     organization = PeerlogicOrganization.objects.get(id="QDuCEPfRwuScig7YxBvstG")
 
-    initialize_nexhealth_records_for_practice(
+    _initialize_nexhealth_records_for_practice(
         nexhealth_institution_id=4047,
         nexhealth_subdomain="peerlogic-od-sandbox",
         nexhealth_location_id=25229,

@@ -13,7 +13,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "peerlogic.settings")
 django.setup()
 log = logging.getLogger(__name__)
 
-from core.cloud_functions.bar import bar
-
 # noqa
-from nexhealth_integration.cloud_functions.foo import foo
+from nexhealth_integration.cloud_functions.initialize_practice import (
+    nexhealth_initialize_practice,
+)
