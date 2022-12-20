@@ -13,10 +13,6 @@ log = logging.getLogger(__name__)
 
 
 def get_validated_call_dates(request: Request) -> Dict:
-    """
-    TODO Kyle: Meaningful docstring
-    """
-
     header_name = "HTTP_TIMEZONE"
     tzname = request.META.get(header_name)
     if not tzname or tzname not in zoneinfo.available_timezones():

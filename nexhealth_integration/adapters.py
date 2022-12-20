@@ -309,8 +309,8 @@ def update_or_create_insurance_coverage_from_dict(
         "nh_id": nh_id,
         "nh_patient_id": nh_patient_id,
         "nh_insurance_plan_id": nh_insurance_plan_id,
-        "effective_date": data["effective_date"],  # TODO Kyle: Type
-        "expiration_date": data["expiration_date"],  # TODO Kyle: Type
+        "effective_date": data["effective_date"],
+        "expiration_date": data["expiration_date"],
         "priority": data["priority"],
         "subscriber_num": data["subscriber_num"],
         "subscription_relation": data["subscription_relation"],
