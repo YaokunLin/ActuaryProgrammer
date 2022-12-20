@@ -7,6 +7,7 @@ from typing import Dict, Optional
 from core.models import Organization as PeerlogicOrganization
 from core.models import Practice as PeerlogicPractice
 from nexhealth_integration import adapters
+from nexhealth_integration.models import Location
 from nexhealth_integration.nexhealth_api_client import NexHealthAPIClient
 from nexhealth_integration.utils import NexHealthLogAdapter
 from peerlogic.settings import (
@@ -23,7 +24,7 @@ def nexhealth_initialize_practice(event: Dict, context: Dict) -> None:
     data = json.loads(base64.b64decode(event["data"]).decode())
     peerlogic_practice = PeerlogicPractice.objects.get(id=data["peerlogic_practice_id"])
     peerlogic_organization = PeerlogicOrganization.objects.get(id=data["peerlogic_organization_id"])
-    _ingest_all_nexhealth_records_for_practice(
+    ingest_all_nexhealth_records_for_practice(
         appointment_end_time=datetime.datetime.fromisoformat(data["appointment_end_time"]),
         appointment_start_time=datetime.datetime.fromisoformat(data["appointment_start_time"]),
         is_institution_bound_to_practice=data["is_institution_bound_to_practice"],
@@ -36,7 +37,7 @@ def nexhealth_initialize_practice(event: Dict, context: Dict) -> None:
     log.info(f"Completed nexhealth_initialize_practice!")
 
 
-def _ingest_all_nexhealth_records_for_practice(
+def ingest_all_nexhealth_records_for_practice(
     appointment_end_time: datetime.datetime,
     appointment_start_time: datetime.datetime,
     is_institution_bound_to_practice: bool,
@@ -47,7 +48,9 @@ def _ingest_all_nexhealth_records_for_practice(
     peerlogic_practice: PeerlogicPractice,
 ) -> None:
     """
-    Ingest NexHealth records for resources pertaining to the given Practice/Organization
+    Ingest NexHealth records for resources pertaining to the given Practice/Organization.
+
+    If resources for the given NexHealth Location have been ingested before, records will be filtered on updated_since.
     """
     log.info(
         f"Ingesting NexHealth resources for NexHealth Institution ({nexhealth_institution_id}), "
@@ -56,13 +59,28 @@ def _ingest_all_nexhealth_records_for_practice(
         f"Practice: {peerlogic_practice.name} ({peerlogic_practice.id}). NexHealth institution will be bound to "
         f"{'practice' if is_institution_bound_to_practice else 'organization'}."
     )
+    now = datetime.datetime.utcnow()
     client = _construct_nexhealth_api_client(nexhealth_institution_id, nexhealth_subdomain, nexhealth_location_id)
     _ingest_institution(client, peerlogic_practice, peerlogic_organization if is_institution_bound_to_practice else None)
-    _ingest_location(client, peerlogic_practice)
-    _ingest_insurance_plans(client)
-    _ingest_providers(client)
-    _ingest_patients_and_insurance_coverages(client)
-    _ingest_appointments(client, appointment_start_time, appointment_end_time)
+    location = _ingest_location(client, peerlogic_practice)
+    if location.updated_from_nexhealth_at is None:
+        # Only index all insurance plans the first time we ingest data for the location
+        # After this, we'll keep everything up-to-date as we pull in patients
+        _ingest_insurance_plans(client)
+    else:
+        log.info(
+            f"NexHealth resources for  Location ({nexhealth_location_id}) have been ingested before. "
+            f"Filtering updated_since={location.updated_from_nexhealth_at}"
+        )
+        log.info(
+            "Not ingesting InsurancePlans since this Location has been previously ingested. InsurancePlans will be ingested as we ingest updated patients."
+        )
+
+    _ingest_providers(client, updated_since=location.updated_from_nexhealth_at)
+    _ingest_patients_and_insurance_coverages(client, updated_since=location.updated_from_nexhealth_at)
+    _ingest_appointments(client, appointment_start_time, appointment_end_time, updated_since=location.updated_from_nexhealth_at)
+    location.updated_from_nexhealth_at = now
+    location.save()
     log.info(
         f"Completed ingesting NexHealth resources for NexHealth Institution ({nexhealth_institution_id}), "
         f'SubDomain ("{nexhealth_subdomain}"), Location ({nexhealth_location_id}), and Peerlogic '
@@ -88,11 +106,12 @@ def _ingest_institution(client: NexHealthAPIClient, practice: PeerlogicPractice,
     log.info(f"Institution ({institution.id}) for NexHealth Institution {institution.nh_id} successfully {'created' if institution_created else 'updated'}!")
 
 
-def _ingest_location(client: NexHealthAPIClient, practice: PeerlogicPractice) -> None:
+def _ingest_location(client: NexHealthAPIClient, practice: PeerlogicPractice) -> Location:
     log.info("Ingesting Location")
     r = client.get_location()
     location, location_created = adapters.update_or_create_location_from_dict(r.response_nh_data, peerlogic_practice=practice)
     log.info(f"Location ({location.id}) for NexHealth Location {location.nh_id} successfully {'created' if location_created else 'updated'}!")
+    return location
 
 
 def _ingest_insurance_plans(client: NexHealthAPIClient) -> None:
@@ -109,11 +128,11 @@ def _ingest_insurance_plans(client: NexHealthAPIClient) -> None:
     log.info(f"Created {created} and updated {updated} InsurancePlans!")
 
 
-def _ingest_providers(client: NexHealthAPIClient) -> None:
+def _ingest_providers(client: NexHealthAPIClient, updated_since: Optional[datetime.datetime]) -> None:
     log.info("Ingesting Providers (and ProviderLocations)")
     created = 0
     updated = 0
-    for r in client.iterate_list_requests(client.list_providers):
+    for r in client.iterate_list_requests(client.list_providers, updated_since=updated_since):
         for provider_data in r.response_nh_data:
             _, was_created = adapters.update_or_create_provider_from_dict(provider_data)
             if was_created:

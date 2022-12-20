@@ -290,7 +290,7 @@ class NexHealthAPIClient:
             "per_page": per_page if per_page is not None else self._max_per_page,
         }
         if updated_since is not None:
-            params["updated_since"] = updated_since
+            params["updated_since"] = updated_since.isoformat()
         if foreign_id is not None:
             params["foreign_id"] = foreign_id
         if requestable is not None:

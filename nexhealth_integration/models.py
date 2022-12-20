@@ -94,6 +94,7 @@ class Location(AuditTrailDateTimeOnlyModel):
     nh_institution_id = models.PositiveIntegerField(db_index=True)
     nh_last_sync_time = models.DateTimeField(null=True)
     nh_updated_at = models.DateTimeField(null=True)
+    updated_from_nexhealth_at = models.DateTimeField(null=True)
 
     peerlogic_practice = models.ForeignKey(to="core.Practice", on_delete=models.SET_NULL, null=True, related_name="nexhealth_locations")
 
