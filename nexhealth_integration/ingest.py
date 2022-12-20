@@ -19,8 +19,8 @@ from peerlogic.settings import (
 log = NexHealthLogAdapter(logging.getLogger(__name__))
 
 
-def nexhealth_initialize_practice(event: Dict, context: Dict) -> None:
-    log.info(f"Started nexhealth_initialize_practice! Event: {event}, Context: {context}")
+def nexhealth_ingest_practice(event: Dict, context: Dict) -> None:
+    log.info(f"Started nexhealth_ingest_practice! Event: {event}, Context: {context}")
     data = json.loads(base64.b64decode(event["data"]).decode())
     peerlogic_practice = PeerlogicPractice.objects.get(id=data["peerlogic_practice_id"])
     peerlogic_organization = PeerlogicOrganization.objects.get(id=data["peerlogic_organization_id"])
@@ -34,7 +34,7 @@ def nexhealth_initialize_practice(event: Dict, context: Dict) -> None:
         peerlogic_organization=peerlogic_practice,
         peerlogic_practice=peerlogic_organization,
     )
-    log.info(f"Completed nexhealth_initialize_practice!")
+    log.info(f"Completed nexhealth_ingest_practice!")
 
 
 def ingest_all_nexhealth_records_for_practice(
@@ -59,7 +59,7 @@ def ingest_all_nexhealth_records_for_practice(
         f"Practice: {peerlogic_practice.name} ({peerlogic_practice.id}). NexHealth institution will be bound to "
         f"{'practice' if is_institution_bound_to_practice else 'organization'}."
     )
-    now = datetime.datetime.utcnow()
+    location_updated_at = datetime.datetime.utcnow()
     client = _construct_nexhealth_api_client(nexhealth_institution_id, nexhealth_subdomain, nexhealth_location_id)
     _ingest_institution(client, peerlogic_practice, peerlogic_organization if is_institution_bound_to_practice else None)
     location = _ingest_location(client, peerlogic_practice)
@@ -79,8 +79,7 @@ def ingest_all_nexhealth_records_for_practice(
     _ingest_providers(client, updated_since=location.updated_from_nexhealth_at)
     _ingest_patients_and_insurance_coverages(client, updated_since=location.updated_from_nexhealth_at)
     _ingest_appointments(client, appointment_start_time, appointment_end_time, updated_since=location.updated_from_nexhealth_at)
-    location.updated_from_nexhealth_at = now
-    location.save()
+    _mark_location_updated(location, location_updated_at)
     log.info(
         f"Completed ingesting NexHealth resources for NexHealth Institution ({nexhealth_institution_id}), "
         f'SubDomain ("{nexhealth_subdomain}"), Location ({nexhealth_location_id}), and Peerlogic '
@@ -88,6 +87,16 @@ def ingest_all_nexhealth_records_for_practice(
         f"Practice: {peerlogic_practice.name} ({peerlogic_practice.id}). NexHealth institution is bound to "
         f"{'practice' if is_institution_bound_to_practice else 'organization'}."
     )
+
+
+def _mark_location_updated(
+    location: Location,
+    updated_from_nexhealth_at: datetime.datetime,
+):
+    log.info(f"Updating Location ({location.id}) is_initialized=True, updated_from_nexhealth_at={updated_from_nexhealth_at.isoformat()}")
+    location.updated_from_nexhealth_at = updated_from_nexhealth_at
+    location.is_initialized = True
+    location.save()
 
 
 def _construct_nexhealth_api_client(institution_id: int, subdomain: str, location_id: int) -> NexHealthAPIClient:

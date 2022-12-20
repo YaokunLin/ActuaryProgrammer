@@ -14,6 +14,6 @@ django.setup()
 log = logging.getLogger(__name__)
 
 # noqa
-from nexhealth_integration.cloud_functions.initialize_practice import (
-    nexhealth_initialize_practice,
+from nexhealth_integration.cloud_functions.ingest_records_for_practice import (
+    nexhealth_ingest_practice,
 )

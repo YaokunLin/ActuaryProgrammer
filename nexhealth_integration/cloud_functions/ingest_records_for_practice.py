@@ -18,8 +18,8 @@ from nexhealth_integration.utils import NexHealthLogAdapter
 log = NexHealthLogAdapter(logging.getLogger(__name__))
 
 
-def nexhealth_initialize_practice(event: Dict, context: Dict) -> None:
-    log.info(f"Started nexhealth_initialize_practice! Event: {event}, Context: {context}")
+def nexhealth_ingest_practice(event: Dict, context: Dict) -> None:
+    log.info(f"Started nexhealth_ingest_practice! Event: {event}, Context: {context}")
     data = json.loads(base64.b64decode(event["data"]).decode())
     peerlogic_practice = PeerlogicPractice.objects.get(id=data["peerlogic_practice_id"])
     peerlogic_organization = PeerlogicOrganization.objects.get(id=data["peerlogic_organization_id"])
@@ -33,7 +33,7 @@ def nexhealth_initialize_practice(event: Dict, context: Dict) -> None:
         peerlogic_organization=peerlogic_practice,
         peerlogic_practice=peerlogic_organization,
     )
-    log.info(f"Completed nexhealth_initialize_practice!")
+    log.info(f"Completed nexhealth_ingest_practice!")
 
 
 if __name__ == "__main__":

@@ -45,14 +45,14 @@ jobs:
 
 # BEGIN Cloud Function Jobs - Do not edit above this line normally ---------------------------------------------------------------------------------------------
 # See https://github.com/google-github-actions/deploy-cloud-functions for more information
-  deploy_cloud_function_nexhealth_initialize_practice:
+  deploy_cloud_function_nexhealth_ingest_practice:
     runs-on: ubuntu-latest
     needs: setup_environment
     permissions:
       contents: 'read'
       id-token: 'write'
     env:
-      FUNCTION_NAME: nexhealth_initialize_practice
+      FUNCTION_NAME: nexhealth_ingest_practice
 
     steps:
       - name: Checkout
@@ -69,7 +69,7 @@ jobs:
         run: |
           cp requirements/requirements.txt requirements.txt
 
-      - name: Deploy Cloud Function - NexHealth Initialize Practice
+      - name: Deploy Cloud Function - NexHealth Ingest Practice
         uses: 'google-github-actions/deploy-cloud-functions@v0'
         with:
           build_environment_variables: "ALLOWED_HOSTS=localhost,DJANGO_SECRET_KEY=foo"
@@ -92,7 +92,7 @@ jobs:
       - name: 'Set up Cloud SDK'
         uses: 'google-github-actions/setup-gcloud@v0'
 
-      - name: Configure deadletter - Initialize Practice
+      - name: Configure deadletter - NexHealth Ingest Practice
         run: |
           gcloud pubsub subscriptions update \
           "gcf-cf-${{ needs.setup_environment.outputs.gcp_env }}-${{ needs.setup_environment.outputs.base_name }}-${{ env.FUNCTION_NAME }}-${{ needs.setup_environment.outputs.region }}-${{ needs.setup_environment.outputs.gcp_env }}-${{ env.FUNCTION_NAME }}" \
@@ -103,7 +103,7 @@ jobs:
 # END Cloud Function Jobs --------------------------------------------------------------------------------------------------------------------------------------
 
   slackSuccessNotification:
-    needs: [setup_environment, deploy_cloud_function_nexhealth_initialize_practice]
+    needs: [setup_environment, deploy_cloud_function_nexhealth_ingest_practice]
     runs-on: ubuntu-latest
     name: Slack Notification - Success
     steps:
@@ -118,7 +118,7 @@ jobs:
           SLACK_ICON_EMOJI: github
 
   slackFailureNotification:
-    needs: [setup_environment, deploy_cloud_function_nexhealth_initialize_practice]
+    needs: [setup_environment, deploy_cloud_function_nexhealth_ingest_practice]
     runs-on: ubuntu-latest
     if: always()
     name: Slack Notification - Failure
