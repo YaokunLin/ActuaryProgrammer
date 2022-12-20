@@ -1,4 +1,5 @@
 from concurrent import futures
+from datetime import datetime, timedelta
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser
@@ -16,9 +17,10 @@ from peerlogic.settings import PUBSUB_TOPIC_PATH_NEXHEALTH_INGEST_PRACTICE
 def ingest_practice(request: Request) -> Response:
     serializer = NexHealthInitializePracticeSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
+    now = datetime.utcnow()
     event_data = {
-        "appointment_end_time": serializer.validated_data["appointment_end_time"],
-        "appointment_start_time": serializer.validated_data["appointment_start_time"],
+        "appointment_end_time": (serializer.validated_data.get("appointment_end_time") or (now + timedelta(weeks=52))).isoformat(),
+        "appointment_start_time": (serializer.validated_data.get("appointment_start_time") or (now - timedelta(weeks=52))).isoformat(),
         "is_institution_bound_to_practice": serializer.validated_data["is_institution_bound_to_practice"],
         "nexhealth_institution_id": serializer.validated_data["nexhealth_institution_id"],
         "nexhealth_location_id": serializer.validated_data["nexhealth_location_id"],

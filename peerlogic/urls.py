@@ -22,16 +22,20 @@ from core.urls import urlpatterns as core_urlpatterns
 from etl.urls import urlpatterns as etl_urlpatterns
 from inbox.urls import urlpatterns as inbox_urlpatterns
 from ml.urls import urlpatterns as ml_urlpatterns
+from nexhealth_integration.cron.urls import urlpatterns as cron_nexhealth_urlpatterns
 from nexhealth_integration.urls import urlpatterns as nexhealth_urlpatterns
 from peerlogic.views import health_check, status
 from reminders.urls import urlpatterns as reminders_urlpatterns
 
 admin.site.site_header = "Peerlogic API Admin Portal"
 
+cron_url_patterns = [path("nexhealth/", include(cron_nexhealth_urlpatterns))]
+
 integration_url_patterns = [
     path("jive/", include("jive_integration.urls", namespace="jive")),
     path("netsapiens/", include("netsapiens_integration.urls", namespace="netsapiens")),
     path("ringcentral/", include("ringcentral_integration.urls", namespace="ringcentral")),
+    path("nexhealth/", include(nexhealth_urlpatterns)),
 ]
 
 urlpatterns = [
@@ -48,6 +52,6 @@ urlpatterns = [
     path("api/", include(inbox_urlpatterns)),
     path("api/", include(ml_urlpatterns)),
     path("api/", include(reminders_urlpatterns)),
-    path("api/nexhealth/", include(nexhealth_urlpatterns)),
     path("oauth/", include("oauth2_provider.urls", namespace="oauth2_provider")),
+    path("cron/", include(cron_url_patterns)),
 ]

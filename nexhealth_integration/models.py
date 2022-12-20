@@ -91,13 +91,13 @@ class Location(AuditTrailDateTimeOnlyModel):
     nh_created_at = models.DateTimeField()
     nh_id = models.PositiveIntegerField(db_index=True)
     nh_inactive = models.BooleanField(db_index=True)
-    nh_institution_id = models.PositiveIntegerField(db_index=True)
     nh_last_sync_time = models.DateTimeField(null=True)
     nh_updated_at = models.DateTimeField(null=True)
-    updated_from_nexhealth_at = models.DateTimeField(null=True)
+    updated_from_nexhealth_at = models.DateTimeField(null=True)  # This is the most recent time Peerlogic fetched updates for the location
     is_initialized = models.BooleanField(default=False)
 
     peerlogic_practice = models.ForeignKey(to="core.Practice", on_delete=models.SET_NULL, null=True, related_name="nexhealth_locations")
+    nh_institution = models.ForeignKey(to=Institution, to_field="nh_id", on_delete=models.CASCADE, related_name="locations")  # type: ignore
 
     city = models.CharField(max_length=255, null=True)
     email = models.EmailField(null=True)
