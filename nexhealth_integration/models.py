@@ -90,7 +90,7 @@ class Location(AuditTrailDateTimeOnlyModel):
 
     nh_created_at = models.DateTimeField()
     nh_id = models.PositiveIntegerField(db_index=True)
-    nh_inactive = models.BooleanField()
+    nh_inactive = models.BooleanField(db_index=True)
     nh_institution_id = models.PositiveIntegerField(db_index=True)
     nh_last_sync_time = models.DateTimeField(null=True)
     nh_updated_at = models.DateTimeField(null=True)
@@ -129,7 +129,7 @@ class Provider(AuditTrailDateTimeOnlyModel):
 
     nh_created_at = models.DateTimeField()
     nh_id = models.PositiveIntegerField(db_index=True)
-    nh_inactive = models.BooleanField()
+    nh_inactive = models.BooleanField(db_index=True)
     nh_institution_id = models.PositiveIntegerField(db_index=True)
     nh_last_sync_time = models.DateTimeField(null=True)
     nh_updated_at = models.DateTimeField(null=True)
@@ -183,7 +183,7 @@ class Patient(AuditTrailDateTimeOnlyModel):
     nh_created_at = models.DateTimeField()
     nh_guarantor_id = models.PositiveIntegerField(db_index=True, null=True)
     nh_id = models.PositiveIntegerField(db_index=True)
-    nh_inactive = models.BooleanField()
+    nh_inactive = models.BooleanField(db_index=True)
     nh_institution_id = models.PositiveIntegerField(db_index=True)
     nh_last_sync_time = models.DateTimeField(null=True)
     nh_updated_at = models.DateTimeField(null=True)
@@ -240,7 +240,7 @@ class NexHealthPatientLink(models.Model):
 
 class Procedure(AuditTrailDateTimeOnlyModel):
     """
-    Similar to a "Procedure" in Peerlogic except that it's bount to a single appointment
+    Similar to a "Procedure" in Peerlogic except that it's bound to a single appointment
 
     NexHealth Reference: https://docs.nexhealth.com/reference/procedures
     """
@@ -289,9 +289,9 @@ class Appointment(AuditTrailDateTimeOnlyModel):
     nh_provider_id = models.PositiveIntegerField(db_index=True)
     nh_updated_at = models.DateTimeField(null=True)
     nh_institution_id = models.PositiveIntegerField(db_index=True)
-    nh_deleted = models.BooleanField()
+    nh_deleted = models.BooleanField(db_index=True)
 
-    cancelled = models.BooleanField(null=True)
+    cancelled = models.BooleanField(null=True, db_index=True)
     cancelled_at = models.DateTimeField(null=True)
     checked_out = models.BooleanField(null=True)
     checked_out_at = models.DateTimeField(null=True)
@@ -303,7 +303,7 @@ class Appointment(AuditTrailDateTimeOnlyModel):
     foreign_id_type = models.CharField(max_length=255, null=True)
     is_guardian = models.BooleanField(null=True)
     is_new_clients_patient = models.BooleanField(null=True)
-    is_past_patient = models.BooleanField(null=True)
+    is_past_patient = models.BooleanField(null=True, db_index=True)
     misc = models.JSONField(null=True)  # e.g. {"is_booked_on_nexhealth": true}
     note = models.TextField(null=True, blank=True)
     patient_confirmed = models.BooleanField(null=True)
@@ -312,9 +312,9 @@ class Appointment(AuditTrailDateTimeOnlyModel):
     provider_name = models.CharField(max_length=255, null=True)
     referrer = models.CharField(max_length=255, null=True)
     sooner_if_possible = models.BooleanField(null=True)
-    start_time = models.DateTimeField(null=True)
+    start_time = models.DateTimeField(null=True, db_index=True)
     timezone_offset = models.TextField(max_length=128, null=True, blank=True)
-    unavailable = models.BooleanField(null=True)
+    unavailable = models.BooleanField(null=True, db_index=True)
 
     class Meta:
         constraints = [
