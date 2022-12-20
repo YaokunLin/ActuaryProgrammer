@@ -179,6 +179,7 @@ class NexHealthAPIClient:
         include_adjustments: bool = True,
         include_procedures: bool = False,
         include_insurance_coverages: bool = True,
+        updated_since: Optional[datetime] = None,
     ) -> APIRequest:
         """
         NexHealth Reference: https://docs.nexhealth.com/reference/getpatients
@@ -201,6 +202,8 @@ class NexHealthAPIClient:
             params["email"] = email
         if phone_number is not None:
             params["phone_number"] = phone_number
+        if updated_since is not None:
+            params["updated_since"] = updated_since.isoformat()
 
         include = []
         if include_upcoming_appts:
@@ -224,15 +227,15 @@ class NexHealthAPIClient:
         start_time: datetime,
         end_time: datetime,
         page: int = 1,
-        per_page: Optional[int] = None,
-        updated_since: Optional[datetime] = None,
+        appointment_type_id: Optional[int] = None,
+        include_booking_details: bool = True,
+        include_descriptors: bool = True,
+        include_patients: bool = False,  # patient_id will still be included
+        include_procedures: bool = True,
         is_cancelled: Optional[bool] = None,
         patient_id: Optional[int] = None,
-        appointment_type_id: Optional[int] = None,
-        include_patients: bool = False,  # patient_id will still be included
-        include_booking_details: bool = True,
-        include_procedures: bool = True,
-        include_descriptors: bool = True,
+        per_page: Optional[int] = None,
+        updated_since: Optional[datetime] = None,
     ) -> APIRequest:
         """
         NexHealth Reference: https://docs.nexhealth.com/reference/getappointments
@@ -246,7 +249,7 @@ class NexHealthAPIClient:
             "per_page": per_page if per_page is not None else self._max_per_page,
         }
         if updated_since is not None:
-            params["updated_since"] = updated_since
+            params["updated_since"] = updated_since.isoformat()
         if is_cancelled is not None:
             params["cancelled"] = is_cancelled
         if patient_id is not None:
