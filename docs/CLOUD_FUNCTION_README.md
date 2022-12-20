@@ -22,17 +22,17 @@ performing operations against our [RDBMS](https://cloud.google.com/sql/docs/read
 
 ## Implementation / Anatomy
 
-#### [Entrypoint](main.py)
+#### [Entrypoint](../main.py)
 
 Cloud Function entrypoints are python functions with a specific signature in a specific file[^1].
-Because of this, we must have a single [main.py](main.py) file for the entire project which has
+Because of this, we must have a single [main.py](../main.py) file for the entire project which has
 the following responsibilities:
 1. Set up the Django environment so that we can use the ORM. This includes loading of general configuration.
 2. Import and expose entrypoints to Cloud Functions which are defined in their respective app directories.
 
 This file should only be importing code from elsewhere. No functions should be defined here.
 
-#### [GitHub Action Configuration](main.py)
+#### [GitHub Action Configuration](../main.py)
 
 This is a spicy [YAML](https://yaml.org/) file that configures the [GitHub Action](https://github.com/features/actions) (CI)
 for all of our cloud functions.
@@ -44,7 +44,7 @@ This file is broken down into jobs and those jobs are broken down into steps:
    - These jobs take about 3-5 minutes each and (again) run concurrently. Each job:
       - Checks out the code
       - Authenticates to GCP
-      - Copies [requirements.txt](requirements/requirements.txt) to root directory[^1]
+      - Copies [requirements.txt](../requirements/requirements.txt) to root directory[^1]
       - Deploys the Cloud Function and configures the [Subscription](https://cloud.google.com/pubsub/docs/readme_images/create-subscription)
       - Configuration for the Cloud Function can be changed when necessary (e.g. memory, timeout, etc.)[^2]
 3. Job runs to announce success or failure to Slack
@@ -126,20 +126,20 @@ Following our best practices, this topic will be backed by a deadletter topic.
 
 First, let's start by creating our Pub/Sub topic in [the appropriate terraform file](https://github.com/peerlogictech/infrastructure/commit/e9b95cc5764f6f31a6666050a450a932457a3674):
 
-![docs/readme_images/create_pubsub_topic_infra_commit.png](docs/readme_images/create_pubsub_topic_infra_commit.png)
+![docs/readme_images/create_pubsub_topic_infra_commit.png](readme_images/create_pubsub_topic_infra_commit.png)
 
 After that is committed to the appropriate branch for the environment (dev in our case),
 we need to apply the change via [Terraform Cloud](https://app.terraform.io/app/peerlogic/workspaces?organization_name=peerlogic).
 
-![docs/readme_images/create_pubsub_topic_tf_cloud.png](docs/readme_images/create_pubsub_topic_tf_cloud.png)
+![docs/readme_images/create_pubsub_topic_tf_cloud.png](readme_images/create_pubsub_topic_tf_cloud.png)
 
 After the change has been applied, our GCP Pub/Sub topic is created and ready to go:
 
-![docs/readme_images/gcp_pubsub_topics_bar.png](docs/readme_images/gcp_pubsub_topics_bar.png)
+![docs/readme_images/gcp_pubsub_topics_bar.png](readme_images/gcp_pubsub_topics_bar.png)
 
 You'll notice a deadletter topic and subscription were created as well:
 
-![docs/readme_images/gcp_pubsub_subscriptions_bar.png](docs/readme_images/gcp_pubsub_subscriptions_bar.png)
+![docs/readme_images/gcp_pubsub_subscriptions_bar.png](readme_images/gcp_pubsub_subscriptions_bar.png)
 
 ### Peerlogic API Code Changes
 
@@ -148,7 +148,7 @@ You'll notice a deadletter topic and subscription were created as well:
 Let's define our cloud function in the `core` app! To do this, we'll create a new python package
 in the `core` directory named `cloud_functions`:
 
-![docs/readme_images/add_cloud_function_code_bar.png](docs/readme_images/add_cloud_function_code_bar.png)
+![docs/readme_images/add_cloud_function_code_bar.png](readme_images/add_cloud_function_code_bar.png)
 
 Inside this `cloud_functions` directory, we'll
 create our `bar.py` file:
@@ -184,7 +184,7 @@ that will be invoked when an event comes over the wire on our Pub/Sub topic.
 #### 2. Expose the new entrypoint
 
 Now that we've added the code we want to execute, let's wire it up. We need to import our newly-created
-function above in [main.py](main.py):
+function above in [main.py](../main.py):
 ```python
 import logging
 import os
@@ -212,7 +212,7 @@ from core.cloud_functions.bar import bar  # noqa
 
 Now that the python code is ready, we need to update our CI configuration to deploy our cloud function
 as when we merge and release the code. To do this, we need to add a new job to
-[the GitHub Action YML file](.github/workflows/deploy-function.yml). The job we're adding is best done by
+[the GitHub Action YML file](../.github/workflows/deploy-function.yml). The job we're adding is best done by
 copy+paste+editing an existing Cloud Function deploy job in the file.
 
 1. The job should be called `deploy_cloud_function_<OUR_FUNCTION_NAME>`
@@ -254,6 +254,7 @@ copy+paste+editing an existing Cloud Function deploy job in the file.
       - name: Deploy Cloud Function - Bar
         uses: 'google-github-actions/deploy-cloud-functions@v0'
         with:
+          build_environment_variables: "ALLOWED_HOSTS=localhost ,DJANGO_SECRET_KEY=foo"
           deploy_timeout: 900
           entry_point: ${{ env.FUNCTION_NAME }}
           env_vars: "REGION=${{ needs.setup_environment.outputs.region }},GOOGLE_CLOUD_PROJECT=peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}"
@@ -307,9 +308,9 @@ Example:
 
 Once our code is merged to the `development` branch, the GitHub action should run and deploy our cloud function:
 
-![docs/readme_images/github_action_bar_1.png](docs/readme_images/github_action_bar_1.png)
+![docs/readme_images/github_action_bar_1.png](readme_images/github_action_bar_1.png)
 
-![docs/readme_images/github_action_bar_2.png](docs/readme_images/github_action_bar_2.png)
+![docs/readme_images/github_action_bar_2.png](readme_images/github_action_bar_2.png)
 
 
 #### 5. Verifying
@@ -318,13 +319,13 @@ Now that our function has deployed, we can publish a message to our Pub/Sub topi
 
 Let's go to our Pub/Sub topic in the GCP console and use the `Publish Message` button on the `Messages` tab for the topic:
 
-![docs/readme_images/pubsub_publish_message_1.png](docs/readme_images/pubsub_publish_message_1.png)
+![docs/readme_images/pubsub_publish_message_1.png](readme_images/pubsub_publish_message_1.png)
 
 For the message body, let's just send `{}`. No attributes or anything else. Defaults are fine.
 
 After we've published our message, we can make sure it worked by checking logs:
 
-![docs/readme_images/cloud_function_logs_bar.png](docs/readme_images/cloud_function_logs_bar.png)
+![docs/readme_images/cloud_function_logs_bar.png](readme_images/cloud_function_logs_bar.png)
 
 [^1]: https://cloud.google.com/functions/docs/readme_images/writing#directory-structure-python
 [^2]: https://github.com/google-github-actions/deploy-cloud-functions

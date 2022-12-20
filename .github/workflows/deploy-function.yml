@@ -78,9 +78,9 @@ jobs:
       - name: Deploy Cloud Function - NexHealth Initialize Practice
         uses: 'google-github-actions/deploy-cloud-functions@v0'
         with:
+          build_environment_variables: "ALLOWED_HOSTS=localhost,DJANGO_SECRET_KEY=foo"
           deploy_timeout: 900
           entry_point: ${{ env.FUNCTION_NAME }}
-          build_environment_variables: "ALLOWED_HOSTS=,DJANGO_SECRET_KEY=foo"
           env_vars: "REGION=${{ needs.setup_environment.outputs.region }},GOOGLE_CLOUD_PROJECT=peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}"
           event_trigger_resource: projects/peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}/topics/${{ needs.setup_environment.outputs.gcp_env }}-${{ env.FUNCTION_NAME }}
           event_trigger_retry: true

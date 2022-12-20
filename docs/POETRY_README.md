@@ -2,13 +2,12 @@
 
 ## Installation (OSX)
 
-Disclaimer: This is a work in progress and we do not have prebuilt wheels for google libs and psycopg2 so there is a bit of extra work involved for now, especially on ARM hardware.
-
-Poetry brings with it lots of benefits for deterministic deploys, etc. For now, we're only leveraging it for local development, but we may in the future update our dockerfile to leverage it therein.
+Disclaimer: This is a work in progress and we do not have prebuilt wheels for google libs and psycopg2 so there is a bit of extra work involved for now.
 
 We will still run dependencies (postgres, redis, etc.) locally with docker compose.
 
-You will need to have the following installed. Be sure to follow prompts and put appropriate things on your PATH and in your .zshrc/.zprofile., brew, pyenv, and the appropriate python version (3.7.9 at time of writing) via pyenv installed if you don't already:
+You will need to have the following installed. Be sure to follow prompts and put appropriate things on your PATH and in your .zshrc/.zprofile.,
+brew, pyenv, and the appropriate python version (3.7.15 at time of writing) via pyenv installed if you don't already:
 
 ### Xcode Command Line Tools
 
@@ -124,7 +123,7 @@ If for any reason you run into issues with these that you can't sort out, gettin
 pre-commit uninstall
 ```
 
-### Just-for-now Stuff (especially for ARM Mac users)
+### Just-for-now Stuff
 
 Since we don't have prebuilt wheels, you'll have a few extra steps to get up and running.
 
@@ -138,7 +137,7 @@ export GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1
 ```
 
 "WARNING: The Python lzma extension was not compiled. Missing the lzma lib?"
-If you get the following warning during a python install with pyenv. Perform the following updates.
+If you get the following warning during a python install with pyenv. Perform the following updates:
 
 ```bash
 brew install xz
@@ -162,17 +161,43 @@ As always, follow any prompts/instructions from the output of those commands abo
 
 Once of all that is done (and your active shell reflects the changes), you should be all ready `poetry install`!
 
+## Using Poetry to Run Things Locally
+
+### Shell
+Once your Poetry environment is installed, you can hop into it at any time in your API directory by typing `poetry shell`.
+
+Postgres and Redis must still be running with docker:
+```shell
+docker-compose up -d postgres redis
+```
+
+Once in the shell, you can run management commands, etc:
+```shell
+python manage.py makemigrations
+python manage.py migrate
+etc.
+```
+
+### IDE
+
+Additionally, PyCharm and VS Code both work well using Poetry environments for local python interpreters for full debugging and static analysis.
+
+Example setting up PyCharm (OSX) to use Poetry:
+1. Go to PyCharm -> Preferences -> Project: peerlogic-api -> Python Interpreter -> Add Interpreter -> Add Local Interpreter -> Poetry
+   - If somehow you already added the poetry environment to our existing interpreters, you can just select it from the dropdown. It doesn't need to be added again.
+2. Find your Poetry environment which already exists (from when you did `poetry install`), and select that as your interpreter
+3. Now you can add run configurations for scripts and the Django server! Be sure to specify `DJANGO_SETTINGS_MODULE=peerlogic.settings` in the configuration env vars.
 
 ## Recreating Poetry Environment
-In case of an emergency and you need to start fresh, follow these steps
+In case of an emergency, you may want to start fresh. Follow these steps:
 
-# Stop the current virtualenv if active or alternative use `exit` to exit from a Poetry shell session
+### Stop the current virtualenv if active or alternative use `exit` to exit from a Poetry shell session
 
 ```bash
 deactivate
 ```
 
-# Remove all the files of the current environment of the folder we are in
+### Remove all the files of the current environment of the folder we are in
 
 ```bash
 POETRY_LOCATION=`poetry env info -p`
@@ -180,12 +205,12 @@ echo "Poetry is $POETRY_LOCATION"
 rm -rf "$POETRY_LOCATION"
 ```
 
-# Reactivate Poetry shell
+### Reactivate Poetry shell
 ```bash
 poetry shell
 ```
 
-# Install everything
+### Install everything
 ```bash
 poetry install
 ```
