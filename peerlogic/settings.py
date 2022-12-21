@@ -32,18 +32,18 @@ log = logging.getLogger(__name__)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-PROJECT_ID = os.getenv("PROJECT_ID", "peerlogic-api-dev")
+PROJECT_ID = os.getenv("PROJECT_ID", "peerlogic-api-dev")  # This does not come directly from GCP
+
 GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT", None)  # WE'RE IN GCP
 IN_GCP = GOOGLE_CLOUD_PROJECT != None
-# TODO: get region from vm metadata: https://cloud.google.com/compute/docs/metadata/default-metadata-values
-# https://cloud.google.com/appengine/docs/flexible/python/runtime#environment_variables
+
+# REGION is set for API deploys
 REGION = os.environ.get("REGION", "us-west4")
-PROJECT_NUMBER = os.getenv("PROJECT_NUMBER", "148263976475")
 ENV_CONFIG_SECRET_NAME = os.environ.get("ENV_CONFIG_SECRET_NAME", "peerlogic-api-env")
 
 if IN_GCP:
     # Pull secrets from Secret Manager
-    PROJECT_ID = os.environ.get("GOOGLE_CLOUD_PROJECT")
+    PROJECT_ID = GOOGLE_CLOUD_PROJECT
 
     client = secretmanager.SecretManagerServiceClient()
     name = f"projects/{PROJECT_ID}/secrets/{ENV_CONFIG_SECRET_NAME}/versions/latest"
@@ -177,8 +177,8 @@ TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_IS_ENABLED = os.getenv("TWILIO_IS_ENABLED", "False").lower() in ("true", "1", "t")
 
 TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS_DEFAULT = 60 * 60 * 24 * 365  # seconds in a year
+env_var = os.getenv("TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS")
 try:
-    env_var = os.getenv("TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS")
     TELECOM_CALLER_NAME_INFO_MAX_AGE_IN_SECONDS = int(env_var)
 except (ValueError, TypeError) as error:
     if env_var != None:
@@ -267,6 +267,10 @@ PUBSUB_TOPIC_ID_RINGCENTRAL_CALL_DISCONNECTED_PROJECT_ID = os.getenv("PUBSUB_TOP
 PUBSUB_TOPIC_ID_RINGCENTRAL_CALL_LEG_SAVED = os.getenv("PUBSUB_TOPIC_ID_RINGCENTRAL_CALL_LEG_SAVED", "dev-ringcentral-call_leg_saved")
 PUBSUB_TOPIC_ID_RINGCENTRAL_CALL_LEG_SAVED_PROJECT_ID = os.getenv("PUBSUB_TOPIC_ID_RINGCENTRAL_CALL_LEG_SAVED_PROJECT_ID", PROJECT_ID)
 
+# NexHealth
+PUBSUB_TOPIC_ID_NEXHEALTH_INGEST_PRACTICE = env("PUBSUB_TOPIC_ID_NEXHEALTH_INGEST_PRACTICE", cast=str, default="dev-nexhealth_ingest_practice")
+PUBSUB_TOPIC_ID_NEXHEALTH_INGEST_PRACTICE_PROJECT_ID = env("PUBSUB_TOPIC_ID_NEXHEALTH_INGEST_PRACTICE_PROJECT_ID", cast=int, default=PROJECT_ID)
+
 PUBLISH_FUTURE_TIMEOUT_IN_SECONDS_DEFAULT = 60
 try:
     env_var = os.getenv("PUBLISH_FUTURE_TIMEOUT_IN_SECONDS")
@@ -307,6 +311,11 @@ if PUBLISHER_IS_ENABLED:
         PUBSUB_TOPIC_ID_RINGCENTRAL_CALL_LEG_SAVED_PROJECT_ID, PUBSUB_TOPIC_ID_RINGCENTRAL_CALL_LEG_SAVED
     )
 
+    # NexHealth
+    PUBSUB_TOPIC_PATH_NEXHEALTH_INGEST_PRACTICE = PUBLISHER.topic_path(
+        PUBSUB_TOPIC_ID_NEXHEALTH_INGEST_PRACTICE_PROJECT_ID, PUBSUB_TOPIC_ID_NEXHEALTH_INGEST_PRACTICE
+    )
+
 else:
     PUBLISHER = None
 
@@ -327,6 +336,8 @@ else:
     PUBSUB_TOPIC_PATH_RINGCENTRAL_CALL_DISCONNECTED = None
     PUBSUB_TOPIC_PATH_RINGCENTRAL_CALL_LEG_SAVED = None
 
+    # NexHealth
+    PUBSUB_TOPIC_PATH_NEXHEALTH_INGEST_PRACTICE = None
 
 # Application definition
 
@@ -360,6 +371,7 @@ INSTALLED_APPS = [
     "jive_integration",
     "netsapiens_integration",
     "ringcentral_integration",
+    "nexhealth_integration",
 ]
 
 MIDDLEWARE = [
@@ -452,6 +464,7 @@ REST_FRAMEWORK = {
 
 # [START dbconfig]
 DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -571,6 +584,12 @@ BOTO_SESSION = boto3.Session(aws_access_key_id=AWS_ACCESS_KEY, aws_secret_access
 AWS_DEFAULT_REGION = os.getenv("AWS_DEFAULT_REGION", "us-east-2")
 S3_CLIENT = BOTO_SESSION.client("s3", region_name=AWS_DEFAULT_REGION)
 IAM_CLIENT = BOTO_SESSION.client("iam")
+
+
+# NexHealth (https://www.nexhealth.com/)
+NEXHEALTH_PAGE_SIZE: int = env("NEXHEALTH_PAGE_SIZE", cast=int, default=300)
+NEXHEALTH_API_ROOT_URL: str = env("NEXHEALTH_API_ROOT_URL", cast=str, default="https://nexhealth.info/")
+NEXHEALTH_API_TOKEN: str = env("NEXHEALTH_API_TOKEN", cast=str, default="")
 
 
 #

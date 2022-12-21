@@ -1,8 +1,9 @@
 # Peerlogic API
 
-## Dependencies
-
-## TODO
+## Docs
+- [Getting started running the app locally with Poetry](docs/POETRY_README.md)
+- [Cloud Functions](docs/CLOUD_FUNCTION_README.md)
+- [SolveStack](docs/SOLVESTACK_README.md)
 
 ## Docker
 
@@ -88,10 +89,6 @@ End all processes:
 ### Database and Data Schema Creations
 
 `docker-compose run api python3 manage.py makemigrations --name {name}`
-
-## Run it Locally (w/o Docker)
-
-Not really recommended; docker has been more tested.
 
 ### Initializing, Installing, and Migrating
 

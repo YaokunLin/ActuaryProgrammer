@@ -1,0 +1,140 @@
+---
+name: Deploy
+
+on:
+  push:
+    branches:
+      - development
+      - 'hotfix/**'
+      - 'release/**'
+      - main
+
+concurrency:
+  group: ci-${{ github.ref }}
+
+jobs:
+  setup_environment:
+    runs-on: ubuntu-latest
+    outputs:
+      gcp_env: ${{ steps.setenv.outputs.GCP_ENV }}
+      base_name: ${{ steps.setenv.outputs.BASE_NAME }}
+      region: ${{ steps.setenv.outputs.REGION }}
+      gcp_project: ${{ steps.setenv.outputs.GCP_PROJECT }}
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    steps:
+      - name: Set deployment variables
+        id: setenv
+        run: |
+          echo "BASE_NAME=peerlogic-api" >> $GITHUB_OUTPUT
+          echo "REGION=us-west4" >> $GITHUB_OUTPUT
+          if [[ ${{ github.ref }} == "refs/heads/main" ]]
+          then
+          echo "GCP_ENV=prod" >> $GITHUB_OUTPUT
+          echo "GCP_PROJECT=339409233783" >> $GITHUB_OUTPUT
+          elif [[ ${{ github.ref }} == "refs/heads/development" ]]
+          then
+          echo "GCP_ENV=dev" >> $GITHUB_OUTPUT
+          echo "GCP_PROJECT=148263976475" >> $GITHUB_OUTPUT
+          else
+          echo "GCP_ENV=stage" >> $GITHUB_OUTPUT
+          echo "GCP_PROJECT=945726277583" >> $GITHUB_OUTPUT
+          fi
+
+
+# BEGIN Cloud Function Jobs - Do not edit above this line normally ---------------------------------------------------------------------------------------------
+# See https://github.com/google-github-actions/deploy-cloud-functions for more information
+  deploy_cloud_function_nexhealth_ingest_practice:
+    runs-on: ubuntu-latest
+    needs: setup_environment
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    env:
+      FUNCTION_NAME: nexhealth_ingest_practice
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Authenticate to GCP
+        id: auth
+        uses: google-github-actions/auth@v0
+        with:
+          workload_identity_provider: "projects/${{ needs.setup_environment.outputs.gcp_project }}/locations/global/workloadIdentityPools/${{ needs.setup_environment.outputs.base_name }}/providers/${{ needs.setup_environment.outputs.base_name }}"
+          service_account: "github-sa@peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}.iam.gserviceaccount.com"
+
+      - name: Copy requirements.txt to root
+        run: |
+          cp requirements/requirements.txt requirements.txt
+
+      - name: Deploy Cloud Function - NexHealth Ingest Practice
+        uses: 'google-github-actions/deploy-cloud-functions@v0'
+        with:
+          build_environment_variables: "ALLOWED_HOSTS=localhost,DJANGO_SECRET_KEY=foo"
+          deploy_timeout: 900
+          entry_point: ${{ env.FUNCTION_NAME }}
+          env_vars: "REGION=${{ needs.setup_environment.outputs.region }},GOOGLE_CLOUD_PROJECT=peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}"
+          event_trigger_resource: projects/peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}/topics/${{ needs.setup_environment.outputs.gcp_env }}-${{ env.FUNCTION_NAME }}
+          event_trigger_retry: true
+          event_trigger_type: google.pubsub.topic.publish
+          max_instances: 1
+          memory_mb: 512
+          name: "cf-${{ needs.setup_environment.outputs.gcp_env }}-${{ needs.setup_environment.outputs.base_name }}-${{ env.FUNCTION_NAME }}"
+          project_id: "peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}"
+          region: "${{ needs.setup_environment.outputs.region }}"
+          runtime: 'python39'
+          source_dir: .
+          timeout: 540
+          vpc_connector: "projects/peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}/locations/${{ needs.setup_environment.outputs.region }}/connectors/peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}"
+
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v0'
+
+      - name: Configure deadletter - NexHealth Ingest Practice
+        run: |
+          gcloud pubsub subscriptions update \
+          "gcf-cf-${{ needs.setup_environment.outputs.gcp_env }}-${{ needs.setup_environment.outputs.base_name }}-${{ env.FUNCTION_NAME }}-${{ needs.setup_environment.outputs.region }}-${{ needs.setup_environment.outputs.gcp_env }}-${{ env.FUNCTION_NAME }}" \
+          --dead-letter-topic="${{ needs.setup_environment.outputs.gcp_env }}-${{ env.FUNCTION_NAME }}-failed" \
+          --dead-letter-topic-project="peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}" \
+          --max-delivery-attempts=6 \
+          --min-retry-delay=2m
+# END Cloud Function Jobs --------------------------------------------------------------------------------------------------------------------------------------
+
+  slackSuccessNotification:
+    needs: [setup_environment, deploy_cloud_function_nexhealth_ingest_practice]
+    runs-on: ubuntu-latest
+    name: Slack Notification - Success
+    steps:
+      - name: Slack Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: "${{ needs.setup_environment.outputs.gcp_env }}-deployments"
+          SLACK_COLOR: '#3278BD'
+          SLACK_TITLE: Cloud Function Deploy Complete
+          SLACK_USERNAME: Deploying Function ${{ needs.setup_environment.outputs.base_name }}
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_ICON_EMOJI: github
+
+  slackFailureNotification:
+    needs: [setup_environment, deploy_cloud_function_nexhealth_ingest_practice]
+    runs-on: ubuntu-latest
+    if: always()
+    name: Slack Notification - Failure
+    steps:
+      # run this action to get workflow conclusion
+      # You can get conclusion via env (env.WORKFLOW_CONCLUSION)
+      - uses: technote-space/workflow-conclusion-action@v2
+      - name: Slack Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: "${{ needs.setup_environment.outputs.gcp_env }}-deployments"
+          SLACK_COLOR: '#f54242'
+          SLACK_TITLE: Function Deploy or PubSub Config Failed
+          SLACK_USERNAME: ${{ needs.setup_environment.outputs.base_name }}
+          SLACK_MESSAGE: Workflow Failed
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_ICON_EMOJI: boom
+          MSG_MINIMAL: true
+        if: env.WORKFLOW_CONCLUSION == 'failure'  # notify only if failure
