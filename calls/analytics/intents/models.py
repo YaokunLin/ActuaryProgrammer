@@ -3,16 +3,15 @@ import logging
 from django.db import models
 from django_extensions.db.fields import ShortUUIDField
 
-from core.abstract_models import AuditTrailModel
-
-# Get an instance of a logger
-log = logging.getLogger(__name__)
-
 from calls.analytics.intents.field_choices import (
     CallOutcomeReasonTypes,
     CallOutcomeTypes,
     CallPurposeTypes,
 )
+from core.abstract_models import AuditTrailModel
+
+# Get an instance of a logger
+log = logging.getLogger(__name__)
 
 
 class CallPurpose(AuditTrailModel):
@@ -72,11 +71,23 @@ class CallMentionedCompany(AuditTrailModel):
     call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="company mentioned during a call", related_name="mentioned_companies")
     keyword = models.CharField(max_length=50, db_index=True, blank=True)  # not a formal ForeignKey but will eventually require validation from another table
 
+    class Meta:
+        unique_together = (
+            "call",
+            "keyword",
+        )
+
 
 class CallMentionedInsurance(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="insurance mentioned during a call", related_name="mentioned_insurances")
     keyword = models.CharField(max_length=50, db_index=True, blank=True)  # not a formal ForeignKey but will eventually require validation from another table
+
+    class Meta:
+        unique_together = (
+            "call",
+            "keyword",
+        )
 
 
 class CallMentionedProcedure(AuditTrailModel):
@@ -85,6 +96,12 @@ class CallMentionedProcedure(AuditTrailModel):
     keyword = models.CharField(
         max_length=50, db_index=True, blank=True
     )  # not a formal ForeignKey but will be referenced by ProcedureKeyword. We need to extract and store entities from a call even if we don't have an entry in Procedures
+
+    class Meta:
+        unique_together = (
+            "call",
+            "keyword",
+        )
 
 
 class ProcedureKeyword(AuditTrailModel):
@@ -103,8 +120,20 @@ class CallMentionedProduct(AuditTrailModel):
     call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="product mentioned during a call", related_name="mentioned_products")
     keyword = models.CharField(max_length=50, db_index=True, blank=True)  # not a formal ForeignKey but will eventually require validation from another table
 
+    class Meta:
+        unique_together = (
+            "call",
+            "keyword",
+        )
+
 
 class CallMentionedSymptom(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     call = models.ForeignKey("Call", on_delete=models.CASCADE, verbose_name="symptom mentioned during a call", related_name="mentioned_symptoms")
     keyword = models.CharField(max_length=50, db_index=True, blank=True)  # not a formal ForeignKey but will eventually require validation from another table
+
+    class Meta:
+        unique_together = (
+            "call",
+            "keyword",
+        )
