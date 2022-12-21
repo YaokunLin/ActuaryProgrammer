@@ -21,7 +21,7 @@ steps:
 
   - id: "Default App Engine Deploy"
     name: "gcr.io/cloud-builders/gcloud"
-    args: ["app", "deploy", "/workspace/cron.yaml"]
+    args: ["app", "deploy", "$_DEPLOY_YAML_FILE"]
     timeout: "1600s"
 
   - id: "django_migrate service App Engine Deploy"
@@ -53,7 +53,7 @@ steps:
 
   - id: "Deploy cron"
     name: "gcr.io/cloud-builders/gcloud"
-    args: [ "app", "deploy", "cron.yaml" ]
+    args: [ "app", "deploy", "/workspace/cron.yaml" ]
     timeout: "1600s"
 
   - id: "Remove elder app versions"
