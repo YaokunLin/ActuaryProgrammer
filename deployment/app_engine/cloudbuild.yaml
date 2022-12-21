@@ -51,6 +51,11 @@ steps:
         curl $(gcloud app services browse django-createsuperuser --no-launch-browser --format='value(url)')
     timeout: "1600s"
 
+  - id: "Deploy cron"
+    name: "gcr.io/cloud-builders/gcloud"
+    args: [ "app", "deploy", "cron.yaml" ]
+    timeout: "1600s"
+
   - id: "Remove elder app versions"
     name: "gcr.io/cloud-builders/gcloud"
     entrypoint: "bash"
