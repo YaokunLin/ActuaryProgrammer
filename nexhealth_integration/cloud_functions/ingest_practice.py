@@ -24,8 +24,8 @@ def nexhealth_ingest_practice(event: Dict, context: Dict) -> None:
     peerlogic_practice = PeerlogicPractice.objects.get(id=data["peerlogic_practice_id"])
     peerlogic_organization = PeerlogicOrganization.objects.get(id=data["peerlogic_organization_id"])
     ingest_all_nexhealth_records_for_practice(
-        appointment_end_time=datetime.datetime.fromisoformat(data["appointment_end_time"]),
-        appointment_start_time=datetime.datetime.fromisoformat(data["appointment_start_time"]),
+        appointment_created_at_from=datetime.datetime.fromisoformat(data["appointment_created_at_from"]),
+        appointment_created_at_to=datetime.datetime.fromisoformat(data["appointment_created_at_to"]),
         is_institution_bound_to_practice=data["is_institution_bound_to_practice"],
         nexhealth_institution_id=data["nexhealth_institution_id"],
         nexhealth_location_id=data["nexhealth_location_id"],
@@ -47,6 +47,6 @@ if __name__ == "__main__":
         peerlogic_practice=practice,
         peerlogic_organization=organization,
         is_institution_bound_to_practice=False,
-        appointment_start_time=datetime.datetime.strptime("2022-12-01", "%Y-%M-%d"),
-        appointment_end_time=datetime.datetime.strptime("2023-01-01", "%Y-%M-%d"),
+        appointment_created_at_from=datetime.datetime.strptime("2022-12-01", "%Y-%M-%d"),
+        appointment_created_at_to=datetime.datetime.strptime("2023-01-01", "%Y-%M-%d"),
     )

@@ -19,8 +19,8 @@ def ingest_practice(request: Request) -> Response:
     serializer.is_valid(raise_exception=True)
     now = datetime.utcnow()
     event_data = {
-        "appointment_end_time": (serializer.validated_data.get("appointment_end_time") or (now + timedelta(weeks=52))).isoformat(),
-        "appointment_start_time": (serializer.validated_data.get("appointment_start_time") or (now - timedelta(weeks=52))).isoformat(),
+        "appointment_created_at_to": (serializer.validated_data.get("appointment_created_at_to") or (now + timedelta(weeks=52))).isoformat(),
+        "appointment_created_at_from": (serializer.validated_data.get("appointment_created_at_from") or (now - timedelta(weeks=52))).isoformat(),
         "is_institution_bound_to_practice": serializer.validated_data["is_institution_bound_to_practice"],
         "nexhealth_institution_id": serializer.validated_data["nexhealth_institution_id"],
         "nexhealth_location_id": serializer.validated_data["nexhealth_location_id"],

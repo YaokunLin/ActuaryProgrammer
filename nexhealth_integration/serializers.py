@@ -4,8 +4,8 @@ from core.models import Organization, Practice
 
 
 class NexHealthInitializePracticeSerializer(serializers.Serializer):
-    appointment_end_time = serializers.DateTimeField(required=False, allow_null=True, default=None)
-    appointment_start_time = serializers.DateTimeField(required=False, allow_null=True, default=None)
+    appointment_created_at_from = serializers.DateTimeField(required=False, allow_null=True, default=None)
+    appointment_created_at_to = serializers.DateTimeField(required=False, allow_null=True, default=None)
     is_institution_bound_to_practice = serializers.BooleanField(required=True, allow_null=False)
     nexhealth_institution_id = serializers.IntegerField(required=True)
     nexhealth_location_id = serializers.IntegerField(required=True)

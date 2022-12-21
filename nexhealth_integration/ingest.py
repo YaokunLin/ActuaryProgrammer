@@ -2,6 +2,8 @@ import datetime
 import logging
 from typing import Optional
 
+from django.utils import timezone
+
 from core.models import Organization as PeerlogicOrganization
 from core.models import Practice as PeerlogicPractice
 from nexhealth_integration import adapters
@@ -18,8 +20,8 @@ log = NexHealthLogAdapter(logging.getLogger(__name__))
 
 
 def ingest_all_nexhealth_records_for_practice(
-    appointment_end_time: datetime.datetime,
-    appointment_start_time: datetime.datetime,
+    appointment_created_at_from: datetime.datetime,
+    appointment_created_at_to: datetime.datetime,
     is_institution_bound_to_practice: bool,
     nexhealth_institution_id: int,
     nexhealth_location_id: int,
@@ -39,7 +41,7 @@ def ingest_all_nexhealth_records_for_practice(
         f"Practice: {peerlogic_practice.name} ({peerlogic_practice.id}). NexHealth institution will be bound to "
         f"{'practice' if is_institution_bound_to_practice else 'organization'}."
     )
-    location_updated_at = datetime.datetime.utcnow()
+    location_updated_at = timezone.now()  # Will be UTC
     client = _construct_nexhealth_api_client(nexhealth_institution_id, nexhealth_subdomain, nexhealth_location_id)
     _ingest_institution(client, peerlogic_practice, peerlogic_organization if is_institution_bound_to_practice else None)
     location = _ingest_location(client, peerlogic_practice)
@@ -58,7 +60,7 @@ def ingest_all_nexhealth_records_for_practice(
 
     _ingest_providers(client, updated_since=location.updated_from_nexhealth_at)
     _ingest_patients_and_insurance_coverages(client, updated_since=location.updated_from_nexhealth_at)
-    _ingest_appointments(client, appointment_start_time, appointment_end_time, updated_since=location.updated_from_nexhealth_at)
+    _ingest_appointments(client, appointment_created_at_from, appointment_created_at_to, updated_since=location.updated_from_nexhealth_at)
     _mark_location_updated(location, location_updated_at)
     log.info(
         f"Completed ingesting NexHealth resources for NexHealth Institution ({nexhealth_institution_id}), "
@@ -147,15 +149,18 @@ def _ingest_patients_and_insurance_coverages(client: NexHealthAPIClient, updated
 
 def _ingest_appointments(
     client: NexHealthAPIClient,
-    appointment_start_time: datetime.datetime,
-    appointment_end_time: datetime.datetime,
+    appointment_created_at_from: datetime.datetime,
+    appointment_created_at_to: datetime.datetime,
     updated_since: Optional[datetime.datetime] = None,
 ) -> None:
     log.info("Ingesting Appointments (and Procedures)")
     created = 0
     updated = 0
     for r in client.iterate_list_requests(
-        client.list_appointments, start_time=appointment_start_time, end_time=appointment_end_time, updated_since=updated_since
+        client.list_appointments,
+        appointment_created_at_from=appointment_created_at_from,
+        appointment_created_at_to=appointment_created_at_to,
+        updated_since=updated_since,
     ):
         for appointment_data in r.response_nh_data:
             _, was_created = adapters.update_or_create_appointment_from_dict(

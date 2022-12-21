@@ -224,8 +224,8 @@ class NexHealthAPIClient:
 
     def list_appointments(
         self,
-        start_time: datetime,
-        end_time: datetime,
+        appointment_created_at_from: datetime,
+        appointment_created_at_to: datetime,
         page: int = 1,
         appointment_type_id: Optional[int] = None,
         include_booking_details: bool = True,
@@ -243,8 +243,8 @@ class NexHealthAPIClient:
         nh_resource = "appointments"
         url_path = f"/{nh_resource}"
         params = {
-            "start": start_time.isoformat(),
-            "end": end_time.isoformat(),
+            "start": appointment_created_at_from.isoformat(),
+            "end": appointment_created_at_to.isoformat(),
             "page": page,
             "per_page": per_page if per_page is not None else self._max_per_page,
         }

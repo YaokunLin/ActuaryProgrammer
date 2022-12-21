@@ -52,8 +52,8 @@ def update_practices(request: Request) -> Response:
     gcp_futures = []
     for location in locations:
         event_data = {
-            "appointment_end_time": (now + timedelta(weeks=52)).isoformat(),
-            "appointment_start_time": (now - timedelta(weeks=52)).isoformat(),
+            "appointment_created_at_from": (now - timedelta(weeks=52)).isoformat(),
+            "appointment_created_at_to": (now + timedelta(weeks=52)).isoformat(),
             "is_institution_bound_to_practice": location.nh_institution.peerlogic_practice == location.peerlogic_practice,
             "nexhealth_institution_id": location.nh_institution_id,
             "nexhealth_location_id": location.nh_id,
