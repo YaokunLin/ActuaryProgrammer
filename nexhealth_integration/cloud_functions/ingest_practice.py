@@ -30,8 +30,8 @@ def nexhealth_ingest_practice(event: Dict, context: Dict) -> None:
         nexhealth_institution_id=data["nexhealth_institution_id"],
         nexhealth_location_id=data["nexhealth_location_id"],
         nexhealth_subdomain=data["nexhealth_subdomain"],
-        peerlogic_organization=peerlogic_practice,
-        peerlogic_practice=peerlogic_organization,
+        peerlogic_organization=peerlogic_organization,
+        peerlogic_practice=peerlogic_practice,
     )
     log.info(f"Completed nexhealth_ingest_practice!")
 
