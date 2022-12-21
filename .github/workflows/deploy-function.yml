@@ -77,7 +77,7 @@ jobs:
           entry_point: ${{ env.FUNCTION_NAME }}
           env_vars: "REGION=${{ needs.setup_environment.outputs.region }},GOOGLE_CLOUD_PROJECT=peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}"
           event_trigger_resource: projects/peerlogic-api-${{ needs.setup_environment.outputs.gcp_env }}/topics/${{ needs.setup_environment.outputs.gcp_env }}-${{ env.FUNCTION_NAME }}
-          event_trigger_retry: true
+          event_trigger_retry: false
           event_trigger_type: google.pubsub.topic.publish
           max_instances: 1
           memory_mb: 512
