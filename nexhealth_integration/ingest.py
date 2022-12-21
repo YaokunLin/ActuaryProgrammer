@@ -1,8 +1,6 @@
-import base64
 import datetime
-import json
 import logging
-from typing import Dict, Optional
+from typing import Optional
 
 from core.models import Organization as PeerlogicOrganization
 from core.models import Practice as PeerlogicPractice
@@ -17,24 +15,6 @@ from peerlogic.settings import (
 )
 
 log = NexHealthLogAdapter(logging.getLogger(__name__))
-
-
-def nexhealth_ingest_practice(event: Dict, context: Dict) -> None:
-    log.info(f"Started nexhealth_ingest_practice! Event: {event}, Context: {context}")
-    data = json.loads(base64.b64decode(event["data"]).decode())
-    peerlogic_practice = PeerlogicPractice.objects.get(id=data["peerlogic_practice_id"])
-    peerlogic_organization = PeerlogicOrganization.objects.get(id=data["peerlogic_organization_id"])
-    ingest_all_nexhealth_records_for_practice(
-        appointment_end_time=datetime.datetime.fromisoformat(data["appointment_end_time"]),
-        appointment_start_time=datetime.datetime.fromisoformat(data["appointment_start_time"]),
-        is_institution_bound_to_practice=data["is_institution_bound_to_practice"],
-        nexhealth_institution_id=data["nexhealth_institution_id"],
-        nexhealth_location_id=data["nexhealth_location_id"],
-        nexhealth_subdomain=data["nexhealth_subdomain"],
-        peerlogic_organization=peerlogic_practice,
-        peerlogic_practice=peerlogic_organization,
-    )
-    log.info(f"Completed nexhealth_ingest_practice!")
 
 
 def ingest_all_nexhealth_records_for_practice(
@@ -54,7 +34,7 @@ def ingest_all_nexhealth_records_for_practice(
     """
     log.info(
         f"Ingesting NexHealth resources for NexHealth Institution ({nexhealth_institution_id}), "
-        f'SubDomain ("{nexhealth_subdomain}"), Location ({nexhealth_location_id}), and Peerlogic '
+        f"SubDomain ('{nexhealth_subdomain}'), Location ({nexhealth_location_id}), and Peerlogic "
         f"Organization: {peerlogic_organization.name} ({peerlogic_organization.id}), "
         f"Practice: {peerlogic_practice.name} ({peerlogic_practice.id}). NexHealth institution will be bound to "
         f"{'practice' if is_institution_bound_to_practice else 'organization'}."
@@ -82,7 +62,7 @@ def ingest_all_nexhealth_records_for_practice(
     _mark_location_updated(location, location_updated_at)
     log.info(
         f"Completed ingesting NexHealth resources for NexHealth Institution ({nexhealth_institution_id}), "
-        f'SubDomain ("{nexhealth_subdomain}"), Location ({nexhealth_location_id}), and Peerlogic '
+        f"SubDomain ('{nexhealth_subdomain}'), Location ({nexhealth_location_id}), and Peerlogic "
         f"Organization: {peerlogic_organization.name} ({peerlogic_organization.id}), "
         f"Practice: {peerlogic_practice.name} ({peerlogic_practice.id}). NexHealth institution is bound to "
         f"{'practice' if is_institution_bound_to_practice else 'organization'}."
@@ -134,7 +114,7 @@ def _ingest_insurance_plans(client: NexHealthAPIClient) -> None:
                 created += 1
             else:
                 updated += 1
-    log.info(f"Created {created} and updated {updated} InsurancePlans!")
+    log.info(f"InsurancePlans: created={created}, updated={updated}")
 
 
 def _ingest_providers(client: NexHealthAPIClient, updated_since: Optional[datetime.datetime]) -> None:
@@ -148,8 +128,7 @@ def _ingest_providers(client: NexHealthAPIClient, updated_since: Optional[dateti
                 created += 1
             else:
                 updated += 1
-
-    log.info(f"Created {created} and updated {updated} Providers!")
+    log.info(f"Providers: created={created}, updated={updated}")
 
 
 def _ingest_patients_and_insurance_coverages(client: NexHealthAPIClient, updated_since: Optional[datetime.datetime] = None) -> None:
@@ -158,13 +137,12 @@ def _ingest_patients_and_insurance_coverages(client: NexHealthAPIClient, updated
     updated = 0
     for r in client.iterate_list_requests(client.list_patients, updated_since=updated_since):
         for patient_data in r.response_nh_data["patients"]:
-            patient, was_created = adapters.update_or_create_patient_from_dict(patient_data, create_or_update_related_insurances=True)
+            patient, was_created = adapters.update_or_create_patient_from_dict(patient_data, should_create_or_update_related_insurances=True)
             if was_created:
                 created += 1
             else:
                 updated += 1
-
-    log.info(f"Created {created} and updated {updated} Patients!")
+    log.info(f"Patients: created={created}, updated={updated}")
 
 
 def _ingest_appointments(
@@ -181,10 +159,10 @@ def _ingest_appointments(
     ):
         for appointment_data in r.response_nh_data:
             _, was_created = adapters.update_or_create_appointment_from_dict(
-                appointment_data, nh_institution_id=r.client_nh_institution_id, create_or_update_related_procedures=True
+                appointment_data, nh_institution_id=r.client_nh_institution_id, should_create_or_update_related_procedures=True
             )
             if was_created:
                 created += 1
             else:
                 updated += 1
-    log.info(f"Created {created} and updated {updated} Appointments!")
+    log.info(f"Appointments: created={created}, updated={updated}")

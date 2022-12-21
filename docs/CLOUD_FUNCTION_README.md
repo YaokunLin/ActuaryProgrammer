@@ -203,7 +203,7 @@ from core.cloud_functions.bar import bar  # noqa
 
 > **NOTE**
 >
-> The name we import our function as is important. This is the name that we will be
+> The import name of our function is important. This is the name that we will be
 > targeting in our next step. If, for instance, you imported `bar as core_bar` or something
 > along those lines, you would need to note "core_bar" as the function target for configuration
 > going forward.
@@ -215,11 +215,12 @@ as when we merge and release the code. To do this, we need to add a new job to
 [the GitHub Action YML file](../.github/workflows/deploy-function.yml). The job we're adding is best done by
 copy+paste+editing an existing Cloud Function deploy job in the file.
 
-1. The job should be called `deploy_cloud_function_<OUR_FUNCTION_NAME>`
-2. The job env var `FUNCTION_NAME` should be set to `<OUR_FUNCTION_NAME>`
-3. Label the "deploy" step as `Deploy Cloud Function - <OUR_FUNCTION_NAME>`
-4. Label the "deadletter" step as `Configure deadletter - <OUR_FUNCTION_NAME>`
-5. Adjust any necessary configuration. Some common params you might want to change include:
+1. Copy an existing section from the deploy-function.yml file. Don't just copy out of this README.
+2. The job should be called `deploy_cloud_function_<OUR_FUNCTION_NAME>`
+3. The job env var `FUNCTION_NAME` should be set to `<OUR_FUNCTION_NAME>`
+4. Label the "deploy" step as `Deploy Cloud Function - <OUR_FUNCTION_NAME>`
+5. Label the "deadletter" step as `Configure deadletter - <OUR_FUNCTION_NAME>`
+6. Adjust any necessary configuration. Some common params you might want to change include:
   - `event_trigger_type` and `event_trigger_resource` if not using Pub/Sub
   - `max_instances`
   - `memory_mb`

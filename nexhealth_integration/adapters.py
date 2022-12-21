@@ -90,7 +90,7 @@ def update_or_create_location_from_dict(
     )
 
 
-def update_or_create_patient_from_dict(data: Dict, create_or_update_related_insurances: bool = False) -> Tuple[Patient, bool]:
+def update_or_create_patient_from_dict(data: Dict, should_create_or_update_related_insurances: bool = False) -> Tuple[Patient, bool]:
     nh_id = data["id"]
     nh_institution_id = data["institution_id"]
     defaults = {
@@ -121,10 +121,10 @@ def update_or_create_patient_from_dict(data: Dict, create_or_update_related_insu
             defaults[k] = data[k]
 
     with atomic():
-        if create_or_update_related_insurances:
+        if should_create_or_update_related_insurances:
             InsuranceCoverage.objects.filter(nh_patient_id=nh_id, nh_institution_id=nh_institution_id).delete()
             for coverage_data in data.get("insurance_coverages", []):
-                update_or_create_insurance_coverage_from_dict(coverage_data, nh_institution_id, create_or_update_related_insurance_plans=True)
+                update_or_create_insurance_coverage_from_dict(coverage_data, nh_institution_id, should_create_or_update_related_insurance_plans=True)
 
         return Patient.objects.update_or_create(
             nh_id=nh_id,
@@ -133,7 +133,9 @@ def update_or_create_patient_from_dict(data: Dict, create_or_update_related_insu
         )
 
 
-def update_or_create_appointment_from_dict(data: Dict, nh_institution_id: int, create_or_update_related_procedures: bool = False) -> Tuple[Appointment, bool]:
+def update_or_create_appointment_from_dict(
+    data: Dict, nh_institution_id: int, should_create_or_update_related_procedures: bool = False
+) -> Tuple[Appointment, bool]:
     nh_id = data["id"]
     nh_location_id = data["location_id"]
     defaults = {
@@ -173,7 +175,7 @@ def update_or_create_appointment_from_dict(data: Dict, nh_institution_id: int, c
         "unavailable": data["unavailable"],
     }
     with atomic():
-        if create_or_update_related_procedures:
+        if should_create_or_update_related_procedures:
             for procedure_data in data.get("procedures", []):
                 update_or_create_procedure_from_dict(procedure_data, nh_institution_id)
 
@@ -299,7 +301,7 @@ def update_or_create_insurance_plan_from_dict(data: Dict, nh_institution_id: int
 def update_or_create_insurance_coverage_from_dict(
     data: Dict,
     nh_institution_id: int,
-    create_or_update_related_insurance_plans: bool = False,
+    should_create_or_update_related_insurance_plans: bool = False,
 ) -> Tuple[InsuranceCoverage, bool]:
     nh_id = data["id"]
     nh_patient_id = data["patient_id"]
@@ -315,7 +317,7 @@ def update_or_create_insurance_coverage_from_dict(
         "subscriber_num": data["subscriber_num"],
         "subscription_relation": data["subscription_relation"],
     }
-    if create_or_update_related_insurance_plans:
+    if should_create_or_update_related_insurance_plans:
         update_or_create_insurance_plan_from_dict(data["plan"], nh_institution_id)
 
     return InsuranceCoverage.objects.update_or_create(
