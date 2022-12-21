@@ -106,7 +106,11 @@ class CallsFilter(filters.FilterSet):
             "practice__id": ["exact"],
             "call_direction": ["exact"],
             "call_sentiments__overall_sentiment_score": ["exact"],
+            "mentioned_companies__keyword": ["exact"],
+            "mentioned_insurances__keyword": ["exact"],
             "mentioned_procedures__keyword": ["exact"],
+            "mentioned_products__keyword": ["exact"],
+            "mentioned_symptoms__keyword": ["exact"],
             "sip_caller_extension": ["exact"],
         }
 
