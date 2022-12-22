@@ -1,7 +1,7 @@
 from django.db import transaction
 from django.db.models import QuerySet
 from rest_framework import status, viewsets
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, get_object_or_404
 from rest_framework.response import Response
 
 from calls.analytics.intents.models import (
@@ -112,7 +112,7 @@ class CallDeleteChildrenOnCreateMixin:
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def _get_call_parent(self) -> Call:
-        call: Call = Call.objects.get(pk=self.kwargs.get("call_pk"))
+        call: Call = get_object_or_404(Call, pk=self.kwargs.get("call_pk"))
         return call
 
     def _get_children(self, call) -> QuerySet:
