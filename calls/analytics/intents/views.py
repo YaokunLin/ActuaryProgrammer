@@ -96,34 +96,12 @@ class CallParentQueryFilterMixin:
 #
 
 
-class CallPurposeViewset(viewsets.ModelViewSet):
+class CallPurposeViewset(CallParentQueryFilterMixin, CallParentDeleteChildrenOnCreateMixin, viewsets.ModelViewSet):
     queryset = CallPurpose.objects.all().order_by("-modified_at")
     serializer_class = CallPurposeSerializer
     filter_fields = ["call_purpose_type", "call__id"]
 
-    def get_queryset(self):
-        queryset = super().get_queryset().filter(call_id=self.kwargs.get("call_pk"))
-        return queryset
-
-    def create(self, request, *args, **kwargs):
-        # overridden to provide the ability to perform single or multiple object creation
-        serializer = self.get_serializer(data=request.data, many=isinstance(request.data, list))
-        serializer.is_valid(raise_exception=True)
-
-        with transaction.atomic():
-            # get call to update
-            call: Call = Call.objects.get(pk=self.kwargs.get("call_pk"))
-
-            # delete existing CallPurpose objects
-            call_purposes = call.call_purposes.all()
-            if call_purposes.exists():
-                call_purposes.delete()
-
-            # create the new / replacement CallPurpose objects
-            self.perform_create(serializer)
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    _CHILD_METHOD_NAME = "call_purposes"
 
 
 class CallOutcomeViewset(viewsets.ModelViewSet):
