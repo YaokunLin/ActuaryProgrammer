@@ -28,10 +28,7 @@ class CallPurpose(AuditTrailModel):
     )
 
     class Meta:
-        unique_together = (
-            "call",
-            "call_purpose_type",
-        )
+        constraints = [models.UniqueConstraint(fields=["call", "call_purpose_type"], name="unique call_purpose_type to call assignment")]
 
 
 class CallOutcome(AuditTrailModel):
@@ -72,10 +69,7 @@ class CallMentionedCompany(AuditTrailModel):
     keyword = models.CharField(max_length=50, db_index=True, blank=True)  # not a formal ForeignKey but will eventually require validation from another table
 
     class Meta:
-        unique_together = (
-            "call",
-            "keyword",
-        )
+        constraints = [models.UniqueConstraint(fields=["call", "keyword"], name="unique keyword to call assignment")]
 
 
 class CallMentionedInsurance(AuditTrailModel):
@@ -84,10 +78,7 @@ class CallMentionedInsurance(AuditTrailModel):
     keyword = models.CharField(max_length=50, db_index=True, blank=True)  # not a formal ForeignKey but will eventually require validation from another table
 
     class Meta:
-        unique_together = (
-            "call",
-            "keyword",
-        )
+        constraints = [models.UniqueConstraint(fields=["call", "keyword"], name="unique keyword to call assignment")]
 
 
 class CallMentionedProcedure(AuditTrailModel):
@@ -98,10 +89,7 @@ class CallMentionedProcedure(AuditTrailModel):
     )  # not a formal ForeignKey but will be referenced by ProcedureKeyword. We need to extract and store entities from a call even if we don't have an entry in Procedures
 
     class Meta:
-        unique_together = (
-            "call",
-            "keyword",
-        )
+        constraints = [models.UniqueConstraint(fields=["call", "keyword"], name="unique keyword to call assignment")]
 
 
 class ProcedureKeyword(AuditTrailModel):
@@ -121,10 +109,7 @@ class CallMentionedProduct(AuditTrailModel):
     keyword = models.CharField(max_length=50, db_index=True, blank=True)  # not a formal ForeignKey but will eventually require validation from another table
 
     class Meta:
-        unique_together = (
-            "call",
-            "keyword",
-        )
+        constraints = [models.UniqueConstraint(fields=["call", "keyword"], name="unique keyword to call assignment")]
 
 
 class CallMentionedSymptom(AuditTrailModel):
@@ -133,7 +118,4 @@ class CallMentionedSymptom(AuditTrailModel):
     keyword = models.CharField(max_length=50, db_index=True, blank=True)  # not a formal ForeignKey but will eventually require validation from another table
 
     class Meta:
-        unique_together = (
-            "call",
-            "keyword",
-        )
+        constraints = [models.UniqueConstraint(fields=["call", "keyword"], name="unique keyword to call assignment")]
