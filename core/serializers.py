@@ -167,8 +167,8 @@ class AgentSerializer(serializers.ModelSerializer):
 
 
 class MyProfileUserSerializer(serializers.ModelSerializer):
-    first_name = serializers.CharField(write_only=True, required=True)
-    last_name = serializers.CharField(write_only=True, required=True)
+    first_name = serializers.CharField(required=True)
+    last_name = serializers.CharField(required=True)
 
     class Meta:
         model = User
