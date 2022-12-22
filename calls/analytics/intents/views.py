@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.db.models import QuerySet
 from rest_framework import status, viewsets
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
@@ -84,13 +85,63 @@ class CallOutcomeReasonViewset(viewsets.ModelViewSet):
 #
 
 
-class CallMentionedCompanyViewset(viewsets.ModelViewSet):
+class CallDeleteChildrenOnCreateMixin:
+    # need to search out the example Kyle has
+
+    _CHILD_METHOD_NAME: str = None
+
+    # override create method
+    def create(self, request, *args, **kwargs):
+        # overridden to provide the ability to perform single or multiple object creation
+        serializer = self.get_serializer(data=request.data, many=isinstance(request.data, list))
+        serializer.is_valid(raise_exception=True)
+
+        with transaction.atomic():
+            # get call to update
+            call: Call = self._get_call_parent()
+
+            # delete existing CallPurpose objects
+            call_children = self._get_children(call)
+            if call_children.exists():
+                call_children.delete()
+
+            # create the new / replacement children objects
+            self.perform_create(serializer)
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def _get_call_parent(self) -> Call:
+        call: Call = Call.objects.get(pk=self.kwargs.get("call_pk"))
+        return call
+
+    def _get_children(self, call) -> QuerySet:
+        if not self._CHILD_METHOD_NAME:
+            raise ValueError(f"Programmer Error occurred. _CHILD_METHOD_NAME was not defined.")
+
+        if not hasattr(call, self._CHILD_METHOD_NAME):
+            raise ValueError(
+                f"Programmer Error occurred. _CHILD_METHOD_NAME='{self._CHILD_METHOD_NAME}' must be a callable attribute of Call. Call has no such attribute."
+            )
+
+        get_children_func = getattr(call, self._CHILD_METHOD_NAME)
+        if not callable(get_children_func):
+            raise ValueError(
+                f"Programmer Error occurred. _CHILD_METHOD_NAME='{self._CHILD_METHOD_NAME}' must be a callable attribute of Call that returns a QuerySet."
+            )
+
+        return get_children_func.all()
+
+
+class CallMentionedCompanyViewset(CallDeleteChildrenOnCreateMixin, viewsets.ModelViewSet):
     queryset = CallMentionedCompany.objects.all().order_by("-modified_at")
     filter_fields = ["call__id", "keyword"]
 
     serializer_class_read = CallMentionedCompanyReadSerializer
     serializer_class_write = CallMentionedCompanyWriteSerializer
 
+    _CHILD_METHOD_NAME = "mentioned_companies"
+
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
             return self.serializer_class_write
@@ -102,13 +153,15 @@ class CallMentionedCompanyViewset(viewsets.ModelViewSet):
         return queryset
 
 
-class CallMentionedInsuranceViewset(viewsets.ModelViewSet):
+class CallMentionedInsuranceViewset(CallDeleteChildrenOnCreateMixin, viewsets.ModelViewSet):
     queryset = CallMentionedInsurance.objects.all().order_by("-modified_at")
     filter_fields = ["call__id", "keyword"]
 
     serializer_class_read = CallMentionedInsuranceReadSerializer
     serializer_class_write = CallMentionedInsuranceWriteSerializer
 
+    _CHILD_METHOD_NAME = "mentioned_insurances"
+
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
             return self.serializer_class_write
@@ -120,12 +173,14 @@ class CallMentionedInsuranceViewset(viewsets.ModelViewSet):
         return queryset
 
 
-class CallMentionedProcedureViewset(viewsets.ModelViewSet):
+class CallMentionedProcedureViewset(CallDeleteChildrenOnCreateMixin, viewsets.ModelViewSet):
     queryset = CallMentionedProcedure.objects.all().order_by("-modified_at")
     filter_fields = ["call__id", "keyword"]
 
     serializer_class_read = CallMentionedProcedureReadSerializer
     serializer_class_write = CallMentionedProcedureWriteSerializer
+
+    _CHILD_METHOD_NAME = "mentioned_procedures"
 
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
@@ -143,12 +198,14 @@ class CallMentionedProcedureDistinctView(ListAPIView):
     serializer_class = CallMentionedProcedureKeywordOnlySerializer
 
 
-class CallMentionedProductViewset(viewsets.ModelViewSet):
+class CallMentionedProductViewset(CallDeleteChildrenOnCreateMixin, viewsets.ModelViewSet):
     queryset = CallMentionedProduct.objects.all().order_by("-modified_at")
     filter_fields = ["call__id", "keyword"]
 
     serializer_class_read = CallMentionedProductReadSerializer
     serializer_class_write = CallMentionedProductWriteSerializer
+
+    _CHILD_METHOD_NAME = "mentioned_products"
 
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
@@ -161,12 +218,14 @@ class CallMentionedProductViewset(viewsets.ModelViewSet):
         return queryset
 
 
-class CallMentionedSymptomViewset(viewsets.ModelViewSet):
+class CallMentionedSymptomViewset(CallDeleteChildrenOnCreateMixin, viewsets.ModelViewSet):
     queryset = CallMentionedSymptom.objects.all().order_by("-modified_at")
     filter_fields = ["call__id", "keyword"]
 
     serializer_class_read = CallMentionedSymptomReadSerializer
     serializer_class_write = CallMentionedSymptomWriteSerializer
+
+    _CHILD_METHOD_NAME = "mentioned_symptoms"
 
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
