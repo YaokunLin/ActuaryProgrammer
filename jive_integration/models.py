@@ -116,9 +116,9 @@ class JiveAWSRecordingBucket(AuditTrailModel):
         attach_user_policy(policy_arn=self.policy_arn, username=self.username)
         access_key = create_access_key(username=self.username)
         self.access_key_id = access_key.AccessKeyId
-        log.info(f"Saving recording bucket info to the RDBMS with self.__dict__={self.__dict__}")
+        log.info(f"Saving recording bucket info to the RDBMS with vars(self)={vars(self)}")
         self.save()
-        log.info(f"Saved recording bucket info to the RDBMS with self.__dict__={self.__dict__}")
+        log.info(f"Saved recording bucket info to the RDBMS with vars(self)={vars(self)}")
 
         # Do not save off the secret key, only return it
         return {"aws_bucket_name": self.bucket_name, "aws_access_key": self.access_key_id, "aws_secret_access_key": access_key.SecretAccessKey}
@@ -132,9 +132,9 @@ class JiveAWSRecordingBucket(AuditTrailModel):
         delete_user(username=self.username)
         self.username = ""
 
-        log.info(f"Saving recording bucket info to the RDBMS with self.__dict__={self.__dict__}")
+        log.info(f"Saving recording bucket info to the RDBMS with vars(self)={vars(self)}")
         self.save()
-        log.info(f"Saved recording bucket info to the RDBMS with self.__dict__={self.__dict__}")
+        log.info(f"Saved recording bucket info to the RDBMS with vars(self)={vars(self)}")
 
     def regenerate_credentials(self) -> Dict[str, str]:
         self.delete_credentials()
