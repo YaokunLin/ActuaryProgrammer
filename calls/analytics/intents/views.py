@@ -85,7 +85,7 @@ class CallOutcomeReasonViewset(viewsets.ModelViewSet):
 #
 
 
-class CallDeleteChildrenOnCreateMixin:
+class CallParentDeleteChildrenOnCreateMixin:
     # need to search out the example Kyle has
 
     _CHILD_METHOD_NAME: str = None
@@ -139,7 +139,7 @@ class CallParentQueryFilterMixin:
         return queryset
 
 
-class CallMentionedCompanyViewset(CallParentQueryFilterMixin, CallDeleteChildrenOnCreateMixin, viewsets.ModelViewSet):
+class CallMentionedCompanyViewset(CallParentQueryFilterMixin, CallParentDeleteChildrenOnCreateMixin, viewsets.ModelViewSet):
     queryset = CallMentionedCompany.objects.all().order_by("-modified_at")
     filter_fields = ["call__id", "keyword"]
 
@@ -155,7 +155,7 @@ class CallMentionedCompanyViewset(CallParentQueryFilterMixin, CallDeleteChildren
         return self.serializer_class_read
 
 
-class CallMentionedInsuranceViewset(CallParentQueryFilterMixin, CallDeleteChildrenOnCreateMixin, viewsets.ModelViewSet):
+class CallMentionedInsuranceViewset(CallParentQueryFilterMixin, CallParentDeleteChildrenOnCreateMixin, viewsets.ModelViewSet):
     queryset = CallMentionedInsurance.objects.all().order_by("-modified_at")
     filter_fields = ["call__id", "keyword"]
 
@@ -171,7 +171,7 @@ class CallMentionedInsuranceViewset(CallParentQueryFilterMixin, CallDeleteChildr
         return self.serializer_class_read
 
 
-class CallMentionedProcedureViewset(CallParentQueryFilterMixin, CallDeleteChildrenOnCreateMixin, viewsets.ModelViewSet):
+class CallMentionedProcedureViewset(CallParentQueryFilterMixin, CallParentDeleteChildrenOnCreateMixin, viewsets.ModelViewSet):
     queryset = CallMentionedProcedure.objects.all().order_by("-modified_at")
     filter_fields = ["call__id", "keyword"]
 
@@ -192,7 +192,7 @@ class CallMentionedProcedureDistinctView(ListAPIView):
     serializer_class = CallMentionedProcedureKeywordOnlySerializer
 
 
-class CallMentionedProductViewset(CallParentQueryFilterMixin, CallDeleteChildrenOnCreateMixin, viewsets.ModelViewSet):
+class CallMentionedProductViewset(CallParentQueryFilterMixin, CallParentDeleteChildrenOnCreateMixin, viewsets.ModelViewSet):
     queryset = CallMentionedProduct.objects.all().order_by("-modified_at")
     filter_fields = ["call__id", "keyword"]
 
@@ -208,7 +208,7 @@ class CallMentionedProductViewset(CallParentQueryFilterMixin, CallDeleteChildren
         return self.serializer_class_read
 
 
-class CallMentionedSymptomViewset(CallParentQueryFilterMixin, CallDeleteChildrenOnCreateMixin, viewsets.ModelViewSet):
+class CallMentionedSymptomViewset(CallParentQueryFilterMixin, CallParentDeleteChildrenOnCreateMixin, viewsets.ModelViewSet):
     queryset = CallMentionedSymptom.objects.all().order_by("-modified_at")
     filter_fields = ["call__id", "keyword"]
 
