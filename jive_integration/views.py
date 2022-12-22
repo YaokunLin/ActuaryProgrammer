@@ -432,7 +432,7 @@ class JiveAWSRecordingBucketViewSet(viewsets.ModelViewSet):
         serializer = JiveAWSRecordingBucketSerializer(bucket)
         return Response(status=status.HTTP_201_CREATED, data=serializer.data)
 
-    @action(detail=True, methods=["post"])
+    @action(detail=True, methods=["post", "patch"])
     def bucket_credentials(self, request: Request, pk: str = None) -> Response:
         practice_telecom_pk = self.request.data.get("practice_telecom_pk")
         if not (self.request.user.is_staff or self.request.user.is_superuser or practice_telecom_pk in get_practice_telecoms_belonging_to_user(request.user)):
@@ -442,11 +442,20 @@ class JiveAWSRecordingBucketViewSet(viewsets.ModelViewSet):
         bucket = self.get_queryset().get(pk=pk)
         log.info(f"Got JiveAWSRecordingBucket from database with pk='{pk}'")
 
-        log.info(f"Creating credentials for JiveAWSRecordingBucket with pk='{pk}'")
-        response_data = bucket.generate_credentials()
-        log.info(f"Created credentials for JiveAWSRecordingBucket with pk='{pk}'")
+        response_status = None
+        response_data = {}
+        if request.method == "POST":
+            log.info(f"Creating credentials for JiveAWSRecordingBucket with pk='{pk}'")
+            response_data = bucket.generate_credentials()
+            log.info(f"Created credentials for JiveAWSRecordingBucket with pk='{pk}'")
+            response_status = status.HTTP_201_CREATED
+        elif request.method == "PATCH":
+            log.info(f"Regenerating credentials for JiveAWSRecordingBucket with pk='{pk}'")
+            response_data = bucket.regenerate_credentials()
+            log.info(f"Regenerated credentials for JiveAWSRecordingBucket with pk='{pk}'")
+            response_status = status.HTTP_200_OK
 
-        return Response(status=status.HTTP_201_CREATED, data=response_data)
+        return Response(status=response_status, data=response_data)
 
 
 @api_view(["GET"])

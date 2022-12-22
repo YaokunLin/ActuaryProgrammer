@@ -12,6 +12,10 @@ from core.aws_iam_helpers import (
     create_access_key,
     create_call_recording_iam_policy_for_bucket,
     create_user,
+    delete_access_key,
+    delete_call_recording_iam_policy_for_bucket,
+    delete_user,
+    detach_user_policy,
 )
 from core.aws_s3_helpers import create_bucket
 from core.models import PracticeTelecom
@@ -72,7 +76,7 @@ class JiveAWSRecordingBucket(AuditTrailModel):
 
     def generate_aws_bucket_name(self) -> str:
         """
-        Used for nearly everything in aws to refer back to this model in our database
+        Used for nearly everything in aws to refer back to this model in our RDBMS
 
         Use jive, then ID at beginning and then normal domain heirarchy employed
         by the dependency flow for ease
@@ -86,7 +90,7 @@ class JiveAWSRecordingBucket(AuditTrailModel):
     @property
     def aws_long_resource_name(self) -> str:
         """
-        Used for nearly everything in aws to refer back to this model in our database
+        Used for nearly everything in aws to refer back to this model in our RDBMS
 
         Use jive, then ID at beginning and then normal domain heirarchy employed
         by the dependency flow for ease
@@ -112,26 +116,29 @@ class JiveAWSRecordingBucket(AuditTrailModel):
         attach_user_policy(policy_arn=self.policy_arn, username=self.username)
         access_key = create_access_key(username=self.username)
         self.access_key_id = access_key.AccessKeyId
-        log.info(f"Saving recording bucket info to the database with self.__dict__={self.__dict__}")
+        log.info(f"Saving recording bucket info to the RDBMS with vars(self)={vars(self)}")
         self.save()
-        log.info(f"Saved recording bucket info to the database with self.__dict__={self.__dict__}")
+        log.info(f"Saved recording bucket info to the RDBMS with vars(self)={vars(self)}")
 
         # Do not save off the secret key, only return it
         return {"aws_bucket_name": self.bucket_name, "aws_access_key": self.access_key_id, "aws_secret_access_key": access_key.SecretAccessKey}
 
-    def delete_credentials(self):
-        """TODO: implement for cleanup
-        Detach Policy
-        Delete Policy
-        Delete Access Key
-        Delete User
-        """
+    def delete_credentials(self) -> None:
+        detach_user_policy(username=self.username, policy_arn=self.policy_arn)
+        delete_call_recording_iam_policy_for_bucket(policy_arn=self.policy_arn, bucket_name=self.bucket_name)
+        self.policy_arn = ""
+        delete_access_key(access_key_id=self.access_key_id, username=self.username)
+        self.access_key_id = ""
+        delete_user(username=self.username)
+        self.username = ""
 
-        pass
+        log.info(f"Saving recording bucket info to the RDBMS with vars(self)={vars(self)}")
+        self.save()
+        log.info(f"Saved recording bucket info to the RDBMS with vars(self)={vars(self)}")
 
-    def regenerate_credentials(self):
-        """TODO: implement for inevitable issues"""
-        pass
+    def regenerate_credentials(self) -> Dict[str, str]:
+        self.delete_credentials()
+        return self.generate_credentials()
 
 
 class JiveChannel(AuditTrailModel):

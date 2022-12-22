@@ -61,6 +61,49 @@ def attach_user_policy(policy_arn: str, username: str) -> Dict:
     return response  # only response metadata is returned according to the docs, so no pydantic model ¯\_(ツ)_/¯
 
 
+def detach_user_policy(policy_arn: str, username: str) -> Dict:
+    """https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/iam.html#IAM.Client.detach_user_policy"""
+    log.info(f"AWS: Detaching iam policy with policy_arn='{policy_arn}', username='{username}'")
+    response = settings.IAM_CLIENT.detach_user_policy(UserName=username, PolicyArn=policy_arn)
+    log.info(f"AWS: Detached iam policy with policy_arn='{policy_arn}', username='{username}', response='{response}'")
+    return response  # only response metadata is returned according to the docs, so no pydantic model ¯\_(ツ)_/¯
+
+
+def delete_call_recording_iam_policy_for_bucket(policy_arn: str, bucket_name: str) -> Dict:
+    """
+    https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/iam.html#IAM.Client.delete_policy
+
+    bucket name included for logging
+    """
+
+    log.info(f"AWS: Deleting recording bucket iam policy with policy_arn='{policy_arn}', bucket_name='{bucket_name}'")
+    response = settings.IAM_CLIENT.delete_policy(PolicyArn=policy_arn)
+    log.info(f"AWS: Deleted recording bucket iam policy with policy_arn='{policy_arn}', bucket_name='{bucket_name}', response='{response}'")
+    return response
+
+
+def delete_access_key(access_key_id: str, username: str) -> Dict:
+    """
+    https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/iam.html#IAM.Client.delete_access_key
+    """
+
+    log.info(f"AWS: Deleting access key with access_key_id='{access_key_id}', username='{username}'")
+    response = settings.IAM_CLIENT.delete_access_key(UserName=username, AccessKeyId=access_key_id)
+    log.info(f"AWS: Deleted access key with access_key_id='{access_key_id}', username='{username}', response='{response}'")
+    return response
+
+
+def delete_user(username: str) -> Dict:
+    """
+    https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/iam.html#IAM.Client.delete_user
+    """
+
+    log.info(f"AWS: Deleting user with username='{username}'")
+    response = settings.IAM_CLIENT.delete_user(UserName=username)
+    log.info(f"AWS: Deleted user with username='{username}', response='{response}'")
+    return response
+
+
 def create_access_key(username: str) -> AccessKey:
     log.info(f"AWS: Creating access key for username='{username}'")
     response = settings.IAM_CLIENT.create_access_key(
