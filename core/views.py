@@ -292,8 +292,8 @@ class PatientViewset(viewsets.ModelViewSet):
     queryset = Patient.objects.all().order_by("-modified_at")
     serializer_class = PatientSerializer
 
-    filterset_fields = ["phone_mobile", "phone_home", "phone_work", "phone_fax"]
-    search_fields = ["name_first", "name_last", "phone_mobile", "phone_home", "phone_work"]
+    filterset_fields = ["phone_number", "phone_mobile", "phone_home", "phone_work", "phone_fax"]
+    search_fields = ["name", "name_last", "phone_number", "phone_mobile", "phone_home", "phone_work", "phone_fax"]
 
     def get_queryset(self):
         patient_qs = Patient.objects.none()

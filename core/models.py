@@ -189,10 +189,12 @@ class PracticeTelecom(AuditTrailModel):
 
 class Patient(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
-    practice = models.ForeignKey(Practice, on_delete=models.CASCADE)
-    name_first = models.CharField(blank=True, max_length=255, db_index=True)
-    name_last = models.CharField(blank=True, max_length=255, db_index=True)
+    name = models.CharField(blank=True, null=True, max_length=255, db_index=True)
+    name_first = models.CharField(blank=True, null=True, max_length=255)
+    name_last = models.CharField(blank=True, null=True, max_length=255, db_index=True)
+    name_middle = models.CharField(blank=True, null=True, max_length=255)
     placeholder = models.CharField(blank=True, max_length=255)
+    phone_number = PhoneNumberField(db_index=True, blank=True, null=False, default="")
     phone_mobile = PhoneNumberField(db_index=True, blank=True, null=False, default="")
     phone_home = PhoneNumberField(db_index=True, blank=True, null=False, default="")
     phone_work = PhoneNumberField(db_index=True, blank=True, null=False, default="")
@@ -201,7 +203,18 @@ class Patient(AuditTrailModel):
     address_line_2 = models.CharField(blank=True, max_length=255)
     zip_code = models.CharField(max_length=50)
     zip_code_add_on = models.CharField(max_length=50, blank=True)
-    date_of_birth = models.DateTimeField()
+    date_of_birth = models.DateField()
+
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    practices = models.ManyToManyField(to=Practice, through="PracticePatient", related_name="patients")
+
+
+class PracticePatient(models.Model):
+    practice = models.ForeignKey(to=Practice, on_delete=models.CASCADE)
+    patient = models.ForeignKey(to=Patient, on_delete=models.CASCADE)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["practice_id", "patient_id"], name="unique_practice_with_patient")]
 
 
 class UserPatient(AuditTrailModel):

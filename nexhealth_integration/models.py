@@ -194,6 +194,7 @@ class Patient(AuditTrailDateTimeOnlyModel):
     balance_amount = models.CharField(max_length=32, null=True, blank=False)
     balance_currency = models.CharField(max_length=3, null=True, blank=False)
     bio = models.JSONField(null=True)
+    date_of_birth = models.DateField(null=True)
     charges = models.JSONField(null=True)  # https://docs.nexhealth.com/reference/getcharges
     first_name = models.CharField(max_length=255, null=True, blank=True)
     foreign_id = models.CharField(max_length=255, null=True, db_index=True)
@@ -215,11 +216,7 @@ class Patient(AuditTrailDateTimeOnlyModel):
 
     @property
     def peerlogic_patients(self) -> "models.query.QuerySet[PeerlogicPatient]":
-        return PeerlogicPatient.objects.filter(
-            id__in=NexHealthPatientLink.objects.filter(
-                nh_institution_id=self.nh_institution_id,
-            )
-        )
+        return PeerlogicPatient.objects.filter(id__in=NexHealthPatientLink.objects.filter(nh_institution_id=self.nh_institution_id, nh_patient_id=self.nh_id))
 
 
 class NexHealthPatientLink(models.Model):
@@ -227,9 +224,9 @@ class NexHealthPatientLink(models.Model):
     Through-model linking NexHealth Integration Patient to Peerlogic Patient
     """
 
-    nh_institution_id = models.PositiveIntegerField(db_index=True)
-    nh_location_id = models.PositiveIntegerField(db_index=True)
-    nh_patient_id = models.PositiveIntegerField(db_index=True)
+    nh_institution_id = models.PositiveIntegerField(db_index=True, null=False)
+    nh_location_id = models.PositiveIntegerField(db_index=True, null=False)
+    nh_patient_id = models.PositiveIntegerField(db_index=True, null=False)
     peerlogic_patient = models.ForeignKey(to="core.Patient", on_delete=models.CASCADE)
 
     class Meta:
