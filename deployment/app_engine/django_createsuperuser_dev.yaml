@@ -8,5 +8,5 @@ service: django-createsuperuser
 entrypoint: "python3 manage.py createsuperuser --noinput"
 
 vpc_access_connector:
-  name: projects/peerlogic-api-dev/locations/us-west4/connectors/peerlogic-api-dev
+  name: projects/peerlogic-api-dev/locations/us-central1/connectors/peerlogic-api-dev-c1
 # [END django_createsuperuser]

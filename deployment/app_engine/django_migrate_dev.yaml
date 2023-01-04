@@ -9,5 +9,5 @@ entrypoint: "python3 manage.py migrate --noinput"
 instance_class: F4_1G
 
 vpc_access_connector:
-  name: projects/peerlogic-api-dev/locations/us-west4/connectors/peerlogic-api-dev
+  name: projects/peerlogic-api-dev/locations/us-central1/connectors/peerlogic-api-dev-c1
 # [END django_migrate]
