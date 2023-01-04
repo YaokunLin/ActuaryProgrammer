@@ -195,6 +195,7 @@ class Patient(AuditTrailDateTimeOnlyModel):
     balance_currency = models.CharField(max_length=3, null=True, blank=False)
     bio = models.JSONField(null=True)
     date_of_birth = models.DateField(null=True)
+    email = models.EmailField(null=True)
     charges = models.JSONField(null=True)  # https://docs.nexhealth.com/reference/getcharges
     first_name = models.CharField(max_length=255, null=True, blank=True)
     foreign_id = models.CharField(max_length=255, null=True, db_index=True)
@@ -203,7 +204,6 @@ class Patient(AuditTrailDateTimeOnlyModel):
     middle_name = models.CharField(max_length=255, null=True, blank=True)
     name = models.CharField(max_length=255, db_index=True, null=True, blank=True)
     payments = models.JSONField(null=True)  # https://docs.nexhealth.com/reference/getpayments
-    phone_number_best = PhoneNumberField(null=True, blank=True, db_index=True)  # From bio JSON
     phone_number = PhoneNumberField(null=True, blank=True, db_index=True)  # From bio JSON
     phone_number_mobile = PhoneNumberField(null=True, blank=True, db_index=True)  # From bio JSON
     phone_number_home = PhoneNumberField(null=True, blank=True, db_index=True)  # From bio JSON
@@ -227,7 +227,7 @@ class NexHealthPatientLink(models.Model):
     nh_institution_id = models.PositiveIntegerField(db_index=True, null=False)
     nh_location_id = models.PositiveIntegerField(db_index=True, null=False)
     nh_patient_id = models.PositiveIntegerField(db_index=True, null=False)
-    peerlogic_patient = models.ForeignKey(to="core.Patient", on_delete=models.CASCADE)
+    peerlogic_patient = models.ForeignKey(to="core.Patient", on_delete=models.CASCADE, related_name="nexhealth_patient")
 
     class Meta:
         constraints = [
@@ -257,7 +257,7 @@ class Procedure(AuditTrailDateTimeOnlyModel):
     code = models.CharField(max_length=128, db_index=True)
     end_date = models.DateField(null=True)
     fee_amount = models.CharField(max_length=32, null=True, blank=False)
-    fee_currency = models.CharField(max_length=3, null=True, blank=False)
+    fee_currency = models.CharField(max_length=3, null=False, blank=False, default="USD")
     name = models.CharField(max_length=255, db_index=True)
     start_date = models.DateField(null=True)
 

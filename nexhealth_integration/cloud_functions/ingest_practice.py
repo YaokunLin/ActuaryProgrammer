@@ -43,10 +43,10 @@ if __name__ == "__main__":
     ingest_all_nexhealth_records_for_practice(
         nexhealth_institution_id=4047,
         nexhealth_subdomain="peerlogic-od-sandbox",
-        nexhealth_location_id=25229,
+        nexhealth_location_id=25663,
         peerlogic_practice=practice,
         peerlogic_organization=organization,
         is_institution_bound_to_practice=False,
         appointment_created_at_from=datetime.datetime.strptime("2022-12-01", "%Y-%M-%d"),
-        appointment_created_at_to=datetime.datetime.strptime("2023-01-01", "%Y-%M-%d"),
+        appointment_created_at_to=datetime.datetime.strptime("2023-03-01", "%Y-%M-%d"),
     )
