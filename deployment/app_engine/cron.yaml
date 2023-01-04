@@ -1,4 +1,7 @@
 cron:
-- description: "Daytime NexHealth Practice Update"
+- description: "NexHealth Practice Update - Early Day"
   url: /cron/nexhealth/update-practices
-  schedule: every 6 hours
+  schedule: every 30 minutes from 11:00 to 23:59
+- description: "NexHealth Practice Update - Late Day"
+  url: /cron/nexhealth/update-practices
+  schedule: every 30 minutes from 00:00 to 04:00
