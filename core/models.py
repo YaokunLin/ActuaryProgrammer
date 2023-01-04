@@ -189,8 +189,8 @@ class PracticeTelecom(AuditTrailModel):
 
 class Patient(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
-    address_line_1 = models.CharField(blank=True, max_length=255)
-    address_line_2 = models.CharField(blank=True, max_length=255)
+    address_line_1 = models.CharField(blank=True, max_length=255, null=True)
+    address_line_2 = models.CharField(blank=True, max_length=255, null=True)
     date_of_birth = models.DateField(null=True)
     email = models.EmailField(null=True)
     is_active = models.BooleanField(default=True)
@@ -199,13 +199,13 @@ class Patient(AuditTrailModel):
     name_last = models.CharField(blank=True, null=True, max_length=255, db_index=True)
     name_middle = models.CharField(blank=True, null=True, max_length=255)
     phone_fax = PhoneNumberField(blank=True, null=False, default="")
-    phone_home = PhoneNumberField(db_index=True, blank=True, null=False, default="")
-    phone_mobile = PhoneNumberField(db_index=True, blank=True, null=False, default="")
-    phone_number = PhoneNumberField(db_index=True, blank=True, null=False, default="")
-    phone_work = PhoneNumberField(db_index=True, blank=True, null=False, default="")
-    placeholder = models.CharField(blank=True, max_length=255)
-    zip_code = models.CharField(max_length=50)
-    zip_code_add_on = models.CharField(max_length=50, blank=True)
+    phone_home = PhoneNumberField(db_index=True, blank=True, null=True, default="")
+    phone_mobile = PhoneNumberField(db_index=True, blank=True, null=True, default="")
+    phone_number = PhoneNumberField(db_index=True, blank=True, null=True, default="")
+    phone_work = PhoneNumberField(db_index=True, blank=True, null=True, default="")
+    placeholder = models.CharField(blank=True, max_length=255, null=True)
+    zip_code = models.CharField(max_length=50, blank=True, null=True)
+    zip_code_add_on = models.CharField(max_length=50, blank=True, null=True)
 
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
     practices = models.ManyToManyField(to=Practice, through="PracticePatient", related_name="patients")
@@ -226,11 +226,16 @@ class Appointment(AuditTrailDateTimeOnlyModel):
         CANCELLED = "CANCELLED"
         DELETED = "DELETED"
 
-    appointment_at = models.DateTimeField(null=False, db_index=True)
+    appointment_start_at = models.DateTimeField(null=False, db_index=True)
+    appointment_end_at = models.DateTimeField(null=False, db_index=True)
     patient_id = models.ForeignKey(to=Patient, on_delete=models.CASCADE, related_name="appointments")
     practice_id = models.ForeignKey(to=Practice, on_delete=models.CASCADE, related_name="appointments")
     status = models.CharField(choices=Status.choices, max_length=16, blank=False, null=False, default=Status.SCHEDULED)
-    deleted_at = models.DateTimeField(null=True, db_index=True)
+    is_active = models.BooleanField(default=True, db_index=True)
+    note = models.TextField(null=True)
+    confirmed_at = models.DateTimeField(null=True)
+    did_patient_miss = models.BooleanField(null=True)
+    is_new_patient = models.BooleanField(null=True, db_index=True)
 
     # This can either come directly from the PMS or will be a summation of fee amounts from procedures
     approximate_total_currency = models.CharField(max_length=3, null=False, blank=False, default="USD")
