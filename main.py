@@ -17,6 +17,4 @@ log = logging.getLogger(__name__)
 from nexhealth_integration.cloud_functions.ingest_practice import (
     nexhealth_ingest_practice,
 )
-from nexhealth_integration.cloud_functions.sync_patients_and_appointments_for_practice import (
-    nexhealth_sync_patients_and_appointments_for_practice,
-)
+from nexhealth_integration.cloud_functions.sync_practice import nexhealth_sync_practice

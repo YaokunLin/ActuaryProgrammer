@@ -1,3 +1,13 @@
+"""
+Updates core.Patient and core.Appointment records for a given practice from nexhealth_integration models.
+
+Typically, this is automatically triggered each time new data is ingested for a practice by the nexhealth_ingest_practice Cloud Function.
+
+Inputs:
+
+peerlogic_practice_id: str - ShortUUID PK of the practice for which records are to be synced
+"""
+
 import base64
 import json
 import logging
@@ -16,12 +26,12 @@ from nexhealth_integration.utils import NexHealthLogAdapter
 log = NexHealthLogAdapter(logging.getLogger(__name__))
 
 
-def nexhealth_sync_patients_and_appointments_for_practice(event: Dict, context: Dict) -> None:
-    log.info(f"Started nexhealth_sync_patients_and_appointments_for_practice! Event: {event}, Context: {context}")
+def nexhealth_sync_practice(event: Dict, context: Dict) -> None:
+    log.info(f"Started nexhealth_sync_practice! Event: {event}, Context: {context}")
     data = json.loads(base64.b64decode(event["data"]).decode())
     peerlogic_practice = PeerlogicPractice.objects.get(id=data["peerlogic_practice_id"])
     sync_nexhealth_records_for_practice(peerlogic_practice)
-    log.info(f"Completed nexhealth_sync_patients_and_appointments_for_practice!")
+    log.info(f"Completed nexhealth_sync_practice!")
 
 
 if __name__ == "__main__":

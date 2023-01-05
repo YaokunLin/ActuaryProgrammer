@@ -32,3 +32,9 @@ def ingest_practice(request: Request) -> Response:
     future = publish_event(event_attributes=event_attributes, event=event_data, topic_path=PUBSUB_TOPIC_PATH_NEXHEALTH_INGEST_PRACTICE)
     futures.wait([future])
     return Response({}, status=HTTP_200_OK)
+
+
+@api_view(["POST"])
+@permission_classes([IsAdminUser])
+def sync_practice(request: Request) -> Response:
+    return Response({}, status=HTTP_200_OK)

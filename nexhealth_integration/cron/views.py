@@ -62,6 +62,6 @@ def update_practices(request: Request) -> Response:
             "peerlogic_practice_id": location.peerlogic_practice.id,
         }
         gcp_futures.append(publish_event(event_attributes={}, event=event_data, topic_path=PUBSUB_TOPIC_PATH_NEXHEALTH_INGEST_PRACTICE))
-    if futures:
+    if gcp_futures:
         futures.wait(gcp_futures)
     return Response({}, status=HTTP_200_OK)

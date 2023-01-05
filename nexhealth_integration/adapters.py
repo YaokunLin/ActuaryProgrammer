@@ -409,11 +409,11 @@ def update_or_create_peerlogic_appointment_from_nexhealth(
         ).all()
     procedures_flattened = []
     fee_currency = None
-    total_fee_amount = 0
+    fee_total_amount = 0
     for procedure in procedures:
         fee_currency = procedure.fee_currency
         fee_amount = float(procedure.fee_amount)
-        total_fee_amount += fee_amount
+        fee_total_amount += fee_amount
         procedures_flattened.append({"code": procedure.code, "name": procedure.name, "fee_currency": fee_currency, "fee_amount": fee_amount})
 
     status = core_models.Appointment.Status.SCHEDULED
@@ -434,7 +434,7 @@ def update_or_create_peerlogic_appointment_from_nexhealth(
         "status": status,
         "is_active": is_active,
         "approximate_total_currency": fee_currency or "USD",
-        "approximate_total_amount": total_fee_amount,
+        "approximate_total_amount": fee_total_amount,
         "is_new_patient": not nh_appointment.is_past_patient,
         "note": nh_appointment.note,
         "confirmed_at": nh_appointment.patient_confirmed_at if nh_appointment.patient_confirmed_at else nh_appointment.confirmed_at,
