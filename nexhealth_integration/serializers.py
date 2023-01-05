@@ -12,3 +12,7 @@ class NexHealthInitializePracticeSerializer(serializers.Serializer):
     nexhealth_subdomain = serializers.CharField(required=True, allow_null=False, allow_blank=False)
     peerlogic_organization_id = serializers.PrimaryKeyRelatedField(many=False, allow_empty=False, allow_null=False, queryset=Organization.objects.all())
     peerlogic_practice_id = serializers.PrimaryKeyRelatedField(many=False, allow_empty=False, allow_null=False, queryset=Practice.objects.all())
+
+
+class NexHealthSyncPracticeSerializer(serializers.Serializer):
+    peerlogic_practice_id = serializers.PrimaryKeyRelatedField(many=False, allow_empty=False, allow_null=False, queryset=Practice.objects.all())
