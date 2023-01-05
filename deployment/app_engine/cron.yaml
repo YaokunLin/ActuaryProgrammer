@@ -1,0 +1,4 @@
+cron:
+- description: "Daytime NexHealth Practice Update"
+  url: /cron/nexhealth/update-practices
+  schedule: every 6 hours

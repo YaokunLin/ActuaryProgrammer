@@ -26,7 +26,7 @@ steps:
 
   - id: "django_migrate service App Engine Deploy"
     name: "gcr.io/cloud-builders/gcloud"
-    args: ["app", "deploy", "/workspace/django_migrate.yaml"]
+    args: ["app", "deploy", "$_DEPLOY_MIGRATE_YAML_FILE"]
     timeout: "1600s"
 
   - id: "Run django migrate"
@@ -39,7 +39,7 @@ steps:
 
   - id: "django_createsuperuser service App Engine Deploy"
     name: "gcr.io/cloud-builders/gcloud"
-    args: ["app", "deploy", "/workspace/django_createsuperuser.yaml"]
+    args: ["app", "deploy", "$_DEPLOY_CREATE_SU_YAML_FILE"]
     timeout: "1600s"
 
   - id: "Run django createsuperuser"
@@ -49,6 +49,11 @@ steps:
       - '-c'
       - |
         curl $(gcloud app services browse django-createsuperuser --no-launch-browser --format='value(url)')
+    timeout: "1600s"
+
+  - id: "Deploy cron"
+    name: "gcr.io/cloud-builders/gcloud"
+    args: [ "app", "deploy", "/workspace/cron.yaml" ]
     timeout: "1600s"
 
   - id: "Remove elder app versions"
