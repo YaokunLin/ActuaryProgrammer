@@ -1,4 +1,5 @@
 import datetime
+from dataclasses import asdict, dataclass, fields
 from logging import LoggerAdapter
 from typing import Any, Dict, Optional, Tuple
 
@@ -14,45 +15,46 @@ def parse_nh_datetime_str(nh_datetime_str: Optional[str]) -> Optional[datetime.d
 
 
 def get_phone_numbers_from_bio(bio_data: Optional[Dict]) -> Dict[str, Optional[str]]:
-    phone_number_best = "phone_number_best"
-    phone_number = "phone_number"
-    phone_number_mobile = "phone_number_mobile"
-    phone_number_home = "phone_number_home"
-    phone_number_work = "phone_number_work"
-    phone_numbers = {
-        phone_number_best: None,
-        phone_number: None,
-        phone_number_mobile: None,
-        phone_number_home: None,
-        phone_number_work: None,
-    }
-    if not bio_data:
-        return phone_numbers
+    @dataclass
+    class _PhoneNumbers:
+        phone_number: Optional[str] = None
+        phone_number_mobile: Optional[str] = None
+        phone_number_home: Optional[str] = None
+        phone_number_work: Optional[str] = None
 
-    phone_key_mapping = {
-        phone_number: "phone_number",
-        phone_number_mobile: "cell_phone_number",
-        phone_number_home: "home_phone_number",
-        phone_number_work: "work_phone_number",
-    }
-    for k, nh_key in phone_key_mapping.items():
-        value = bio_data.get(nh_key)
-        if not value:
-            continue
+        def __init__(
+            self,
+            phone_number: Optional[str] = None,
+            phone_number_mobile: Optional[str] = None,
+            phone_number_home: Optional[str] = None,
+            phone_number_work: Optional[str] = None,
+        ):
+            self.phone_number = phone_number
+            self.phone_number_mobile = phone_number_mobile
+            self.phone_number_home = phone_number_home
+            self.phone_number_work = phone_number_work
+            for f in fields(self):
+                v = getattr(self, f.name, None)
+                if v is not None:
+                    try:
+                        phonenumbers.parse(v, _check_region=False)
+                    except phonenumbers.NumberParseException:  # noqa
+                        setattr(self, f.name, None)
 
-        try:
-            phonenumbers.parse(value, _check_region=False)
-            phone_numbers[k] = value
-        except phonenumbers.NumberParseException:  # noqa
-            continue
+            if self.phone_number is None:
+                # Set phone_number to be the "best" phone number if it is not populated
+                self.phone_number = (
+                    self.phone_number_mobile if self.phone_number_mobile else self.phone_number_home if self.phone_number_home else self.phone_number_work
+                )
 
-    # Note: This is an important priority order! Order matters
-    for k in (phone_number, phone_number_mobile, phone_number_home, phone_number_work):
-        if phone_numbers[k]:
-            phone_numbers[phone_number_best] = phone_numbers[k]
-            break
-
-    return phone_numbers
+    return asdict(
+        _PhoneNumbers(
+            phone_number=bio_data.get("phone_number"),
+            phone_number_mobile=bio_data.get("cell_phone_number"),
+            phone_number_home=bio_data.get("home_phone_number"),
+            phone_number_work=bio_data.get("work_phone_number"),
+        )
+    )
 
 
 class NexHealthLogAdapter(LoggerAdapter):

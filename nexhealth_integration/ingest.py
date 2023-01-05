@@ -43,7 +43,7 @@ def ingest_all_nexhealth_records_for_practice(
     )
     location_updated_at = timezone.now()  # Will be UTC
     client = _construct_nexhealth_api_client(nexhealth_institution_id, nexhealth_subdomain, nexhealth_location_id)
-    _ingest_institution(client, peerlogic_practice, peerlogic_organization if is_institution_bound_to_practice else None)
+    _ingest_institution(client, peerlogic_organization, peerlogic_practice if is_institution_bound_to_practice else None)
     location = _ingest_location(client, peerlogic_practice)
     if location.updated_from_nexhealth_at is None:
         # Only index all insurance plans the first time we ingest data for the location
@@ -88,7 +88,7 @@ def _construct_nexhealth_api_client(institution_id: int, subdomain: str, locatio
     return client
 
 
-def _ingest_institution(client: NexHealthAPIClient, practice: PeerlogicPractice, organization: Optional[PeerlogicOrganization]) -> None:
+def _ingest_institution(client: NexHealthAPIClient, organization: PeerlogicOrganization, practice: Optional[PeerlogicPractice]) -> None:
     log.info("Ingesting Institution")
     r = client.get_institution()
     institution, institution_created = adapters.update_or_create_institution_from_dict(

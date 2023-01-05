@@ -72,7 +72,11 @@ class PracticeTelecomAdmin(admin.ModelAdmin):
 
 
 class PatientAdmin(admin.ModelAdmin):
-    list_display = ("id", "practice", "name_first", "name_last")
+    list_display = (
+        "id",
+        "organization",
+        "name",
+    )
 
 
 class UserPatientAdmin(admin.ModelAdmin):

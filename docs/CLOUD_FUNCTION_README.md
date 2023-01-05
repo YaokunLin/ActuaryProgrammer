@@ -290,19 +290,15 @@ at the bottom of the YAML file to include your new job name in their `needs` fie
 
 Example:
 ```yaml
-  ...
 
   slackSuccessNotification:
     needs: [setup_environment, deploy_cloud_bar]
     runs-on: ubuntu-latest
 
-  ...
-
   slackFailureNotification:
     needs: [setup_environment, deploy_cloud_bar]
     runs-on: ubuntu-latest
 
-  ...
 ```
 
 #### 4. Deploying
