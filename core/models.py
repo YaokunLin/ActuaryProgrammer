@@ -227,8 +227,8 @@ class Appointment(AuditTrailDateTimeOnlyModel):
 
     appointment_start_at = models.DateTimeField(null=False, db_index=True)
     appointment_end_at = models.DateTimeField(null=False, db_index=True)
-    patient_id = models.ForeignKey(to=Patient, on_delete=models.CASCADE, related_name="appointments")
-    practice_id = models.ForeignKey(to=Practice, on_delete=models.CASCADE, related_name="appointments")
+    patient = models.ForeignKey(to=Patient, on_delete=models.CASCADE, related_name="appointments")
+    practice = models.ForeignKey(to=Practice, on_delete=models.CASCADE, related_name="appointments")
     status = models.CharField(choices=Status.choices, max_length=16, blank=False, null=False, default=Status.SCHEDULED)
     is_active = models.BooleanField(default=True, db_index=True)
     note = models.TextField(null=True)

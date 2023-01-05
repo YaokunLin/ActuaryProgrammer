@@ -429,8 +429,8 @@ def update_or_create_peerlogic_appointment_from_nexhealth(
         "procedures": procedures_flattened,
         "appointment_start_at": nh_appointment.start_time,
         "appointment_end_at": nh_appointment.end_time,
-        "patient_id": peerlogic_patient,  # Must be an instance, not an ID
-        "practice_id": peerlogic_practice,  # Must be an instance, not an ID
+        "patient": peerlogic_patient,
+        "practice": peerlogic_practice,
         "status": status,
         "is_active": is_active,
         "approximate_total_currency": fee_currency or "USD",
