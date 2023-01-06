@@ -146,8 +146,8 @@ class AdminPracticeTelecomSerializer(serializers.ModelSerializer):
 class VoipProviderSerializer(serializers.ModelSerializer):
     class Meta:
         model = VoipProvider
-        fields = ["id", "created_at", "modified_at", "company_name"]
-        read_only_fields = ["id", "created_at", "modified_at", "company_name"]
+        fields = ["id", "created_at", "modified_at", "company_name", "integration_type"]
+        read_only_fields = ["id", "created_at", "modified_at", "company_name", "integration_type"]
 
 
 class AdminVoipProviderSerializer(serializers.ModelSerializer):
@@ -167,8 +167,8 @@ class AgentSerializer(serializers.ModelSerializer):
 
 
 class MyProfileUserSerializer(serializers.ModelSerializer):
-    first_name = serializers.CharField(write_only=True, required=True)
-    last_name = serializers.CharField(write_only=True, required=True)
+    first_name = serializers.CharField(required=True)
+    last_name = serializers.CharField(required=True)
 
     class Meta:
         model = User

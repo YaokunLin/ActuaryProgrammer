@@ -409,7 +409,7 @@ class OrganizationViewSet(MadeByMeViewSetMixin, viewsets.ModelViewSet):
         elif self.request.method in SAFE_METHODS:
             # Can see your own organizations associated to your assigned agent practices
             practice_ids = Agent.objects.filter(user=self.request.user).values_list("practice_id", flat=True)
-            organizations_related_to_me_filter = Q(practice__id__in=practice_ids)
+            organizations_related_to_me_filter = Q(practices__id__in=practice_ids)
             filters = self.resource_made_by_me_filter | organizations_related_to_me_filter
             organizations_qs = Organization.objects.filter(filters)
 
