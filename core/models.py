@@ -6,6 +6,7 @@ from django.contrib.auth.models import (
     _user_has_perm,
 )
 from django.db import models
+from django.db.models.functions import Upper
 from django.utils.translation import gettext_lazy as _
 from django_extensions.db.fields import ShortUUIDField
 from localflavor.us.models import USStateField
@@ -208,6 +209,14 @@ class Patient(AuditTrailModel):
 
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
     practices = models.ManyToManyField(to=Practice, through="PracticePatient", related_name="patients")
+
+    class Meta:
+        indexes = [
+            models.Index(
+                models.functions.Upper("name_last"),
+                name="name_last_case_insensitive",
+            ),
+        ]
 
 
 class PracticePatient(models.Model):

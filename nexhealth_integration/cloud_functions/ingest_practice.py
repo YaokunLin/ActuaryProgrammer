@@ -83,6 +83,6 @@ if __name__ == "__main__":
         peerlogic_practice=practice,
         peerlogic_organization=organization,
         is_institution_bound_to_practice=False,
-        appointment_created_at_from=datetime.datetime.strptime("2022-12-01", "%Y-%M-%d"),
-        appointment_created_at_to=datetime.datetime.strptime("2023-03-01", "%Y-%M-%d"),
+        appointment_created_at_from=datetime.datetime.strptime("2022-12-01", "%Y-%m-%d"),
+        appointment_created_at_to=datetime.datetime.strptime("2023-03-01", "%Y-%m-%d"),
     )

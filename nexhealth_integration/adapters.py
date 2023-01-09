@@ -348,10 +348,10 @@ def update_or_create_peerlogic_patient_from_nexhealth(
         "name_first": nh_patient.first_name,
         "name_last": nh_patient.last_name,
         "name_middle": nh_patient.middle_name,
-        "phone_home": nh_patient.phone_number_home,
-        "phone_mobile": nh_patient.phone_number_mobile,
-        "phone_number": nh_patient.phone_number,
-        "phone_work": nh_patient.phone_number_work,
+        "phone_home": nh_patient.phone_number_home.as_e164 if nh_patient.phone_number_home else None,
+        "phone_mobile": nh_patient.phone_number_mobile.as_e164 if nh_patient.phone_number_mobile else None,
+        "phone_number": nh_patient.phone_number.as_e164 if nh_patient.phone_number else None,
+        "phone_work": nh_patient.phone_number_work.as_e164 if nh_patient.phone_number_work else None,
         "organization_id": peerlogic_practice.organization_id,
     }
 
