@@ -10,7 +10,6 @@ from rest_framework.status import HTTP_200_OK
 
 from care.models import Procedure
 from care.serializers import ExistingPatientsSerializer, ProcedureSerializer
-from core.models import Appointment, Patient, Practice
 
 
 class ProcedureViewset(viewsets.ModelViewSet):
@@ -38,9 +37,11 @@ def get_existing_patients(request: Request) -> Response:
         Q(phone_number=phone_number) | Q(phone_mobile=phone_number) | Q(phone_home=phone_number) | Q(phone_work=phone_number) | Q(phone_fax=phone_number)
     )
 
+    # If a last name is given, do a case-insensitive filter on that
     if patients and name_last:
         patients = patients.alias(name_last_upper=Upper("name_last")).filter(name_last_upper=name_last.upper())
 
+    # Figure out whether any matching patients have completed appointments before
     matches_existing_patient = False
     for patient in patients:
         appointments = patient.appointments.order_by("-created_at").all()
@@ -50,6 +51,7 @@ def get_existing_patients(request: Request) -> Response:
             matches_existing_patient = True
             break
 
+        # For all appointments in descending created_at order, if the appointment has been completed, set matches_existing_patient and stop looping
         for appointment in appointments:
             if appointment.status == appointment.Status.COMPLETED or appointment.appointment_end_at < now:
                 matches_existing_patient = True
@@ -58,5 +60,7 @@ def get_existing_patients(request: Request) -> Response:
         if matches_existing_patient:
             break
 
+    # total_matches: int total number of patient records which match the given number/name. Not necessarily "existing" patients who have completed appointments
+    # matches_existing_patient: bool whether any of the matching patients are "existing" insofar as they've completed an appointment
     data = {"total_matches": patients.count(), "matches_existing_patient": matches_existing_patient}
     return Response(data, status=HTTP_200_OK)
