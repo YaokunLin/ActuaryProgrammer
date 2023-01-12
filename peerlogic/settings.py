@@ -599,6 +599,10 @@ NEXHEALTH_API_ROOT_URL: str = env("NEXHEALTH_API_ROOT_URL", cast=str, default="h
 NEXHEALTH_API_TOKEN: str = env("NEXHEALTH_API_TOKEN", cast=str, default="")
 
 
+# Phone Number Fields
+# HEREBEDRAGONS: For now, this means that only US numbers can be validated/saved
+PHONENUMBER_DEFAULT_REGION = "US"  # https://django-phonenumber-field.readthedocs.io/en/latest/reference.html#phonenumber-default-region
+
 #
 # Testing
 #

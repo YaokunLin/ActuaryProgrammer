@@ -5,6 +5,8 @@ from typing import Any, Dict, Optional, Tuple
 
 import phonenumbers
 
+from peerlogic.settings import PHONENUMBER_DEFAULT_REGION
+
 
 def parse_nh_datetime_str(nh_datetime_str: Optional[str]) -> Optional[datetime.datetime]:
     if nh_datetime_str is None:
@@ -37,7 +39,12 @@ def get_phone_numbers_from_bio(bio_data: Optional[Dict]) -> Dict[str, Optional[s
                 v = getattr(self, f.name, None)
                 if v is not None:
                     try:
-                        phonenumbers.parse(v, _check_region=False)
+                        try:
+                            validated_number = phonenumbers.parse(v)
+                        except phonenumbers.NumberParseException:  # noqa
+                            validated_number = phonenumbers.parse(v, PHONENUMBER_DEFAULT_REGION)
+                        number_as_e164 = phonenumbers.format_number(validated_number, phonenumbers.PhoneNumberFormat.E164)
+                        setattr(self, f.name, number_as_e164)
                     except phonenumbers.NumberParseException:  # noqa
                         setattr(self, f.name, None)
 
