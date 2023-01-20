@@ -13,6 +13,7 @@ class ProcedureSerializer(serializers.ModelSerializer):
 
 
 class ExistingPatientsSerializer(serializers.Serializer):
+    appointment_created_before = serializers.DateTimeField(required=True, allow_null=False)
     practice = serializers.PrimaryKeyRelatedField(required=True, many=False, allow_empty=False, allow_null=False, queryset=Practice.objects.all())
     phone_number = PhoneNumberField(required=True, allow_null=False, allow_blank=False)
     name_last = serializers.CharField(required=False, allow_blank=True, max_length=255)
