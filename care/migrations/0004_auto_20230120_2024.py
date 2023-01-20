@@ -116,10 +116,10 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name="practicepatient",
-            constraint=models.UniqueConstraint(fields=("practice_id", "patient_id"), name="unique_practice_with_patient"),
+            constraint=models.UniqueConstraint(fields=("practice_id", "patient_id"), name="unique_care_practice_with_patient"),
         ),
         migrations.AddIndex(
             model_name="patient",
-            index=models.Index(django.db.models.functions.text.Upper("name_last"), name="name_last_case_insensitive"),
+            index=models.Index(django.db.models.functions.text.Upper("name_last"), name="patient_name_last_ci"),
         ),
     ]

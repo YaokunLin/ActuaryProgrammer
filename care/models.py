@@ -40,7 +40,7 @@ class Patient(AuditTrailModel):
         indexes = [
             models.Index(
                 models.functions.Upper("name_last"),
-                name="name_last_case_insensitive",
+                name="patient_name_last_ci",
             ),
         ]
 
@@ -50,7 +50,7 @@ class PracticePatient(models.Model):
     patient = models.ForeignKey(to=Patient, on_delete=models.CASCADE)
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=["practice_id", "patient_id"], name="unique_practice_with_patient")]
+        constraints = [models.UniqueConstraint(fields=["practice_id", "patient_id"], name="unique_care_practice_with_patient")]
 
 
 class Appointment(AuditTrailDateTimeOnlyModel):
