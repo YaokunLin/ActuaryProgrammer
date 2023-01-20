@@ -384,7 +384,7 @@ def update_or_create_peerlogic_patient_from_nexhealth(
             )
 
         # Ensure practice association exists
-        core_models.PracticePatient.objects.update_or_create(
+        care_models.PracticePatient.objects.update_or_create(
             practice_id=peerlogic_practice.id,
             patient_id=peerlogic_patient.id,
             defaults={"practice_id": peerlogic_practice.id, "patient_id": peerlogic_patient.id},
