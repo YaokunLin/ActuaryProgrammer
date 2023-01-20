@@ -52,31 +52,31 @@ def get_existing_patients(request: Request) -> Response:
         patients = patients.alias(name_last_upper=Upper("name_last")).filter(name_last_upper=name_last.upper())
 
     # Figure out whether any matching patients have completed appointments before
-    has_completed_appointments_at_practice = False
+    has_completed_appointment_at_practice = False
     for patient in patients:
         appointments = patient.appointments.filter(pms_created_at__lt=appointment_created_before).order_by("-pms_created_at").all()
         latest_appointment = appointments.first()
         # appointment.is_new_patient being set to false (not NULL) means that a patient has completed appointments before according to the PMS
         if latest_appointment and latest_appointment.is_new_patient is False:
-            has_completed_appointments_at_practice = True
+            has_completed_appointment_at_practice = True
             break
 
-        # For all appointments in descending created_at order, if the appointment has been completed, set has_completed_appointments_at_practice and stop looping
+        # For all appointments in descending created_at order, if the appointment has been completed, set has_completed_appointment_at_practice and stop looping
         for appointment in appointments:
             if appointment.status == appointment.Status.COMPLETED or appointment.appointment_end_at < now:
-                has_completed_appointments_at_practice = True
+                has_completed_appointment_at_practice = True
                 break
 
-        if has_completed_appointments_at_practice:
+        if has_completed_appointment_at_practice:
             break
 
     # is_patient_at_practice: bool whether any patients match for the given name/number at the practice, regardless of completed appointment
-    # has_completed_appointments_at_practice: bool whether any of the matching patients are "existing" insofar as they've completed an appointment
+    # has_completed_appointment_at_practice: bool whether any of the matching patients are "existing" insofar as they've completed an appointment
     # is_patient_in_system: bool whether any patient record exists with a matching number in the whole system
     return Response(
         {
             "is_patient_at_practice": patients.exists(),
-            "has_completed_appointments_at_practice": has_completed_appointments_at_practice,
+            "has_completed_appointment_at_practice": has_completed_appointment_at_practice,
             "is_patient_in_system": is_patient_in_system,
         },
         status=HTTP_200_OK,
