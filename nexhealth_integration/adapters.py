@@ -5,6 +5,7 @@ from typing import Dict, Iterable, Optional, Tuple
 from django.db.transaction import atomic
 from django.utils import timezone
 
+from care import models as care_models
 from core import models as core_models
 from nexhealth_integration.models import (
     Appointment,
@@ -339,7 +340,7 @@ def update_or_create_insurance_coverage_from_dict(
 def update_or_create_peerlogic_patient_from_nexhealth(
     nh_patient: Patient,
     peerlogic_practice: core_models.Practice,
-) -> core_models.Patient:
+) -> care_models.Patient:
     patient_data = {
         "date_of_birth": nh_patient.date_of_birth,
         "email": nh_patient.email,
@@ -353,6 +354,7 @@ def update_or_create_peerlogic_patient_from_nexhealth(
         "phone_number": nh_patient.phone_number.as_e164 if nh_patient.phone_number else None,
         "phone_work": nh_patient.phone_number_work.as_e164 if nh_patient.phone_number_work else None,
         "organization_id": peerlogic_practice.organization_id,
+        "pms_created_at": nh_patient.nh_created_at,
     }
 
     with atomic():
@@ -375,7 +377,7 @@ def update_or_create_peerlogic_patient_from_nexhealth(
             #   always create the record (below)
 
             # Create a core.Patient record and NexHealthPatientLink
-            peerlogic_patient = core_models.Patient.objects.create(**patient_data)
+            peerlogic_patient = care_models.Patient.objects.create(**patient_data)
 
             NexHealthPatientLink.objects.create(
                 nh_institution_id=nh_patient.nh_institution_id, nh_patient_id=nh_patient.nh_id, peerlogic_patient=peerlogic_patient
@@ -395,8 +397,8 @@ def update_or_create_peerlogic_appointment_from_nexhealth(
     nh_appointment: Appointment,
     peerlogic_practice: core_models.Practice,
     procedures: Optional[Iterable[Procedure]] = None,
-    peerlogic_patient: Optional[core_models.Patient] = None,
-) -> core_models.Appointment:
+    peerlogic_patient: Optional[care_models.Patient] = None,
+) -> care_models.Appointment:
     if peerlogic_patient is None:
         peerlogic_patient = NexHealthPatientLink.objects.get(
             nh_institution_id=nh_appointment.nh_institution_id, nh_patient_id=nh_appointment.nh_patient_id
@@ -416,13 +418,13 @@ def update_or_create_peerlogic_appointment_from_nexhealth(
         fee_total_amount += fee_amount
         procedures_flattened.append({"code": procedure.code, "name": procedure.name, "fee_currency": fee_currency, "fee_amount": fee_amount})
 
-    status = core_models.Appointment.Status.SCHEDULED
+    status = care_models.Appointment.Status.SCHEDULED
     if nh_appointment.nh_deleted:
-        status = core_models.Appointment.Status.DELETED
+        status = care_models.Appointment.Status.DELETED
     if nh_appointment.cancelled:
-        status = core_models.Appointment.Status.CANCELLED
+        status = care_models.Appointment.Status.CANCELLED
     elif nh_appointment.end_time < timezone.now():
-        status = core_models.Appointment.Status.COMPLETED
+        status = care_models.Appointment.Status.COMPLETED
 
     is_active = nh_appointment.nh_deleted is False and nh_appointment.cancelled is False and nh_appointment.unavailable is False
     appointment_data = {
@@ -439,6 +441,7 @@ def update_or_create_peerlogic_appointment_from_nexhealth(
         "note": nh_appointment.note,
         "confirmed_at": nh_appointment.patient_confirmed_at if nh_appointment.patient_confirmed_at else nh_appointment.confirmed_at,
         "did_patient_miss": nh_appointment.patient_missed,
+        "pms_created_at": nh_appointment.nh_created_at,
     }
 
     with atomic():
@@ -446,7 +449,7 @@ def update_or_create_peerlogic_appointment_from_nexhealth(
             nh_institution_id=nh_appointment.nh_institution_id, nh_appointment_id=nh_appointment.nh_id
         ).first()
         if existing_link:
-            # Update the existing core.Appointment record with new data
+            # Update the existing care.Appointment record with new data
             peerlogic_appointment = existing_link.peerlogic_appointment
             if peerlogic_appointment.modified_at > nh_appointment.nh_updated_at:
                 log.info(f"Not updating Appointment {peerlogic_appointment.id} due to existing data being more up-to-date")
@@ -456,8 +459,8 @@ def update_or_create_peerlogic_appointment_from_nexhealth(
                 setattr(peerlogic_appointment, k, v)
             peerlogic_appointment.save()
         else:
-            # Create and link a core.Appointment record
-            peerlogic_appointment = core_models.Appointment.objects.create(**appointment_data)
+            # Create and link a care.Appointment record
+            peerlogic_appointment = care_models.Appointment.objects.create(**appointment_data)
             NexHealthAppointmentLink.objects.create(
                 nh_institution_id=nh_appointment.nh_institution_id, nh_appointment_id=nh_appointment.nh_id, peerlogic_appointment=peerlogic_appointment
             )
