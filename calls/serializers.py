@@ -334,5 +334,6 @@ class TelecomCallerNameInfoSerializer(CountryFieldMixin, serializers.ModelSerial
             "created_at",
             "modified_by",
             "modified_at",
+            "is_known_insurance_provider",
         ]
-        read_only_fields = ["created_at", "modified_by", "modified_at"]
+        read_only_fields = ["created_at", "modified_by", "modified_at", "is_known_insurance_provider"]

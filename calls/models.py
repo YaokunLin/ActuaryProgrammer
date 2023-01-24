@@ -260,6 +260,7 @@ class TelecomCallerNameInfo(AuditTrailModel):
     mobile_network_code = models.IntegerField(max_length=3, null=True, default=None)  # 2-3 digit mobile network code of the carrier, (only for mobile numbers)
 
     extract_raw_json = models.JSONField(default=None, null=True)  # raw value used to generate this, if received
+    is_known_insurance_provider = models.BooleanField(db_index=True, default=False)
 
     def is_caller_name_info_stale(self) -> bool:
         time_zone = self.modified_at.tzinfo  # use database standard timezone
