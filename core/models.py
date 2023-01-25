@@ -6,7 +6,6 @@ from django.contrib.auth.models import (
     _user_has_perm,
 )
 from django.db import models
-from django.db.models.functions import Upper
 from django.utils.translation import gettext_lazy as _
 from django_extensions.db.fields import ShortUUIDField
 from localflavor.us.models import USStateField
@@ -186,82 +185,6 @@ class PracticeTelecom(AuditTrailModel):
     domain = models.CharField(max_length=80, db_index=True, blank=True)  # TODO: move to Netsapiens App specific datamodel
     phone_sms = PhoneNumberField(blank=True)
     phone_callback = PhoneNumberField(blank=True)
-
-
-class Patient(AuditTrailModel):
-    id = ShortUUIDField(primary_key=True, editable=False)
-    address_line_1 = models.CharField(blank=True, max_length=255, null=True)
-    address_line_2 = models.CharField(blank=True, max_length=255, null=True)
-    date_of_birth = models.DateField(null=True)
-    email = models.EmailField(null=True)
-    is_active = models.BooleanField(default=True)
-    name = models.CharField(blank=True, null=True, max_length=255, db_index=True)
-    name_first = models.CharField(blank=True, null=True, max_length=255)
-    name_middle = models.CharField(blank=True, null=True, max_length=255)
-    name_last = models.CharField(blank=True, null=True, max_length=255, db_index=True)
-    phone_fax = PhoneNumberField(blank=True, null=True, default="")
-    phone_home = PhoneNumberField(db_index=True, blank=True, null=True)
-    phone_mobile = PhoneNumberField(db_index=True, blank=True, null=True)
-    phone_number = PhoneNumberField(db_index=True, blank=True, null=True)
-    phone_work = PhoneNumberField(db_index=True, blank=True, null=True)
-    placeholder = models.CharField(blank=True, max_length=255, null=True)
-    zip_code = models.CharField(max_length=12, blank=True, null=True)
-
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
-    practices = models.ManyToManyField(to=Practice, through="PracticePatient", related_name="patients")
-
-    class Meta:
-        indexes = [
-            models.Index(
-                models.functions.Upper("name_last"),
-                name="name_last_case_insensitive",
-            ),
-        ]
-
-
-class PracticePatient(models.Model):
-    practice = models.ForeignKey(to=Practice, on_delete=models.CASCADE)
-    patient = models.ForeignKey(to=Patient, on_delete=models.CASCADE)
-
-    class Meta:
-        constraints = [models.UniqueConstraint(fields=["practice_id", "patient_id"], name="unique_practice_with_patient")]
-
-
-class Appointment(AuditTrailDateTimeOnlyModel):
-    class Status(models.TextChoices):
-        SCHEDULED = "SCHEDULED"
-        COMPLETED = "COMPLETED"
-        CANCELLED = "CANCELLED"
-        DELETED = "DELETED"
-
-    appointment_start_at = models.DateTimeField(null=False, db_index=True)
-    appointment_end_at = models.DateTimeField(null=False, db_index=True)
-    patient = models.ForeignKey(to=Patient, on_delete=models.CASCADE, related_name="appointments")
-    practice = models.ForeignKey(to=Practice, on_delete=models.CASCADE, related_name="appointments")
-    status = models.CharField(choices=Status.choices, max_length=16, blank=False, null=False, default=Status.SCHEDULED)
-    is_active = models.BooleanField(default=True, db_index=True)
-    note = models.TextField(null=True)
-    confirmed_at = models.DateTimeField(null=True)
-    did_patient_miss = models.BooleanField(null=True)
-    is_new_patient = models.BooleanField(null=True, db_index=True)
-
-    # This can either come directly from the PMS or will be a summation of fee amounts from procedures
-    approximate_total_currency = models.CharField(max_length=3, null=False, blank=False, default="USD")
-    approximate_total_amount = models.DecimalField(max_digits=24, decimal_places=2, default=0.00)
-
-    # Note on procedures:
-    #   These are stored denormalized and simplified with 4 fields each, and should be stored in order of "code":
-    #     code: The ADA code for the procedure/treatment
-    #     name: The name or description for the procedure from the PMS
-    #     fee_currency: The ISO 4217 currency code (e.g. "USD")
-    #     fee_amount: The approximate cost of the procedure
-    procedures = models.JSONField(null=True)
-
-
-class UserPatient(AuditTrailModel):
-    id = ShortUUIDField(primary_key=True, editable=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
 
 
 class InsuranceProvider(AuditTrailModel):

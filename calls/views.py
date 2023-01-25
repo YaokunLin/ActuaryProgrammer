@@ -42,7 +42,7 @@ from calls.twilio_etl import (
 )
 from calls.validation import get_validated_query_param_bool
 from core.file_upload import FileToUpload
-from core.models import Agent
+from core.models import Agent, InsuranceProviderPhoneNumber
 
 from .field_choices import (
     CallAudioFileStatusTypes,
@@ -660,14 +660,16 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return HttpResponseBadRequest(f"Invalid phone number detected, phone_number_raw: '{phone_number_raw}'")
 
-        # use whatever we find and 404 if we don't find anything
-        if not settings.TWILIO_IS_ENABLED:
-            log.info(f"Twilio is off. Using existing database lookup for phone_number: '{phone_number}'")
-            return super().retrieve(request, phone_number)
+        # Check for insurance providers
+        is_known_insurance_provider = InsuranceProviderPhoneNumber.objects.filter(phone_number=phone_number).exists()
 
         # search database for record
         log.info(f"Performing lookups for phone_number: '{phone_number}'")
         telecom_caller_name_info, created = TelecomCallerNameInfo.objects.get_or_create(phone_number=phone_number)
+
+        if telecom_caller_name_info.is_known_insurance_provider != is_known_insurance_provider:
+            telecom_caller_name_info.is_known_insurance_provider = is_known_insurance_provider
+            telecom_caller_name_info.save()
 
         # existing row that has legitimate values and is not stale
         if not created and telecom_caller_name_info.caller_name_type is not None and not telecom_caller_name_info.is_caller_name_info_stale():
@@ -684,6 +686,9 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
             telecom_caller_name_info.source = TelecomCallerNameInfoSourceTypes.PEERLOGIC
             telecom_caller_name_info.caller_name_type = TelecomCallerNameInfoTypes.BUSINESS
             telecom_caller_name_info.save()
+            return Response(TelecomCallerNameInfoSerializer(telecom_caller_name_info).data)
+
+        if not settings.TWILIO_IS_ENABLED:
             return Response(TelecomCallerNameInfoSerializer(telecom_caller_name_info).data)
 
         # fetch from twilio and update database

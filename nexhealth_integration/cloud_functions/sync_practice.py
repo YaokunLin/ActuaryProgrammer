@@ -1,5 +1,5 @@
 """
-Updates core.Patient and core.Appointment records for a given practice from nexhealth_integration models.
+Updates care.Patient and care.Appointment records for a given practice from nexhealth_integration models.
 
 Typically, this is automatically triggered each time new data is ingested for a practice by the nexhealth_ingest_practice Cloud Function.
 

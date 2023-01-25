@@ -13,7 +13,7 @@ class SMSMessage(AuditTrailModel):
     id = ShortUUIDField(primary_key=True, editable=False)
     bandwidth_id = models.CharField(editable=False, max_length=255, default=shortuuid.uuid)
     # TODO: put in the bandwidth description in the datamodel
-    patient = models.ForeignKey("core.Patient", on_delete=models.SET_NULL, null=True)
+    patient = models.ForeignKey("care.Patient", on_delete=models.SET_NULL, null=True)
     assigned_to_agent = models.ForeignKey("core.Agent", on_delete=models.SET_NULL, null=True)
     owner = PhoneNumberField()
     destination_number = PhoneNumberField(blank=True)

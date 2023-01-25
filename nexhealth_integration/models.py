@@ -3,8 +3,8 @@ from django.db import models
 from django_extensions.db.fields import ShortUUIDField
 from phonenumber_field.modelfields import PhoneNumberField
 
+from care.models import Patient as PeerlogicPatient
 from core.abstract_models import AuditTrailDateTimeOnlyModel
-from core.models import Patient as PeerlogicPatient
 
 
 class APIRequest(AuditTrailDateTimeOnlyModel):
@@ -77,7 +77,7 @@ class Institution(AuditTrailDateTimeOnlyModel):
     name = models.CharField(max_length=255, db_index=True)
     notify_insert_fails = models.BooleanField(null=True)
     phone_number = PhoneNumberField(null=True, blank=True, db_index=True)
-    synced_patients_to_peerlogic_at = models.DateTimeField(null=True)  # This is the most recent time that we synced to core.Patient records
+    synced_patients_to_peerlogic_at = models.DateTimeField(null=True)  # This is the most recent time that we synced to care.Patient records
 
 
 class Location(AuditTrailDateTimeOnlyModel):
@@ -95,7 +95,7 @@ class Location(AuditTrailDateTimeOnlyModel):
     nh_last_sync_time = models.DateTimeField(null=True)
     nh_updated_at = models.DateTimeField(null=True)
     updated_from_nexhealth_at = models.DateTimeField(null=True)  # This is the most recent time Peerlogic fetched updates for the location
-    synced_appointments_to_peerlogic_at = models.DateTimeField(null=True)  # This is the most recent time that we synced to core.Appointment records
+    synced_appointments_to_peerlogic_at = models.DateTimeField(null=True)  # This is the most recent time that we synced to care.Appointment records
     is_initialized = models.BooleanField(default=False)
 
     peerlogic_practice = models.ForeignKey(to="core.Practice", on_delete=models.SET_NULL, null=True, related_name="nexhealth_locations")
@@ -225,7 +225,7 @@ class NexHealthPatientLink(models.Model):
 
     nh_institution_id = models.PositiveIntegerField(db_index=True, null=False)
     nh_patient_id = models.PositiveIntegerField(db_index=True, null=False)
-    peerlogic_patient = models.ForeignKey(to="core.Patient", on_delete=models.CASCADE, related_name="nexhealth_patient")
+    peerlogic_patient = models.ForeignKey(to="care.Patient", on_delete=models.CASCADE, related_name="nexhealth_patient")
 
     class Meta:
         constraints = [
@@ -324,7 +324,7 @@ class NexHealthAppointmentLink(models.Model):
 
     nh_institution_id = models.PositiveIntegerField(db_index=True, null=False)
     nh_appointment_id = models.PositiveIntegerField(db_index=True, null=False)
-    peerlogic_appointment = models.ForeignKey(to="core.Appointment", on_delete=models.CASCADE, related_name="nexhealth_appointment")
+    peerlogic_appointment = models.ForeignKey(to="care.Appointment", on_delete=models.CASCADE, related_name="nexhealth_appointment")
 
     class Meta:
         constraints = [
