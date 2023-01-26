@@ -138,7 +138,7 @@ class CallTranscript(AuditTrailModel):
     call = models.ForeignKey(Call, on_delete=models.CASCADE)
     publish_event_on_patch = models.BooleanField(default=False)
     mime_type = models.CharField(choices=SupportedTranscriptMimeTypes.choices, max_length=180, default=SupportedTranscriptMimeTypes.TEXT_PLAIN)
-    transcript_type = models.CharField(choices=TranscriptTypes.choices, max_length=80, default=TranscriptTypes.FULL_TEXT)
+    transcript_type = models.CharField(choices=TranscriptTypes.choices, max_length=80, default=TranscriptTypes.FULL_TEXT, db_index=True)
 
     transcript_text = models.TextField(blank=True)
     transcript_text_tsvector = SearchVectorField(null=True)
