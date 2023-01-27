@@ -168,11 +168,11 @@ Google Cloud credentials are necessary to access the database. Your environment 
 
 4. Change the value in ./environment-connect/cloudsql-docker-compose.yml env_file to point at your `.env.dev`.
 
-6. You can now connect as a server via ./environment-connect/connect.sh dev up.
+5. You can now connect as a server via ./environment-connect/connect.sh dev up.
 
     In fact, you can run any docker commands after `./environment-connect/connect.sh dev`!
 
-7. Allow some amount of time for the API to connect to the remote database. We've seen problems with the gunicorn workers timing out and dying.
+6. Allow some amount of time for the API to connect to the remote database. We've seen problems with the gunicorn workers timing out and dying.
 
     Error seen from clients trying to connect to peerlogic-api:
 
