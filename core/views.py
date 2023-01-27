@@ -30,7 +30,6 @@ from core.models import (
     Agent,
     Client,
     Organization,
-    Patient,
     Practice,
     PracticeTelecom,
     User,
@@ -46,7 +45,6 @@ from core.serializers import (
     MyProfileUserSerializer,
     OrganizationCreateSerializer,
     OrganizationSerializer,
-    PatientSerializer,
     PracticeSerializer,
     PracticeTelecomCreateSerializer,
     PracticeTelecomSerializer,
@@ -288,27 +286,6 @@ class ClientViewset(viewsets.ModelViewSet):
         return queryset
 
 
-class PatientViewset(viewsets.ModelViewSet):
-    queryset = Patient.objects.all().order_by("-modified_at")
-    serializer_class = PatientSerializer
-
-    filterset_fields = ["phone_mobile", "phone_home", "phone_work", "phone_fax"]
-    search_fields = ["name_first", "name_last", "phone_mobile", "phone_home", "phone_work"]
-
-    def get_queryset(self):
-        patient_qs = Patient.objects.none()
-
-        if self.request.user.is_staff or self.request.user.is_superuser:
-            patient_qs = Patient.objects.all()
-        elif self.request.method in SAFE_METHODS:
-            # TODO: organizations ACL
-            # Can see any patients if you are an assigned agent to a practice
-            practice_ids = Agent.objects.filter(user=self.request.user).values_list("practice_id", flat=True)
-            patient_qs = Patient.objects.filter(practice__id__in=practice_ids)
-
-        return patient_qs.order_by("-modified_at")
-
-
 class PracticeViewSet(viewsets.ModelViewSet):
     serializer_class = PracticeSerializer
     filterset_fields = ["active"]
@@ -409,7 +386,7 @@ class OrganizationViewSet(MadeByMeViewSetMixin, viewsets.ModelViewSet):
         elif self.request.method in SAFE_METHODS:
             # Can see your own organizations associated to your assigned agent practices
             practice_ids = Agent.objects.filter(user=self.request.user).values_list("practice_id", flat=True)
-            organizations_related_to_me_filter = Q(practice__id__in=practice_ids)
+            organizations_related_to_me_filter = Q(practices__id__in=practice_ids)
             filters = self.resource_made_by_me_filter | organizations_related_to_me_filter
             organizations_qs = Organization.objects.filter(filters)
 

@@ -138,7 +138,7 @@ class CallTranscript(AuditTrailModel):
     call = models.ForeignKey(Call, on_delete=models.CASCADE)
     publish_event_on_patch = models.BooleanField(default=False)
     mime_type = models.CharField(choices=SupportedTranscriptMimeTypes.choices, max_length=180, default=SupportedTranscriptMimeTypes.TEXT_PLAIN)
-    transcript_type = models.CharField(choices=TranscriptTypes.choices, max_length=80, default=TranscriptTypes.FULL_TEXT)
+    transcript_type = models.CharField(choices=TranscriptTypes.choices, max_length=80, default=TranscriptTypes.FULL_TEXT, db_index=True)
 
     transcript_text = models.TextField(blank=True)
     transcript_text_tsvector = SearchVectorField(null=True)
@@ -260,6 +260,7 @@ class TelecomCallerNameInfo(AuditTrailModel):
     mobile_network_code = models.IntegerField(max_length=3, null=True, default=None)  # 2-3 digit mobile network code of the carrier, (only for mobile numbers)
 
     extract_raw_json = models.JSONField(default=None, null=True)  # raw value used to generate this, if received
+    is_known_insurance_provider = models.BooleanField(db_index=True, default=False)
 
     def is_caller_name_info_stale(self) -> bool:
         time_zone = self.modified_at.tzinfo  # use database standard timezone

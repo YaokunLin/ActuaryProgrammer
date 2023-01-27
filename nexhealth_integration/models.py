@@ -3,8 +3,8 @@ from django.db import models
 from django_extensions.db.fields import ShortUUIDField
 from phonenumber_field.modelfields import PhoneNumberField
 
+from care.models import Patient as PeerlogicPatient
 from core.abstract_models import AuditTrailDateTimeOnlyModel
-from core.models import Patient as PeerlogicPatient
 
 
 class APIRequest(AuditTrailDateTimeOnlyModel):
@@ -77,6 +77,7 @@ class Institution(AuditTrailDateTimeOnlyModel):
     name = models.CharField(max_length=255, db_index=True)
     notify_insert_fails = models.BooleanField(null=True)
     phone_number = PhoneNumberField(null=True, blank=True, db_index=True)
+    synced_patients_to_peerlogic_at = models.DateTimeField(null=True)  # This is the most recent time that we synced to care.Patient records
 
 
 class Location(AuditTrailDateTimeOnlyModel):
@@ -94,6 +95,7 @@ class Location(AuditTrailDateTimeOnlyModel):
     nh_last_sync_time = models.DateTimeField(null=True)
     nh_updated_at = models.DateTimeField(null=True)
     updated_from_nexhealth_at = models.DateTimeField(null=True)  # This is the most recent time Peerlogic fetched updates for the location
+    synced_appointments_to_peerlogic_at = models.DateTimeField(null=True)  # This is the most recent time that we synced to care.Appointment records
     is_initialized = models.BooleanField(default=False)
 
     peerlogic_practice = models.ForeignKey(to="core.Practice", on_delete=models.SET_NULL, null=True, related_name="nexhealth_locations")
@@ -173,9 +175,6 @@ class LocationProvider(models.Model):
 class Patient(AuditTrailDateTimeOnlyModel):
     """
     Similar to a "Patient" in Peerlogic
-    Note: One NexHealth Patient may link to numerous Peerlogic Patients
-        This is because in NexHealth, patients are bound to an institution
-        and are linked to practices through Appointments.
 
     NexHealth Reference: https://docs.nexhealth.com/reference/patients-1
     """
@@ -194,6 +193,8 @@ class Patient(AuditTrailDateTimeOnlyModel):
     balance_amount = models.CharField(max_length=32, null=True, blank=False)
     balance_currency = models.CharField(max_length=3, null=True, blank=False)
     bio = models.JSONField(null=True)
+    date_of_birth = models.DateField(null=True)
+    email = models.EmailField(null=True)
     charges = models.JSONField(null=True)  # https://docs.nexhealth.com/reference/getcharges
     first_name = models.CharField(max_length=255, null=True, blank=True)
     foreign_id = models.CharField(max_length=255, null=True, db_index=True)
@@ -202,7 +203,6 @@ class Patient(AuditTrailDateTimeOnlyModel):
     middle_name = models.CharField(max_length=255, null=True, blank=True)
     name = models.CharField(max_length=255, db_index=True, null=True, blank=True)
     payments = models.JSONField(null=True)  # https://docs.nexhealth.com/reference/getpayments
-    phone_number_best = PhoneNumberField(null=True, blank=True, db_index=True)  # From bio JSON
     phone_number = PhoneNumberField(null=True, blank=True, db_index=True)  # From bio JSON
     phone_number_mobile = PhoneNumberField(null=True, blank=True, db_index=True)  # From bio JSON
     phone_number_home = PhoneNumberField(null=True, blank=True, db_index=True)  # From bio JSON
@@ -215,35 +215,28 @@ class Patient(AuditTrailDateTimeOnlyModel):
 
     @property
     def peerlogic_patients(self) -> "models.query.QuerySet[PeerlogicPatient]":
-        return PeerlogicPatient.objects.filter(
-            id__in=NexHealthPatientLink.objects.filter(
-                nh_institution_id=self.nh_institution_id,
-            )
-        )
+        return PeerlogicPatient.objects.filter(id__in=NexHealthPatientLink.objects.filter(nh_institution_id=self.nh_institution_id, nh_patient_id=self.nh_id))
 
 
 class NexHealthPatientLink(models.Model):
     """
-    Through-model linking NexHealth Integration Patient to Peerlogic Patient
+    Links NexHealth Integration Patient to Peerlogic Patient
     """
 
-    nh_institution_id = models.PositiveIntegerField(db_index=True)
-    nh_location_id = models.PositiveIntegerField(db_index=True)
-    nh_patient_id = models.PositiveIntegerField(db_index=True)
-    peerlogic_patient = models.ForeignKey(to="core.Patient", on_delete=models.CASCADE)
+    nh_institution_id = models.PositiveIntegerField(db_index=True, null=False)
+    nh_patient_id = models.PositiveIntegerField(db_index=True, null=False)
+    peerlogic_patient = models.ForeignKey(to="care.Patient", on_delete=models.CASCADE, related_name="nexhealth_patient")
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["nh_institution_id", "nh_location_id", "nh_patient_id", "peerlogic_patient_id"], name="unique_nexhealth_patient_with_peerlogic_patient"
+                fields=["nh_institution_id", "nh_patient_id", "peerlogic_patient_id"], name="unique_nexhealth_patient_with_peerlogic_patient"
             )
         ]
 
 
 class Procedure(AuditTrailDateTimeOnlyModel):
     """
-    Similar to a "Procedure" in Peerlogic except that it's bound to a single appointment
-
     NexHealth Reference: https://docs.nexhealth.com/reference/procedures
     """
 
@@ -260,7 +253,7 @@ class Procedure(AuditTrailDateTimeOnlyModel):
     code = models.CharField(max_length=128, db_index=True)
     end_date = models.DateField(null=True)
     fee_amount = models.CharField(max_length=32, null=True, blank=False)
-    fee_currency = models.CharField(max_length=3, null=True, blank=False)
+    fee_currency = models.CharField(max_length=3, null=False, blank=False, default="USD")
     name = models.CharField(max_length=255, db_index=True)
     start_date = models.DateField(null=True)
 
@@ -321,6 +314,23 @@ class Appointment(AuditTrailDateTimeOnlyModel):
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=["nh_id", "nh_location_id", "nh_institution_id"], name="nh_unique_appointment_with_institution_and_location")
+        ]
+
+
+class NexHealthAppointmentLink(models.Model):
+    """
+    Links NexHealth Integration Appointment to Peerlogic Appointment
+    """
+
+    nh_institution_id = models.PositiveIntegerField(db_index=True, null=False)
+    nh_appointment_id = models.PositiveIntegerField(db_index=True, null=False)
+    peerlogic_appointment = models.ForeignKey(to="care.Appointment", on_delete=models.CASCADE, related_name="nexhealth_appointment")
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["nh_institution_id", "nh_appointment_id", "peerlogic_appointment_id"], name="unique_nexhealth_appointment_with_peerlogic_appointment"
+            )
         ]
 
 

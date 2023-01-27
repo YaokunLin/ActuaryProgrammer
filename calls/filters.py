@@ -15,6 +15,7 @@ from calls.analytics.intents.field_choices import (
     CallPurposeTypes,
 )
 from calls.analytics.participants.field_choices import NonAgentEngagementPersonaTypes
+from calls.field_choices import TranscriptTypes
 from calls.models import Call, CallTranscript
 from core.models import MarketingCampaignPhoneNumber
 
@@ -123,7 +124,7 @@ class CallSearchFilter(BaseFilterBackend):
         if search_term:
             # Use the computed ts_vector directly to speed up the search.
             # Use filter and not "search" here
-            return queryset.filter(calltranscript__transcript_text_tsvector=search_term)
+            return queryset.filter(calltranscript__transcript_text_tsvector=search_term, calltranscript__transcript_type=TranscriptTypes.FULL_TEXT)
 
         return queryset
 
@@ -136,7 +137,7 @@ class CallTranscriptsSearchFilter(BaseFilterBackend):
         if search_term:
             # Use the computed ts_vector directly to speed up the search.
             # Use filter and not "search" here
-            return queryset.filter(transcript_text_tsvector=search_term)
+            return queryset.filter(transcript_text_tsvector=search_term, calltranscript__transcript_type=TranscriptTypes.FULL_TEXT)
 
         return queryset
 

@@ -9,7 +9,6 @@ from .views import (
     LoginView,
     MyProfileView,
     OrganizationViewSet,
-    PatientViewset,
     PracticeTelecomViewSet,
     PracticeViewSet,
     VoipProviderViewset,
@@ -19,7 +18,6 @@ router = routers.DefaultRouter()
 
 router.register(r"agents", AgentViewset)
 router.register(r"clients", ClientViewset)
-router.register(r"patients", PatientViewset)
 router.register(r"organizations", OrganizationViewSet)
 router.register(r"practices", PracticeViewSet, basename="practices")
 router.register(r"practice-telecoms", PracticeTelecomViewSet)

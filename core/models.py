@@ -11,7 +11,7 @@ from django_extensions.db.fields import ShortUUIDField
 from localflavor.us.models import USStateField
 from phonenumber_field.modelfields import PhoneNumberField
 
-from core.abstract_models import AuditTrailModel
+from core.abstract_models import AuditTrailDateTimeOnlyModel, AuditTrailModel
 from core.field_choices import IndustryTypes, VoipProviderIntegrationTypes
 from core.managers import PracticeManager, UserManager
 
@@ -185,29 +185,6 @@ class PracticeTelecom(AuditTrailModel):
     domain = models.CharField(max_length=80, db_index=True, blank=True)  # TODO: move to Netsapiens App specific datamodel
     phone_sms = PhoneNumberField(blank=True)
     phone_callback = PhoneNumberField(blank=True)
-
-
-class Patient(AuditTrailModel):
-    id = ShortUUIDField(primary_key=True, editable=False)
-    practice = models.ForeignKey(Practice, on_delete=models.CASCADE)
-    name_first = models.CharField(blank=True, max_length=255, db_index=True)
-    name_last = models.CharField(blank=True, max_length=255, db_index=True)
-    placeholder = models.CharField(blank=True, max_length=255)
-    phone_mobile = PhoneNumberField(db_index=True, blank=True, null=False, default="")
-    phone_home = PhoneNumberField(db_index=True, blank=True, null=False, default="")
-    phone_work = PhoneNumberField(db_index=True, blank=True, null=False, default="")
-    phone_fax = PhoneNumberField(blank=True, null=False, default="")
-    address_line_1 = models.CharField(blank=True, max_length=255)
-    address_line_2 = models.CharField(blank=True, max_length=255)
-    zip_code = models.CharField(max_length=50)
-    zip_code_add_on = models.CharField(max_length=50, blank=True)
-    date_of_birth = models.DateTimeField()
-
-
-class UserPatient(AuditTrailModel):
-    id = ShortUUIDField(primary_key=True, editable=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    patient = models.ForeignKey(Patient, on_delete=models.CASCADE)
 
 
 class InsuranceProvider(AuditTrailModel):

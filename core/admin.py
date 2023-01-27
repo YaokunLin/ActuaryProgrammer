@@ -7,11 +7,9 @@ from .models import (
     Agent,
     Client,
     Organization,
-    Patient,
     Practice,
     PracticeTelecom,
     User,
-    UserPatient,
     UserTelecom,
     VoipProvider,
 )
@@ -71,21 +69,11 @@ class PracticeTelecomAdmin(admin.ModelAdmin):
     list_display = ("id", "practice", "domain", "voip_provider")
 
 
-class PatientAdmin(admin.ModelAdmin):
-    list_display = ("id", "practice", "name_first", "name_last")
-
-
-class UserPatientAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "patient")
-
-
 admin.site.register(Agent, AgentAdmin)
 admin.site.register(Client, ClientAdmin)
-admin.site.register(Patient, PatientAdmin)
 admin.site.register(Practice, PracticeAdmin)
 admin.site.register(Organization, OrganizationAdmin)
 admin.site.register(PracticeTelecom, PracticeTelecomAdmin)
 admin.site.register(User, UserAdmin)
-admin.site.register(UserPatient, UserPatientAdmin)
 admin.site.register(UserTelecom, UserTelecomAdmin)
 admin.site.register(VoipProvider, VoipProviderAdmin)

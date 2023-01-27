@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 
 from core.field_choices import IndustryTypes
 from core.inline_serializers import (
@@ -12,7 +11,6 @@ from core.models import (
     Agent,
     Client,
     Organization,
-    Patient,
     Practice,
     PracticeTelecom,
     User,
@@ -39,13 +37,6 @@ class ClientSerializer(serializers.ModelSerializer):
         model = Client
         fields = "__all__"
         read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
-
-
-class PatientSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Patient
-        read_only_fields = ["id", "created_at", "modified_by", "modified_at"]
-        fields = "__all__"
 
 
 class AdminPracticeSerializer(serializers.ModelSerializer):
@@ -146,8 +137,8 @@ class AdminPracticeTelecomSerializer(serializers.ModelSerializer):
 class VoipProviderSerializer(serializers.ModelSerializer):
     class Meta:
         model = VoipProvider
-        fields = ["id", "created_at", "modified_at", "company_name"]
-        read_only_fields = ["id", "created_at", "modified_at", "company_name"]
+        fields = ["id", "created_at", "modified_at", "company_name", "integration_type"]
+        read_only_fields = ["id", "created_at", "modified_at", "company_name", "integration_type"]
 
 
 class AdminVoipProviderSerializer(serializers.ModelSerializer):
@@ -167,8 +158,8 @@ class AgentSerializer(serializers.ModelSerializer):
 
 
 class MyProfileUserSerializer(serializers.ModelSerializer):
-    first_name = serializers.CharField(write_only=True, required=True)
-    last_name = serializers.CharField(write_only=True, required=True)
+    first_name = serializers.CharField(required=True)
+    last_name = serializers.CharField(required=True)
 
     class Meta:
         model = User

@@ -1,24 +1,32 @@
-from typing import Dict, Optional, Tuple
+from datetime import datetime, timedelta
+from logging import getLogger
+from typing import Dict, Iterable, Optional, Tuple
 
 from django.db.transaction import atomic
+from django.utils import timezone
 
+from care import models as care_models
 from core import models as core_models
 from nexhealth_integration.models import (
-    APIRequest,
     Appointment,
     Institution,
     InsuranceCoverage,
     InsurancePlan,
     Location,
     LocationProvider,
+    NexHealthAppointmentLink,
+    NexHealthPatientLink,
     Patient,
     Procedure,
     Provider,
 )
 from nexhealth_integration.utils import (
+    NexHealthLogAdapter,
     get_phone_numbers_from_bio,
     parse_nh_datetime_str,
 )
+
+log = NexHealthLogAdapter(getLogger(__name__))
 
 
 def update_or_create_institution_from_dict(
@@ -104,6 +112,7 @@ def update_or_create_patient_from_dict(data: Dict, should_create_or_update_relat
         "balance_amount": data["balance"]["amount"] if data["balance"] else None,
         "balance_currency": data["balance"]["currency"] if data["balance"] else None,
         "bio": data["bio"],
+        "email": data["email"],
         "first_name": data["first_name"],
         "foreign_id": data["foreign_id"],
         "foreign_id_type": data["foreign_id_type"],
@@ -326,3 +335,179 @@ def update_or_create_insurance_coverage_from_dict(
         nh_patient_id=nh_patient_id,
         defaults=defaults,
     )
+
+
+def update_or_create_peerlogic_patient_from_nexhealth(
+    nh_patient: Patient,
+    peerlogic_practice: core_models.Practice,
+) -> care_models.Patient:
+    patient_data = {
+        "date_of_birth": nh_patient.date_of_birth,
+        "email": nh_patient.email,
+        "is_active": not nh_patient.nh_inactive,
+        "name": nh_patient.name,
+        "name_first": nh_patient.first_name,
+        "name_last": nh_patient.last_name,
+        "name_middle": nh_patient.middle_name,
+        "phone_home": nh_patient.phone_number_home.as_e164 if nh_patient.phone_number_home else None,
+        "phone_mobile": nh_patient.phone_number_mobile.as_e164 if nh_patient.phone_number_mobile else None,
+        "phone_number": nh_patient.phone_number.as_e164 if nh_patient.phone_number else None,
+        "phone_work": nh_patient.phone_number_work.as_e164 if nh_patient.phone_number_work else None,
+        "organization_id": peerlogic_practice.organization_id,
+        "pms_created_at": nh_patient.nh_created_at,
+    }
+
+    with atomic():
+        # Check for an existing association based just on IDs
+        existing_link = NexHealthPatientLink.objects.filter(nh_institution_id=nh_patient.nh_institution_id, nh_patient_id=nh_patient.nh_id).first()
+        if existing_link:
+            # Update the existing core.Patient record with new data
+            peerlogic_patient = existing_link.peerlogic_patient
+            if peerlogic_patient.modified_at > nh_patient.nh_updated_at:
+                log.info(f"Not updating Patient {peerlogic_patient.id} due to existing data being more up-to-date")
+                return peerlogic_patient
+
+            for k, v in patient_data.items():
+                setattr(peerlogic_patient, k, v)
+            peerlogic_patient.save()
+        else:
+            # Check for matching core.Patient records based on other fields
+            # TODO: For now, there is no other source of patient records
+            #   so we can punt on this implementation for now and just
+            #   always create the record (below)
+
+            # Create a core.Patient record and NexHealthPatientLink
+            peerlogic_patient = care_models.Patient.objects.create(**patient_data)
+
+            NexHealthPatientLink.objects.create(
+                nh_institution_id=nh_patient.nh_institution_id, nh_patient_id=nh_patient.nh_id, peerlogic_patient=peerlogic_patient
+            )
+
+        # Ensure practice association exists
+        care_models.PracticePatient.objects.update_or_create(
+            practice_id=peerlogic_practice.id,
+            patient_id=peerlogic_patient.id,
+            defaults={"practice_id": peerlogic_practice.id, "patient_id": peerlogic_patient.id},
+        )
+
+    return peerlogic_patient
+
+
+def update_or_create_peerlogic_appointment_from_nexhealth(
+    nh_appointment: Appointment,
+    peerlogic_practice: core_models.Practice,
+    procedures: Optional[Iterable[Procedure]] = None,
+    peerlogic_patient: Optional[care_models.Patient] = None,
+) -> care_models.Appointment:
+    if peerlogic_patient is None:
+        peerlogic_patient = NexHealthPatientLink.objects.get(
+            nh_institution_id=nh_appointment.nh_institution_id, nh_patient_id=nh_appointment.nh_patient_id
+        ).peerlogic_patient
+
+    if procedures is None:
+        procedures = Procedure.objects.filter(
+            nh_institution_id=nh_appointment.nh_institution_id,
+            nh_appointment_id=nh_appointment.nh_id,
+        ).all()
+    procedures_flattened = []
+    fee_currency = None
+    fee_total_amount = 0
+    for procedure in procedures:
+        fee_currency = procedure.fee_currency
+        fee_amount = float(procedure.fee_amount)
+        fee_total_amount += fee_amount
+        procedures_flattened.append({"code": procedure.code, "name": procedure.name, "fee_currency": fee_currency, "fee_amount": fee_amount})
+
+    status = care_models.Appointment.Status.SCHEDULED
+    if nh_appointment.nh_deleted:
+        status = care_models.Appointment.Status.DELETED
+    if nh_appointment.cancelled:
+        status = care_models.Appointment.Status.CANCELLED
+    elif nh_appointment.end_time < timezone.now():
+        status = care_models.Appointment.Status.COMPLETED
+
+    is_active = nh_appointment.nh_deleted is False and nh_appointment.cancelled is False and nh_appointment.unavailable is False
+    appointment_data = {
+        "procedures": procedures_flattened,
+        "appointment_start_at": nh_appointment.start_time,
+        "appointment_end_at": nh_appointment.end_time,
+        "patient": peerlogic_patient,
+        "practice": peerlogic_practice,
+        "status": status,
+        "is_active": is_active,
+        "approximate_total_currency": fee_currency or "USD",
+        "approximate_total_amount": fee_total_amount,
+        "is_new_patient": not nh_appointment.is_past_patient,
+        "note": nh_appointment.note,
+        "confirmed_at": nh_appointment.patient_confirmed_at if nh_appointment.patient_confirmed_at else nh_appointment.confirmed_at,
+        "did_patient_miss": nh_appointment.patient_missed,
+        "pms_created_at": nh_appointment.nh_created_at,
+    }
+
+    with atomic():
+        existing_link = NexHealthAppointmentLink.objects.filter(
+            nh_institution_id=nh_appointment.nh_institution_id, nh_appointment_id=nh_appointment.nh_id
+        ).first()
+        if existing_link:
+            # Update the existing care.Appointment record with new data
+            peerlogic_appointment = existing_link.peerlogic_appointment
+            if peerlogic_appointment.modified_at > nh_appointment.nh_updated_at:
+                log.info(f"Not updating Appointment {peerlogic_appointment.id} due to existing data being more up-to-date")
+                return peerlogic_appointment
+
+            for k, v in appointment_data.items():
+                setattr(peerlogic_appointment, k, v)
+            peerlogic_appointment.save()
+        else:
+            # Create and link a care.Appointment record
+            peerlogic_appointment = care_models.Appointment.objects.create(**appointment_data)
+            NexHealthAppointmentLink.objects.create(
+                nh_institution_id=nh_appointment.nh_institution_id, nh_appointment_id=nh_appointment.nh_id, peerlogic_appointment=peerlogic_appointment
+            )
+    return peerlogic_appointment
+
+
+def sync_nexhealth_records_for_practice(practice: core_models.Practice) -> None:
+    """
+    For the given Practice, this will iterate all NexHealth Patient and Appointment records with an updated_at
+    greater than the given updated_since value and will update/create relevant Peerlogic Patient and Appointment records
+    """
+    locations = Location.objects.filter(peerlogic_practice=practice)
+    institutions = Institution.objects.filter(nh_id__in=locations.values_list("nh_institution_id", flat=True)).distinct()
+
+    for institution in institutions:
+        now = timezone.now()
+        updated_since = institution.synced_patients_to_peerlogic_at or timezone.now() - timedelta(days=30)
+        log.info(
+            f"Syncing patient records for Peerlogic Practice ({practice.id}), NexHealth Institution ({institution.nh_id}), updated_since ({updated_since.isoformat()})"
+        )
+        nh_patients = Patient.objects.filter(nh_institution_id=institution.nh_id, modified_at__gte=updated_since)
+        log.info(
+            f"Creating or updating {len(nh_patients)} patient records for Peerlogic Practice ({practice.id}), NexHealth Institution ({institution.nh_id}), updated_since ({updated_since.isoformat()})"
+        )
+        for nh_patient in nh_patients:
+            update_or_create_peerlogic_patient_from_nexhealth(nh_patient, practice)
+        log.info(
+            f"Completed syncing patient records for Peerlogic Practice ({practice.id}), NexHealth Institution ({institution.nh_id}), updated_since ({updated_since.isoformat()})"
+        )
+        institution.synced_patients_to_peerlogic_at = now
+        institution.save()
+
+    for location in locations:
+        now = timezone.now()
+        updated_since = location.synced_appointments_to_peerlogic_at or timezone.now() - timedelta(days=30)
+        nh_institution_id = location.nh_institution_id
+        log.info(
+            f"Syncing appointment records for Peerlogic Practice ({practice.id}), NexHealth Institution ({nh_institution_id}), NexHealth Location ({location.nh_id}), updated_since ({updated_since.isoformat()})"
+        )
+        nh_appointments = Appointment.objects.filter(nh_institution_id=nh_institution_id, nh_location_id=location.nh_id, modified_at__gte=updated_since)
+        log.info(
+            f"Creating or updating {len(nh_appointments)} appointment records for Peerlogic Practice ({practice.id}), NexHealth Institution ({nh_institution_id}), NexHealth Location ({location.nh_id}), updated_since ({updated_since.isoformat()})"
+        )
+        for nh_appointment in nh_appointments:
+            update_or_create_peerlogic_appointment_from_nexhealth(nh_appointment, practice)
+        log.info(
+            f"Completed syncing appointment records for Peerlogic Practice ({practice.id}), NexHealth Institution ({nh_institution_id}), NexHealth Location ({location.nh_id}), updated_since ({updated_since.isoformat()})"
+        )
+        location.synced_appointments_to_peerlogic_at = now
+        location.save()
