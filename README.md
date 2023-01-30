@@ -145,29 +145,11 @@ echo "1PASSWORD_SHORTHAND=<youroutputtedtokenhere>" >> ~/.bashrc
 
 ## Running Against Other Environments / Running Management Commands Against Other Environments
 
-### Setup Proxy Access to the Environment
+### Setup Access to the Environment
 
 Creation of credentials requires us to be local / on the same network as the environment in question since we're using the ORM to update the database itself directly.
 
-1. Download the appropriate credentials file to access the environment via IAM. Place this file into the ./credentials directory. For accessing the local dev environment, use the [local credentials](https://start.1password.com/open/i?a=P3RU52IFYBEH3GKEDF2UBYENBQ&v=wlmpasbyyncmhpjji3lfc7ra4a&i=hwym3nsqbjfhrjskkfjmvcnq4a&h=my.1password.com). If there is another environment you are trying to access, you'll need to generate an appropriate credentials file for that environment.
-
-2. [install Gcloud](https://cloud.google.com/sdk/docs/install) then Create a google cloud environment.
-
-    Enter this with the appropriate values at the prompts:
-
-    ```bash
-    gcloud init
-    ```
-
-    When it asks to pick a configuration, select `[2] Create a new configuration`.
-
-    Name it `peerlogic-api-dev`, `peerlogic-api-stage` or `peerlogic-api-prod` depending on which project you choose. Select us-west4a as the Compute Region/Zone.
-
-3. Enter the google cloud environment to access the database with [cloud sql proxy](https://cloud.google.com/sql/docs/mysql/connect-instance-auth-proxy#macos-64-bit)
-
-    ```bash
-    ./devtools/cloud_sql_proxy.bash
-    ```
+1. Connect to the network of the environment via VPN. If you do not possess a VPN client for the environment, please create a PTECH ticket and assign to your manager for approval.
 
 ### Database Access to the Environment
 
@@ -186,17 +168,11 @@ Google Cloud credentials are necessary to access the database. Your environment 
 
 4. Change the value in ./environment-connect/cloudsql-docker-compose.yml env_file to point at your `.env.dev`.
 
-5. Build the necessary dependencies in a separate terminal window:
-
-   ```bash
-   docker-compose -f ./environment-connect/cloudsql-docker-compose.yml up --build
-   ```
-
-6. You can now connect as a server via ./environment-connect/connect.sh dev up, and remember to still run the ./devtools/cloud_sql_proxy.bash as explained in the previous section.
+5. You can now connect as a server via ./environment-connect/connect.sh dev up.
 
     In fact, you can run any docker commands after `./environment-connect/connect.sh dev`!
 
-7. Allow some amount of time for the API to connect to the remote database. We've seen problems with the gunicorn workers timing out and dying.
+6. Allow some amount of time for the API to connect to the remote database. We've seen problems with the gunicorn workers timing out and dying.
 
     Error seen from clients trying to connect to peerlogic-api:
 
