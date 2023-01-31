@@ -1,11 +1,57 @@
 import datetime
 from dataclasses import asdict, dataclass, fields
-from logging import LoggerAdapter
+from logging import LoggerAdapter, getLogger
 from typing import Any, Dict, Optional, Tuple
 
 import phonenumbers
+from google.api_core.exceptions import NotFound as GCPNotFoundError
+from google.cloud import secretmanager
 
-from peerlogic.settings import PHONENUMBER_DEFAULT_REGION
+from peerlogic.settings import PHONENUMBER_DEFAULT_REGION, PROJECT_ID
+
+
+class NexHealthLogAdapter(LoggerAdapter):
+    def __init__(self, logger, extra=None):
+        super().__init__(logger, None)
+
+    def process(self, msg: str, kwargs: Any) -> Tuple[str, Any]:
+        return f"[NexHealth] {msg}", kwargs
+
+
+log = NexHealthLogAdapter(getLogger(__name__))
+
+
+def persist_nexhealth_access_token(nexhealth_subdomain: str, nexhealth_access_token: str) -> None:
+    secret_parent, secret_id, secret_name, latest_secret_version_name = _get_secret_identifiers_for_nexhealth_subdomain(nexhealth_subdomain)
+    secrets_client = secretmanager.SecretManagerServiceClient()
+    existing_secret_value = None
+    try:
+        existing_secret_value = get_nexhealth_access_token_for_subdomain(nexhealth_subdomain, secrets_client)
+        log.info(f"Found existing secret for {secret_name}.")
+    except GCPNotFoundError:
+        log.info(f"Creating new secret for {secret_name}.")
+        secrets_client.create_secret(
+            request={
+                "parent": secret_parent,
+                "secret_id": secret_id,
+                "secret": {"replication": {"automatic": {}}},
+            }
+        )
+
+    if existing_secret_value != nexhealth_access_token:
+        log.info(f"Adding new secret version for {secret_name}")
+        secrets_client.add_secret_version(request={"parent": secret_name, "payload": {"data": nexhealth_access_token.encode()}})
+        log.info(f"Added new secret version for {secret_name}")
+    else:
+        log.info(f"New secret version matches old secret version. Not updating")
+
+
+def get_nexhealth_access_token_for_subdomain(nexhealth_subdomain: str, secrets_client: Optional[secretmanager.SecretManagerServiceClient] = None) -> str:
+    if secrets_client is None:
+        secrets_client = secretmanager.SecretManagerServiceClient()
+    _, _, _, latest_secret_version_name = _get_secret_identifiers_for_nexhealth_subdomain(nexhealth_subdomain)
+    secret_value_response = secrets_client.access_secret_version(name=latest_secret_version_name)
+    return secret_value_response.payload.data.decode()
 
 
 def parse_nh_datetime_str(nh_datetime_str: Optional[str]) -> Optional[datetime.datetime]:
@@ -64,9 +110,12 @@ def get_phone_numbers_from_bio(bio_data: Optional[Dict]) -> Dict[str, Optional[s
     )
 
 
-class NexHealthLogAdapter(LoggerAdapter):
-    def __init__(self, logger, extra=None):
-        super().__init__(logger, None)
-
-    def process(self, msg: str, kwargs: Any) -> Tuple[str, Any]:
-        return f"[NexHealth] {msg}", kwargs
+def _get_secret_identifiers_for_nexhealth_subdomain(nexhealth_subdomain: str) -> Tuple[str, str, str, str]:
+    """
+    Returns secret_parent, secret_name, latest_secret_version_name
+    """
+    secret_parent = f"projects/{PROJECT_ID}"
+    secret_id = f"NEXHEALTH_CREDENTIAL_{nexhealth_subdomain.upper().replace('-', '_')}"
+    secret_name = f"{secret_parent}/secrets/{secret_id}"
+    latest_secret_version_name = f"{secret_name}/versions/latest"
+    return secret_parent, secret_id, secret_name, latest_secret_version_name
