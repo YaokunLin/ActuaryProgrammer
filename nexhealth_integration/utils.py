@@ -29,7 +29,7 @@ def persist_nexhealth_access_token(nexhealth_subdomain: str, nexhealth_access_to
         existing_secret_value = get_nexhealth_access_token_for_subdomain(nexhealth_subdomain, secrets_client)
         log.info(f"Found existing secret for {secret_name}.")
     except GCPNotFoundError:
-        log.info(f"Creating new secret for {secret_name}.")
+        log.info(f"No existing secret found. Creating new secret for {secret_name}.")
         secrets_client.create_secret(
             request={
                 "parent": secret_parent,
@@ -43,7 +43,7 @@ def persist_nexhealth_access_token(nexhealth_subdomain: str, nexhealth_access_to
         secrets_client.add_secret_version(request={"parent": secret_name, "payload": {"data": nexhealth_access_token.encode()}})
         log.info(f"Added new secret version for {secret_name}")
     else:
-        log.info(f"New secret version matches old secret version. Not updating")
+        log.info(f"New secret version matches old secret version. Not updating {secret_name}")
 
 
 def get_nexhealth_access_token_for_subdomain(nexhealth_subdomain: str, secrets_client: Optional[secretmanager.SecretManagerServiceClient] = None) -> str:
