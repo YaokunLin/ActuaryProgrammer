@@ -21,6 +21,7 @@ from nexhealth_integration.utils import (
 )
 from peerlogic.settings import (
     NEXHEALTH_API_ROOT_URL,
+    PUBSUB_TOPIC_PATH_NEXHEALTH_INGEST_PRACTICE,
     PUBSUB_TOPIC_PATH_NEXHEALTH_SYNC_PRACTICE,
 )
 
@@ -90,8 +91,8 @@ def ingest_practice(request: Request) -> Response:
     }
     event_attributes = {}
 
-    # future = publish_event(event_attributes=event_attributes, event=event_data, topic_path=PUBSUB_TOPIC_PATH_NEXHEALTH_INGEST_PRACTICE)
-    # futures.wait([future])
+    future = publish_event(event_attributes=event_attributes, event=event_data, topic_path=PUBSUB_TOPIC_PATH_NEXHEALTH_INGEST_PRACTICE)
+    futures.wait([future])
     return Response({}, status=HTTP_200_OK)
 
 
