@@ -9,12 +9,11 @@ from core.models import Practice as PeerlogicPractice
 from nexhealth_integration import adapters
 from nexhealth_integration.models import Location
 from nexhealth_integration.nexhealth_api_client import NexHealthAPIClient
-from nexhealth_integration.utils import NexHealthLogAdapter
-from peerlogic.settings import (
-    NEXHEALTH_API_ROOT_URL,
-    NEXHEALTH_API_TOKEN,
-    NEXHEALTH_PAGE_SIZE,
+from nexhealth_integration.utils import (
+    NexHealthLogAdapter,
+    get_nexhealth_access_token_for_subdomain,
 )
+from peerlogic.settings import NEXHEALTH_API_ROOT_URL, NEXHEALTH_PAGE_SIZE
 
 log = NexHealthLogAdapter(logging.getLogger(__name__))
 
@@ -82,8 +81,11 @@ def _mark_location_updated(
 
 
 def _construct_nexhealth_api_client(institution_id: int, subdomain: str, location_id: int) -> NexHealthAPIClient:
+    log.info("Loading NexHealth API Access Token from Secret Manager")
+    nexhealth_api_token = get_nexhealth_access_token_for_subdomain(subdomain)
+    log.info("Loaded NexHealth API Access Token from Secret Manager")
     log.info("Creating NexHealthAPIClient.")
-    client = NexHealthAPIClient(NEXHEALTH_API_ROOT_URL, NEXHEALTH_API_TOKEN, institution_id, location_id, subdomain, NEXHEALTH_PAGE_SIZE)
+    client = NexHealthAPIClient(NEXHEALTH_API_ROOT_URL, nexhealth_api_token, institution_id, location_id, subdomain, NEXHEALTH_PAGE_SIZE)
     log.info("Created NexHealthAPIClient.")
     return client
 
