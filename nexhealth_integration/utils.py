@@ -7,7 +7,7 @@ import phonenumbers
 from google.api_core.exceptions import NotFound as GCPNotFoundError
 from google.cloud import secretmanager
 
-from peerlogic.settings import PHONENUMBER_DEFAULT_REGION, PROJECT_ID
+from peerlogic.settings import GCP_PROJECT_NUMBER, PHONENUMBER_DEFAULT_REGION
 
 
 class NexHealthLogAdapter(LoggerAdapter):
@@ -114,7 +114,7 @@ def _get_secret_identifiers_for_nexhealth_subdomain(nexhealth_subdomain: str) ->
     """
     Returns secret_parent, secret_name, latest_secret_version_name
     """
-    secret_parent = f"projects/{PROJECT_ID}"
+    secret_parent = f"projects/{GCP_PROJECT_NUMBER}"
     secret_id = f"NEXHEALTH_CREDENTIAL_{nexhealth_subdomain.upper().replace('-', '_')}"
     secret_name = f"{secret_parent}/secrets/{secret_id}"
     latest_secret_version_name = f"{secret_name}/versions/latest"

@@ -32,7 +32,8 @@ log = logging.getLogger(__name__)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-PROJECT_ID = os.getenv("PROJECT_ID", "148263976475")  # This does not come directly from GCP
+PROJECT_ID = os.getenv("PROJECT_ID", "peerlogic-api-dev")  # This does not come directly from GCP
+GCP_PROJECT_NUMBER: int = env("GCP_PROJECT_NUMBER", cast=int, default=148263976475)
 
 GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT", None)  # WE'RE IN GCP
 IN_GCP = GOOGLE_CLOUD_PROJECT != None
