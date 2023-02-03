@@ -107,7 +107,6 @@ class SMSMessagesFailedCallbackView(APIView):
 class SMSMessagesView(APIView):
     """
     Create a new SMSMessage.
-    # TODO: from_number will always come from 1 assigned group/domain's sms number, not willy-nilly
     """
 
     def post(self, request, format=None):

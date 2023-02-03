@@ -33,6 +33,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 PROJECT_ID = os.getenv("PROJECT_ID", "peerlogic-api-dev")  # This does not come directly from GCP
+GCP_PROJECT_NUMBER: int = env("GCP_PROJECT_NUMBER", cast=int, default=148263976475)
 
 GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT", None)  # WE'RE IN GCP
 IN_GCP = GOOGLE_CLOUD_PROJECT != None
@@ -596,7 +597,6 @@ IAM_CLIENT = BOTO_SESSION.client("iam")
 # NexHealth (https://www.nexhealth.com/)
 NEXHEALTH_PAGE_SIZE: int = env("NEXHEALTH_PAGE_SIZE", cast=int, default=300)
 NEXHEALTH_API_ROOT_URL: str = env("NEXHEALTH_API_ROOT_URL", cast=str, default="https://nexhealth.info/")
-NEXHEALTH_API_TOKEN: str = env("NEXHEALTH_API_TOKEN", cast=str, default="")
 
 
 # Phone Number Fields
