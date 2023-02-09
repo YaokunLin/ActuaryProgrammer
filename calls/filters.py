@@ -55,6 +55,8 @@ class _UnaldultratedDateFromToRangeFilter(filters.RangeFilter):
 class CallsFilter(filters.FilterSet):
     sip_caller_number__startswith = filters.CharFilter(field_name="sip_caller_number", lookup_expr="startswith")
     sip_callee_number__startswith = filters.CharFilter(field_name="sip_callee_number", lookup_expr="startswith")
+    extension_any = filters.CharFilter(method="filter_sip_caller_extension_or_sip_callee_extension")
+    phone_number_any = filters.CharFilter(method="filter_sip_caller_number_or_sip_callee_number")
     call_start_time = _UnaldultratedDateFromToRangeFilter()
     marketing_campaign_name = filters.CharFilter(method="filter_marketing_campaign_name")
     call_purposes__call_purpose_type = filters.MultipleChoiceFilter(choices=CallPurposeTypes.choices, method="_filter_call_purpose_fields")
@@ -79,6 +81,14 @@ class CallsFilter(filters.FilterSet):
             return queryset
 
         return queryset.filter(sip_callee_number=campaign_phone_number.phone_number)
+
+    def filter_sip_caller_extension_or_sip_callee_extension(self, queryset, name, value):
+        extension_filter = Q(sip_caller_extension=value) | Q(sip_callee_extension=value)
+        return queryset.filter(extension_filter)
+
+    def filter_sip_caller_number_or_sip_callee_number(self, queryset, name, value):
+        extension_filter = Q(sip_caller_number=value) | Q(sip_callee_number=value)
+        return queryset.filter(extension_filter)
 
     def _filter_call_purpose_fields(self, queryset, name, value):
         if not self.purpose_filters_applied:
@@ -106,6 +116,9 @@ class CallsFilter(filters.FilterSet):
             "id": ["exact"],
             "practice__id": ["exact"],
             "call_direction": ["exact"],
+            "call_connection": ["exact"],
+            "went_to_voicemail": ["exact"],
+            "checked_voicemail": ["exact"],
             "call_sentiments__overall_sentiment_score": ["exact"],
             "mentioned_companies__keyword": ["exact"],
             "mentioned_insurances__keyword": ["exact"],
