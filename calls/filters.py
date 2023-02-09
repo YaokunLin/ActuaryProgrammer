@@ -63,6 +63,7 @@ class CallsFilter(filters.FilterSet):
         choices=CallOutcomeReasonTypes.choices, method="_filter_call_purpose_fields"
     )
     engaged_in_calls__non_agent_engagement_persona_type = filters.MultipleChoiceFilter(choices=NonAgentEngagementPersonaTypes.choices)
+    extension = filters.CharFilter(method="filter_caller_and_callee_extensions")
 
     def __init__(self, *args, **kwargs):
         self.purpose_filters_applied = False
@@ -79,6 +80,10 @@ class CallsFilter(filters.FilterSet):
             return queryset
 
         return queryset.filter(sip_callee_number=campaign_phone_number.phone_number)
+
+    def filter_caller_and_callee_extensions(self, queryset, name, value):
+        extension_filter = Q(sip_caller_extension=value) | Q(sip_callee_extension=value)
+        return queryset.filter(extension_filter)
 
     def _filter_call_purpose_fields(self, queryset, name, value):
         if not self.purpose_filters_applied:
