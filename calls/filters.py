@@ -55,6 +55,8 @@ class _UnaldultratedDateFromToRangeFilter(filters.RangeFilter):
 class CallsFilter(filters.FilterSet):
     sip_caller_number__startswith = filters.CharFilter(field_name="sip_caller_number", lookup_expr="startswith")
     sip_callee_number__startswith = filters.CharFilter(field_name="sip_callee_number", lookup_expr="startswith")
+    extension_any = filters.CharFilter(method="filter_sip_caller_extension_or_sip_callee_extension")
+    phone_number_any = filters.CharFilter(method="filter_sip_caller_number_or_sip_callee_number")
     call_start_time = _UnaldultratedDateFromToRangeFilter()
     marketing_campaign_name = filters.CharFilter(method="filter_marketing_campaign_name")
     call_purposes__call_purpose_type = filters.MultipleChoiceFilter(choices=CallPurposeTypes.choices, method="_filter_call_purpose_fields")
@@ -63,8 +65,6 @@ class CallsFilter(filters.FilterSet):
         choices=CallOutcomeReasonTypes.choices, method="_filter_call_purpose_fields"
     )
     engaged_in_calls__non_agent_engagement_persona_type = filters.MultipleChoiceFilter(choices=NonAgentEngagementPersonaTypes.choices)
-    extension_any = filters.CharFilter(method="filter_sip_caller_extension_or_sip_callee_extension")
-    phone_number_any = filters.CharFilter(method="filter_sip_caller_number_or_sip_callee_number")
 
     def __init__(self, *args, **kwargs):
         self.purpose_filters_applied = False
