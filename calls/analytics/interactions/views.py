@@ -1,6 +1,8 @@
+from django.http import HttpResponse
 from rest_framework import viewsets
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.permissions import SAFE_METHODS, IsAdminUser
+from rest_framework.status import HTTP_403_FORBIDDEN
 
 from calls.analytics.interactions.models import AgentCallScore, AgentCallScoreMetric
 from calls.analytics.interactions.serializers import (
@@ -23,7 +25,7 @@ class AgentCallScoreViewset(viewsets.ModelViewSet):
         # TODO: https://peerlogictech.atlassian.net/browse/PTECH-1740
         if self.request.user.is_staff or self.request.user.is_superuser or self.request.method in SAFE_METHODS:
             return super().dispatch(request, *args, **kwargs)
-        raise PermissionDenied()
+        return HttpResponse(PermissionDenied.default_detail, status=403)
 
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
