@@ -13,7 +13,7 @@ from google.api_core.exceptions import PermissionDenied as GooglePermissionDenie
 from phonenumber_field.modelfields import to_python as to_phone_number
 from rest_framework import status, views, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.filters import (
     OrderingFilter,  # brought in for a backend filter override
 )
@@ -160,33 +160,33 @@ class CallViewset(viewsets.ModelViewSet):
 
 
 class GetCallAudioPartial(ListAPIView):
-    permission_classes = [IsAdminUser]  # https://peerlogictech.atlassian.net/browse/PTECH-1740
+    permission_classes = [IsAdminUser]  # TODO: https://peerlogictech.atlassian.net/browse/PTECH-1740
     queryset = CallAudioPartial.objects.all().select_related("call_partial").order_by("call_partial__time_interaction_started", "-modified_at")
     serializer_class = CallAudioPartialReadOnlySerializer
 
 
 class GetCallAudioPartials(ListAPIView):
-    permission_classes = [IsAdminUser]  # https://peerlogictech.atlassian.net/browse/PTECH-1740
+    permission_classes = [IsAdminUser]  # TODO: https://peerlogictech.atlassian.net/browse/PTECH-1740
     queryset = CallAudioPartial.objects.all().select_related("call_partial").order_by("call_partial__time_interaction_started", "-modified_at")
     serializer_class = CallAudioPartialReadOnlySerializer
     filter_fields = ["call_partial", "call_partial__call", "mime_type", "status"]
 
 
 class GetCallTranscriptPartial(RetrieveAPIView):
-    permission_classes = [IsAdminUser]  # https://peerlogictech.atlassian.net/browse/PTECH-1740
+    permission_classes = [IsAdminUser]  # TODO: https://peerlogictech.atlassian.net/browse/PTECH-1740
     queryset = CallTranscriptPartial.objects.all().select_related("call_partial").order_by("call_partial__time_interaction_started", "modified_at")
     serializer_class = CallTranscriptPartialReadOnlySerializer
 
 
 class GetCallTranscriptPartials(ListAPIView):
-    permission_classes = [IsAdminUser]  # https://peerlogictech.atlassian.net/browse/PTECH-1740
+    permission_classes = [IsAdminUser]  # TODO: https://peerlogictech.atlassian.net/browse/PTECH-1740
     queryset = CallTranscriptPartial.objects.all().select_related("call_partial").order_by("call_partial__time_interaction_started", "-modified_at")
     serializer_class = CallTranscriptPartialReadOnlySerializer
     filter_fields = ["call_partial", "call_partial__call", "mime_type", "status", "transcript_type", "speech_to_text_model_type"]
 
 
 class CallAudioViewset(viewsets.ModelViewSet):
-    permission_classes = [IsAdminUser]  # https://peerlogictech.atlassian.net/browse/PTECH-1740
+    permission_classes = [IsAdminUser]  # TODO: https://peerlogictech.atlassian.net/browse/PTECH-1740
     queryset = CallAudio.objects.all().order_by("-modified_at")
     serializer_class = CallAudioSerializer
     filter_fields = ["call", "mime_type", "status"]
@@ -296,10 +296,23 @@ class CallTranscriptViewset(viewsets.ModelViewSet):
     )  # note: these must be kept up to date with settings.py values!
     filterset_class = CallTranscriptsFilter
     parser_classes = (JSONParser, FormParser, MultiPartParser)
-    permission_classes = [IsAdminUser]  # https://peerlogictech.atlassian.net/browse/PTECH-1740
+
+    def dispatch(self, request, *args, **kwargs):
+        # TODO: https://peerlogictech.atlassian.net/browse/PTECH-1740
+        if self.request.user.is_staff or self.request.user.is_superuser or self.request.method in SAFE_METHODS:
+            return super().dispatch(request, *args, **kwargs)
+        raise PermissionDenied()
 
     def get_queryset(self):
-        queryset = super().get_queryset().filter(call=self.kwargs.get("call_pk"))
+        # TODO: https://peerlogictech.atlassian.net/browse/PTECH-1740
+        queryset = super().get_queryset().prefetch_related("call").filter(call=self.kwargs.get("call_pk"))
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            return queryset
+
+        allowed_practice_ids = Agent.objects.filter(user=self.request.user).values_list("practice_id", flat=True)
+        if not Call.objects.filter(id=self.kwargs.get("call_pk"), practice_id__in=allowed_practice_ids).exists():
+            raise NotFound()
+
         return queryset
 
     def update(self, request, pk=None, call_pk=None):
@@ -408,7 +421,7 @@ class CallTranscriptPartialViewset(viewsets.ModelViewSet):
     serializer_class = CallTranscriptPartialSerializer
     filter_fields = ["call_partial", "mime_type", "status"]
     parser_classes = (JSONParser, FormParser, MultiPartParser)
-    permission_classes = [IsAdminUser]  # https://peerlogictech.atlassian.net/browse/PTECH-1740
+    permission_classes = [IsAdminUser]  # TODO: https://peerlogictech.atlassian.net/browse/PTECH-1740
 
     def get_queryset(self):
         return super().get_queryset().filter(call_partial=self.kwargs.get("call_partial_pk"))
@@ -486,7 +499,7 @@ class CallAudioPartialViewset(viewsets.ModelViewSet):
     serializer_class = CallAudioPartialSerializer
     filter_fields = ["call_partial", "mime_type", "status"]
     parser_classes = (JSONParser, FormParser, MultiPartParser)
-    permission_classes = [IsAdminUser]  # https://peerlogictech.atlassian.net/browse/PTECH-1740
+    permission_classes = [IsAdminUser]  # TODO: https://peerlogictech.atlassian.net/browse/PTECH-1740
 
     def get_queryset(self):
         return super().get_queryset().filter(call_partial=self.kwargs.get("call_partial_pk"))
@@ -583,7 +596,7 @@ class CallPartialViewset(viewsets.ModelViewSet):
     queryset = CallPartial.objects.all().order_by("-created_at")
     serializer_class = CallPartialSerializer
     filter_fields = ["call", "time_interaction_started", "time_interaction_ended"]
-    permission_classes = [IsAdminUser]  # https://peerlogictech.atlassian.net/browse/PTECH-1740
+    permission_classes = [IsAdminUser]  # TODO: https://peerlogictech.atlassian.net/browse/PTECH-1740
 
     def get_queryset(self):
         return super().get_queryset().filter(call=self.kwargs.get("call_pk"))
@@ -593,7 +606,7 @@ class CallLabelViewset(viewsets.ModelViewSet):
     queryset = CallLabel.objects.all().order_by("-created_at")
     serializer_class = CallLabelSerializer
     filter_fields = ["call__id"]
-    permission_classes = [IsAdminUser]  # https://peerlogictech.atlassian.net/browse/PTECH-1740
+    permission_classes = [IsAdminUser]  # TODO: https://peerlogictech.atlassian.net/browse/PTECH-1740
 
 
 class CallNoteViewSet(viewsets.ModelViewSet):
@@ -601,7 +614,7 @@ class CallNoteViewSet(viewsets.ModelViewSet):
     serializer_class_read = CallNoteReadSerializer
     serializer_class_write = CallNoteWriteSerializer
     filter_fields = ["call__id"]
-    permission_classes = [IsAdminUser]  # https://peerlogictech.atlassian.net/browse/PTECH-1740
+    permission_classes = [IsAdminUser]  # TODO: https://peerlogictech.atlassian.net/browse/PTECH-1740
 
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
@@ -664,7 +677,7 @@ class TelecomCallerNameInfoViewSet(viewsets.ModelViewSet):
     filter_fields = ["caller_name_type", "source"]
     search_fields = ["caller_name"]
     ordering = ["caller_name"]
-    permission_classes = [IsAdminUser]  # https://peerlogictech.atlassian.net/browse/PTECH-1740
+    permission_classes = [IsAdminUser]  # TODO: https://peerlogictech.atlassian.net/browse/PTECH-1740
 
     def retrieve(self, request, pk):
         phone_number_raw = pk

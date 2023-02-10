@@ -101,7 +101,7 @@ class CallPurposeViewset(CallParentQueryFilterMixin, CallParentDeleteChildrenOnC
     queryset = CallPurpose.objects.all().order_by("-modified_at")
     serializer_class = CallPurposeSerializer
     filter_fields = ["call_purpose_type", "call__id"]
-    permission_classes = [IsAdminUser]  # https://peerlogictech.atlassian.net/browse/PTECH-1740
+    permission_classes = [IsAdminUser]  # TODO: https://peerlogictech.atlassian.net/browse/PTECH-1740
 
     _CHILD_METHOD_NAME = "call_purposes"
 
@@ -110,7 +110,7 @@ class CallOutcomeViewset(viewsets.ModelViewSet):
     queryset = CallOutcome.objects.all().order_by("-modified_at")
     serializer_class = CallOutcomeSerializer
     filter_fields = ["call_outcome_type", "call_purpose__id", "call_purpose__call__id"]
-    permission_classes = [IsAdminUser]  # https://peerlogictech.atlassian.net/browse/PTECH-1740
+    permission_classes = [IsAdminUser]  # TODO: https://peerlogictech.atlassian.net/browse/PTECH-1740
 
     def get_queryset(self):
         # TODO: probably nest outcomes underneath a purpose
@@ -122,7 +122,7 @@ class CallOutcomeReasonViewset(viewsets.ModelViewSet):
     queryset = CallOutcomeReason.objects.all().order_by("-modified_at")
     serializer_class = CallOutcomeReasonSerializer
     filter_fields = ["call_outcome_reason_type", "call_outcome__id", "call_outcome__call_purpose__id", "call_outcome__call_purpose__call__id"]
-    permission_classes = [IsAdminUser]  # https://peerlogictech.atlassian.net/browse/PTECH-1740
+    permission_classes = [IsAdminUser]  # TODO: https://peerlogictech.atlassian.net/browse/PTECH-1740
 
 
 #
@@ -136,7 +136,7 @@ class CallMentionedCompanyViewset(CallParentQueryFilterMixin, CallParentDeleteCh
 
     serializer_class_read = CallMentionedCompanyReadSerializer
     serializer_class_write = CallMentionedCompanyWriteSerializer
-    permission_classes = [IsAdminUser]  # https://peerlogictech.atlassian.net/browse/PTECH-1740
+    permission_classes = [IsAdminUser]  # TODO: https://peerlogictech.atlassian.net/browse/PTECH-1740
 
     _CHILD_METHOD_NAME = "mentioned_companies"
 
@@ -153,7 +153,7 @@ class CallMentionedInsuranceViewset(CallParentQueryFilterMixin, CallParentDelete
 
     serializer_class_read = CallMentionedInsuranceReadSerializer
     serializer_class_write = CallMentionedInsuranceWriteSerializer
-    permission_classes = [IsAdminUser]  # https://peerlogictech.atlassian.net/browse/PTECH-1740
+    permission_classes = [IsAdminUser]  # TODO: https://peerlogictech.atlassian.net/browse/PTECH-1740
 
     _CHILD_METHOD_NAME = "mentioned_insurances"
 
@@ -170,7 +170,7 @@ class CallMentionedProcedureViewset(CallParentQueryFilterMixin, CallParentDelete
 
     serializer_class_read = CallMentionedProcedureReadSerializer
     serializer_class_write = CallMentionedProcedureWriteSerializer
-    permission_classes = [IsAdminUser]  # https://peerlogictech.atlassian.net/browse/PTECH-1740
+    permission_classes = [IsAdminUser]  # TODO: https://peerlogictech.atlassian.net/browse/PTECH-1740
 
     _CHILD_METHOD_NAME = "mentioned_procedures"
 
@@ -184,7 +184,7 @@ class CallMentionedProcedureViewset(CallParentQueryFilterMixin, CallParentDelete
 class CallMentionedProcedureDistinctView(ListAPIView):
     queryset = CallMentionedProcedure.objects.all().distinct("keyword")
     serializer_class = CallMentionedProcedureKeywordOnlySerializer
-    permission_classes = [IsAdminUser]  # https://peerlogictech.atlassian.net/browse/PTECH-1740
+    permission_classes = [IsAdminUser]  # TODO: https://peerlogictech.atlassian.net/browse/PTECH-1740
 
 
 class CallMentionedProductViewset(CallParentQueryFilterMixin, CallParentDeleteChildrenOnCreateMixin, viewsets.ModelViewSet):
@@ -193,7 +193,7 @@ class CallMentionedProductViewset(CallParentQueryFilterMixin, CallParentDeleteCh
 
     serializer_class_read = CallMentionedProductReadSerializer
     serializer_class_write = CallMentionedProductWriteSerializer
-    permission_classes = [IsAdminUser]  # https://peerlogictech.atlassian.net/browse/PTECH-1740
+    permission_classes = [IsAdminUser]  # TODO: https://peerlogictech.atlassian.net/browse/PTECH-1740
 
     _CHILD_METHOD_NAME = "mentioned_products"
 
@@ -210,7 +210,7 @@ class CallMentionedSymptomViewset(CallParentQueryFilterMixin, CallParentDeleteCh
 
     serializer_class_read = CallMentionedSymptomReadSerializer
     serializer_class_write = CallMentionedSymptomWriteSerializer
-    permission_classes = [IsAdminUser]  # https://peerlogictech.atlassian.net/browse/PTECH-1740
+    permission_classes = [IsAdminUser]  # TODO: https://peerlogictech.atlassian.net/browse/PTECH-1740
 
     _CHILD_METHOD_NAME = "mentioned_symptoms"
 
