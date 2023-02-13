@@ -1,5 +1,6 @@
 from django.db import transaction
 from rest_framework import status, viewsets
+from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
 from calls.analytics.participants.models import AgentAssignedCall, AgentEngagedWith
@@ -15,6 +16,7 @@ class AgentAssignedCallViewSet(viewsets.ModelViewSet):
     queryset = AgentAssignedCall.objects.all().order_by("-modified_at")
     serializer_class = AgentAssignedCallSerializer
     filter_fields = ["agent__id", "call__id"]
+    permission_classes = [IsAdminUser]  # TODO: https://peerlogictech.atlassian.net/browse/PTECH-1740
 
 
 class AgentEngagedWithViewset(viewsets.ModelViewSet):
@@ -22,6 +24,7 @@ class AgentEngagedWithViewset(viewsets.ModelViewSet):
     serializer_class_read = AgentEngagedWithReadSerializer
     serializer_class_write = AgentEngagedWithWriteSerializer
     filter_fields = ["non_agent_engagement_persona_type", "call__id"]
+    permission_classes = [IsAdminUser]  # TODO: https://peerlogictech.atlassian.net/browse/PTECH-1740
 
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
