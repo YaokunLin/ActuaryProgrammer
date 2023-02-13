@@ -5,7 +5,7 @@ from typing import Dict, List, Union
 
 from django.conf import settings
 from django.db import DatabaseError, transaction
-from django.http import Http404, HttpResponse, HttpResponseBadRequest
+from django.http import Http404, HttpResponseBadRequest
 from django_filters.rest_framework import (
     DjangoFilterBackend,  # brought in for a backend filter override
 )
@@ -297,11 +297,12 @@ class CallTranscriptViewset(viewsets.ModelViewSet):
     filterset_class = CallTranscriptsFilter
     parser_classes = (JSONParser, FormParser, MultiPartParser)
 
-    def dispatch(self, request, *args, **kwargs):
+    def get_permissions(self):
         # TODO: https://peerlogictech.atlassian.net/browse/PTECH-1740
-        if self.request.user.is_staff or self.request.user.is_superuser or self.request.method in SAFE_METHODS:
-            return super().dispatch(request, *args, **kwargs)
-        return HttpResponse(PermissionDenied.default_detail, status=403)
+        if self.request.method in SAFE_METHODS:
+            return [p() for p in self.permission_classes]
+        else:
+            return [IsAdminUser()]
 
     def get_queryset(self):
         # TODO: https://peerlogictech.atlassian.net/browse/PTECH-1740

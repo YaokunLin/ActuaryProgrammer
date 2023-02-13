@@ -21,11 +21,12 @@ class AgentCallScoreViewset(viewsets.ModelViewSet):
     serializer_class_read = AgentCallScoreReadSerializer
     serializer_class_write = AgentCallScoreWriteSerializer
 
-    def dispatch(self, request, *args, **kwargs):
+    def get_permissions(self):
         # TODO: https://peerlogictech.atlassian.net/browse/PTECH-1740
-        if self.request.user.is_staff or self.request.user.is_superuser or self.request.method in SAFE_METHODS:
-            return super().dispatch(request, *args, **kwargs)
-        return HttpResponse(PermissionDenied.default_detail, status=403)
+        if self.request.method in SAFE_METHODS:
+            return [p() for p in self.permission_classes]
+        else:
+            return [IsAdminUser()]
 
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
