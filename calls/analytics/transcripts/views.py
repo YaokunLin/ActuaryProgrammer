@@ -1,8 +1,13 @@
 from django.db import transaction
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAdminUser
+from rest_framework.request import Request
 from rest_framework.response import Response
 
+from calls.analytics.intents.views import (
+    CallParentDeleteChildrenOnCreateMixin,
+    CallParentQueryFilterMixin,
+)
 from calls.analytics.transcripts.models import (
     CallLongestPause,
     CallSentiment,
@@ -19,7 +24,7 @@ from calls.analytics.transcripts.serializers import (
 from calls.models import Call
 
 
-class CallSentimentViewset(viewsets.ModelViewSet):
+class CallSentimentViewset(CallParentQueryFilterMixin, CallParentDeleteChildrenOnCreateMixin, viewsets.ModelViewSet):
     queryset = CallSentiment.objects.all().order_by("-modified_at")
     filter_fields = ["call__id", "overall_sentiment_score", "caller_sentiment_score", "callee_sentiment_score"]
 
@@ -27,34 +32,13 @@ class CallSentimentViewset(viewsets.ModelViewSet):
     serializer_class_write = CallSentimentWriteSerializer
     permission_classes = [IsAdminUser]  # TODO: https://peerlogictech.atlassian.net/browse/PTECH-1740
 
+    _CHILD_METHOD_NAME = "call_sentiments"
+
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
             return self.serializer_class_write
 
         return self.serializer_class_read
-
-    def get_queryset(self):
-        return super().get_queryset().filter(call=self.kwargs.get("call_pk"))
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        with transaction.atomic():
-            # get call to update
-            call: Call = Call.objects.get(pk=self.kwargs.get("call_pk"))
-
-            # there should only be one neapt for a call to ensure analytics / counting goes smoothly
-            # we err on the side of caution and retrieve all anyway
-            call_sentiments = call.call_sentiments.all()
-            if call_sentiments.exists():
-                call_sentiments.delete()
-
-            # create the new / replacement CallPurpose objects
-            self.perform_create(serializer)
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class CallTranscriptFragmentViewset(viewsets.ModelViewSet):
